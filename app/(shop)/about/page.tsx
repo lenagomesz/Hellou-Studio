@@ -64,12 +64,16 @@ function CatchGame() {
 
   useEffect(() => {
     if (!playing) return;
-    if (timeLeft <= 0) {
-      setPlaying(false);
-      return;
-    }
+    if (timeLeft <= 0) return;
     const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearTimeout(timer);
+  }, [playing, timeLeft]);
+
+  useEffect(() => {
+    if (playing && timeLeft <= 0) {
+      const stop = setTimeout(() => setPlaying(false), 0);
+      return () => clearTimeout(stop);
+    }
   }, [playing, timeLeft]);
 
   useEffect(() => {
