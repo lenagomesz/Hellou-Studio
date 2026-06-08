@@ -24,7 +24,7 @@ export function getStripeWebhookSecret(): string {
 }
 
 export function getAppBaseUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_APP_URL;
+  const explicit = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_BASE_URL;
   if (explicit) return explicit.replace(/\/+$/, '');
   return 'http://localhost:3000';
 }
