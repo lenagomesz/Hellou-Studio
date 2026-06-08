@@ -36,13 +36,6 @@ export const authOptions: NextAuthOptions = {
         const ok = await bcrypt.compare(credentials.password, user.password_hash);
         if (!ok) return null;
 
-        const { data: banned } = await admin
-          .from('banned_emails')
-          .select('id')
-          .eq('email', credentials.email.toLowerCase().trim())
-          .maybeSingle();
-        if (banned) return null;
-
         return {
           id: user.id,
           email: user.email,
