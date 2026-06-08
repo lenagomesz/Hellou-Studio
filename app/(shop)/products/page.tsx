@@ -30,7 +30,19 @@ async function getProductsRaw(filters: {
   search?: string;
   sort?: string;
 }): Promise<Product[]> {
-  const admin = getSupabaseAdmin();
+  console.log('[products/page] getProductsRaw called, filters:', filters);
+  console.log('[products/page] SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING');
+  console.log('[products/page] SERVICE_ROLE_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  let admin;
+  try {
+    admin = getSupabaseAdmin();
+    console.log('[products/page] getSupabaseAdmin() OK');
+  } catch (err) {
+    console.error('[products/page] getSupabaseAdmin() THREW:', err);
+    return [];
+  }
+
   let query = admin.from('products').select('*').eq('active', true).in('category', ['chaveiros', 'escritorio', 'criaturas']).not('name', 'ilike', 'Encomenda%');
 
   if (filters.category && isCategory(filters.category)) {
@@ -55,7 +67,8 @@ async function getProductsRaw(filters: {
       query = query.order('created_at', { ascending: false });
   }
 
-  const { data } = await query;
+  const { data, error } = await query;
+  console.log('[products/page] query result - count:', data?.length ?? 0, 'error:', error?.message ?? 'none');
   return (data ?? []) as Product[];
 }
 

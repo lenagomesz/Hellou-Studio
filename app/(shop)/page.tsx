@@ -81,9 +81,19 @@ const MARQUEE_ITEMS = [
 
 const getFeaturedProducts = unstable_cache(
   async (): Promise<Product[]> => {
+    console.log('[home/page] getFeaturedProducts called');
+    console.log('[home/page] SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING');
+    console.log('[home/page] SERVICE_ROLE_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
     return withTimeout(
       (async () => {
-        const admin = getSupabaseAdmin();
+        let admin;
+        try {
+          admin = getSupabaseAdmin();
+          console.log('[home/page] getSupabaseAdmin() OK');
+        } catch (err) {
+          console.error('[home/page] getSupabaseAdmin() THREW:', err);
+          return [] as Product[];
+        }
         const { data, error } = await admin
           .from('products')
           .select('*')
@@ -92,10 +102,11 @@ const getFeaturedProducts = unstable_cache(
           .not('name', 'ilike', 'Encomenda%')
           .order('created_at', { ascending: false })
           .limit(8);
+        console.log('[home/page] featured query - count:', data?.length ?? 0, 'error:', error?.message ?? 'none');
         if (error) return [];
         return (data ?? []) as Product[];
       })(),
-    ).catch(() => [] as Product[]);
+    ).catch((err) => { console.error('[home/page] withTimeout catch:', err); return [] as Product[]; });
   },
   ['featured-products'],
   { revalidate: 60 },

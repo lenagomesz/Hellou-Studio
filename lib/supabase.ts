@@ -25,7 +25,9 @@ export function getSupabaseAdmin(): SupabaseClient {
   if (adminClient) return adminClient;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  console.log('[supabase] getSupabaseAdmin() - url:', url ? url.slice(0, 30) + '...' : 'MISSING', '| serviceRoleKey exists:', !!serviceRoleKey);
   if (!url || !serviceRoleKey) {
+    console.error('[supabase] MISSING env vars! url:', !!url, 'serviceRoleKey:', !!serviceRoleKey);
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY (server-only)');
   }
   adminClient = createClient(url, serviceRoleKey, {
