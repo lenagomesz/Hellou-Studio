@@ -1,23 +1,34 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+let anonClient: SupabaseClient | null = null;
+let adminClient: SupabaseClient | null = null;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
+export function getSupabase(): SupabaseClient {
+  if (anonClient) return anonClient;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  }
+  anonClient = createClient(url, anonKey);
+  return anonClient;
 }
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-
-let adminClient: SupabaseClient | null = null;
+// Mantém compatibilidade com código que importa `supabase` diretamente
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    return (getSupabase() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
 
 export function getSupabaseAdmin(): SupabaseClient {
   if (adminClient) return adminClient;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY (server-only)');
+  if (!url || !serviceRoleKey) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY (server-only)');
   }
-  adminClient = createClient(supabaseUrl, serviceRoleKey, {
+  adminClient = createClient(url, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return adminClient;
