@@ -3,7 +3,6 @@
 import { useState, useRef, type FormEvent, type DragEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
 
 export default function RequestPrintPage() {
   const router = useRouter();
@@ -102,12 +101,6 @@ export default function RequestPrintPage() {
       </div>
 
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <div className="mb-6">
-        <Link href="/account" className="text-sm text-gray-500 hover:text-pink-600 transition">
-          ← Minha Conta
-        </Link>
-      </div>
-
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
 
         <form onSubmit={handleSubmit} className="space-y-5">

@@ -1,270 +1,168 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Tag, Plus, Trash2, ToggleLeft, ToggleRight, Percent, DollarSign, Truck } from 'lucide-react';
 import type { Coupon } from '@/types/database';
+
+function formatPrice(value: number) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
 
 export default function CouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    code: '',
+    discount_type: 'percent' as 'percent' | 'fixed',
+    discount_value: '',
+    min_purchase: '0',
+    max_uses: '',
+    expires_at: '',
+    free_shipping: false,
+  });
 
-  const [code, setCode] = useState('');
-  const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent');
-  const [discountValue, setDiscountValue] = useState('');
-  const [minPurchase, setMinPurchase] = useState('');
-  const [maxUses, setMaxUses] = useState('');
-  const [freeShipping, setFreeShipping] = useState(false);
-  const [expiresAt, setExpiresAt] = useState('');
-  const [formError, setFormError] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => { void loadCoupons(); }, []);
-
-  async function loadCoupons() {
+  async function fetchCoupons() {
     setLoading(true);
     const res = await fetch('/api/coupons');
     if (res.ok) setCoupons(await res.json());
     setLoading(false);
   }
 
-  function resetForm() {
-    setCode('');
-    setDiscountType('percent');
-    setDiscountValue('');
-    setMinPurchase('');
-    setMaxUses('');
-    setFreeShipping(false);
-    setExpiresAt('');
-    setFormError('');
-  }
+  useEffect(() => { fetchCoupons(); }, []);
 
-  async function handleCreate(e: React.FormEvent) {
+  async function createCoupon(e: React.FormEvent) {
     e.preventDefault();
-    setFormError('');
-    if (!code.trim()) { setFormError('Código é obrigatório'); return; }
-
-    setSaving(true);
     const res = await fetch('/api/coupons', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        code: code.trim(),
-        discount_type: discountType,
-        discount_value: Number(discountValue) || 0,
-        min_purchase: Number(minPurchase) || 0,
-        max_uses: maxUses ? Number(maxUses) : null,
-        free_shipping: freeShipping,
-        expires_at: expiresAt || null,
+        code: form.code.toUpperCase(),
+        discount_type: form.discount_type,
+        discount_value: Number(form.discount_value),
+        min_purchase: Number(form.min_purchase) || 0,
+        max_uses: form.max_uses ? Number(form.max_uses) : null,
+        expires_at: form.expires_at || null,
+        free_shipping: form.free_shipping,
       }),
     });
-
-    if (!res.ok) {
-      const data = await res.json();
-      setFormError(data.error || 'Erro ao criar cupom');
-      setSaving(false);
-      return;
+    if (res.ok) {
+      setToast('Cupom criado!');
+      setTimeout(() => setToast(''), 3000);
+      setShowForm(false);
+      setForm({ code: '', discount_type: 'percent', discount_value: '', min_purchase: '0', max_uses: '', expires_at: '', free_shipping: false });
+      fetchCoupons();
     }
-
-    resetForm();
-    setShowForm(false);
-    setSaving(false);
-    void loadCoupons();
   }
 
-  async function toggleActive(coupon: Coupon) {
+  async function toggleCoupon(id: string, active: boolean) {
     await fetch('/api/coupons', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: coupon.id, active: !coupon.active }),
+      body: JSON.stringify({ id, active: !active }),
     });
-    void loadCoupons();
+    setCoupons(prev => prev.map(c => c.id === id ? { ...c, active: !active } : c));
   }
 
-  async function deleteCoupon(id: string) {
-    if (!confirm('Excluir este cupom?')) return;
-    await fetch(`/api/coupons?id=${id}`, { method: 'DELETE' });
-    void loadCoupons();
+  async function deleteCoupon(id: string, code: string) {
+    if (!confirm(`Excluir cupom "${code}"?`)) return;
+    await fetch('/api/coupons', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    setCoupons(prev => prev.filter(c => c.id !== id));
+    setToast('Cupom excluído');
+    setTimeout(() => setToast(''), 3000);
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">{toast}</div>
+      )}
+
+      <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cupons</h1>
-          <p className="mt-1 text-sm text-gray-600">Gerencie cupons de desconto e frete grátis.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Cupons</h1>
+          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{coupons.length} cupons cadastrados</p>
         </div>
-        <button
-          type="button"
-          onClick={() => { setShowForm(!showForm); resetForm(); }}
-          className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition"
-        >
-          {showForm ? 'Cancelar' : 'Novo cupom'}
+        <button onClick={() => setShowForm(!showForm)} className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition">
+          <Plus className="h-4 w-4" /> Novo cupom
         </button>
-      </div>
+      </header>
 
+      {/* Create Form */}
       {showForm && (
-        <form onSubmit={handleCreate} className="mt-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Código</label>
-              <input
-                type="text"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="EX: PRIMEIRA10"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Tipo de desconto</label>
-              <select
-                value={discountType}
-                onChange={(e) => setDiscountType(e.target.value as 'percent' | 'fixed')}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-              >
-                <option value="percent">Porcentagem (%)</option>
-                <option value="fixed">Valor fixo (R$)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Valor do desconto {discountType === 'percent' ? '(%)' : '(R$)'}
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={discountValue}
-                onChange={(e) => setDiscountValue(e.target.value)}
-                placeholder="0"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Compra mínima (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={minPurchase}
-                onChange={(e) => setMinPurchase(e.target.value)}
-                placeholder="0"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Máximo de usos</label>
-              <input
-                type="number"
-                min="1"
-                value={maxUses}
-                onChange={(e) => setMaxUses(e.target.value)}
-                placeholder="Ilimitado"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Expira em</label>
-              <input
-                type="date"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
+        <form onSubmit={createCoupon} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm space-y-4 dark:border-gray-800 dark:bg-gray-900">
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Criar cupom</h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <input type="text" value={form.code} onChange={e => setForm({...form, code: e.target.value})} placeholder="Código (ex: PROMO10)" required className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm uppercase dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+            <select value={form.discount_type} onChange={e => setForm({...form, discount_type: e.target.value as 'percent' | 'fixed'})} className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+              <option value="percent">Porcentagem (%)</option>
+              <option value="fixed">Valor fixo (R$)</option>
+            </select>
+            <input type="number" value={form.discount_value} onChange={e => setForm({...form, discount_value: e.target.value})} placeholder="Valor do desconto" required min="0" step="0.01" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+            <input type="number" value={form.min_purchase} onChange={e => setForm({...form, min_purchase: e.target.value})} placeholder="Compra mínima (R$)" min="0" step="0.01" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+            <input type="number" value={form.max_uses} onChange={e => setForm({...form, max_uses: e.target.value})} placeholder="Usos max (vazio = ilimitado)" min="1" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+            <input type="date" value={form.expires_at} onChange={e => setForm({...form, expires_at: e.target.value})} className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
           </div>
-
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={freeShipping}
-              onChange={(e) => setFreeShipping(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-pink-500 focus:ring-pink-500"
-            />
-            <span className="text-sm text-gray-700">Frete grátis</span>
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input type="checkbox" checked={form.free_shipping} onChange={e => setForm({...form, free_shipping: e.target.checked})} className="rounded" />
+            Frete grátis
           </label>
-
-          {formError && <p className="text-sm text-red-600">{formError}</p>}
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 transition disabled:opacity-50"
-          >
-            {saving ? 'Salvando...' : 'Criar cupom'}
-          </button>
+          <div className="flex gap-2">
+            <button type="submit" className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800">Criar</button>
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">Cancelar</button>
+          </div>
         </form>
       )}
 
+      {/* Coupons List */}
       {loading ? (
-        <div className="mt-8 space-y-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-lg bg-gray-100" />
-          ))}
-        </div>
+        <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />)}</div>
       ) : coupons.length === 0 ? (
-        <div className="mt-8 text-center text-sm text-gray-500">
-          Nenhum cupom cadastrado.
+        <div className="rounded-2xl bg-white p-12 text-center border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
+          <Tag className="mx-auto h-12 w-12 text-gray-300" />
+          <p className="mt-3 text-sm text-gray-500">Nenhum cupom cadastrado</p>
         </div>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50">
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Código</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Desconto</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Frete grátis</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Usos</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {coupons.map((c) => (
-                <tr key={c.id} className={!c.active ? 'opacity-50' : ''}>
-                  <td className="px-4 py-3 font-mono font-semibold text-gray-900">{c.code}</td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {c.discount_value > 0
-                      ? c.discount_type === 'percent'
-                        ? `${c.discount_value}%`
-                        : `R$${c.discount_value.toFixed(2)}`
-                      : '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    {c.free_shipping
-                      ? <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Sim</span>
-                      : <span className="text-gray-400">Não</span>}
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {c.used_count}{c.max_uses !== null ? `/${c.max_uses}` : ''}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      c.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {c.active ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => toggleActive(c)}
-                      className="text-xs text-gray-600 hover:text-gray-900 transition"
-                    >
-                      {c.active ? 'Desativar' : 'Ativar'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteCoupon(c.id)}
-                      className="text-xs text-red-600 hover:text-red-800 transition"
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-3">
+          {coupons.map(coupon => (
+            <div key={coupon.id} className="flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${coupon.active ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
+                  {coupon.discount_type === 'percent' ? <Percent className="h-5 w-5" /> : <DollarSign className="h-5 w-5" />}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-bold text-gray-900 dark:text-white">{coupon.code}</span>
+                    {coupon.free_shipping && (
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
+                        <Truck className="h-2.5 w-2.5" /> Frete grátis
+                      </span>
+                    )}
+                    {!coupon.active && <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">Inativo</span>}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {coupon.discount_type === 'percent' ? `${coupon.discount_value}% off` : formatPrice(coupon.discount_value)}
+                    {coupon.min_purchase > 0 && ` · min ${formatPrice(coupon.min_purchase)}`}
+                    {coupon.max_uses && ` · ${coupon.used_count}/${coupon.max_uses} usos`}
+                    {coupon.expires_at && ` · expira ${new Date(coupon.expires_at).toLocaleDateString('pt-BR')}`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={() => toggleCoupon(coupon.id, coupon.active)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 transition dark:hover:bg-gray-800" title={coupon.active ? 'Desativar' : 'Ativar'}>
+                  {coupon.active ? <ToggleRight className="h-5 w-5 text-green-600" /> : <ToggleLeft className="h-5 w-5" />}
+                </button>
+                <button onClick={() => deleteCoupon(coupon.id, coupon.code)} className="rounded-lg p-2 text-red-500 hover:bg-red-50 transition" title="Excluir">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

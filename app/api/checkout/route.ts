@@ -90,6 +90,22 @@ export async function POST(request: Request) {
     }
   }
 
+  const subtotal = items.reduce((sum, item) => sum + computeUnitPrice(item) * item.quantity, 0);
+
+  if (subtotal < 15) {
+    return badRequest('O valor mínimo para compra é R$15,00');
+  }
+
+  const freeShippingBySubtotal = subtotal >= 99;
+
+  const { count: orderCount } = await admin
+    .from('orders')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', auth.user.id)
+    .in('status', ['paid', 'processing', 'shipped', 'delivered']);
+
+  const isFirstPurchase = (orderCount ?? 0) === 0;
+
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map(
     (item) => {
       const unit = computeUnitPrice(item);
@@ -187,13 +203,14 @@ export async function POST(request: Request) {
       sessionParams.shipping_address_collection = { allowed_countries: ['BR'] };
     }
 
-    if (validCoupon?.free_shipping) {
+    if (validCoupon?.free_shipping || freeShippingBySubtotal) {
+      const label = freeShippingBySubtotal ? 'Frete grátis (acima de R$99)' : 'Frete grátis (cupom)';
       sessionParams.shipping_options = [
         {
           shipping_rate_data: {
             type: 'fixed_amount',
             fixed_amount: { amount: 0, currency: 'brl' },
-            display_name: 'Frete grátis (cupom)',
+            display_name: label,
           },
         },
       ];
@@ -210,6 +227,14 @@ export async function POST(request: Request) {
       sessionParams.discounts = [{ coupon: stripeCoupon.id }];
       sessionParams.metadata!.coupon_id = validCoupon.id;
       sessionParams.metadata!.coupon_code = validCoupon.code;
+    } else if (isFirstPurchase) {
+      const firstPurchaseCoupon = await stripe.coupons.create({
+        percent_off: 10,
+        currency: 'brl',
+        duration: 'once',
+      });
+      sessionParams.discounts = [{ coupon: firstPurchaseCoupon.id }];
+      sessionParams.metadata!.first_purchase_discount = 'true';
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);

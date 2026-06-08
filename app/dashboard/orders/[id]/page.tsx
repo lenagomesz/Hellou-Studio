@@ -267,103 +267,116 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          {/* Actions — update status */}
+          {/* Gerenciar pedido */}
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <div className="mb-4">
-              <h2 className="text-sm font-semibold text-gray-900">Atualizar status</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Avance o pedido no fluxo de produção e entrega</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {STATUS_FLOW.map((s) => {
-                const isCurrent = s === order.status;
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    disabled={updating || isCurrent}
-                    onClick={() => updateStatus(s)}
-                    className={`rounded-xl border px-3.5 py-2 text-xs font-medium transition ${
-                      isCurrent
-                        ? 'border-pink-200 bg-pink-50 text-pink-700 ring-1 ring-pink-200 cursor-default'
-                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'
-                    } disabled:opacity-50`}
-                  >
-                    {STATUS_LABELS[s]}
-                  </button>
-                );
-              })}
-              <div className="w-px bg-gray-200 mx-1 self-stretch" />
-              <button
-                type="button"
-                disabled={updating}
-                onClick={() => updateStatus('canceled')}
-                className="rounded-xl border border-red-200 bg-white px-3.5 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                disabled={updating}
-                onClick={() => updateStatus('refunded')}
-                className="rounded-xl border border-red-200 bg-white px-3.5 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-              >
-                Reembolsar
-              </button>
+            <div className="mb-5">
+              <h2 className="text-sm font-semibold text-gray-900">Gerenciar pedido</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Avance o status ou atualize informações de envio</p>
             </div>
 
-            {saveMsg && (
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-xs font-medium text-green-700">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-                {saveMsg}
-              </div>
-            )}
-            {shippingError && (
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-                </svg>
-                {shippingError}
-              </div>
-            )}
-          </div>
-
-          {/* Tracking */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50">
+            {/* Código de rastreamento */}
+            <div className="mb-5 rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <div className="flex items-center gap-2 mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-purple-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                 </svg>
+                <span className="text-xs font-semibold text-gray-700">Código de rastreamento</span>
+                {order.status === 'processing' && (
+                  <span className="ml-auto text-[10px] font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">Obrigatório para enviar</span>
+                )}
               </div>
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900">Rastreamento</h2>
-                <p className="text-[11px] text-gray-500">Obrigatório para marcar como enviado</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={trackingCode}
+                  onChange={(e) => { setTrackingCode(e.target.value); setShippingError(''); }}
+                  placeholder="Ex: BR123456789BR"
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 ${
+                    shippingError
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
+                      : 'border-gray-200 focus:border-pink-500 focus:ring-pink-200'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={saveTracking}
+                  disabled={updating}
+                  className="rounded-lg bg-gray-800 px-3 py-2 text-xs font-medium text-white transition hover:bg-gray-700 disabled:opacity-50"
+                >
+                  Salvar
+                </button>
+              </div>
+              {shippingError && (
+                <p className="mt-2 text-xs text-red-600">{shippingError}</p>
+              )}
+            </div>
+
+            {/* Próximo passo */}
+            {order.status !== 'delivered' && order.status !== 'canceled' && order.status !== 'refunded' && (
+              <div className="mb-4">
+                <p className="text-xs font-medium text-gray-500 mb-2">Próximo passo:</p>
+                <div className="flex flex-wrap gap-2">
+                  {order.status === 'pending' && (
+                    <button type="button" disabled={updating} onClick={() => updateStatus('paid')} className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50">
+                      💳 Confirmar pagamento
+                    </button>
+                  )}
+                  {order.status === 'paid' && (
+                    <button type="button" disabled={updating} onClick={() => updateStatus('processing')} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50">
+                      ⚙️ Iniciar preparo
+                    </button>
+                  )}
+                  {order.status === 'processing' && (
+                    <button type="button" disabled={updating} onClick={() => updateStatus('shipped')} className="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-purple-700 disabled:opacity-50">
+                      📦 Marcar como enviado
+                    </button>
+                  )}
+                  {order.status === 'shipped' && (
+                    <button type="button" disabled={updating} onClick={() => updateStatus('delivered')} className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-green-700 disabled:opacity-50">
+                      ✅ Confirmar entrega
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Outros status */}
+            <div className="border-t border-gray-100 pt-4">
+              <p className="text-xs font-medium text-gray-500 mb-2">Ir para status:</p>
+              <div className="flex flex-wrap gap-2">
+                {STATUS_FLOW.map((s) => {
+                  const isCurrent = s === order.status;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      disabled={updating || isCurrent}
+                      onClick={() => updateStatus(s)}
+                      className={`rounded-lg border px-3 py-1.5 text-[11px] font-medium transition ${
+                        isCurrent
+                          ? 'border-pink-200 bg-pink-50 text-pink-700 cursor-default'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                      } disabled:opacity-40`}
+                    >
+                      {STATUS_LABELS[s]}
+                    </button>
+                  );
+                })}
+                <div className="w-px bg-gray-200 mx-1 self-stretch" />
+                <button type="button" disabled={updating} onClick={() => updateStatus('canceled')} className="rounded-lg border border-red-200 px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-40">
+                  Cancelar
+                </button>
+                <button type="button" disabled={updating} onClick={() => updateStatus('refunded')} className="rounded-lg border border-red-200 px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-40">
+                  Reembolsar
+                </button>
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={trackingCode}
-                onChange={(e) => { setTrackingCode(e.target.value); setShippingError(''); }}
-                placeholder="Ex: BR123456789BR"
-                className={`flex-1 rounded-xl border px-3.5 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 ${
-                  shippingError
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                    : 'border-gray-200 focus:border-pink-500 focus:ring-pink-200'
-                }`}
-              />
-              <button
-                type="button"
-                onClick={saveTracking}
-                disabled={updating}
-                className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
-              >
-                Salvar
-              </button>
-            </div>
+            {saveMsg && (
+              <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-xs font-medium text-green-700">
+                ✓ {saveMsg}
+              </div>
+            )}
           </div>
         </div>
 
@@ -415,6 +428,53 @@ export default function OrderDetailPage() {
             ) : (
               <p className="text-xs text-gray-400">Sem informações de entrega</p>
             )}
+          </div>
+
+          {/* Etiqueta de envio */}
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-gray-700">Etiqueta de envio</h2>
+              <button
+                type="button"
+                onClick={() => {
+                  const remetente = `REMETENTE:\nhelloustudio\nRua São Paulo, 250\nBairro São Judas\nItajaí - SC\nCEP: 88303-330`;
+                  const dest = shipping
+                    ? `DESTINATÁRIO:\n${order.user?.name ?? ''}\n${String(shipping.street ?? '')}${shipping.number ? ', ' + String(shipping.number) : ''}${shipping.complement ? ' - ' + String(shipping.complement) : ''}\n${String(shipping.neighborhood ?? '')}\n${String(shipping.city ?? '')} - ${String(shipping.state ?? '')}\nCEP: ${String(shipping.cep ?? '')}`
+                    : `DESTINATÁRIO:\n${order.user?.name ?? ''}\n(endereço não informado)`;
+                  navigator.clipboard.writeText(`${remetente}\n\n${dest}`);
+                }}
+                className="text-[11px] font-medium text-pink-600 hover:text-pink-700 transition"
+              >
+                Copiar tudo
+              </button>
+            </div>
+            <div className="space-y-3 text-xs">
+              <div className="rounded-lg bg-gray-50 p-3 border border-gray-100">
+                <p className="font-semibold text-gray-700 mb-1">REMETENTE:</p>
+                <p className="text-gray-600">helloustudio</p>
+                <p className="text-gray-600">Rua São Paulo, 250</p>
+                <p className="text-gray-600">Bairro São Judas</p>
+                <p className="text-gray-600">Itajaí - SC</p>
+                <p className="text-gray-600 font-mono">CEP: 88303-330</p>
+              </div>
+              <div className="rounded-lg bg-pink-50 p-3 border border-pink-100">
+                <p className="font-semibold text-gray-700 mb-1">DESTINATÁRIO:</p>
+                <p className="text-gray-600">{order.user?.name ?? '—'}</p>
+                {shipping ? (
+                  <>
+                    <p className="text-gray-600">
+                      {String(shipping.street ?? '')}{shipping.number ? `, ${String(shipping.number)}` : ''}
+                      {shipping.complement ? ` - ${String(shipping.complement)}` : ''}
+                    </p>
+                    <p className="text-gray-600">{String(shipping.neighborhood ?? '')}</p>
+                    <p className="text-gray-600">{String(shipping.city ?? '')} - {String(shipping.state ?? '')}</p>
+                    <p className="text-gray-600 font-mono">CEP: {String(shipping.cep ?? '')}</p>
+                  </>
+                ) : (
+                  <p className="text-gray-400 italic">Endereço não informado</p>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Payment */}

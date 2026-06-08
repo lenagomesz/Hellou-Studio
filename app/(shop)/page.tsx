@@ -174,6 +174,13 @@ function FeaturedSkeleton() {
 export default function HomePage() {
   return (
     <div className="overflow-x-hidden bg-white">
+      {/* Promo banner */}
+      <div className="bg-gradient-to-r from-pink-600 to-orange-500 px-4 py-2.5 text-center">
+        <p className="text-xs font-medium text-white sm:text-sm">
+          🚚 <span className="font-semibold">Frete grátis</span> acima de R$99 &nbsp;·&nbsp; 🎉 <span className="font-semibold">10% OFF</span> na sua primeira compra
+        </p>
+      </div>
+
       {/* ═══════════════════════════════════════════ */}
       {/* HERO */}
       {/* ═══════════════════════════════════════════ */}
@@ -217,7 +224,7 @@ export default function HomePage() {
             style={{ animationDelay: '200ms' }}
           >
             Descubra uma coleção exclusiva de chaveiros, itens de escritório e
-            criaturas fofas — todos impressos sob demanda com a sua cara.
+            criaturas fofas, todos impressos sob demanda com a sua cara.
           </p>
 
           {/* CTAs */}
@@ -256,7 +263,7 @@ export default function HomePage() {
             className="mt-14 flex flex-wrap justify-center gap-6 animate-fade-in"
             style={{ animationDelay: '500ms' }}
           >
-            {['Frete grátis acima de R$99', 'Troca garantida', 'Pagamento seguro'].map((text) => (
+            {['Atendimento humanizado', 'Bom acabamento', 'Pagamento seguro'].map((text) => (
               <span key={text} className="flex items-center gap-1.5 text-xs text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5 text-green-500">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />

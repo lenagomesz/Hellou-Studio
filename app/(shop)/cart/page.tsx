@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
@@ -53,8 +53,18 @@ export default function CartPage() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
 
+  const [isFirstPurchase, setIsFirstPurchase] = useState(false);
+
   const isLoading = status === 'loading';
   const isSyncing = status === 'syncing';
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch('/api/orders').then(r => r.json()).then((orders) => {
+        if (Array.isArray(orders) && orders.length === 0) setIsFirstPurchase(true);
+      }).catch(() => {});
+    }
+  }, [session]);
 
   async function handleCalculateShipping() {
     const digits = shippingCep.replace(/\D/g, '');
@@ -326,6 +336,28 @@ export default function CartPage() {
             {couponError && <p className="mt-2 text-xs text-red-600">{couponError}</p>}
           </div>
 
+          {/* Info banners */}
+          {isFirstPurchase && (
+            <div className="rounded-xl border border-pink-200 bg-gradient-to-r from-pink-50 to-orange-50 px-4 py-3">
+              <p className="text-sm text-pink-700 font-medium">🎉 Primeira compra! Você tem <span className="font-bold">10% de desconto</span> automático no pagamento.</p>
+            </div>
+          )}
+          {total < 15 && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm text-red-700 font-medium">O valor mínimo para compra é R$15,00. Adicione mais itens para continuar.</p>
+            </div>
+          )}
+          {total >= 15 && total < 99 && (
+            <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
+              <p className="text-sm text-orange-700">Falta <span className="font-semibold">{formatPrice(99 - total)}</span> para frete grátis! 🚚</p>
+            </div>
+          )}
+          {total >= 99 && (
+            <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+              <p className="text-sm text-green-700 font-medium">🚚 Você ganhou frete grátis!</p>
+            </div>
+          )}
+
           {/* Subtotal bar + Next */}
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
@@ -338,8 +370,9 @@ export default function CartPage() {
               </div>
               <button
                 type="button"
+                disabled={total < 15}
                 onClick={() => { if (!session) { router.push('/login?callbackUrl=/cart'); return; } setStep(2); }}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/30 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/30 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
               >
                 Continuar
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
@@ -349,22 +382,13 @@ export default function CartPage() {
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 pt-3 text-xs text-gray-400">
               <span className="inline-flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                </svg>
-                Pagamento seguro
+                💬 Atendimento humanizado
               </span>
               <span className="inline-flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H18.75M3.375 14.25h.008v.008h-.008v-.008Zm0 0V11.25m0 3H7.5m-4.125 0a1.125 1.125 0 0 0-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m0-3.75h3.75m-3.75 0V6.375c0-.621.504-1.125 1.125-1.125h13.5c.621 0 1.125.504 1.125 1.125v4.875m-18 0h18M7.5 14.25h.008v.008H7.5v-.008Z" />
-                </svg>
-                Envio rastreado
+                ✨ Bom acabamento
               </span>
               <span className="inline-flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                </svg>
-                Compra protegida
+                🔒 Pagamento seguro
               </span>
             </div>
           </div>
@@ -711,8 +735,14 @@ export default function CartPage() {
         </div>
       )}
 
-      <ProductRecommendations title="Aproveite e veja também" />
       </div>
+
+      {/* Sugestões - só mostra no step 1 e abaixo de tudo */}
+      {step === 1 && (
+        <div className="mx-auto max-w-3xl px-4 pb-12 sm:px-6">
+          <ProductRecommendations title="Aproveite e veja também" />
+        </div>
+      )}
     </div>
   );
 }

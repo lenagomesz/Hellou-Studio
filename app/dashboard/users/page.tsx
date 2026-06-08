@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Users, Search, Shield, Ban, Trash2, Mail } from 'lucide-react';
 
 interface UserRow {
   id: string;
@@ -10,18 +11,29 @@ interface UserRow {
   created_at: string;
 }
 
-export default function AdminUsersPage() {
+function timeAgo(value: string) {
+  const diff = Date.now() - new Date(value).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Hoje';
+  if (days === 1) return 'Ontem';
+  if (days < 30) return `${days}d atrás`;
+  const months = Math.floor(days / 30);
+  return `${months} mes${months > 1 ? 'es' : ''} atrás`;
+}
+
+export default function UsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [toast, setToast] = useState('');
 
   async function fetchUsers(q?: string) {
     setLoading(true);
     const params = q ? `?search=${encodeURIComponent(q)}` : '';
     const res = await fetch(`/api/admin/users${params}`);
     if (res.ok) {
-      const data = (await res.json()) as { users: UserRow[] };
-      setUsers(data.users);
+      const data = await res.json();
+      setUsers(Array.isArray(data) ? data : data.users ?? []);
     }
     setLoading(false);
   }
@@ -33,98 +45,105 @@ export default function AdminUsersPage() {
     fetchUsers(search);
   }
 
-  async function handleDelete(id: string, email: string) {
-    if (!confirm(`Excluir o usuário ${email}?`)) return;
-    const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-    }
-  }
-
-  async function handleBan(id: string, email: string) {
-    const reason = prompt(`Motivo do banimento de ${email} (opcional):`);
-    if (reason === null) return;
-    const res = await fetch(`/api/admin/users/${id}`, {
+  async function banUser(user: UserRow) {
+    if (!confirm(`Banir ${user.email}? O usuário será removido e não poderá se cadastrar novamente.`)) return;
+    const res = await fetch(`/api/admin/users/${user.id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'ban', reason: reason || null }),
+      body: JSON.stringify({ action: 'ban' }),
     });
     if (res.ok) {
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+      setUsers(prev => prev.filter(u => u.id !== user.id));
+      setToast(`${user.email} banido`);
+      setTimeout(() => setToast(''), 3000);
     }
   }
 
-  return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Usuários</h1>
-      </div>
+  async function deleteUser(user: UserRow) {
+    if (!confirm(`Excluir ${user.email}? Esta ação não pode ser desfeita.`)) return;
+    const res = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setUsers(prev => prev.filter(u => u.id !== user.id));
+      setToast(`${user.email} removido`);
+      setTimeout(() => setToast(''), 3000);
+    }
+  }
 
-      <form onSubmit={handleSearch} className="mb-4 flex gap-2">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por email ou nome..."
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
-        />
-        <button
-          type="submit"
-          className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition"
-        >
-          Buscar
-        </button>
+  const admins = users.filter(u => u.role === 'admin');
+  const regularUsers = users.filter(u => u.role === 'user');
+
+  return (
+    <div className="space-y-6">
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">
+          {toast}
+        </div>
+      )}
+
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Usuários</h1>
+          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+            {users.length} usuários · {admins.length} admins
+          </p>
+        </div>
+      </header>
+
+      <form onSubmit={handleSearch} className="flex gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por email ou nome..." className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+        </div>
+        <button type="submit" className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800">Buscar</button>
       </form>
 
       {loading ? (
-        <div className="animate-pulse space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="h-12 rounded-lg bg-gray-100" />)}
-        </div>
-      ) : users.length === 0 ? (
-        <p className="text-sm text-gray-500">Nenhum usuário encontrado.</p>
+        <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />)}</div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Email</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Nome</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Tipo</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Criado</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600">Ações</th>
+        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-gray-100 dark:border-gray-800">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Usuário</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Role</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cadastro</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{user.email}</td>
-                  <td className="px-4 py-3 text-gray-600">{user.name ?? '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {user.role === 'admin' ? 'Admin' : 'Usuário'}
-                    </span>
+                <tr key={user.id} className="transition hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-xs font-bold text-pink-600">
+                        {(user.name ?? user.email).charAt(0).toUpperCase()}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{user.name || '—'}</p>
+                        <p className="truncate text-xs text-gray-500 flex items-center gap-1">
+                          <Mail className="h-3 w-3" /> {user.email}
+                        </p>
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                  <td className="px-4 py-3.5">
+                    {user.role === 'admin' ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                        <Shield className="h-3 w-3" /> Admin
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Usuário</span>
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3.5 text-xs text-gray-500">{timeAgo(user.created_at)}</td>
+                  <td className="px-4 py-3.5 text-right">
                     {user.role !== 'admin' && (
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleBan(user.id, user.email)}
-                          className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition"
-                        >
-                          Banir
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => banUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-orange-600 hover:bg-orange-50 transition" title="Banir">
+                          <Ban className="h-3.5 w-3.5" />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(user.id, user.email)}
-                          className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition"
-                        >
-                          Excluir
+                        <button onClick={() => deleteUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition" title="Excluir">
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     )}

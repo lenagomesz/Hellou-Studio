@@ -1,196 +1,178 @@
-import Link from 'next/link';
-import { getSupabaseAdmin } from '@/lib/supabase';
-import { isCategory, VALID_CATEGORIES } from '@/lib/api';
-import type { Product } from '@/types/database';
+'use client';
 
-export const dynamic = 'force-dynamic';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
   escritorio: 'Escritório',
   criaturas: 'Criaturas',
+  encomenda: 'Encomenda',
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  chaveiros: 'bg-pink-100 text-pink-700',
+  escritorio: 'bg-blue-100 text-blue-700',
+  criaturas: 'bg-purple-100 text-purple-700',
+  encomenda: 'bg-orange-100 text-orange-700',
 };
 
 function formatPrice(value: number) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
 
-async function getProducts(filters: { category?: string; search?: string; status?: string }) {
-  const admin = getSupabaseAdmin();
-  let query = admin
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false });
+type ProductRow = {
+  id: string;
+  name: string;
+  category: string;
+  base_price: number;
+  image_url: string | null;
+  active: boolean;
+  created_at: string;
+};
 
-  if (filters.category && isCategory(filters.category)) {
-    query = query.eq('category', filters.category);
+export default function ProductsPage() {
+  const [products, setProducts] = useState<ProductRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [status, setStatus] = useState('');
+  const [toast, setToast] = useState('');
+
+  async function fetchProducts() {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (category) params.set('category', category);
+    if (status === 'active') params.set('active', 'true');
+    if (status === 'inactive') params.set('active', 'false');
+    const res = await fetch(`/api/products?${params.toString()}`);
+    if (res.ok) setProducts(await res.json());
+    setLoading(false);
   }
-  if (filters.status === 'active') {
-    query = query.eq('active', true);
-  } else if (filters.status === 'inactive') {
-    query = query.eq('active', false);
+
+  useEffect(() => { fetchProducts(); }, [category, status]);
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    fetchProducts();
   }
-  if (filters.search) {
-    query = query.ilike('name', `%${filters.search}%`);
+
+  async function toggleActive(id: string, active: boolean) {
+    const res = await fetch(`/api/products/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: !active }),
+    });
+    if (res.ok) {
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, active: !active } : p));
+      setToast(!active ? 'Produto ativado' : 'Produto desativado');
+      setTimeout(() => setToast(''), 3000);
+    }
   }
 
-  const { data } = await query;
-  return (data ?? []) as Product[];
-}
+  async function deleteProduct(id: string, name: string) {
+    if (!confirm(`Tem certeza que deseja excluir "${name}"?`)) return;
+    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setProducts(prev => prev.filter(p => p.id !== id));
+      setToast('Produto excluído');
+      setTimeout(() => setToast(''), 3000);
+    }
+  }
 
-export default async function ProductsListPage(props: PageProps<'/dashboard/products'>) {
-  const searchParams = await props.searchParams;
-  const category =
-    typeof searchParams.category === 'string' ? searchParams.category : undefined;
-  const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
-  const status = typeof searchParams.status === 'string' ? searchParams.status : undefined;
-
-  const products = await getProducts({ category, search, status });
+  const activeCount = products.filter(p => p.active).length;
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">
+          {toast}
+        </div>
+      )}
+
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Produtos</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            {products.length} {products.length === 1 ? 'produto' : 'produtos'}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Produtos</h1>
+          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+            {products.length} produtos · {activeCount} ativos
           </p>
         </div>
-        <Link
-          href="/dashboard/products/new"
-          className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
-        >
-          Novo produto
+        <Link href="/dashboard/products/new" className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition">
+          <Plus className="h-4 w-4" /> Novo produto
         </Link>
       </header>
 
-      <form
-        method="get"
-        className="rounded-2xl bg-white p-4 shadow-sm border border-gray-100 grid gap-3 sm:grid-cols-[1fr_180px_180px_auto]"
-      >
-        <input
-          type="text"
-          name="search"
-          defaultValue={search ?? ''}
-          placeholder="Buscar por nome..."
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-        />
-        <select
-          name="category"
-          defaultValue={category ?? ''}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-        >
-          <option value="">Todas as categorias</option>
-          {VALID_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {CATEGORY_LABELS[cat]}
-            </option>
-          ))}
+      <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome..." className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+        </div>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+          <option value="">Todas categorias</option>
+          <option value="chaveiros">Chaveiros</option>
+          <option value="escritorio">Escritório</option>
+          <option value="criaturas">Criaturas</option>
         </select>
-        <select
-          name="status"
-          defaultValue={status ?? ''}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-        >
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
           <option value="">Todos</option>
           <option value="active">Ativos</option>
           <option value="inactive">Inativos</option>
         </select>
-        <button
-          type="submit"
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-        >
-          Filtrar
-        </button>
+        <button type="submit" className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800">Buscar</button>
       </form>
 
-      {products.length === 0 ? (
-        <div className="rounded-2xl bg-white p-10 shadow-sm border border-gray-100 text-center">
-          <p className="text-gray-600">Nenhum produto encontrado.</p>
-          <Link
-            href="/dashboard/products/new"
-            className="mt-4 inline-block rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition"
-          >
-            Criar primeiro produto
-          </Link>
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />)}
+        </div>
+      ) : products.length === 0 ? (
+        <div className="rounded-2xl bg-white p-12 text-center border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
+          <Package className="mx-auto h-12 w-12 text-gray-300" />
+          <p className="mt-3 text-sm text-gray-500">Nenhum produto encontrado</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100">
-          <table className="min-w-full min-w-[640px] divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Produto
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Categoria
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Preço base
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Status
-                </th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      {product.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="h-10 w-10 rounded-lg object-cover bg-gray-100"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-pink-100 to-orange-100" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{product.name}</p>
-                        {product.description && (
-                          <p className="text-xs text-gray-500 line-clamp-1 max-w-md">
-                            {product.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {CATEGORY_LABELS[product.category] ?? product.category}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                    {formatPrice(product.base_price)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                        product.active
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {product.active ? 'Ativo' : 'Inativo'}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {products.map((product) => (
+            <div key={product.id} className="group relative rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition hover:shadow-md hover:border-pink-200 dark:border-gray-800 dark:bg-gray-900">
+              <div className="h-36 bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full items-center justify-center"><Package className="h-10 w-10 text-pink-200" /></div>
+                )}
+              </div>
+              <div className="absolute top-2 right-2">
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${product.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {product.active ? 'Ativo' : 'Inativo'}
+                </span>
+              </div>
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-white">{product.name}</h3>
+                    <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${CATEGORY_COLORS[product.category] ?? 'bg-gray-100 text-gray-600'}`}>
+                      {CATEGORY_LABELS[product.category] ?? product.category}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/dashboard/products/${product.id}`}
-                      className="text-sm font-medium text-pink-600 hover:text-pink-700"
-                    >
-                      Ver
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(product.base_price)}</p>
+                </div>
+                <div className="mt-3 flex items-center gap-1.5 border-t border-gray-50 pt-3 dark:border-gray-800">
+                  <Link href={`/dashboard/products/${product.id}/edit`} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition dark:text-gray-400 dark:hover:bg-gray-800">
+                    <Pencil className="h-3 w-3" /> Editar
+                  </Link>
+                  <button onClick={() => toggleActive(product.id, product.active)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition dark:text-gray-400 dark:hover:bg-gray-800">
+                    {product.active ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    {product.active ? 'Desativar' : 'Ativar'}
+                  </button>
+                  <button onClick={() => deleteProduct(product.id, product.name)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition ml-auto">
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

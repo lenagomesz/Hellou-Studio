@@ -1,216 +1,184 @@
-import Link from 'next/link';
-import { getSupabaseAdmin } from '@/lib/supabase';
-import type { PrintRequest, PrintRequestStatus, User } from '@/types/database';
+'use client';
 
-export const dynamic = 'force-dynamic';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Printer, Search, FileText, Clock } from 'lucide-react';
+import type { PrintRequestStatus } from '@/types/database';
 
 const STATUS_LABELS: Record<PrintRequestStatus, string> = {
   pending: 'Pendente',
   needs_info: 'Aguardando info',
   quoted: 'Orçado',
-  approved: 'Aprovado',
+  approved: 'Aprovada',
   paid: 'Pago',
   in_production: 'Em produção',
   shipped: 'Enviado',
   delivered: 'Entregue',
-  rejected: 'Rejeitado',
-  canceled: 'Cancelado',
+  rejected: 'Rejeitada',
+  canceled: 'Cancelada',
 };
 
 const STATUS_STYLES: Record<PrintRequestStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
   needs_info: 'bg-amber-100 text-amber-700',
   quoted: 'bg-blue-100 text-blue-700',
-  approved: 'bg-indigo-100 text-indigo-700',
-  paid: 'bg-green-100 text-green-700',
-  in_production: 'bg-purple-100 text-purple-700',
-  shipped: 'bg-teal-100 text-teal-700',
-  delivered: 'bg-emerald-100 text-emerald-700',
+  approved: 'bg-emerald-100 text-emerald-700',
+  paid: 'bg-indigo-100 text-indigo-700',
+  in_production: 'bg-violet-100 text-violet-700',
+  shipped: 'bg-purple-100 text-purple-700',
+  delivered: 'bg-green-100 text-green-700',
   rejected: 'bg-red-100 text-red-700',
   canceled: 'bg-gray-100 text-gray-600',
 };
 
-const VALID_STATUSES: PrintRequestStatus[] = [
-  'pending', 'needs_info', 'quoted', 'approved', 'paid', 'in_production',
-  'shipped', 'delivered', 'rejected', 'canceled',
-];
-
-function isValidStatus(value: string): value is PrintRequestStatus {
-  return (VALID_STATUSES as string[]).includes(value);
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
-}
+const VALID_STATUSES: PrintRequestStatus[] = ['pending', 'needs_info', 'quoted', 'approved', 'paid', 'in_production', 'shipped', 'delivered', 'rejected', 'canceled'];
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
 
-function formatFileSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function timeAgo(value: string) {
+  const diff = Date.now() - new Date(value).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Hoje';
+  if (days === 1) return 'Ontem';
+  if (days < 30) return `${days}d`;
+  return `${Math.floor(days / 30)}m`;
 }
 
-type RequestRow = PrintRequest & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
+type RequestRow = {
+  id: string;
+  title: string;
+  status: PrintRequestStatus;
+  quoted_price: number | null;
+  stl_file_name: string | null;
+  created_at: string;
+  user: { id: string; email: string; name: string | null } | null;
+};
 
-async function getRequests(filters: { status?: string; search?: string }) {
-  const admin = getSupabaseAdmin();
-  let query = admin
-    .from('print_requests')
-    .select('*, user:users(id, email, name)')
-    .order('created_at', { ascending: false });
+export default function RequestsPage() {
+  const [requests, setRequests] = useState<RequestRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [toast] = useState('');
 
-  if (filters.status && isValidStatus(filters.status)) {
-    query = query.eq('status', filters.status);
+  async function fetchRequests() {
+    setLoading(true);
+    const res = await fetch('/api/print-requests?admin=true');
+    if (res.ok) {
+      const data = await res.json();
+      setRequests(data);
+    }
+    setLoading(false);
   }
 
-  const { data } = await query;
-  let rows = (data ?? []) as RequestRow[];
+  useEffect(() => { fetchRequests(); }, []);
 
-  if (filters.search) {
-    const term = filters.search.toLowerCase();
-    rows = rows.filter((r) => {
-      if (r.id.toLowerCase().includes(term)) return true;
-      if (r.title.toLowerCase().includes(term)) return true;
-      const email = r.user?.email?.toLowerCase() ?? '';
-      const name = r.user?.name?.toLowerCase() ?? '';
-      return email.includes(term) || name.includes(term);
-    });
-  }
+  const filtered = requests.filter(r => {
+    if (statusFilter && r.status !== statusFilter) return false;
+    if (search) {
+      const term = search.toLowerCase();
+      if (!r.title.toLowerCase().includes(term) && !r.user?.email?.toLowerCase().includes(term) && !r.user?.name?.toLowerCase().includes(term)) return false;
+    }
+    return true;
+  });
 
-  return rows;
-}
-
-export default async function AdminRequestsPage(
-  props: { searchParams: Promise<Record<string, string | string[] | undefined>> },
-) {
-  const searchParams = await props.searchParams;
-  const status = typeof searchParams.status === 'string' ? searchParams.status : undefined;
-  const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
-
-  const requests = await getRequests({ status, search });
+  const pendingCount = requests.filter(r => r.status === 'pending').length;
+  const quotedCount = requests.filter(r => r.status === 'quoted').length;
+  const inProductionCount = requests.filter(r => r.status === 'in_production' || r.status === 'paid').length;
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold text-gray-900">Impressões 3D</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          {requests.length} {requests.length === 1 ? 'solicitação' : 'solicitações'}
-        </p>
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">{toast}</div>
+      )}
+
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Solicitações de Impressão</h1>
+          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+            {requests.length} solicitações · {pendingCount} pendentes · {inProductionCount} em produção
+          </p>
+        </div>
       </header>
 
-      <form
-        method="get"
-        className="rounded-2xl bg-white p-4 shadow-sm border border-gray-100 grid gap-3 sm:grid-cols-[1fr_200px_auto]"
-      >
-        <input
-          type="text"
-          name="search"
-          defaultValue={search ?? ''}
-          placeholder="Buscar por título, email ou nome..."
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-        />
-        <select
-          name="status"
-          defaultValue={status ?? ''}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-        >
-          <option value="">Todos os status</option>
-          {VALID_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {STATUS_LABELS[s]}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-        >
-          Filtrar
-        </button>
-      </form>
+      {/* Quick stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-yellow-500" />
+            <p className="text-xs font-medium text-gray-500">Pendentes</p>
+          </div>
+          <p className="mt-1 text-2xl font-bold text-yellow-600">{pendingCount}</p>
+        </div>
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-blue-500" />
+            <p className="text-xs font-medium text-gray-500">Orçados</p>
+          </div>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{quotedCount}</p>
+        </div>
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Printer className="h-4 w-4 text-violet-500" />
+            <p className="text-xs font-medium text-gray-500">Em produção</p>
+          </div>
+          <p className="mt-1 text-2xl font-bold text-violet-600">{inProductionCount}</p>
+        </div>
+      </div>
 
-      {requests.length === 0 ? (
-        <div className="rounded-2xl bg-white p-10 shadow-sm border border-gray-100 text-center">
-          <p className="text-gray-600">Nenhuma solicitação encontrada.</p>
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por título, email ou nome..." className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+        </div>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+          <option value="">Todos os status</option>
+          {VALID_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+        </select>
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />)}</div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl bg-white p-12 text-center border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
+          <Printer className="mx-auto h-12 w-12 text-gray-300" />
+          <p className="mt-3 text-sm text-gray-500">Nenhuma solicitação encontrada</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100">
-          <table className="min-w-full min-w-[640px] divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Título
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Cliente
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Arquivo
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Preço
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                  Data
-                </th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {requests.map((req) => (
-                <tr key={req.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-[180px] truncate">
-                    {req.title}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <p className="font-medium text-gray-900">
-                      {req.user?.name ?? '—'}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {req.user?.email ?? '—'}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    <p className="truncate max-w-[120px]">{req.stl_file_name}</p>
-                    <p className="text-xs text-gray-400">{formatFileSize(req.stl_file_size)}</p>
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    {req.quoted_price !== null ? formatPrice(req.quoted_price) : '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[req.status]}`}
-                    >
-                      {STATUS_LABELS[req.status]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {formatDate(req.created_at)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/dashboard/requests/${req.id}`}
-                      className="text-sm font-medium text-pink-600 hover:text-pink-700"
-                    >
-                      Ver
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-2">
+          {filtered.map(req => (
+            <Link
+              key={req.id}
+              href={`/dashboard/requests/${req.id}`}
+              className="flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md hover:border-pink-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-pink-800"
+            >
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-900/30">
+                  <Printer className="h-5 w-5 text-violet-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{req.title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {req.user?.name || req.user?.email || 'Cliente'}
+                    {req.stl_file_name && ` · ${req.stl_file_name}`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                {req.quoted_price !== null && (
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatPrice(req.quoted_price)}</span>
+                )}
+                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium ${STATUS_STYLES[req.status]}`}>
+                  {STATUS_LABELS[req.status]}
+                </span>
+                <span className="text-xs text-gray-400">{timeAgo(req.created_at)}</span>
+              </div>
+            </Link>
+          ))}
         </div>
       )}
     </div>
