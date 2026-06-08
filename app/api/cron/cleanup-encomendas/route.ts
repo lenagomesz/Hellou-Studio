@@ -1,0 +1,46 @@
+import { NextResponse } from 'next/server';
+import { getSupabaseAdmin } from '@/lib/supabase';
+
+const DAYS_AFTER_DELIVERY = 60;
+
+export async function POST(request: Request) {
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const admin = getSupabaseAdmin();
+  const cutoff = new Date(Date.now() - DAYS_AFTER_DELIVERY * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: requests } = await admin
+    .from('print_requests')
+    .select('product_id')
+    .eq('status', 'delivered')
+    .lt('updated_at', cutoff)
+    .not('product_id', 'is', null);
+
+  if (!requests || requests.length === 0) {
+    return NextResponse.json({ deleted: 0 });
+  }
+
+  const productIds = requests
+    .map((r: { product_id: string | null }) => r.product_id)
+    .filter(Boolean) as string[];
+
+  if (productIds.length === 0) {
+    return NextResponse.json({ deleted: 0 });
+  }
+
+  const { error } = await admin
+    .from('products')
+    .delete()
+    .in('id', productIds)
+    .eq('category', 'encomenda');
+
+  if (error) {
+    console.error('[cleanup-encomendas] delete error:', error);
+    return NextResponse.json({ error: 'Erro ao excluir' }, { status: 500 });
+  }
+
+  return NextResponse.json({ deleted: productIds.length });
+}

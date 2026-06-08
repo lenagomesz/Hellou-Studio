@@ -1,0 +1,509 @@
+import Link from 'next/link';
+import { Suspense } from 'react';
+import { unstable_cache } from 'next/cache';
+import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
+import { ProductCard } from '@/components/shop/ProductCard';
+import { HeroCarousel } from '@/components/shop/HeroCarousel';
+import { ScrollReveal } from '@/components/ui/ScrollReveal';
+import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
+import { Marquee } from '@/components/ui/Marquee';
+import { ProductCardSkeleton } from '@/components/ui/Skeleton';
+import type { Product } from '@/types/database';
+
+const CATEGORIES = [
+  {
+    slug: 'chaveiros',
+    label: 'Chaveiros',
+    emoji: '🔑',
+    description: 'Chaveiros personalizáveis para todos os estilos.',
+    color: 'from-pink-400 to-orange-400',
+  },
+  {
+    slug: 'escritorio',
+    label: 'Escritório',
+    emoji: '🖊️',
+    description: 'Organizadores e acessórios 3D para seu desk.',
+    color: 'from-orange-400 to-pink-400',
+  },
+  {
+    slug: 'criaturas',
+    label: 'Criaturas',
+    emoji: '🦊',
+    description: 'Personagens adoráveis feitos com carinho.',
+    color: 'from-pink-500 to-orange-400',
+  },
+];
+
+const FEATURES = [
+  {
+    emoji: '🎨',
+    title: 'Personalização Total',
+    description:
+      'Escolha cores, tamanhos e acabamentos únicos para cada produto.',
+  },
+  {
+    emoji: '⚡',
+    title: 'Sob Demanda',
+    description:
+      'Cada peça é fabricada especialmente para você após o pedido.',
+  },
+  {
+    emoji: '💎',
+    title: 'Qualidade Premium',
+    description:
+      'Impressão 3D de alta resolução com acabamento impecável.',
+  },
+  {
+    emoji: '🚀',
+    title: 'Envio Rápido',
+    description:
+      'Produção em até 3 dias úteis e envio com rastreamento.',
+  },
+];
+
+const STATS = [
+  { value: '500+', label: 'Produtos criados' },
+  { value: '2000+', label: 'Clientes felizes' },
+  { value: '98%', label: 'Avaliações positivas' },
+  { value: '3 dias', label: 'Prazo de produção' },
+];
+
+const MARQUEE_ITEMS = [
+  'Impressão 3D de alta resolução',
+  'Personalização sob demanda',
+  'Envio para todo o Brasil',
+  'Materiais sustentáveis',
+  'Acabamento premium',
+  'Design exclusivo',
+  'Atendimento humanizado',
+  'Embalagem especial',
+];
+
+const getFeaturedProducts = unstable_cache(
+  async (): Promise<Product[]> => {
+    return withTimeout(
+      (async () => {
+        const admin = getSupabaseAdmin();
+        const { data, error } = await admin
+          .from('products')
+          .select('*')
+          .eq('active', true)
+          .in('category', ['chaveiros', 'escritorio', 'criaturas'])
+          .not('name', 'ilike', 'Encomenda%')
+          .order('created_at', { ascending: false })
+          .limit(8);
+        if (error) return [];
+        return (data ?? []) as Product[];
+      })(),
+    ).catch(() => [] as Product[]);
+  },
+  ['featured-products'],
+  { revalidate: 60 },
+);
+
+async function FeaturedProducts() {
+  const featured = await getFeaturedProducts();
+  if (featured.length === 0) return null;
+  return (
+    <section className="bg-white/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <ScrollReveal direction="left">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-orange-600 ring-1 ring-orange-100">
+                Destaques
+              </span>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl md:text-4xl">
+                Lançamentos{' '}
+                <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
+                  Recentes
+                </span>
+              </h2>
+            </div>
+            <Link
+              href="/products"
+              className="group flex items-center gap-1.5 rounded-full border border-orange-200/60 bg-white px-5 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition-all duration-300 hover:border-pink-300 hover:text-pink-600 hover:shadow-md hover:scale-[1.03] active:scale-[0.98]"
+            >
+              Ver tudo
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </Link>
+          </div>
+        </ScrollReveal>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {featured.map((product, i) => (
+            <ScrollReveal key={product.id} delay={i * 100} direction={i % 2 === 0 ? 'up' : 'scale'}>
+              <div className="hover-lift transition-all duration-500">
+                <ProductCard product={product} />
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeaturedSkeleton() {
+  return (
+    <section className="bg-white/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="h-8 w-48 animate-pulse rounded-lg bg-pink-200/60" />
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <div className="overflow-x-hidden bg-white">
+      {/* ═══════════════════════════════════════════ */}
+      {/* HERO */}
+      {/* ═══════════════════════════════════════════ */}
+      <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-50/80 via-orange-50 to-amber-50" />
+        <div className="absolute top-20 right-10 h-72 w-72 rounded-full bg-gradient-to-br from-pink-200/40 to-orange-200/30 blur-3xl animate-float" />
+        <div className="absolute bottom-20 left-10 h-56 w-56 rounded-full bg-gradient-to-br from-orange-200/30 to-pink-100/20 blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-gradient-to-br from-orange-100/30 to-pink-100/20 blur-3xl animate-pulse-soft" />
+
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
+        <div className="relative mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
+          {/* Badge */}
+          <div className="animate-fade-in-up">
+            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200/60 bg-white/80 px-4 py-2 text-xs font-semibold text-orange-700 shadow-sm backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-orange-500" />
+              </span>
+              Novidades toda semana
+            </span>
+          </div>
+
+          {/* Title */}
+          <h1
+            className="mx-auto mt-8 max-w-4xl text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl lg:text-7xl animate-fade-in-up"
+            style={{ animationDelay: '100ms' }}
+          >
+            <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
+              Produtos Únicos
+            </span>
+            <br />
+            <span className="text-gray-900">Fabricados em 3D</span>
+          </h1>
+
+          {/* Subtitle */}
+          <p
+            className="mx-auto mt-6 max-w-xl text-lg text-gray-600 leading-relaxed animate-fade-in-up"
+            style={{ animationDelay: '200ms' }}
+          >
+            Descubra uma coleção exclusiva de chaveiros, itens de escritório e
+            criaturas fofas — todos impressos sob demanda com a sua cara.
+          </p>
+
+          {/* CTAs */}
+          <div
+            className="mt-10 flex flex-wrap justify-center gap-4 animate-fade-in-up"
+            style={{ animationDelay: '300ms' }}
+          >
+            <Link
+              href="/products"
+              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-pink-200/30 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-200/40 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+              <span className="relative">Explorar Catálogo</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+                stroke="currentColor"
+                className="relative h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </Link>
+            <Link
+              href="/products?category=criaturas"
+              className="group inline-flex items-center rounded-full border border-pink-200/60 bg-white/80 px-7 py-3.5 text-sm font-semibold text-gray-700 backdrop-blur-sm transition-all duration-300 hover:bg-white hover:border-orange-200 hover:text-orange-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span className="mr-2 transition-transform duration-300 group-hover:scale-110">🦊</span>
+              Ver Criaturas
+            </Link>
+          </div>
+
+          {/* Trust badges */}
+          <div
+            className="mt-14 flex flex-wrap justify-center gap-6 animate-fade-in"
+            style={{ animationDelay: '500ms' }}
+          >
+            {['Frete grátis acima de R$99', 'Troca garantida', 'Pagamento seguro'].map((text) => (
+              <span key={text} className="flex items-center gap-1.5 text-xs text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5 text-green-500">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                {text}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* MARQUEE STRIP */}
+      {/* ═══════════════════════════════════════════ */}
+      <div className="border-y border-orange-200/40 bg-white">
+        <Marquee items={MARQUEE_ITEMS} speed={35} />
+      </div>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* CATEGORIES */}
+      {/* ═══════════════════════════════════════════ */}
+      <section className="bg-white/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <ScrollReveal direction="scale">
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-orange-600 ring-1 ring-orange-100">
+                Categorias
+              </span>
+              <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                Explore Nossa{' '}
+                <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
+                  Coleção
+                </span>
+              </h2>
+              <p className="mx-auto mt-3 max-w-md text-sm text-gray-600">
+                Cada categoria foi pensada com carinho para atender diferentes estilos e necessidades.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-3">
+            {CATEGORIES.map((cat, i) => (
+              <ScrollReveal key={cat.slug} delay={i * 150} direction={i === 0 ? 'left' : i === 2 ? 'right' : 'up'}>
+                <Link
+                  href={`/products?category=${cat.slug}`}
+                  className="group relative overflow-hidden rounded-3xl border border-orange-100/60 bg-gradient-to-br from-orange-50/50 to-pink-50/30 p-8 text-center hover-lift block transition-all duration-500 hover:border-pink-200 hover:bg-white"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 transition-opacity duration-500 group-hover:opacity-[0.08]`} />
+                  <div className={`absolute -top-10 -right-10 h-28 w-28 rounded-full bg-gradient-to-br ${cat.color} opacity-0 blur-2xl transition-all duration-700 group-hover:opacity-30 group-hover:top-0 group-hover:right-0`} />
+
+                  <div className="relative">
+                    <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 to-pink-100 text-3xl shadow-sm transition-all duration-500 group-hover:scale-125 group-hover:shadow-lg group-hover:-rotate-6">
+                      {cat.emoji}
+                    </span>
+                    <h3 className="mt-5 text-lg font-bold text-gray-900 transition-colors duration-300 group-hover:text-pink-700">
+                      {cat.label}
+                    </h3>
+                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                      {cat.description}
+                    </p>
+                    <p className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-pink-600 transition-all duration-300 group-hover:gap-3">
+                      Ver produtos
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-3.5 w-3.5 transition-transform duration-500 group-hover:translate-x-2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                      </svg>
+                    </p>
+                  </div>
+                </Link>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* CAROUSEL BANNER */}
+      {/* ═══════════════════════════════════════════ */}
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <ScrollReveal direction="scale">
+            <HeroCarousel />
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* FEATURED PRODUCTS */}
+      {/* ═══════════════════════════════════════════ */}
+      <Suspense fallback={<FeaturedSkeleton />}>
+        <FeaturedProducts />
+      </Suspense>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* WHY CHOOSE US */}
+      {/* ═══════════════════════════════════════════ */}
+      <section className="bg-white/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <ScrollReveal direction="right">
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-pink-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-pink-600 ring-1 ring-pink-100">
+                Diferenciais
+              </span>
+              <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                Por que escolher{' '}
+                <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
+                  helloustudio
+                </span>
+                ?
+              </h2>
+              <p className="mx-auto mt-3 max-w-md text-sm text-gray-600">
+                Cada peça é produzida com tecnologia de ponta e atenção a cada detalhe.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.map((feat, i) => (
+              <ScrollReveal key={feat.title} delay={i * 120} direction={i < 2 ? 'left' : 'right'} className="h-full">
+                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-orange-100/60 bg-gradient-to-br from-orange-50/50 to-pink-50/30 p-7 text-center transition-all duration-500 hover:border-pink-200 hover:shadow-xl hover:bg-white hover:-translate-y-2">
+                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500/0 to-orange-400/0 transition-all duration-500 group-hover:from-pink-500/[0.03] group-hover:to-orange-400/[0.05]" />
+                  <div className="relative flex flex-1 flex-col">
+                    <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-100 to-orange-100 text-2xl shadow-sm transition-all duration-500 group-hover:scale-125 group-hover:rotate-12 group-hover:shadow-lg mx-auto">
+                      {feat.emoji}
+                    </span>
+                    <h3 className="mt-4 text-base font-bold text-gray-900 transition-colors duration-300 group-hover:text-orange-600">
+                      {feat.title}
+                    </h3>
+                    <p className="mt-2 flex-1 text-sm text-gray-600 leading-relaxed">
+                      {feat.description}
+                    </p>
+                  </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* STATS */}
+      {/* ═══════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-gradient-to-r from-pink-50 via-orange-50 to-pink-50 py-16">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-20 -left-20 h-56 w-56 rounded-full bg-pink-500/20 blur-3xl animate-float" />
+          <div className="absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-orange-400/20 blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        </div>
+        <div className="relative mx-auto max-w-5xl px-4 sm:px-6">
+          <div className="grid gap-6 sm:grid-cols-4 text-center">
+            {STATS.map((stat, i) => (
+              <ScrollReveal key={stat.label} delay={i * 120} direction="scale">
+                <div className="group rounded-2xl bg-white/60 p-6 backdrop-blur-sm transition-all duration-500 hover:bg-white hover:shadow-lg hover:scale-105">
+                  <AnimatedCounter
+                    target={stat.value}
+                    className="text-3xl font-bold text-gray-800 sm:text-4xl"
+                  />
+                  <p className="mt-2 text-sm font-medium text-gray-500">
+                    {stat.label}
+                  </p>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* SOCIAL PROOF / REVIEWS */}
+      {/* ═══════════════════════════════════════════ */}
+      <section className="bg-white/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <ScrollReveal direction="scale">
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-orange-600 ring-1 ring-orange-100">
+                Depoimentos
+              </span>
+              <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                O que nossos clientes{' '}
+                <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
+                  dizem
+                </span>
+              </h2>
+              <p className="mx-auto mt-3 max-w-md text-sm text-gray-600">
+                Centenas de clientes satisfeitos com produtos únicos e personalizados.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-3">
+            {[
+              { name: 'Mariana S.', text: 'Amei o chaveiro personalizado! A qualidade é incrível e chegou super rápido.', stars: 5 },
+              { name: 'Lucas R.', text: 'O organizador de desk ficou perfeito no meu setup. Já quero mais peças!', stars: 5 },
+              { name: 'Ana P.', text: 'As criaturas são lindas demais! Comprei pra dar de presente e foi um sucesso.', stars: 5 },
+            ].map((review, i) => (
+              <ScrollReveal key={review.name} delay={i * 150} direction={i === 0 ? 'left' : i === 2 ? 'right' : 'up'}>
+                <div className="group relative overflow-hidden rounded-3xl border border-orange-100/60 bg-gradient-to-br from-orange-50/50 to-pink-50/30 p-7 transition-all duration-500 hover:shadow-xl hover:border-pink-200 hover:bg-white hover:-translate-y-2">
+                  <div className="absolute -top-8 -right-8 h-20 w-20 rounded-full bg-gradient-to-br from-orange-200/30 to-pink-200/30 blur-xl opacity-0 transition-all duration-500 group-hover:opacity-100" />
+                  <div className="relative">
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: review.stars }).map((_, j) => (
+                        <span key={j} className="text-amber-400 text-base transition-transform duration-300 group-hover:scale-110" style={{ transitionDelay: `${j * 50}ms` }}>★</span>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-sm text-gray-600 leading-relaxed italic">
+                      &ldquo;{review.text}&rdquo;
+                    </p>
+                    <div className="mt-5 flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-xs font-bold text-orange-700 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:scale-110">
+                        {review.name.charAt(0)}
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900">{review.name}</span>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* CTA FINAL */}
+      {/* ═══════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-gradient-to-r from-pink-50 via-orange-50 to-pink-50 py-20">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-500/20 blur-3xl animate-float" />
+          <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-orange-400/20 blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        </div>
+        <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
+          <ScrollReveal direction="scale">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-800 sm:text-4xl lg:text-5xl">
+              Pronto para criar algo único?
+            </h2>
+            <p className="mx-auto mt-5 max-w-lg text-base text-gray-600 leading-relaxed sm:text-lg">
+              Explore nosso catálogo e encontre a peça perfeita para você. Cada
+              produto é impresso com carinho especialmente para o seu pedido.
+            </p>
+            <div className="mt-10 flex flex-wrap justify-center gap-4">
+              <Link
+                href="/products"
+                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-pink-200/30 transition-all duration-300 hover:shadow-xl hover:scale-[1.03] active:scale-[0.98]"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+                <span className="relative">Começar a explorar</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="relative h-4 w-4 transition-transform duration-300 group-hover:translate-x-1">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                </svg>
+              </Link>
+              <Link
+                href="/products?category=chaveiros"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-pink-200 bg-white px-7 py-4 text-sm font-semibold text-gray-700 transition-all duration-300 hover:border-pink-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <span className="transition-transform duration-300 group-hover:scale-110">🔑</span>
+                Chaveiros populares
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+    </div>
+  );
+}

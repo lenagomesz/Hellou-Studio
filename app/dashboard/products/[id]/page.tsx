@@ -1,0 +1,119 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { OptionsManager } from '@/components/admin/OptionsManager';
+import type { Product, ProductOption } from '@/types/database';
+
+export const dynamic = 'force-dynamic';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  chaveiros: 'Chaveiros',
+  escritorio: 'Escritório',
+  criaturas: 'Criaturas',
+};
+
+function formatPrice(value: number) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+}
+
+async function getProductWithOptions(id: string) {
+  const admin = getSupabaseAdmin();
+  const [productRes, optionsRes] = await Promise.all([
+    admin.from('products').select('*').eq('id', id).maybeSingle(),
+    admin
+      .from('product_options')
+      .select('*')
+      .eq('product_id', id)
+      .order('created_at', { ascending: true }),
+  ]);
+
+  if (!productRes.data) return null;
+  return {
+    product: productRes.data as Product,
+    options: (optionsRes.data ?? []) as ProductOption[],
+  };
+}
+
+export default async function ProductDetailPage(
+  props: PageProps<'/dashboard/products/[id]'>,
+) {
+  const { id } = await props.params;
+  const result = await getProductWithOptions(id);
+  if (!result) notFound();
+
+  const { product, options } = result;
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <header>
+        <Link href="/dashboard/products" className="text-sm text-gray-600 hover:text-gray-900">
+          ← Voltar para produtos
+        </Link>
+        <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+              <span>{CATEGORY_LABELS[product.category] ?? product.category}</span>
+              <span>·</span>
+              <span className="font-medium text-gray-900">{formatPrice(product.base_price)}</span>
+              <span>·</span>
+              <span
+                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                  product.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {product.active ? 'Ativo' : 'Inativo'}
+              </span>
+            </div>
+          </div>
+          <Link
+            href={`/dashboard/products/${product.id}/edit`}
+            className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+          >
+            Editar produto
+          </Link>
+        </div>
+      </header>
+
+      <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 space-y-4">
+        <h2 className="text-lg font-semibold text-gray-900">Detalhes</h2>
+        <dl className="grid gap-4 sm:grid-cols-2 text-sm">
+          <div>
+            <dt className="text-gray-600">Descrição</dt>
+            <dd className="mt-1 text-gray-900 whitespace-pre-wrap">
+              {product.description ?? <span className="text-gray-400">—</span>}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-600">Imagem</dt>
+            <dd className="mt-1">
+              {product.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  className="h-32 w-32 rounded-lg object-cover bg-gray-100"
+                />
+              ) : (
+                <span className="text-gray-400">—</span>
+              )}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900">Tamanhos e variações</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Adicione tamanhos (P, M, G) ou outras variações com modificadores de preço e controle de estoque.
+        </p>
+        <div className="mt-4">
+          <OptionsManager productId={product.id} initialOptions={options} />
+        </div>
+      </div>
+    </div>
+  );
+}
