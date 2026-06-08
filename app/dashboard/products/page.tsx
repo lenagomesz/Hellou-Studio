@@ -39,10 +39,10 @@ export default function ProductsPage() {
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState('');
   const [toast, setToast] = useState('');
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     if (category) params.set('category', category);
@@ -50,13 +50,14 @@ export default function ProductsPage() {
     if (status === 'inactive') params.set('active', 'false');
     fetch(`/api/products?${params.toString()}`)
       .then(r => r.ok ? r.json() : [])
-      .then(data => { if (!cancelled) setProducts(data); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+      .then(data => { if (!cancelled) { setProducts(data); setLoading(false); } })
+      .catch(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [category, status, search]);
+  }, [category, status, search, fetchKey]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    setFetchKey(k => k + 1);
   }
 
   async function toggleActive(id: string, active: boolean) {

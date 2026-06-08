@@ -41,12 +41,14 @@ function Confetti() {
   );
 }
 
+let trailCounter = 0;
+
 function MouseTrail() {
   const [trail, setTrail] = useState<{ x: number; y: number; id: number }[]>([]);
 
   useEffect(() => {
     function handleMove(e: MouseEvent) {
-      const id = Date.now() + e.clientX;
+      const id = ++trailCounter;
       setTrail(prev => [...prev.slice(-12), { x: e.clientX, y: e.clientY, id }]);
     }
     window.addEventListener('mousemove', handleMove);
