@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search } from 'lucide-react';
 
@@ -40,23 +40,23 @@ export default function ProductsPage() {
   const [status, setStatus] = useState('');
   const [toast, setToast] = useState('');
 
-  async function fetchProducts() {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     if (category) params.set('category', category);
     if (status === 'active') params.set('active', 'true');
     if (status === 'inactive') params.set('active', 'false');
-    const res = await fetch(`/api/products?${params.toString()}`);
-    if (res.ok) setProducts(await res.json());
-    setLoading(false);
-  }
-
-  useEffect(() => { fetchProducts(); }, [category, status]);
+    fetch(`/api/products?${params.toString()}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { if (!cancelled) setProducts(data); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [category, status, search]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    fetchProducts();
   }
 
   async function toggleActive(id: string, active: boolean) {
@@ -138,6 +138,7 @@ export default function ProductsPage() {
             <div key={product.id} className="group relative rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition hover:shadow-md hover:border-pink-200 dark:border-gray-800 dark:bg-gray-900">
               <div className="h-36 bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
                 {product.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full items-center justify-center"><Package className="h-10 w-10 text-pink-200" /></div>
