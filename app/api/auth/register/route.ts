@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    sendWelcomeEmail(created.email, created.name);
+    await sendWelcomeEmail(created.email, created.name);
   } catch (err) {
     console.error('[register] email de boas-vindas falhou:', err);
   }

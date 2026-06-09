@@ -235,7 +235,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     .single();
 
   if (user) {
-    sendOrderConfirmationEmail({
+    await sendOrderConfirmationEmail({
       email: user.email,
       nome: user.name,
       pedidoId: orderId,
@@ -259,7 +259,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     const customerEmail = user?.email ?? session.customer_details?.email ?? '';
     const customerName = user?.name ?? null;
     for (const adm of admins) {
-      sendAdminNewOrderEmail({
+      await sendAdminNewOrderEmail({
         adminEmail: adm.email,
         orderId,
         customerName,
