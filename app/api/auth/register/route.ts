@@ -13,10 +13,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { email, password, name } = (body ?? {}) as {
+  const { email, password, name, phone } = (body ?? {}) as {
     email?: string;
     password?: string;
     name?: string;
+    phone?: string;
   };
 
   if (!email || !password) {
@@ -69,12 +70,15 @@ export async function POST(request: Request) {
 
   const password_hash = await bcrypt.hash(password, 12);
 
+  const cleanPhone = phone?.replace(/\D/g, '').trim() || null;
+
   const { data: created, error } = await admin
     .from('users')
     .insert({
       email: normalizedEmail,
       password_hash,
       name: name?.trim() || null,
+      phone: cleanPhone,
       role: 'user',
     })
     .select('id, email, name, role')

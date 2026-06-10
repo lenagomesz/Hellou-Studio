@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Inter, Sora } from 'next/font/google';
 import { SessionProvider } from '@/components/auth/SessionProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import './globals.css';
@@ -10,9 +10,9 @@ const inter = Inter({
   display: 'swap',
 });
 
-const spaceGrotesk = Space_Grotesk({
+const sora = Sora({
   variable: '--font-display',
-  weight: ['500', '600', '700'],
+  weight: ['500', '600', '700', '800'],
   subsets: ['latin'],
   display: 'swap',
 });
@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${spaceGrotesk.variable} h-full`}
+      className={`${inter.variable} ${sora.variable} h-full`}
     >
       <body className="min-h-full flex flex-col font-sans antialiased">
         <SessionProvider>

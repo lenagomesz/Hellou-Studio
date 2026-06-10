@@ -144,6 +144,7 @@ export interface User {
   email: string;
   password_hash: string;
   name: string | null;
+  phone: string | null;
   role: 'user' | 'admin';
   created_at: string;
   updated_at: string;
@@ -159,6 +160,7 @@ export interface Database {
           email: string;
           password_hash: string;
           name?: string | null;
+          phone?: string | null;
           role?: 'user' | 'admin';
           created_at?: string;
           updated_at?: string;
@@ -168,6 +170,7 @@ export interface Database {
           email?: string;
           password_hash?: string;
           name?: string | null;
+          phone?: string | null;
           role?: 'user' | 'admin';
           created_at?: string;
           updated_at?: string;
