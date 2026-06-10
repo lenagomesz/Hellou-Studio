@@ -100,7 +100,7 @@ export default async function ProductDetailPage(
 
       {related.length > 0 ? (
         <section className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900">Você também pode gostar</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Você também pode gostar</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} />
