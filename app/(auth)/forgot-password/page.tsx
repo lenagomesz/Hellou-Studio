@@ -151,13 +151,22 @@ export default function ForgotPasswordPage() {
       {/* Formulário */}
       <div className="flex flex-1 w-full lg:w-1/2 items-center justify-center bg-gray-50/50 dark:bg-gray-950">
         <div className="w-full max-w-md mx-auto px-5 lg:px-8 py-8 lg:py-0">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/60 dark:shadow-gray-950/60 p-5 lg:p-0 lg:bg-transparent lg:shadow-none lg:rounded-none">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/60 dark:shadow-gray-950/60 p-5 lg:p-8 lg:bg-white lg:dark:bg-gray-900 lg:shadow-lg lg:shadow-gray-200/40 lg:dark:shadow-gray-950/40">
             {/* Título desktop */}
-            <div className="hidden lg:block mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-display">Esqueceu a senha?</h1>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Informe seu email e enviaremos um link para redefinir sua senha.
-              </p>
+            <div className="hidden lg:flex lg:items-start lg:justify-between mb-8">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-display">Esqueceu a senha?</h1>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Informe seu email e enviaremos um link para redefinir sua senha.
+                </p>
+              </div>
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                aria-label="Alternar tema"
+              >
+                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
             </div>
 
             {/* Subtítulo mobile */}
@@ -216,7 +225,7 @@ export default function ForgotPasswordPage() {
                 <div className="w-full border-t border-gray-200 dark:border-gray-700" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white dark:bg-gray-900 lg:bg-gray-50/50 lg:dark:bg-gray-950 px-3 text-gray-400">ou</span>
+                <span className="bg-white dark:bg-gray-900 px-3 text-gray-400">ou</span>
               </div>
             </div>
 
