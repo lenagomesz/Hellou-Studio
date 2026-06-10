@@ -91,21 +91,46 @@ export default function RequestPrintPage() {
   return (
     <div>
       {/* Full-width Banner */}
-      <div className="bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
+      <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
         <h2 className="text-2xl font-bold text-white sm:text-3xl">
           Encomendas personalizadas
         </h2>
-        <p className="mt-2 text-sm text-white/90 sm:text-base">
-          Transforme sua ideia em realidade! Envie seu arquivo .stl e receba um orçamento sob medida.
+        <p className="mx-auto mt-2 max-w-xl text-sm text-white/90 sm:text-base">
+          Transforme sua ideia em realidade! Envie seu arquivo .stl com o que precisa e nós cuidamos do resto.
         </p>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+      {/* Explicação do fluxo */}
+      <div className="mx-auto max-w-2xl px-4 pt-8 sm:px-6">
+        <div className="rounded-2xl border border-pink-100 dark:border-pink-900/30 bg-pink-50/50 dark:bg-pink-950/20 p-5 sm:p-6">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Como funciona?</h3>
+          <ol className="space-y-2.5 text-sm text-gray-600 dark:text-gray-400">
+            <li className="flex items-start gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">1</span>
+              <span>Você envia sua solicitação com o arquivo .stl e descreve o que precisa.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">2</span>
+              <span>Eu verifico se tenho o material disponível e analiso o projeto.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">3</span>
+              <span>Envio o valor do orçamento para você avaliar.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">4</span>
+              <span>Se tiver qualquer dúvida, entro em contato para alinharmos tudo antes de começar.</span>
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-2xl px-4 pb-10 pt-6 sm:px-6">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="title" className="block text-sm font-semibold text-gray-900">
+            <label htmlFor="title" className="block text-sm font-semibold text-gray-900 dark:text-white">
               Título do projeto *
             </label>
             <input
@@ -114,13 +139,13 @@ export default function RequestPrintPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Suporte para celular personalizado"
-              className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="mt-1.5 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             />
           </div>
 
           {/* Dropzone */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900">Arquivo STL *</label>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white">Arquivo STL *</label>
             <div
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
@@ -128,10 +153,10 @@ export default function RequestPrintPage() {
               onClick={() => fileInputRef.current?.click()}
               className={`mt-1.5 flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed p-8 text-center transition ${
                 dragOver
-                  ? 'border-pink-500 bg-pink-50'
+                  ? 'border-pink-500 bg-pink-50 dark:bg-pink-950/30'
                   : file
-                    ? 'border-green-300 bg-green-50/50'
-                    : 'border-gray-300 bg-gray-50 hover:border-pink-300 hover:bg-pink-50/30'
+                    ? 'border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-950/30'
+                    : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-pink-300 hover:bg-pink-50/30 dark:hover:bg-pink-950/20'
               }`}
             >
               {file ? (
@@ -141,8 +166,8 @@ export default function RequestPrintPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                     </svg>
                   </div>
-                  <p className="mt-2 text-sm font-medium text-gray-900">{file.name}</p>
-                  <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                  <p className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{file.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</p>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setFile(null); }}
@@ -158,10 +183,10 @@ export default function RequestPrintPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                     </svg>
                   </div>
-                  <p className="mt-2 text-sm font-medium text-gray-700">
+                  <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     Arraste seu arquivo .stl aqui
                   </p>
-                  <p className="text-xs text-gray-500">ou clique para selecionar (máx. 50MB)</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">ou clique para selecionar (máx. 50MB)</p>
                 </>
               )}
               <input
@@ -175,7 +200,7 @@ export default function RequestPrintPage() {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-gray-900">
+            <label htmlFor="description" className="block text-sm font-semibold text-gray-900 dark:text-white">
               Descrição
             </label>
             <textarea
@@ -184,12 +209,12 @@ export default function RequestPrintPage() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Descreva o que você gostaria (cor, material, acabamento...)"
               rows={3}
-              className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="mt-1.5 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             />
           </div>
 
           <div>
-            <label htmlFor="notes" className="block text-sm font-semibold text-gray-900">
+            <label htmlFor="notes" className="block text-sm font-semibold text-gray-900 dark:text-white">
               Observações adicionais
             </label>
             <textarea
@@ -198,12 +223,12 @@ export default function RequestPrintPage() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Quantidade, prazo, uso pretendido..."
               rows={2}
-              className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="mt-1.5 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             />
           </div>
 
           {error && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">
               {error}
             </p>
           )}

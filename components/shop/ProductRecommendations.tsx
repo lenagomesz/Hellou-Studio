@@ -30,7 +30,7 @@ export function ProductRecommendations({ excludeId, title }: { excludeId?: strin
 
   return (
     <section className="mt-10">
-      <h2 className="text-lg font-bold text-gray-900 mb-4">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
         {title ?? 'Você também pode gostar'}
       </h2>
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
@@ -38,9 +38,9 @@ export function ProductRecommendations({ excludeId, title }: { excludeId?: strin
           <Link
             key={p.id}
             href={`/products/${p.id}`}
-            className="group rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm transition hover:shadow-md"
+            className="group rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden shadow-sm transition hover:shadow-md"
           >
-            <div className="aspect-square bg-gray-100 overflow-hidden">
+            <div className="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden">
               {p.image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -55,8 +55,8 @@ export function ProductRecommendations({ excludeId, title }: { excludeId?: strin
               )}
             </div>
             <div className="p-3">
-              <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
-              <p className="mt-1 text-sm font-semibold text-pink-600">{formatPrice(p.base_price)}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.name}</p>
+              <p className="mt-1 text-sm font-semibold text-pink-600 dark:text-pink-400">{formatPrice(p.base_price)}</p>
             </div>
           </Link>
         ))}

@@ -22,8 +22,8 @@ export default function ConfirmDeliveryButton({ orderId }: { orderId: string }) 
 
   if (confirmed) {
     return (
-      <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm text-center">
-        <p className="text-sm font-medium text-green-800">
+      <div className="mt-6 rounded-2xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/50 p-5 shadow-sm text-center">
+        <p className="text-sm font-medium text-green-800 dark:text-green-300">
           Recebimento confirmado! Obrigado.
         </p>
       </div>
@@ -31,9 +31,9 @@ export default function ConfirmDeliveryButton({ orderId }: { orderId: string }) 
   }
 
   return (
-    <div className="mt-6 rounded-2xl border border-green-200 bg-green-50/50 p-5 shadow-sm">
-      <h2 className="text-sm font-semibold text-green-900 mb-2">Confirmar recebimento</h2>
-      <p className="text-xs text-green-700 mb-3">
+    <div className="mt-6 rounded-2xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/50 p-5 shadow-sm">
+      <h2 className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">Confirmar recebimento</h2>
+      <p className="text-xs text-green-700 dark:text-green-400 mb-3">
         Seu pedido foi enviado! Quando receber, confirme aqui para finalizarmos.
       </p>
       <button

@@ -56,21 +56,21 @@ export default async function OrdersPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Meus Pedidos</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Meus Pedidos</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'} no total
           </p>
         </div>
       </div>
 
       {orders.length === 0 ? (
-        <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center shadow-sm">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-10 text-center shadow-sm">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-pink-50 to-orange-50 text-pink-400">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-8 w-8">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" />
             </svg>
           </div>
-          <p className="mt-4 text-gray-600">Você ainda não fez nenhum pedido.</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Você ainda não fez nenhum pedido.</p>
           <Link
             href="/products"
             className="mt-4 inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
@@ -84,7 +84,7 @@ export default async function OrdersPage() {
             <li key={order.id}>
               <Link
                 href={`/account/orders/${order.id}`}
-                className="block rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-gray-200"
+                className="block rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm transition-all hover:shadow-md hover:border-gray-200"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -99,7 +99,7 @@ export default async function OrdersPage() {
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[order.status]}`}>
                       {STATUS_LABELS[order.status]}
                     </span>
-                    <span className="text-sm font-bold text-gray-900">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
                       {formatPrice(order.total)}
                     </span>
                   </div>
@@ -109,7 +109,7 @@ export default async function OrdersPage() {
                   <div className="mt-4 flex items-center gap-2">
                     <div className="flex -space-x-2">
                       {order.items.slice(0, 4).map((item) => (
-                        <div key={item.id} className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg border-2 border-white bg-gray-100">
+                        <div key={item.id} className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg border-2 border-white dark:border-gray-900 bg-gray-100 dark:bg-gray-800">
                           {item.product?.image_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={item.product.image_url} alt="" className="h-full w-full object-cover" />

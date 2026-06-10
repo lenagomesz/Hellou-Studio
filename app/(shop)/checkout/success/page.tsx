@@ -14,8 +14,8 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
       <ClearCartOnMount />
       {/* Celebration icon */}
       <div className="relative mx-auto h-24 w-24">
-        <div className="absolute inset-0 animate-ping rounded-full bg-green-100 opacity-20" />
-        <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-50 shadow-lg shadow-green-100/50">
+        <div className="absolute inset-0 animate-ping rounded-full bg-green-100 dark:bg-green-800 opacity-20" />
+        <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/30 dark:to-emerald-950 shadow-lg shadow-green-100/50 dark:shadow-green-900/20">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -29,10 +29,10 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      <h1 className="mt-8 text-3xl font-bold text-gray-900 animate-fade-in-up">
+      <h1 className="mt-8 text-3xl font-bold text-gray-900 dark:text-white animate-fade-in-up">
         Pedido confirmado!
       </h1>
-      <p className="mt-3 text-gray-600 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+      <p className="mt-3 text-gray-600 dark:text-gray-300 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
         Seu pagamento foi processado com sucesso. Já estamos preparando seu pedido com muito carinho.
       </p>
 
@@ -51,13 +51,13 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
         ].map(({ step, title, desc, done }) => (
           <div
             key={title}
-            className={`rounded-2xl border p-5 shadow-sm transition ${done ? 'border-green-200 bg-green-50/50' : 'border-gray-100 bg-white'}`}
+            className={`rounded-2xl border p-5 shadow-sm transition ${done ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/50' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900'}`}
           >
-            <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${done ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+            <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${done ? 'bg-green-100 text-green-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
               {step}
             </span>
-            <p className={`mt-3 text-sm font-semibold ${done ? 'text-green-800' : 'text-gray-900'}`}>{title}</p>
-            <p className="mt-1 text-xs text-gray-500">{desc}</p>
+            <p className={`mt-3 text-sm font-semibold ${done ? 'text-green-800 dark:text-green-300' : 'text-gray-900 dark:text-white'}`}>{title}</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{desc}</p>
           </div>
         ))}
       </div>
@@ -72,7 +72,7 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
         </Link>
         <Link
           href="/products"
-          className="inline-flex items-center rounded-full border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 hover:shadow-md hover:scale-[1.02]"
+          className="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 transition-all hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md hover:scale-[1.02]"
         >
           Continuar comprando
         </Link>

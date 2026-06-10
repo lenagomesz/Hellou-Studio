@@ -73,16 +73,16 @@ export default async function OrderDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link href="/account/orders" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition mb-2">
+          <Link href="/account/orders" className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
             Voltar aos pedidos
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Pedido #{order.id.slice(0, 8).toUpperCase()}
           </h1>
-          <p className="mt-1 text-sm text-gray-500">{formatDate(order.created_at)}</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{formatDate(order.created_at)}</p>
         </div>
         <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${STATUS_STYLES[order.status]}`}>
           {STATUS_LABELS[order.status]}
@@ -91,8 +91,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
       {/* Status Timeline */}
       {!isCanceled && (
-        <div className="mb-8 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">Status do pedido</h2>
+        <div className="mb-8 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Status do pedido</h2>
           <div className="flex items-center justify-between">
             {STATUS_ORDER.map((status, i) => {
               const isActive = i <= currentStepIndex;
@@ -105,7 +105,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                         ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md shadow-pink-200/50'
                         : isActive
                         ? 'bg-green-100 text-green-600'
-                        : 'bg-gray-100 text-gray-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
                     }`}>
                       {isActive && !isCurrent ? (
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-4 w-4">
@@ -115,12 +115,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
                         i + 1
                       )}
                     </div>
-                    <span className={`mt-1.5 text-[10px] font-medium text-center hidden sm:block ${isActive ? 'text-gray-700' : 'text-gray-400'}`}>
+                    <span className={`mt-1.5 text-[10px] font-medium text-center hidden sm:block ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>
                       {STATUS_LABELS[status]}
                     </span>
                   </div>
                   {i < STATUS_ORDER.length - 1 && (
-                    <div className={`mx-1 h-0.5 flex-1 rounded ${i < currentStepIndex ? 'bg-green-300' : 'bg-gray-200'}`} />
+                    <div className={`mx-1 h-0.5 flex-1 rounded ${i < currentStepIndex ? 'bg-green-300' : 'bg-gray-200 dark:bg-gray-700'}`} />
                   )}
                 </div>
               );
@@ -131,8 +131,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
       {/* Canceled notice */}
       {isCanceled && (
-        <div className={`mb-8 rounded-2xl border p-5 ${order.status === 'refunded' ? 'border-red-100 bg-red-50/50' : 'border-gray-200 bg-gray-50'}`}>
-          <p className="text-sm font-medium text-gray-700">
+        <div className={`mb-8 rounded-2xl border p-5 ${order.status === 'refunded' ? 'border-red-100 dark:border-red-800 bg-red-50/50 dark:bg-red-950/50' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'}`}>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {order.status === 'refunded'
               ? 'Este pedido foi reembolsado. O valor será devolvido em até 7 dias úteis.'
               : 'Este pedido foi cancelado.'}
@@ -141,16 +141,16 @@ export default async function OrderDetailPage({ params }: PageProps) {
       )}
 
       {/* Order Items */}
-      <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-gray-50 px-5 py-3">
-          <h2 className="text-sm font-semibold text-gray-900">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+        <div className="border-b border-gray-50 dark:border-gray-800 px-5 py-3">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
             Itens ({order.items.length})
           </h2>
         </div>
-        <ul className="divide-y divide-gray-50">
+        <ul className="divide-y divide-gray-50 dark:divide-gray-800">
           {order.items.map((item) => (
             <li key={item.id} className="flex items-center gap-4 px-5 py-4">
-              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
+              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
                 {item.product?.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={item.product.image_url} alt={item.product?.name ?? ''} className="h-full w-full object-cover" />
@@ -161,22 +161,22 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {item.product?.name ?? 'Produto removido'}
                 </p>
                 {item.option && (
-                  <p className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                     {item.option.color && (
                       <span className="inline-block h-3 w-3 rounded-full border border-gray-200" style={{ backgroundColor: item.option.color }} />
                     )}
                     Variação: {item.option.name}
                   </p>
                 )}
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Qtd: {item.quantity} &middot; {formatPrice(item.unit_price)} cada
                 </p>
               </div>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
                 {formatPrice(item.unit_price * item.quantity)}
               </p>
             </li>
@@ -184,12 +184,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
         </ul>
 
         {/* Summary */}
-        <div className="border-t border-gray-100 bg-gray-50/50 px-5 py-4">
-          <div className="flex justify-between text-sm text-gray-600">
+        <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 px-5 py-4">
+          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
             <span>Subtotal</span>
             <span>{formatPrice(order.total)}</span>
           </div>
-          <div className="mt-2 flex justify-between text-base font-bold text-gray-900">
+          <div className="mt-2 flex justify-between text-base font-bold text-gray-900 dark:text-white">
             <span>Total</span>
             <span>{formatPrice(order.total)}</span>
           </div>
@@ -202,16 +202,16 @@ export default async function OrderDetailPage({ params }: PageProps) {
         const trackingCode = typeof shipping?.tracking_code === 'string' ? shipping.tracking_code : '';
         if (!trackingCode || (order.status !== 'shipped' && order.status !== 'delivered')) return null;
         return (
-          <div className="mt-6 rounded-2xl border border-purple-100 bg-purple-50/50 p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-purple-900 mb-2">Rastreamento</h2>
-            <p className="text-sm text-purple-800">
+          <div className="mt-6 rounded-2xl border border-purple-100 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/50 p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-purple-900 dark:text-purple-300 mb-2">Rastreamento</h2>
+            <p className="text-sm text-purple-800 dark:text-purple-300">
               Código: <span className="font-mono font-semibold">{trackingCode}</span>
             </p>
             <a
               href={`https://www.linkcorreios.com.br/?id=${trackingCode}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-purple-700 hover:text-purple-900 transition"
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 transition"
             >
               Rastrear nos Correios
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3 w-3">
@@ -233,12 +233,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
       )}
 
       {/* Payment info */}
-      <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-900 mb-3">Pagamento</h2>
-        <div className="text-sm text-gray-600 space-y-1">
+      <div className="mt-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Pagamento</h2>
+        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
           <p>Processado via Stripe</p>
           {order.stripe_session_id && (
-            <p className="font-mono text-xs text-gray-400">
+            <p className="font-mono text-xs text-gray-400 dark:text-gray-500">
               Ref: ...{order.stripe_session_id.slice(-12).toUpperCase()}
             </p>
           )}
@@ -269,10 +269,10 @@ function ShippingAddress({ address }: { address: Record<string, unknown> }) {
   const isBrazilianFormat = !!street;
 
   return (
-    <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h2 className="text-sm font-semibold text-gray-900 mb-3">Endereço de entrega</h2>
-      <div className="text-sm text-gray-600 space-y-0.5">
-        {name && <p className="font-medium text-gray-900">{name}</p>}
+    <div className="mt-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+      <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Endereço de entrega</h2>
+      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5">
+        {name && <p className="font-medium text-gray-900 dark:text-white">{name}</p>}
         {isBrazilianFormat ? (
           <>
             <p>{[street, number].filter(Boolean).join(', ')}</p>

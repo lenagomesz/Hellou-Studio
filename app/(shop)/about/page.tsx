@@ -190,13 +190,13 @@ export default function AboutPage() {
       </div>
 
       <div className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <Link href="/" className="relative z-10 text-sm text-gray-500 hover:text-pink-600 transition">
+        <Link href="/" className="relative z-10 text-sm text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transition">
           ← Voltar
         </Link>
 
         {/* Card principal com parallax e corações */}
         <RevealOnScroll>
-          <ParallaxCard className="relative z-10 mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+          <ParallaxCard className="relative z-10 mt-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
             <div onClick={spawnHeart} className="relative cursor-default">
               {hearts.map(h => (
                 <span
@@ -208,9 +208,9 @@ export default function AboutPage() {
                 </span>
               ))}
 
-              <div className="space-y-5 text-gray-700 leading-relaxed">
+              <div className="space-y-5 text-gray-700 dark:text-gray-300 leading-relaxed">
                 <p className="text-base">
-                  Oie! Eu sou a <span className="font-semibold text-gray-900">Helena</span> e essa aqui é a
+                  Oie! Eu sou a <span className="font-semibold text-gray-900 dark:text-white">Helena</span> e essa aqui é a
                   {' '}<span className="font-semibold bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">helloustudio</span>.
                 </p>
 
@@ -232,11 +232,11 @@ export default function AboutPage() {
             { emoji: '📦', text: 'Envio pra qualquer lugar do Brasil', color: 'from-amber-100 to-amber-50' },
           ].map((item, i) => (
             <RevealOnScroll key={i} delay={i * 150}>
-              <ParallaxCard className="rounded-2xl border border-gray-100 bg-gradient-to-br p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+              <ParallaxCard className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gradient-to-br dark:from-gray-900 dark:to-gray-900 p-5 shadow-sm text-center hover:shadow-md transition-shadow">
                 <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${item.color} text-2xl shadow-sm transition-transform duration-300 hover:scale-110 hover:rotate-6`}>
                   {item.emoji}
                 </div>
-                <p className="mt-3 text-sm font-medium text-gray-800">{item.text}</p>
+                <p className="mt-3 text-sm font-medium text-gray-800 dark:text-gray-200">{item.text}</p>
               </ParallaxCard>
             </RevealOnScroll>
           ))}
@@ -244,9 +244,9 @@ export default function AboutPage() {
 
         {/* O que é impressão 3D */}
         <RevealOnScroll delay={100}>
-          <div className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">O que é impressão 3D?</h2>
-            <p className="text-sm text-gray-600 leading-relaxed">
+          <div className="mt-10 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">O que é impressão 3D?</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
               É uma tecnologia que cria objetos físicos camada por camada a partir de um modelo digital.
               A impressora derrete um filamento plástico (PLA) e vai desenhando a peça de baixo pra cima,
               como se fosse um glacê de bolo bem preciso. O resultado é uma peça única, sólida e durável.
@@ -256,16 +256,16 @@ export default function AboutPage() {
 
         {/* Materiais */}
         <RevealOnScroll delay={150}>
-          <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Material que eu uso</h2>
+          <div className="mt-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Material que eu uso</h2>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl bg-green-50 border border-green-100 p-4 transition-transform duration-300 hover:scale-[1.02]">
-                <p className="text-sm font-semibold text-green-800">PLA (Ácido Polilático)</p>
-                <p className="mt-1 text-xs text-green-700">Plástico biodegradável feito de amido de milho. Não é tóxico, não tem cheiro forte e tem um acabamento liso bonito.</p>
+              <div className="rounded-xl bg-green-50 dark:bg-green-950/50 border border-green-100 dark:border-green-900 p-4 transition-transform duration-300 hover:scale-[1.02]">
+                <p className="text-sm font-semibold text-green-800 dark:text-green-300">PLA (Ácido Polilático)</p>
+                <p className="mt-1 text-xs text-green-700 dark:text-green-400">Plástico biodegradável feito de amido de milho. Não é tóxico, não tem cheiro forte e tem um acabamento liso bonito.</p>
               </div>
-              <div className="rounded-xl bg-blue-50 border border-blue-100 p-4 transition-transform duration-300 hover:scale-[1.02]">
-                <p className="text-sm font-semibold text-blue-800">Acabamento</p>
-                <p className="mt-1 text-xs text-blue-700">Cada peça sai com camadas visíveis (faz parte do charme!). Posso lixar e pintar sob encomenda se quiser algo mais liso.</p>
+              <div className="rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900 p-4 transition-transform duration-300 hover:scale-[1.02]">
+                <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Acabamento</p>
+                <p className="mt-1 text-xs text-blue-700 dark:text-blue-400">Cada peça sai com camadas visíveis (faz parte do charme!). Posso lixar e pintar sob encomenda se quiser algo mais liso.</p>
               </div>
             </div>
           </div>
@@ -273,8 +273,8 @@ export default function AboutPage() {
 
         {/* Curiosidades */}
         <RevealOnScroll delay={200}>
-          <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Curiosidades</h2>
+          <div className="mt-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Curiosidades</h2>
             <div className="space-y-3">
               {[
                 { icon: '⏱️', text: 'Um chaveiro leva de 30 min a 2 horas pra imprimir' },
@@ -286,7 +286,7 @@ export default function AboutPage() {
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3 group cursor-default">
                   <span className="text-lg transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12">{item.icon}</span>
-                  <p className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{item.text}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{item.text}</p>
                 </div>
               ))}
             </div>
@@ -295,8 +295,8 @@ export default function AboutPage() {
 
         {/* Perguntas frequentes */}
         <RevealOnScroll delay={250}>
-          <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Perguntas frequentes</h2>
+          <div className="mt-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Perguntas frequentes</h2>
             <div className="space-y-4">
               {[
                 { q: 'Quanto tempo demora pra fazer meu pedido?', a: 'Peças do catálogo saem em 1 a 3 dias úteis. Encomendas personalizadas dependem da complexidade, mas geralmente de 3 a 7 dias.' },
@@ -305,12 +305,12 @@ export default function AboutPage() {
                 { q: 'O que é um arquivo .stl?', a: 'É o formato padrão de modelos 3D pra impressão. Se você já tem um modelo pronto, é só enviar. Se não tem, me descreve a ideia que eu vejo o que dá pra fazer.' },
                 { q: 'Envia pra todo o Brasil?', a: 'Sim! Envio pelos Correios com rastreamento. Frete grátis acima de R$99.' },
               ].map((item, i) => (
-                <details key={i} className="group rounded-xl border border-gray-100 overflow-hidden">
-                  <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition">
+                <details key={i} className="group rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+                  <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                     {item.q}
                     <span className="text-gray-400 transition-transform duration-200 group-open:rotate-45 text-lg">+</span>
                   </summary>
-                  <p className="px-4 pb-3 text-sm text-gray-600">{item.a}</p>
+                  <p className="px-4 pb-3 text-sm text-gray-600 dark:text-gray-400">{item.a}</p>
                 </details>
               ))}
             </div>
@@ -326,7 +326,7 @@ export default function AboutPage() {
             >
               Fazer uma encomenda personalizada →
             </Link>
-            <p className="mt-3 text-xs text-gray-400">clica no card lá em cima pra uma surpresinha ♥</p>
+            <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">clica no card lá em cima pra uma surpresinha ♥</p>
           </div>
         </RevealOnScroll>
       </div>

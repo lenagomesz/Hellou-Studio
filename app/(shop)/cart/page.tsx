@@ -183,10 +183,10 @@ export default function CartPage() {
   if (isLoading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <div className="h-8 w-40 animate-pulse rounded bg-gray-100" />
+        <div className="h-8 w-40 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
         <div className="mt-8 space-y-4">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl bg-gray-100" />
+            <div key={i} className="h-28 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />
           ))}
         </div>
       </div>
@@ -201,8 +201,8 @@ export default function CartPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.5l.41 2.05M6 6h14.25l-1.5 9H7.5L6 6Zm0 0L5.16 1.95M9 19.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm9 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
           </svg>
         </div>
-        <h1 className="mt-6 text-2xl font-bold text-gray-900">Seu carrinho está vazio</h1>
-        <p className="mt-3 text-sm text-gray-500 max-w-xs mx-auto">Explore nosso catálogo e encontre peças impressas em 3D feitas para você.</p>
+        <h1 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Seu carrinho está vazio</h1>
+        <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">Explore nosso catálogo e encontre peças impressas em 3D feitas para você.</p>
         <Link href="/products" className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/30 transition hover:opacity-90 hover:shadow-xl">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
@@ -250,8 +250,8 @@ export default function CartPage() {
                     isActive
                       ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md shadow-pink-200/40'
                       : isDone
-                        ? 'bg-pink-50 text-pink-700 hover:bg-pink-100 cursor-pointer'
-                        : 'bg-gray-100 text-gray-400'
+                        ? 'bg-pink-50 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-900/50 cursor-pointer'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
                   }`}
                 >
                   <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
@@ -274,7 +274,7 @@ export default function CartPage() {
       {step === 1 && (
         <div className="space-y-5 animate-fade-in">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {items.length} {items.length === 1 ? 'produto' : 'produtos'} no carrinho
             </p>
             <Link href="/products" className="inline-flex items-center gap-1 text-sm font-medium text-pink-600 hover:text-pink-700 transition">
@@ -299,13 +299,13 @@ export default function CartPage() {
           </ul>
 
           {/* Coupon */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
             <div className="flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-pink-400">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
               </svg>
-              <h2 className="text-sm font-semibold text-gray-900">Cupom de desconto</h2>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cupom de desconto</h2>
             </div>
             {couponDiscount ? (
               <div className="mt-3 flex items-center justify-between rounded-xl border border-green-200 bg-green-50/50 p-3">
@@ -326,7 +326,7 @@ export default function CartPage() {
                   placeholder="Código do cupom"
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className="flex-1 rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2.5 text-sm uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent focus:bg-white"
+                  className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent focus:bg-white dark:focus:bg-gray-700"
                 />
                 <button type="button" onClick={handleApplyCoupon} disabled={couponLoading} className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50">
                   {couponLoading ? '...' : 'Aplicar'}
@@ -359,11 +359,11 @@ export default function CartPage() {
           )}
 
           {/* Subtotal bar + Next */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Subtotal</p>
-                <p className="mt-0.5 text-2xl font-bold text-gray-900">{formatPrice(total)}</p>
+                <p className="mt-0.5 text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(total)}</p>
                 {couponDiscount && (
                   <p className="mt-0.5 text-xs text-green-700">- {formatPrice(couponDiscount.discount_amount)} desconto</p>
                 )}
@@ -380,7 +380,7 @@ export default function CartPage() {
                 </svg>
               </button>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 pt-3 text-xs text-gray-400">
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 dark:border-gray-800 pt-3 text-xs text-gray-400">
               <span className="inline-flex items-center gap-1">
                 💬 Atendimento humanizado
               </span>
@@ -399,10 +399,10 @@ export default function CartPage() {
       {step === 2 && (
         <div className="space-y-5 animate-fade-in">
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm space-y-5">
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm space-y-5">
             {/* CEP */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CEP</label>
               <div className="flex gap-3">
                 <input
                   type="text"
@@ -414,7 +414,7 @@ export default function CartPage() {
                     if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
                     setShippingCep(v);
                   }}
-                  className="w-40 rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-40 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 />
                 <button
                   type="button"
@@ -435,7 +435,7 @@ export default function CartPage() {
 
             {/* Address fields — shown after CEP lookup */}
             {shippingAddress && (
-              <div className="space-y-4 border-t border-gray-100 pt-5">
+              <div className="space-y-4 border-t border-gray-100 dark:border-gray-800 pt-5">
                 <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-pink-500">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -445,53 +445,53 @@ export default function CartPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rua / Avenida</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rua / Avenida</label>
                   <input
                     type="text"
                     placeholder="Ex: Rua das Flores"
                     value={addressStreet}
                     onChange={(e) => setAddressStreet(e.target.value)}
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número</label>
                     <input
                       type="text"
                       placeholder="123"
                       value={addressNumber}
                       onChange={(e) => setAddressNumber(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Complemento</label>
                     <input
                       type="text"
                       placeholder="Apto, bloco... (opcional)"
                       value={addressComplement}
                       onChange={(e) => setAddressComplement(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bairro</label>
                   <input
                     type="text"
                     placeholder="Ex: Centro"
                     value={addressNeighborhood}
                     onChange={(e) => setAddressNeighborhood(e.target.value)}
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cidade</label>
                     <input
                       type="text"
                       value={shippingAddress.city}
@@ -500,7 +500,7 @@ export default function CartPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
                     <input
                       type="text"
                       value={shippingAddress.state}
@@ -514,7 +514,7 @@ export default function CartPage() {
 
             {/* Shipping options */}
             {shippingOptions.length > 0 && !couponDiscount?.free_shipping && (
-              <div className="space-y-3 border-t border-gray-100 pt-5">
+              <div className="space-y-3 border-t border-gray-100 dark:border-gray-800 pt-5">
                 <p className="text-sm font-medium text-gray-700">Modalidade de envio:</p>
                 {shippingOptions.map((opt) => (
                   <label
@@ -556,7 +556,7 @@ export default function CartPage() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
@@ -587,9 +587,9 @@ export default function CartPage() {
         <div className="space-y-5 animate-fade-in">
 
           {/* Items summary */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-900">Itens ({items.length})</h2>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Itens ({items.length})</h2>
               <button type="button" onClick={() => setStep(1)} className="text-xs text-pink-600 hover:text-pink-700 transition">
                 Editar
               </button>
@@ -607,7 +607,7 @@ export default function CartPage() {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{item.product.name}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{item.product.name}</p>
                       <p className="flex items-center gap-1.5 text-xs text-gray-500">
                         {item.option?.color && (
                           <span className="inline-block h-2.5 w-2.5 rounded-full border border-gray-200" style={{ backgroundColor: item.option.color }} />
@@ -616,16 +616,16 @@ export default function CartPage() {
                       </p>
                     </div>
                   </div>
-                  <span className="font-medium text-gray-900">{formatPrice(computeItemTotal(item))}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{formatPrice(computeItemTotal(item))}</span>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Shipping summary */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-900">Entrega</h2>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Entrega</h2>
               <button type="button" onClick={() => setStep(2)} className="text-xs text-pink-600 hover:text-pink-700 transition">
                 Alterar
               </button>
@@ -649,7 +649,7 @@ export default function CartPage() {
           </div>
 
           {/* Totals */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
             <dl className="space-y-2.5 text-sm">
               <div className="flex justify-between text-gray-600">
                 <dt>Subtotal</dt>
@@ -677,8 +677,8 @@ export default function CartPage() {
                       : '—'}
                 </dd>
               </div>
-              <div className="flex justify-between border-t border-gray-100 pt-3">
-                <dt className="text-base font-bold text-gray-900">Total</dt>
+              <div className="flex justify-between border-t border-gray-100 dark:border-gray-800 pt-3">
+                <dt className="text-base font-bold text-gray-900 dark:text-white">Total</dt>
                 <dd className="text-xl font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">{formatPrice(grandTotal)}</dd>
               </div>
             </dl>
@@ -689,7 +689,7 @@ export default function CartPage() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
@@ -766,7 +766,7 @@ function CartLine({
   const atMax = item.quantity >= max;
 
   return (
-    <li className="group rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-pink-100/60">
+    <li className="group rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-pink-100/60">
       <div className="flex gap-3 sm:gap-4">
         <Link href={`/products/${item.product.id}` as Route} className="flex-shrink-0">
           <div className="h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-xl bg-gradient-to-br from-pink-50 to-orange-50 ring-1 ring-gray-100 transition group-hover:ring-pink-100">
@@ -782,7 +782,7 @@ function CartLine({
         <div className="flex flex-1 flex-col min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <Link href={`/products/${item.product.id}` as Route} className="block truncate text-sm font-semibold text-gray-900 hover:text-pink-600 transition">
+              <Link href={`/products/${item.product.id}` as Route} className="block truncate text-sm font-semibold text-gray-900 dark:text-white hover:text-pink-600 dark:hover:text-pink-400 transition">
                 {item.product.name}
               </Link>
               {item.option && (
@@ -809,7 +809,7 @@ function CartLine({
           </div>
 
           <div className="mt-auto flex items-end justify-between pt-2">
-            <div className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50/50">
+            <div className="inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
               <button
                 type="button"
                 onClick={onDecrease}
@@ -821,7 +821,7 @@ function CartLine({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
                 </svg>
               </button>
-              <span className="flex h-8 min-w-[2rem] items-center justify-center border-x border-gray-200 px-2 text-sm font-semibold text-gray-900">{item.quantity}</span>
+              <span className="flex h-8 min-w-[2rem] items-center justify-center border-x border-gray-200 dark:border-gray-700 px-2 text-sm font-semibold text-gray-900 dark:text-white">{item.quantity}</span>
               <button
                 type="button"
                 onClick={onIncrease}
@@ -834,7 +834,7 @@ function CartLine({
                 </svg>
               </button>
             </div>
-            <p className="text-sm font-bold text-gray-900">{formatPrice(lineTotal)}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(lineTotal)}</p>
           </div>
         </div>
       </div>

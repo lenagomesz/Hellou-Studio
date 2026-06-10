@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Sora } from 'next/font/google';
 import { SessionProvider } from '@/components/auth/SessionProvider';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import './globals.css';
 
@@ -37,12 +38,15 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       className={`${inter.variable} ${sora.variable} h-full`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans antialiased">
-        <SessionProvider>
-          {children}
-          <ToastProvider />
-        </SessionProvider>
+      <body className="min-h-full flex flex-col font-sans antialiased bg-[var(--color-background)] text-[var(--color-foreground)]">
+        <ThemeProvider>
+          <SessionProvider>
+            {children}
+            <ToastProvider />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

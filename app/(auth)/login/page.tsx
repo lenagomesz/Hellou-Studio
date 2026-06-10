@@ -4,12 +4,14 @@ import { signIn, getSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Suspense, useState, type FormEvent } from 'react';
-import { Mail, Lock, Eye, EyeOff, Loader2, Check, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, Check, ShieldCheck, ChevronLeft, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
+  const { theme, setTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -73,34 +75,41 @@ function LoginForm() {
       </div>
 
       {/* Header mobile com gradiente */}
-      <div className="lg:hidden relative overflow-hidden bg-gradient-to-br from-pink-500 via-pink-600 to-orange-400 px-6 pb-12 pt-12">
+      <div className="lg:hidden relative overflow-hidden bg-gradient-to-br from-pink-500 via-pink-600 to-orange-400 px-5 pb-6 pt-5">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/30 blur-2xl" />
           <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-orange-300/30 blur-2xl" />
         </div>
         <div className="relative z-10">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="h-9 w-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <span className="text-white text-sm font-bold">H</span>
-            </div>
-            <span className="text-lg font-bold font-display text-white">helloustudio</span>
+          <div className="flex items-center justify-between mb-3">
+            <Link href="/" className="flex items-center gap-1 text-white/90 text-sm font-medium hover:text-white transition">
+              <ChevronLeft className="h-4 w-4" />
+              Início
+            </Link>
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition"
+              aria-label="Alternar tema"
+            >
+              {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            </button>
           </div>
-          <h1 className="text-2xl font-bold text-white font-display">Bem-vindo(a)</h1>
-          <p className="mt-1 text-sm text-white/80">
+          <h1 className="text-xl font-bold text-white font-display">Bem-vindo(a)</h1>
+          <p className="mt-0.5 text-sm text-white/80">
             Entre para acessar sua conta
           </p>
         </div>
       </div>
 
       {/* Formulário */}
-      <div className="flex flex-1 w-full lg:w-1/2 items-start lg:items-center justify-center bg-gray-50/50">
-        <div className="w-full max-w-md mx-auto px-6 lg:px-8 mt-14 lg:mt-0 pb-8 lg:pb-0">
+      <div className="flex flex-1 w-full lg:w-1/2 items-center justify-center bg-gray-50/50 dark:bg-gray-950">
+        <div className="w-full max-w-md mx-auto px-6 lg:px-8 py-8 lg:py-0">
           {/* Card mobile */}
-          <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/60 p-6 lg:p-0 lg:bg-transparent lg:shadow-none lg:rounded-none">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/60 dark:shadow-gray-950/60 p-6 lg:p-0 lg:bg-transparent lg:shadow-none lg:rounded-none">
             {/* Título desktop */}
             <div className="hidden lg:block mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 font-display">Entrar na sua conta</h1>
-              <p className="mt-2 text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-display">Entrar na sua conta</h1>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 Insira seus dados para acessar
               </p>
             </div>
@@ -108,7 +117,7 @@ function LoginForm() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Email
                 </label>
                 <div className="relative">
@@ -121,7 +130,7 @@ function LoginForm() {
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-11 pr-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition-all focus:bg-white focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+                    className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-11 pr-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
                   />
                 </div>
               </div>
@@ -129,10 +138,10 @@ function LoginForm() {
               {/* Senha */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Senha
                   </label>
-                  <Link href="/forgot-password" className="text-xs font-medium text-pink-600 hover:text-pink-700 transition">
+                  <Link href="/forgot-password" className="text-xs font-medium text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition">
                     Esqueceu?
                   </Link>
                 </div>
@@ -146,7 +155,7 @@ function LoginForm() {
                     placeholder="Sua senha"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-11 pr-11 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition-all focus:bg-white focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+                    className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-11 pr-11 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
                   />
                   <button
                     type="button"
@@ -166,14 +175,14 @@ function LoginForm() {
                   type="checkbox"
                   className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
                 />
-                <label htmlFor="remember" className="text-sm text-gray-500">
+                <label htmlFor="remember" className="text-sm text-gray-500 dark:text-gray-400">
                   Lembrar de mim
                 </label>
               </div>
 
               {/* Erro */}
               {error && (
-                <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700 flex items-start gap-2.5">
+                <div className="rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-100 dark:border-red-900 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex items-start gap-2.5">
                   <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-red-100 flex items-center justify-center">
                     <span className="text-xs font-bold text-red-600">!</span>
                   </div>
@@ -201,17 +210,17 @@ function LoginForm() {
             {/* Divisor */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-gray-200 dark:border-gray-700" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white lg:bg-gray-50/50 px-3 text-gray-400">ou</span>
+                <span className="bg-white dark:bg-gray-900 lg:bg-gray-50/50 lg:dark:bg-gray-950 px-3 text-gray-400">ou</span>
               </div>
             </div>
 
             {/* Link para registro */}
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
               Não tem uma conta?{' '}
-              <Link href="/register" className="font-semibold text-pink-600 hover:text-pink-700 transition">
+              <Link href="/register" className="font-semibold text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition">
                 Criar agora
               </Link>
             </p>

@@ -91,11 +91,11 @@ export function ProductReviews({ productId, isAdmin }: { productId: string; isAd
   return (
     <div className="mt-10">
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Avaliações</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Avaliações</h2>
         {reviews.length > 0 && (
           <div className="flex items-center gap-1">
             <Stars rating={Math.round(avg)} />
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               ({avg.toFixed(1)}) · {reviews.length} {reviews.length === 1 ? 'avaliação' : 'avaliações'}
             </span>
           </div>
@@ -104,15 +104,15 @@ export function ProductReviews({ productId, isAdmin }: { productId: string; isAd
 
       {/* Submit form — only for users who purchased */}
       {session?.user && !alreadyReviewed && hasPurchased && (
-        <form onSubmit={handleSubmit} className="mb-8 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm font-medium text-gray-700 mb-2">Deixe sua avaliação</p>
+        <form onSubmit={handleSubmit} className="mb-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Deixe sua avaliação</p>
           <Stars rating={rating} interactive onSelect={setRating} />
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Comentário (opcional)"
             rows={2}
-            className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+            className="mt-3 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
           />
           <button
             type="submit"
@@ -126,8 +126,8 @@ export function ProductReviews({ productId, isAdmin }: { productId: string; isAd
 
       {/* Notice for logged-in users who haven't purchased */}
       {session?.user && !alreadyReviewed && !hasPurchased && !loading && (
-        <div className="mb-8 rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="text-sm text-gray-600">
+        <div className="mb-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Você precisa comprar este produto para poder avaliar.
           </p>
         </div>
@@ -135,24 +135,24 @@ export function ProductReviews({ productId, isAdmin }: { productId: string; isAd
 
       {loading ? (
         <div className="space-y-3 animate-pulse">
-          <div className="h-16 rounded-lg bg-gray-100" />
-          <div className="h-16 rounded-lg bg-gray-100" />
+          <div className="h-16 rounded-lg bg-gray-100 dark:bg-gray-800" />
+          <div className="h-16 rounded-lg bg-gray-100 dark:bg-gray-800" />
         </div>
       ) : reviews.length === 0 ? (
-        <p className="text-sm text-gray-500">Nenhuma avaliação ainda. Seja o primeiro!</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma avaliação ainda. Seja o primeiro!</p>
       ) : (
         <div className="space-y-4">
           {reviews.map((review) => (
-            <div key={review.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div key={review.id} className="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Stars rating={review.rating} />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {review.user?.name ?? 'Usuário'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
                     {new Date(review.created_at).toLocaleDateString('pt-BR')}
                   </span>
                   {isAdmin && (
@@ -167,7 +167,7 @@ export function ProductReviews({ productId, isAdmin }: { productId: string; isAd
                 </div>
               </div>
               {review.comment && (
-                <p className="mt-2 text-sm text-gray-600">{review.comment}</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{review.comment}</p>
               )}
             </div>
           ))}

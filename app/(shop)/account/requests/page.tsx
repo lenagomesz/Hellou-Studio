@@ -49,7 +49,7 @@ function NeedsInfoResponse({ requestId, adminNotes, onSent }: { requestId: strin
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+    <div className="mt-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 p-3 space-y-2">
       {adminNotes && (
         <div>
           <p className="text-xs font-medium text-amber-700">Mensagem do admin:</p>
@@ -61,7 +61,7 @@ function NeedsInfoResponse({ requestId, adminNotes, onSent }: { requestId: strin
         onChange={(e) => setResponse(e.target.value)}
         placeholder="Escreva sua resposta..."
         rows={2}
-        className="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+        className="w-full rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
       />
       <button
         type="button"
@@ -98,8 +98,8 @@ function ApprovedBuyButton({ requestId, quotedPrice }: { requestId: string; quot
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-green-200 bg-green-50 p-3">
-      <p className="text-sm font-medium text-green-900">
+    <div className="mt-3 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/50 p-3">
+      <p className="text-sm font-medium text-green-900 dark:text-green-300">
         Sua encomenda foi aprovada!
         {quotedPrice !== null && (
           <span className="ml-1 text-green-700">
@@ -141,7 +141,7 @@ function ReorderButton({ requestId, onReordered }: { requestId: string; onReorde
         type="button"
         onClick={handleReorder}
         disabled={loading || done}
-        className="inline-flex items-center gap-1 rounded-lg border border-pink-200 bg-white px-4 py-2 text-xs font-semibold text-pink-600 transition hover:bg-pink-50 disabled:opacity-50"
+        className="inline-flex items-center gap-1 rounded-lg border border-pink-200 dark:border-pink-800 bg-white dark:bg-gray-900 px-4 py-2 text-xs font-semibold text-pink-600 dark:text-pink-400 transition hover:bg-pink-50 dark:hover:bg-pink-950/50 disabled:opacity-50"
       >
         {done ? 'Solicitação enviada!' : loading ? 'Enviando...' : 'Solicitar novamente'}
       </button>
@@ -165,9 +165,9 @@ export default function UserRequestsPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 rounded bg-gray-200" />
-          <div className="h-24 rounded-xl bg-gray-100" />
-          <div className="h-24 rounded-xl bg-gray-100" />
+          <div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="h-24 rounded-xl bg-gray-100 dark:bg-gray-800" />
+          <div className="h-24 rounded-xl bg-gray-100 dark:bg-gray-800" />
         </div>
       </div>
     );
@@ -177,10 +177,10 @@ export default function UserRequestsPage() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <Link href="/account" className="text-sm text-gray-500 hover:text-pink-600 transition">
+          <Link href="/account" className="text-sm text-gray-500 dark:text-gray-400 hover:text-pink-600 transition">
             ← Minha Conta
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">Minhas Solicitações</h1>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">Minhas Solicitações</h1>
         </div>
         <Link
           href="/request-print"
@@ -191,12 +191,12 @@ export default function UserRequestsPage() {
       </div>
 
       {requests.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-12 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-3xl">
             🖨️
           </div>
-          <p className="mt-4 text-sm font-medium text-gray-900">Nenhuma solicitação ainda</p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-4 text-sm font-medium text-gray-900 dark:text-white">Nenhuma solicitação ainda</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Envie seu primeiro arquivo .stl para receber um orçamento.
           </p>
           <Link
@@ -213,12 +213,12 @@ export default function UserRequestsPage() {
             return (
               <div
                 key={req.id}
-                className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+                className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900 truncate">{req.title}</p>
-                    <p className="mt-0.5 text-xs text-gray-500">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">{req.title}</p>
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                       {req.stl_file_name} · {formatDate(req.created_at)}
                     </p>
                   </div>
@@ -262,14 +262,14 @@ export default function UserRequestsPage() {
                 )}
 
                 {req.status === 'rejected' && req.rejection_reason && (
-                  <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
-                    <p className="text-xs font-medium text-red-700">Motivo da rejeição:</p>
-                    <p className="mt-0.5 text-sm text-red-800">{req.rejection_reason}</p>
+                  <div className="mt-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/50 p-3">
+                    <p className="text-xs font-medium text-red-700 dark:text-red-400">Motivo da rejeição:</p>
+                    <p className="mt-0.5 text-sm text-red-800 dark:text-red-300">{req.rejection_reason}</p>
                   </div>
                 )}
 
                 {req.admin_notes && req.status !== 'quoted' && req.status !== 'rejected' && (
-                  <p className="mt-2 text-xs text-gray-600 italic">
+                  <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 italic">
                     Obs: {req.admin_notes}
                   </p>
                 )}

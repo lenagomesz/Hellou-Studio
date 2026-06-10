@@ -4,17 +4,17 @@ import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-gray-100 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="mt-auto border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+        <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
           {/* Brand */}
-          <div className="lg:col-span-1">
+          <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="text-xl font-bold tracking-tight">
               <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">
                 helloustudio
               </span>
             </Link>
-            <p className="mt-4 text-sm text-gray-500 leading-relaxed">
+            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
               Marketplace de produtos impressos em 3D, feitos sob demanda com carinho e qualidade premium.
             </p>
             <div className="mt-5 flex gap-3">
@@ -22,7 +22,7 @@ export function Footer() {
                 href="https://instagram.com/helloustudio_"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all duration-300 hover:bg-pink-50 hover:text-pink-500 hover:scale-110"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all duration-300 hover:bg-pink-50 hover:text-pink-500 hover:scale-110 dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-pink-950/50 dark:hover:text-pink-400"
                 aria-label="Instagram"
               >
                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -31,7 +31,7 @@ export function Footer() {
               </a>
               <a
                 href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all duration-300 hover:bg-pink-50 hover:text-pink-500 hover:scale-110"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all duration-300 hover:bg-pink-50 hover:text-pink-500 hover:scale-110 dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-pink-950/50 dark:hover:text-pink-400"
                 aria-label="TikTok"
               >
                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -43,7 +43,7 @@ export function Footer() {
 
           {/* Navegação */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
               Navegação
             </h3>
             <ul className="mt-4 space-y-3">
@@ -56,7 +56,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-500 transition-colors duration-200 hover:text-pink-500"
+                    className="text-sm text-gray-500 transition-colors duration-200 hover:text-pink-500 dark:text-gray-400 dark:hover:text-pink-400"
                   >
                     {link.label}
                   </Link>
@@ -67,7 +67,7 @@ export function Footer() {
 
           {/* Conta */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
               Conta
             </h3>
             <ul className="mt-4 space-y-3">
@@ -80,7 +80,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-500 transition-colors duration-200 hover:text-pink-500"
+                    className="text-sm text-gray-500 transition-colors duration-200 hover:text-pink-500 dark:text-gray-400 dark:hover:text-pink-400"
                   >
                     {link.label}
                   </Link>
@@ -91,7 +91,7 @@ export function Footer() {
 
           {/* Confiança */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
               Garantias
             </h3>
             <ul className="mt-4 space-y-3">
@@ -101,7 +101,7 @@ export function Footer() {
                 { icon: '📦', text: 'Envio para todo o Brasil' },
                 { icon: '↩️', text: 'Troca garantida' },
               ].map((item) => (
-                <li key={item.text} className="flex items-center gap-2.5 text-sm text-gray-500">
+                <li key={item.text} className="flex items-center gap-2.5 text-sm text-gray-500 dark:text-gray-400">
                   <span className="text-base">{item.icon}</span>
                   {item.text}
                 </li>
@@ -112,15 +112,15 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-gray-100">
+      <div className="border-t border-gray-100 dark:border-gray-800">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row sm:px-6">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-gray-500">
             © {new Date().getFullYear()} helloustudio. Todos os direitos reservados.
           </span>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               {/* Visa */}
-              <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50">
+              <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                 <svg viewBox="0 0 48 32" className="h-4 w-auto" fill="none">
                   <path d="M19.5 21h-3l1.9-11.5h3L19.5 21z" fill="#1A1F71" />
                   <path d="M31 9.8c-.6-.2-1.5-.5-2.7-.5-3 0-5.1 1.5-5.1 3.7 0 1.6 1.5 2.5 2.7 3 1.2.6 1.6 1 1.6 1.5 0 .8-1 1.2-1.9 1.2-1.3 0-1.9-.2-3-.7l-.4-.2-.4 2.6c.7.3 2.1.6 3.5.6 3.2 0 5.3-1.5 5.3-3.8 0-1.3-.8-2.3-2.5-3.1-1-.5-1.7-.9-1.7-1.4 0-.5.5-1 1.7-1 1 0 1.7.2 2.2.4l.3.1.4-2.4z" fill="#1A1F71" />
@@ -130,7 +130,7 @@ export function Footer() {
                 </svg>
               </div>
               {/* Mastercard */}
-              <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50">
+              <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                 <svg viewBox="0 0 48 32" className="h-4 w-auto" fill="none">
                   <circle cx="19" cy="16" r="8" fill="#EB001B" />
                   <circle cx="29" cy="16" r="8" fill="#F79E1B" />
@@ -138,7 +138,7 @@ export function Footer() {
                 </svg>
               </div>
               {/* Pix */}
-              <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50">
+              <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                 <svg viewBox="0 0 48 32" className="h-3.5 w-auto" fill="none">
                   <path d="M30.4 22.5l-4.2-4.2a1.2 1.2 0 0 1 0-1.7l4.2-4.2a4.2 4.2 0 0 1 3-1.2h2.1l-5.5 5.5a.8.8 0 0 0 0 1.1l5.5 5.5h-2.1a4.2 4.2 0 0 1-3-1.2v-.6z" fill="#32BCAD" />
                   <path d="M17.6 22.5l4.2-4.2a1.2 1.2 0 0 0 0-1.7l-4.2-4.2a4.2 4.2 0 0 0-3-1.2h-2.1l5.5 5.5a.8.8 0 0 1 0 1.1l-5.5 5.5h2.1a4.2 4.2 0 0 0 3-1.2v-.6z" fill="#32BCAD" />

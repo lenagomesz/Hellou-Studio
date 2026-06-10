@@ -97,7 +97,7 @@ export default async function ProductsCatalogPage(
   return (
     <div>
       {/* Full-width Banner */}
-      <div className="bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
+      <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
         <h2 className="text-2xl font-bold text-white sm:text-3xl">
           Peças exclusivas impressas em 3D
         </h2>
@@ -108,8 +108,8 @@ export default async function ProductsCatalogPage(
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Catálogo</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">Catálogo</h1>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           {products.length}{' '}
           {products.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
         </p>
@@ -130,7 +130,7 @@ export default async function ProductsCatalogPage(
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
                 isActive
                   ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
-                  : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                  : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               {cat.label}
@@ -141,22 +141,27 @@ export default async function ProductsCatalogPage(
 
       <form
         method="get"
-        className="mb-8 grid gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:grid-cols-[1fr_200px_auto]"
+        className="mb-8 grid gap-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm sm:grid-cols-[1fr_180px_auto]"
       >
         {category ? (
           <input type="hidden" name="category" value={category} />
         ) : null}
-        <input
-          type="text"
-          name="search"
-          defaultValue={search ?? ''}
-          placeholder="Buscar por nome..."
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-        />
+        <div className="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <input
+            type="text"
+            name="search"
+            defaultValue={search ?? ''}
+            placeholder="Buscar por nome..."
+            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+          />
+        </div>
         <select
           name="sort"
           defaultValue={sort ?? 'recent'}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 transition-all focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -166,20 +171,20 @@ export default async function ProductsCatalogPage(
         </select>
         <button
           type="submit"
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+          className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-pink-500/20 transition-all hover:shadow-lg hover:shadow-pink-500/30 hover:-translate-y-0.5 active:translate-y-0"
         >
-          Aplicar
+          Buscar
         </button>
       </form>
 
       {products.length === 0 ? (
-        <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center shadow-sm">
-          <p className="text-gray-600">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-10 text-center shadow-sm">
+          <p className="text-gray-600 dark:text-gray-400">
             Nenhum produto encontrado com esses filtros.
           </p>
           <Link
             href="/products"
-            className="mt-3 inline-block text-sm font-medium text-pink-600 hover:text-pink-700"
+            className="mt-3 inline-block text-sm font-medium text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
           >
             Limpar filtros
           </Link>

@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
-import { Mail, Loader2, ArrowLeft, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, CheckCircle2, ShieldCheck, ChevronLeft, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 export default function ForgotPasswordPage() {
+  const { theme, setTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -75,20 +77,20 @@ export default function ForgotPasswordPage() {
         </div>
 
         {/* Conteúdo sucesso */}
-        <div className="flex flex-1 w-full lg:w-1/2 items-start lg:items-center justify-center bg-gray-50/50">
+        <div className="flex flex-1 w-full lg:w-1/2 items-start lg:items-center justify-center bg-gray-50/50 dark:bg-gray-950">
           <div className="w-full max-w-md mx-auto px-5 lg:px-8 mt-4 lg:mt-0 pb-8 lg:pb-0">
-            <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/60 p-6 lg:p-0 lg:bg-transparent lg:shadow-none lg:rounded-none text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/60 dark:shadow-gray-950/60 p-6 lg:p-0 lg:bg-transparent lg:shadow-none lg:rounded-none text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50 dark:bg-green-950/50">
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
               </div>
-              <h2 className="mt-5 text-xl font-bold text-gray-900 font-display hidden lg:block">Email enviado!</h2>
-              <p className="mt-4 text-sm text-gray-600 leading-relaxed">
-                Se existe uma conta com o email <strong className="text-gray-900">{email}</strong>, você receberá um link para redefinir sua senha.
+              <h2 className="mt-5 text-xl font-bold text-gray-900 dark:text-white font-display hidden lg:block">Email enviado!</h2>
+              <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                Se existe uma conta com o email <strong className="text-gray-900 dark:text-white">{email}</strong>, você receberá um link para redefinir sua senha.
               </p>
-              <p className="mt-3 text-xs text-gray-400">Verifique também a pasta de spam.</p>
+              <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">Verifique também a pasta de spam.</p>
               <Link
                 href="/login"
-                className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-pink-600 hover:text-pink-700 transition"
+                className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Voltar ao login
@@ -120,45 +122,52 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* Header mobile com gradiente */}
-      <div className="lg:hidden relative overflow-hidden bg-gradient-to-br from-pink-500 via-pink-600 to-orange-400 px-6 pb-6 pt-10">
+      <div className="lg:hidden relative overflow-hidden bg-gradient-to-br from-pink-500 via-pink-600 to-orange-400 px-5 pb-6 pt-5">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/30 blur-2xl" />
           <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-orange-300/30 blur-2xl" />
         </div>
         <div className="relative z-10">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="h-9 w-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <span className="text-white text-sm font-bold">H</span>
-            </div>
-            <span className="text-lg font-bold font-display text-white">helloustudio</span>
+          <div className="flex items-center justify-between mb-3">
+            <Link href="/login" className="flex items-center gap-1 text-white/90 text-sm font-medium hover:text-white transition">
+              <ChevronLeft className="h-4 w-4" />
+              Login
+            </Link>
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition"
+              aria-label="Alternar tema"
+            >
+              {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            </button>
           </div>
           <h1 className="text-xl font-bold text-white font-display">Esqueceu a senha?</h1>
-          <p className="mt-1 text-sm text-white/80">
+          <p className="mt-0.5 text-sm text-white/80">
             Vamos te ajudar a recuperar
           </p>
         </div>
       </div>
 
       {/* Formulário */}
-      <div className="flex flex-1 w-full lg:w-1/2 items-start lg:items-center justify-center bg-gray-50/50">
-        <div className="w-full max-w-md mx-auto px-5 lg:px-8 mt-4 lg:mt-0 pb-8 lg:pb-0">
-          <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/60 p-5 lg:p-0 lg:bg-transparent lg:shadow-none lg:rounded-none">
+      <div className="flex flex-1 w-full lg:w-1/2 items-center justify-center bg-gray-50/50 dark:bg-gray-950">
+        <div className="w-full max-w-md mx-auto px-5 lg:px-8 py-8 lg:py-0">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/60 dark:shadow-gray-950/60 p-5 lg:p-0 lg:bg-transparent lg:shadow-none lg:rounded-none">
             {/* Título desktop */}
             <div className="hidden lg:block mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 font-display">Esqueceu a senha?</h1>
-              <p className="mt-2 text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-display">Esqueceu a senha?</h1>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 Informe seu email e enviaremos um link para redefinir sua senha.
               </p>
             </div>
 
             {/* Subtítulo mobile */}
-            <p className="lg:hidden text-sm text-gray-500 mb-5">
+            <p className="lg:hidden text-sm text-gray-500 dark:text-gray-400 mb-5">
               Informe seu email e enviaremos um link para redefinir sua senha.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Email
                 </label>
                 <div className="relative">
@@ -171,13 +180,13 @@ export default function ForgotPasswordPage() {
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-11 pr-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition-all focus:bg-white focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+                    className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-11 pr-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
                   />
                 </div>
               </div>
 
               {error && (
-                <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700 flex items-start gap-2.5">
+                <div className="rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-100 dark:border-red-900 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex items-start gap-2.5">
                   <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-red-100 flex items-center justify-center">
                     <span className="text-xs font-bold text-red-600">!</span>
                   </div>
@@ -204,16 +213,16 @@ export default function ForgotPasswordPage() {
             {/* Divisor */}
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-gray-200 dark:border-gray-700" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white lg:bg-gray-50/50 px-3 text-gray-400">ou</span>
+                <span className="bg-white dark:bg-gray-900 lg:bg-gray-50/50 lg:dark:bg-gray-950 px-3 text-gray-400">ou</span>
               </div>
             </div>
 
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
               Lembrou a senha?{' '}
-              <Link href="/login" className="font-semibold text-pink-600 hover:text-pink-700 transition">
+              <Link href="/login" className="font-semibold text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition">
                 Entrar
               </Link>
             </p>
