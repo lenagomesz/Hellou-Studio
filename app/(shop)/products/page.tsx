@@ -141,12 +141,12 @@ export default async function ProductsCatalogPage(
 
       <form
         method="get"
-        className="mb-8 grid gap-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm sm:grid-cols-[1fr_180px_auto]"
+        className="mb-8 grid gap-3 grid-cols-[1fr_auto] rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm sm:grid-cols-[1fr_180px_auto]"
       >
         {category ? (
           <input type="hidden" name="category" value={category} />
         ) : null}
-        <div className="relative">
+        <div className="relative col-span-2 sm:col-span-1">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
@@ -161,7 +161,7 @@ export default async function ProductsCatalogPage(
         <select
           name="sort"
           defaultValue={sort ?? 'recent'}
-          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 transition-all focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-3 sm:px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 transition-all focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -190,7 +190,7 @@ export default async function ProductsCatalogPage(
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
