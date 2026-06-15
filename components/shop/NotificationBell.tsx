@@ -83,12 +83,18 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="relative rounded-full p-2 text-gray-600 transition hover:bg-pink-50/60 hover:text-pink-600"
+        className="relative rounded-full p-2 text-gray-600 transition hover:bg-pink-50/60 hover:text-pink-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-pink-400"
         aria-label="Notificações"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-5 w-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
         </svg>
+        {unreadCount > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 flex h-2 w-2 md:hidden">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-pink-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-pink-500" />
+          </span>
+        )}
         {unreadCount > 0 && (
           <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-1 text-[10px] font-bold leading-4 text-white">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -97,14 +103,14 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute -right-2 sm:right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm rounded-xl border border-gray-200 bg-white shadow-lg z-50">
-          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-            <h3 className="text-sm font-semibold text-gray-900">Notificações</h3>
+        <div className="fixed inset-x-4 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-80 max-w-sm mx-auto sm:mx-0 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Notificações</h3>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={markAllRead}
-                className="text-xs text-pink-600 hover:text-pink-800 font-medium"
+                className="text-xs text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300 font-medium"
               >
                 Marcar todas como lidas
               </button>
@@ -113,7 +119,7 @@ export function NotificationBell() {
 
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-gray-400">
+              <p className="px-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
                 Nenhuma notificação
               </p>
             ) : (
@@ -126,8 +132,8 @@ export function NotificationBell() {
                     setOpen(false);
                     router.push(getNotificationHref(n));
                   }}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-50 transition hover:bg-gray-50 ${
-                    !n.read ? 'bg-pink-50/30' : ''
+                  className={`w-full text-left px-4 py-3 border-b border-gray-50 dark:border-gray-800 transition hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                    !n.read ? 'bg-pink-50/30 dark:bg-pink-950/20' : ''
                   }`}
                 >
                   <div className="flex items-start gap-2">
@@ -135,11 +141,11 @@ export function NotificationBell() {
                       <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-pink-500" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 truncate">{n.title}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{n.title}</p>
                       {n.body && (
-                        <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{n.body}</p>
+                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{n.body}</p>
                       )}
-                      <p className="mt-1 text-[10px] text-gray-400">{timeAgo(n.created_at)}</p>
+                      <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">{timeAgo(n.created_at)}</p>
                     </div>
                   </div>
                 </button>

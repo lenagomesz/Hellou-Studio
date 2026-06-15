@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendWelcomeEmail } from '@/lib/email';
+import { isValidCpf, cleanCpf } from '@/lib/cpf';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -13,11 +14,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { email, password, name, phone } = (body ?? {}) as {
+  const { email, password, name, phone, cpf } = (body ?? {}) as {
     email?: string;
     password?: string;
     name?: string;
     phone?: string;
+    cpf?: string;
   };
 
   if (!email || !password) {
@@ -72,6 +74,15 @@ export async function POST(request: Request) {
 
   const cleanPhone = phone?.replace(/\D/g, '').trim() || null;
 
+  let cleanedCpf: string | null = null;
+  if (cpf) {
+    const digits = cleanCpf(cpf);
+    if (digits.length > 0 && !isValidCpf(digits)) {
+      return NextResponse.json({ error: 'CPF inválido' }, { status: 400 });
+    }
+    if (digits.length === 11) cleanedCpf = digits;
+  }
+
   const { data: created, error } = await admin
     .from('users')
     .insert({
@@ -79,6 +90,7 @@ export async function POST(request: Request) {
       password_hash,
       name: name?.trim() || null,
       phone: cleanPhone,
+      cpf: cleanedCpf,
       role: 'user',
     })
     .select('id, email, name, role')

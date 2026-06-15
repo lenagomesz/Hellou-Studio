@@ -3,9 +3,9 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/api';
 
 const NAV_ITEMS = [
-  { href: '/account', label: 'Minha Conta', icon: 'user' },
-  { href: '/account/orders', label: 'Meus Pedidos', icon: 'orders' },
-  { href: '/account/requests', label: 'Minhas Solicitações', icon: 'requests' },
+  { href: '/account', label: 'Minha Conta', mobileLabel: 'Conta', icon: 'user' },
+  { href: '/account/orders', label: 'Meus Pedidos', mobileLabel: 'Pedidos', icon: 'orders' },
+  { href: '/account/requests', label: 'Minhas Solicitações', mobileLabel: 'Encomendas', icon: 'requests' },
 ];
 
 function NavIcon({ name }: { name: string }) {
@@ -39,8 +39,8 @@ export default async function AccountLayout({
   if (!user) redirect('/login?callbackUrl=/account');
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
+    <div className="mx-auto max-w-6xl overflow-x-hidden px-4 py-6 sm:py-10 sm:px-6">
+      <div className="grid gap-5 sm:gap-8 lg:grid-cols-[240px_1fr]">
         {/* Sidebar */}
         <aside className="hidden lg:block">
           <div className="sticky top-24 space-y-1">
@@ -80,20 +80,21 @@ export default async function AccountLayout({
         </aside>
 
         {/* Mobile tabs */}
-        <nav className="flex gap-1 overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 shadow-sm lg:hidden">
+        <nav className="flex rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-1.5 shadow-sm lg:hidden">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="flex-1 rounded-lg px-3 py-2 text-center text-sm font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-orange-600 whitespace-nowrap"
+              className="flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center text-gray-500 dark:text-gray-400 transition hover:bg-pink-50 dark:hover:bg-pink-950/30 hover:text-pink-600 dark:hover:text-pink-400"
             >
-              {item.label}
+              <NavIcon name={item.icon} />
+              <span className="text-[11px] font-medium leading-tight">{item.mobileLabel}</span>
             </Link>
           ))}
         </nav>
 
         {/* Content */}
-        <main>{children}</main>
+        <main className="min-w-0">{children}</main>
       </div>
     </div>
   );

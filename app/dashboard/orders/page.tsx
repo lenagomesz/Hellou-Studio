@@ -6,7 +6,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import type { OrderStatus } from '@/types/database';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'Pendente',
+  awaiting_payment: 'Aguardando Pgto',
+  pending: 'Aprovado',
   paid: 'Pago',
   processing: 'Em preparo',
   shipped: 'Enviado',
@@ -16,13 +17,14 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
-  pending: 'bg-yellow-100 text-yellow-700',
-  paid: 'bg-blue-100 text-blue-700',
-  processing: 'bg-indigo-100 text-indigo-700',
-  shipped: 'bg-purple-100 text-purple-700',
-  delivered: 'bg-green-100 text-green-700',
-  canceled: 'bg-gray-100 text-gray-600',
-  refunded: 'bg-red-100 text-red-700',
+  awaiting_payment: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  pending: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  paid: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  processing: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  shipped: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  delivered: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  canceled: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+  refunded: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 };
 
 const VALID_STATUSES: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded'];
@@ -256,7 +258,8 @@ function QuickStatusSelect({
   const [trackingError, setTrackingError] = useState('');
 
   const nextStatuses: Record<OrderStatus, OrderStatus[]> = {
-    pending: ['paid', 'canceled'],
+    awaiting_payment: ['pending', 'canceled'],
+    pending: ['processing', 'canceled'],
     paid: ['processing', 'canceled', 'refunded'],
     processing: ['shipped', 'canceled'],
     shipped: ['delivered'],

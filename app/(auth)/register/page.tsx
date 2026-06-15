@@ -3,7 +3,8 @@
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useState, type FormEvent, type ChangeEvent } from 'react';
-import { User, Mail, Phone, Lock, Eye, EyeOff, Loader2, Check, ShieldCheck, ChevronLeft, Sun, Moon } from 'lucide-react';
+import { User, Mail, Phone, Lock, Eye, EyeOff, Loader2, Check, ShieldCheck, ChevronLeft, Sun, Moon, FileText } from 'lucide-react';
+import { formatCpf, isValidCpf, cleanCpf } from '@/lib/cpf';
 import { useTheme } from 'next-themes';
 
 function formatPhone(value: string): string {
@@ -31,6 +32,7 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -60,6 +62,12 @@ export default function RegisterPage() {
       return;
     }
 
+    const cpfDigits = cleanCpf(cpf);
+    if (cpfDigits.length > 0 && !isValidCpf(cpfDigits)) {
+      setError('CPF inválido. Verifique os números informados.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('As senhas não coincidem.');
       return;
@@ -76,7 +84,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email, phone, password }),
+        body: JSON.stringify({ name: name.trim(), email, phone, password, cpf: cleanCpf(cpf) || undefined }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -224,6 +232,27 @@ export default function RegisterPage() {
                     className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-11 pr-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
                   />
                 </div>
+              </div>
+
+              {/* CPF */}
+              <div>
+                <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  CPF <span className="text-gray-400 font-normal">(opcional)</span>
+                </label>
+                <div className="relative">
+                  <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-gray-400" />
+                  <input
+                    id="cpf"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="000.000.000-00"
+                    value={cpf}
+                    onChange={(e) => setCpf(formatCpf(e.target.value))}
+                    className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-11 pr-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">Necessário para emissão de nota fiscal</p>
               </div>
 
               {/* Email */}

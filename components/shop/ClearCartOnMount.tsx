@@ -4,15 +4,17 @@ import { useEffect, useRef } from 'react';
 import { useCart } from '@/components/shop/CartContext';
 
 export function ClearCartOnMount() {
-  const { clearCart, items } = useCart();
+  const { clearCart, items, status } = useCart();
   const didClear = useRef(false);
 
   useEffect(() => {
     if (didClear.current) return;
-    if (items.length === 0) return;
+    if (status === 'loading') return;
     didClear.current = true;
-    void clearCart();
-  }, [clearCart, items]);
+    if (items.length > 0) {
+      void clearCart();
+    }
+  }, [clearCart, items, status]);
 
   return null;
 }

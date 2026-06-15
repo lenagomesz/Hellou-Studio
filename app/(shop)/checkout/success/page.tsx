@@ -3,11 +3,13 @@ import { ClearCartOnMount } from '@/components/shop/ClearCartOnMount';
 
 export const dynamic = 'force-dynamic';
 
-type PageProps = { searchParams: Promise<{ session_id?: string }> };
+type PageProps = { searchParams: Promise<{ session_id?: string; order_id?: string; pending?: string }> };
 
 export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const sessionId = typeof params.session_id === 'string' ? params.session_id : null;
+  const orderId = typeof params.order_id === 'string' ? params.order_id : null;
+  const isPending = params.pending === '1';
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
@@ -30,15 +32,17 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
       </div>
 
       <h1 className="mt-8 text-3xl font-bold text-gray-900 dark:text-white animate-fade-in-up">
-        Pedido confirmado!
+        {isPending ? 'Pedido recebido!' : 'Pedido confirmado!'}
       </h1>
       <p className="mt-3 text-gray-600 dark:text-gray-300 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-        Seu pagamento foi processado com sucesso. Já estamos preparando seu pedido com muito carinho.
+        {isPending
+          ? 'Estamos aguardando a confirmação do pagamento. Você receberá um email assim que for aprovado.'
+          : 'Seu pagamento foi processado com sucesso. Já estamos preparando seu pedido com muito carinho.'}
       </p>
 
-      {sessionId && (
+      {(sessionId || orderId) && (
         <p className="mt-2 font-mono text-xs text-gray-400 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          Ref: ...{sessionId.slice(-12).toUpperCase()}
+          Ref: ...{(orderId || sessionId || '').slice(-12).toUpperCase()}
         </p>
       )}
 

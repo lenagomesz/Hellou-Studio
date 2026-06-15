@@ -22,11 +22,7 @@ export const metadata: Metadata = {
   title: 'Hellou Studio',
   description:
     'Marketplace de produtos impressos em 3D. Chaveiros, escritório e criaturas feitas sob demanda.',
-  icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
-  },
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
 };
 
 export default function RootLayout({

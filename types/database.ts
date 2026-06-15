@@ -1,6 +1,7 @@
 export type Category = 'chaveiros' | 'escritorio' | 'criaturas' | 'encomenda';
 
 export type OrderStatus =
+  | 'awaiting_payment'
   | 'pending'
   | 'paid'
   | 'processing'
@@ -46,6 +47,10 @@ export interface Order {
   user_id: string;
   stripe_session_id: string | null;
   stripe_payment_intent_id: string | null;
+  mp_payment_id: string | null;
+  mp_payment_method: string | null;
+  mp_status: string | null;
+  payment_provider: string;
   status: OrderStatus;
   total: number;
   shipping_address: Record<string, unknown> | null;
@@ -145,6 +150,7 @@ export interface User {
   password_hash: string;
   name: string | null;
   phone: string | null;
+  cpf: string | null;
   role: 'user' | 'admin';
   created_at: string;
   updated_at: string;
@@ -161,6 +167,7 @@ export interface Database {
           password_hash: string;
           name?: string | null;
           phone?: string | null;
+          cpf?: string | null;
           role?: 'user' | 'admin';
           created_at?: string;
           updated_at?: string;
@@ -171,6 +178,7 @@ export interface Database {
           password_hash?: string;
           name?: string | null;
           phone?: string | null;
+          cpf?: string | null;
           role?: 'user' | 'admin';
           created_at?: string;
           updated_at?: string;
@@ -252,6 +260,10 @@ export interface Database {
           user_id: string;
           stripe_session_id?: string | null;
           stripe_payment_intent_id?: string | null;
+          mp_payment_id?: string | null;
+          mp_payment_method?: string | null;
+          mp_status?: string | null;
+          payment_provider?: string;
           status?: OrderStatus;
           total: number;
           shipping_address?: Record<string, unknown> | null;
@@ -263,6 +275,10 @@ export interface Database {
           user_id?: string;
           stripe_session_id?: string | null;
           stripe_payment_intent_id?: string | null;
+          mp_payment_id?: string | null;
+          mp_payment_method?: string | null;
+          mp_status?: string | null;
+          payment_provider?: string;
           status?: OrderStatus;
           total?: number;
           shipping_address?: Record<string, unknown> | null;

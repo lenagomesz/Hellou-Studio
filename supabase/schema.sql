@@ -15,7 +15,7 @@ exception when duplicate_object then null; end $$;
 
 do $$ begin
   create type order_status as enum (
-    'pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded'
+    'awaiting_payment', 'pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded'
   );
 exception when duplicate_object then null; end $$;
 

@@ -13,6 +13,7 @@ import {
 } from '@/lib/cart';
 import type { ShippingOption } from '@/lib/shipping';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
+import { PaymentForm } from '@/components/shop/PaymentForm';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -28,13 +29,11 @@ const STEPS = [
 ] as const;
 
 export default function CartPage() {
-  const { items, total, status, updateQuantity, removeItem } = useCart();
+  const { items, total, status, updateQuantity, removeItem, clearCart } = useCart();
   const { data: session } = useSession();
   const router = useRouter();
 
   const [step, setStep] = useState(1);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [checkoutError, setCheckoutError] = useState('');
 
   const [shippingCep, setShippingCep] = useState('');
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
@@ -54,6 +53,9 @@ export default function CartPage() {
   const [couponError, setCouponError] = useState('');
 
   const [isFirstPurchase, setIsFirstPurchase] = useState(false);
+  const [userCpf, setUserCpf] = useState<string | undefined>(undefined);
+
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const isLoading = status === 'loading';
   const isSyncing = status === 'syncing';
@@ -62,6 +64,9 @@ export default function CartPage() {
     if (session?.user) {
       fetch('/api/orders').then(r => r.json()).then((orders) => {
         if (Array.isArray(orders) && orders.length === 0) setIsFirstPurchase(true);
+      }).catch(() => {});
+      fetch('/api/profile').then(r => r.json()).then((data) => {
+        if (data?.cpf) setUserCpf(data.cpf);
       }).catch(() => {});
     }
   }, [session]);
@@ -137,48 +142,6 @@ export default function CartPage() {
     }
   }
 
-  async function handleCheckout() {
-    if (!session) {
-      router.push('/login?callbackUrl=/cart');
-      return;
-    }
-
-    setCheckoutLoading(true);
-    setCheckoutError('');
-
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          shippingId: selectedShipping?.id,
-          shippingCep: shippingCep.replace(/\D/g, '') || undefined,
-          couponCode: couponDiscount?.code || undefined,
-          shippingAddress: shippingAddress ? {
-            street: addressStreet,
-            number: addressNumber,
-            complement: addressComplement || undefined,
-            neighborhood: addressNeighborhood,
-            city: shippingAddress.city,
-            state: shippingAddress.state,
-            cep: shippingCep.replace(/\D/g, ''),
-          } : undefined,
-        }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setCheckoutError(data.error || 'Erro ao criar sessão de pagamento.');
-        setCheckoutLoading(false);
-        return;
-      }
-
-      window.location.href = data.url;
-    } catch {
-      setCheckoutError('Erro de conexão. Tente novamente.');
-      setCheckoutLoading(false);
-    }
-  }
 
   if (isLoading) {
     return (
@@ -233,7 +196,7 @@ export default function CartPage() {
         </p>
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <div className={`mx-auto px-4 py-8 sm:px-6 ${step === 3 ? 'max-w-5xl' : 'max-w-3xl'}`}>
       {/* Stepper */}
       <nav className="mb-8">
         <ol className="flex items-center justify-center gap-0">
@@ -436,7 +399,7 @@ export default function CartPage() {
             {/* Address fields — shown after CEP lookup */}
             {shippingAddress && (
               <div className="space-y-4 border-t border-gray-100 dark:border-gray-800 pt-5">
-                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-2">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-pink-500">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
@@ -496,7 +459,7 @@ export default function CartPage() {
                       type="text"
                       value={shippingAddress.city}
                       disabled
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-sm text-gray-600 dark:text-gray-400"
                     />
                   </div>
                   <div>
@@ -505,7 +468,7 @@ export default function CartPage() {
                       type="text"
                       value={shippingAddress.state}
                       disabled
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-sm text-gray-600 dark:text-gray-400"
                     />
                   </div>
                 </div>
@@ -515,14 +478,14 @@ export default function CartPage() {
             {/* Shipping options */}
             {shippingOptions.length > 0 && !couponDiscount?.free_shipping && (
               <div className="space-y-3 border-t border-gray-100 dark:border-gray-800 pt-5">
-                <p className="text-sm font-medium text-gray-700">Modalidade de envio:</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Modalidade de envio:</p>
                 {shippingOptions.map((opt) => (
                   <label
                     key={opt.id}
                     className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${
                       selectedShipping?.id === opt.id
-                        ? 'border-pink-400 bg-pink-50/60 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                        ? 'border-pink-400 bg-pink-50/60 dark:bg-pink-950/30 shadow-sm'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50/50 dark:hover:bg-gray-800/50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -534,21 +497,72 @@ export default function CartPage() {
                         className="h-4 w-4 text-pink-500 focus:ring-pink-500"
                       />
                       <div>
-                        <span className="text-sm font-medium text-gray-900">{opt.name}</span>
-                        <p className="text-xs text-gray-500">{opt.days_min}-{opt.days_max} dias úteis</p>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{opt.name}</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{opt.days_min}-{opt.days_max} dias úteis</p>
                       </div>
                     </div>
-                    <span className="text-sm font-bold text-gray-900">{formatPrice(opt.price)}</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(opt.price)}</span>
                   </label>
                 ))}
               </div>
             )}
 
             {couponDiscount?.free_shipping && shippingAddress && (
-              <div className="rounded-xl border border-green-200 bg-green-50/50 p-4">
-                <p className="text-sm font-medium text-green-700">Frete grátis aplicado pelo cupom {couponDiscount.code}</p>
+              <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30 p-4">
+                <p className="text-sm font-medium text-green-700 dark:text-green-300">Frete grátis aplicado pelo cupom {couponDiscount.code}</p>
               </div>
             )}
+          </div>
+
+          {/* Order summary */}
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Resumo do pedido</h3>
+            <ul className="space-y-2 mb-3">
+              {items.map((item) => (
+                <li key={item.id} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-950/30 dark:to-orange-950/30">
+                      {item.product.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-pink-200">◇</div>
+                      )}
+                    </div>
+                    <span className="text-gray-700 dark:text-gray-300 truncate max-w-[180px]">
+                      {item.product.name} <span className="text-gray-400">×{item.quantity}</span>
+                    </span>
+                  </div>
+                  <span className="font-medium text-gray-900 dark:text-white">{formatPrice(computeItemTotal(item))}</span>
+                </li>
+              ))}
+            </ul>
+            <dl className="space-y-1.5 border-t border-gray-100 dark:border-gray-800 pt-3 text-sm">
+              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                <dt>Subtotal</dt>
+                <dd className="font-medium">{formatPrice(total)}</dd>
+              </div>
+              {couponDiscount && (
+                <div className="flex justify-between text-green-700 dark:text-green-400">
+                  <dt>Desconto ({couponDiscount.code})</dt>
+                  <dd className="font-medium">-{formatPrice(discountAmount)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                <dt>Frete</dt>
+                <dd className="font-medium">
+                  {couponDiscount?.free_shipping
+                    ? <span className="text-green-700 dark:text-green-400">Grátis</span>
+                    : selectedShipping
+                      ? formatPrice(selectedShipping.price)
+                      : '—'}
+                </dd>
+              </div>
+              <div className="flex justify-between border-t border-gray-100 dark:border-gray-800 pt-2 mt-2">
+                <dt className="text-base font-bold text-gray-900 dark:text-white">Total</dt>
+                <dd className="text-base font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">{formatPrice(grandTotal)}</dd>
+              </div>
+            </dl>
           </div>
 
           {/* Navigation */}
@@ -582,110 +596,11 @@ export default function CartPage() {
         </div>
       )}
 
-      {/* Step 3: Summary + Payment */}
+      {/* Step 3: Payment + Summary (2-col desktop) */}
       {step === 3 && (
-        <div className="space-y-5 animate-fade-in">
-
-          {/* Items summary */}
-          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Itens ({items.length})</h2>
-              <button type="button" onClick={() => setStep(1)} className="text-xs text-pink-600 hover:text-pink-700 transition">
-                Editar
-              </button>
-            </div>
-            <ul className="space-y-3">
-              {items.map((item) => (
-                <li key={item.id} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pink-50 to-orange-50">
-                      {item.product.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-sm text-pink-200">◇</div>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{item.product.name}</p>
-                      <p className="flex items-center gap-1.5 text-xs text-gray-500">
-                        {item.option?.color && (
-                          <span className="inline-block h-2.5 w-2.5 rounded-full border border-gray-200" style={{ backgroundColor: item.option.color }} />
-                        )}
-                        Qtd: {item.quantity}{item.option ? ` · ${item.option.name}` : ''}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="font-medium text-gray-900 dark:text-white">{formatPrice(computeItemTotal(item))}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Shipping summary */}
-          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Entrega</h2>
-              <button type="button" onClick={() => setStep(2)} className="text-xs text-pink-600 hover:text-pink-700 transition">
-                Alterar
-              </button>
-            </div>
-            {shippingAddress && (
-              <div className="space-y-1 text-sm text-gray-600">
-                <p>{addressStreet}, {addressNumber}{addressComplement ? ` - ${addressComplement}` : ''}</p>
-                <p>{addressNeighborhood}</p>
-                <p>{shippingAddress.city} - {shippingAddress.state}</p>
-                <p className="font-mono text-xs text-gray-500">CEP: {shippingCep}</p>
-              </div>
-            )}
-            {selectedShipping && (
-              <p className="mt-2 text-sm text-gray-600">
-                {selectedShipping.name} — {selectedShipping.days_min}-{selectedShipping.days_max} dias úteis
-              </p>
-            )}
-            {couponDiscount?.free_shipping && (
-              <p className="mt-2 text-sm font-medium text-green-700">Frete grátis (cupom)</p>
-            )}
-          </div>
-
-          {/* Totals */}
-          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-            <dl className="space-y-2.5 text-sm">
-              <div className="flex justify-between text-gray-600">
-                <dt>Subtotal</dt>
-                <dd className="font-medium">{formatPrice(total)}</dd>
-              </div>
-              {couponDiscount && (
-                <div className="flex justify-between text-green-700">
-                  <dt className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
-                    </svg>
-                    Desconto ({couponDiscount.code})
-                  </dt>
-                  <dd className="font-medium">-{formatPrice(discountAmount)}</dd>
-                </div>
-              )}
-              <div className="flex justify-between text-gray-600">
-                <dt>Frete</dt>
-                <dd className="font-medium">
-                  {couponDiscount?.free_shipping
-                    ? <span className="text-green-700">Grátis</span>
-                    : selectedShipping
-                      ? formatPrice(selectedShipping.price)
-                      : '—'}
-                </dd>
-              </div>
-              <div className="flex justify-between border-t border-gray-100 dark:border-gray-800 pt-3">
-                <dt className="text-base font-bold text-gray-900 dark:text-white">Total</dt>
-                <dd className="text-xl font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">{formatPrice(grandTotal)}</dd>
-              </div>
-            </dl>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-between">
+        <div className="animate-fade-in">
+          {/* Back button */}
+          <div className="mb-5">
             <button
               type="button"
               onClick={() => setStep(2)}
@@ -696,42 +611,166 @@ export default function CartPage() {
               </svg>
               Voltar
             </button>
-            <button
-              onClick={handleCheckout}
-              disabled={isSyncing || checkoutLoading}
-              className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-200/40 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] ${
-                isSyncing || checkoutLoading ? 'pointer-events-none opacity-60' : ''
-              }`}
-            >
-              {checkoutLoading ? (
-                <>
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                  </svg>
-                  Finalizar Compra
-                </>
-              )}
-            </button>
           </div>
 
-          {!session && (
-            <p className="text-center text-xs text-gray-500">Você precisará fazer login para finalizar a compra.</p>
-          )}
+          <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+            {/* Summary — shows FIRST on mobile (order-1), RIGHT column on desktop (lg:order-2) */}
+            <div className="space-y-4 order-1 lg:order-2 lg:sticky lg:top-24 lg:self-start">
+              {/* Items */}
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Itens ({items.length})</h2>
+                  <button type="button" onClick={() => setStep(1)} className="text-xs text-pink-600 hover:text-pink-700 transition">
+                    Editar
+                  </button>
+                </div>
+                <ul className="space-y-2.5">
+                  {items.map((item) => (
+                    <li key={item.id} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-950/30 dark:to-orange-950/30">
+                          {item.product.image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs text-pink-200">◇</div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 dark:text-white truncate text-xs">{item.product.name}</p>
+                          <p className="text-xs text-gray-400">×{item.quantity}{item.option ? ` · ${item.option.name}` : ''}</p>
+                        </div>
+                      </div>
+                      <span className="font-medium text-gray-900 dark:text-white text-xs">{formatPrice(computeItemTotal(item))}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-          {checkoutError && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{checkoutError}</p>
-          )}
-          {status === 'error' && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">Erro ao sincronizar com o servidor. Tente novamente.</p>
-          )}
+              {/* Shipping */}
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Entrega</h2>
+                  <button type="button" onClick={() => setStep(2)} className="text-xs text-pink-600 hover:text-pink-700 transition">
+                    Alterar
+                  </button>
+                </div>
+                {shippingAddress && (
+                  <div className="space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
+                    <p>{addressStreet}, {addressNumber}{addressComplement ? ` - ${addressComplement}` : ''}</p>
+                    <p>{addressNeighborhood} — {shippingAddress.city}/{shippingAddress.state}</p>
+                  </div>
+                )}
+                {selectedShipping && (
+                  <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {selectedShipping.name} · {selectedShipping.days_min}-{selectedShipping.days_max} dias úteis
+                  </p>
+                )}
+                {couponDiscount?.free_shipping && (
+                  <p className="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400">Frete grátis (cupom)</p>
+                )}
+              </div>
+
+              {/* Coupon */}
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-pink-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
+                  </svg>
+                  <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cupom</h2>
+                </div>
+                {couponDiscount ? (
+                  <div className="flex items-center justify-between rounded-xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30 p-3">
+                    <div>
+                      <span className="text-xs font-bold text-green-800 dark:text-green-300">{couponDiscount.code}</span>
+                      <p className="text-xs text-green-700 dark:text-green-400">{couponDiscount.description}</p>
+                    </div>
+                    <button type="button" onClick={() => { setCouponDiscount(null); setCouponCode(''); }} className="rounded-full p-1 text-gray-400 transition hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Código"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-3 py-2 text-xs text-gray-900 dark:text-gray-100 uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent focus:bg-white dark:focus:bg-gray-700"
+                    />
+                    <button type="button" onClick={handleApplyCoupon} disabled={couponLoading} className="rounded-xl bg-gray-900 dark:bg-gray-100 px-3 py-2 text-xs font-medium text-white dark:text-gray-900 transition hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50">
+                      {couponLoading ? '...' : 'Aplicar'}
+                    </button>
+                  </div>
+                )}
+                {couponError && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{couponError}</p>}
+              </div>
+
+              {/* Totals */}
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+                <dl className="space-y-2 text-sm">
+                  <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                    <dt>Subtotal</dt>
+                    <dd className="font-medium">{formatPrice(total)}</dd>
+                  </div>
+                  {couponDiscount && (
+                    <div className="flex justify-between text-green-700 dark:text-green-400">
+                      <dt>Desconto ({couponDiscount.code})</dt>
+                      <dd className="font-medium">-{formatPrice(discountAmount)}</dd>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                    <dt>Frete</dt>
+                    <dd className="font-medium">
+                      {couponDiscount?.free_shipping
+                        ? <span className="text-green-700 dark:text-green-400">Grátis</span>
+                        : selectedShipping
+                          ? formatPrice(selectedShipping.price)
+                          : '—'}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between border-t border-gray-100 dark:border-gray-800 pt-2.5">
+                    <dt className="text-base font-bold text-gray-900 dark:text-white">Total</dt>
+                    <dd className="text-lg font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">{formatPrice(grandTotal)}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+
+            {/* Payment — shows SECOND on mobile (order-2), LEFT column on desktop (lg:order-1) */}
+            <div className="order-2 lg:order-1">
+              {session ? (
+                <PaymentForm
+                  grandTotal={grandTotal}
+                  shippingCost={shippingCost}
+                  couponCode={couponDiscount?.code}
+                  shippingAddress={shippingAddress ? {
+                    street: addressStreet,
+                    number: addressNumber,
+                    complement: addressComplement || undefined,
+                    neighborhood: addressNeighborhood,
+                    city: shippingAddress.city,
+                    state: shippingAddress.state,
+                    cep: shippingCep.replace(/\D/g, ''),
+                  } : undefined}
+                  userCpf={userCpf}
+                />
+              ) : (
+                <div className="text-center space-y-3 py-12">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Você precisará fazer login para finalizar a compra.</p>
+                  <button
+                    onClick={() => router.push('/login?callbackUrl=/cart')}
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/40 transition hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Fazer login
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

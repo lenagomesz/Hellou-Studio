@@ -4,12 +4,14 @@ import { getCurrentUser } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { Order, OrderItem, Product, ProductOption, OrderStatus } from '@/types/database';
 import ConfirmDeliveryButton from './ConfirmDeliveryButton';
+import PixPaymentSection from './PixPaymentSection';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 
 export const dynamic = 'force-dynamic';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'Pendente',
+  awaiting_payment: 'Aguardando Pagamento',
+  pending: 'Aprovado',
   paid: 'Pago',
   processing: 'Em preparo',
   shipped: 'Enviado',
@@ -19,16 +21,17 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
-  pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  paid: 'bg-blue-100 text-blue-700 border-blue-200',
-  processing: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-  shipped: 'bg-purple-100 text-purple-700 border-purple-200',
-  delivered: 'bg-green-100 text-green-700 border-green-200',
-  canceled: 'bg-gray-100 text-gray-600 border-gray-200',
-  refunded: 'bg-red-100 text-red-700 border-red-200',
+  awaiting_payment: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
+  pending: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
+  paid: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+  processing: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800',
+  shipped: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
+  delivered: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
+  canceled: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700',
+  refunded: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
 };
 
-const STATUS_ORDER: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
+const STATUS_ORDER: OrderStatus[] = ['awaiting_payment', 'pending', 'paid', 'processing', 'shipped', 'delivered'];
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -129,6 +132,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
         </div>
       )}
 
+      {/* PIX payment section */}
+      {order.status === 'awaiting_payment' && order.mp_payment_id && order.mp_payment_method === 'pix' && (
+        <PixPaymentSection mpPaymentId={order.mp_payment_id} orderId={order.id} />
+      )}
+
       {/* Canceled notice */}
       {isCanceled && (
         <div className={`mb-8 rounded-2xl border p-5 ${order.status === 'refunded' ? 'border-red-100 dark:border-red-800 bg-red-50/50 dark:bg-red-950/50' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'}`}>
@@ -185,14 +193,26 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
         {/* Summary */}
         <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 px-5 py-4">
-          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-            <span>Subtotal</span>
-            <span>{formatPrice(order.total)}</span>
-          </div>
-          <div className="mt-2 flex justify-between text-base font-bold text-gray-900 dark:text-white">
-            <span>Total</span>
-            <span>{formatPrice(order.total)}</span>
-          </div>
+          {(() => {
+            const itemsSubtotal = order.items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+            const shippingCost = Math.max(0, Math.round((order.total - itemsSubtotal) * 100) / 100);
+            return (
+              <>
+                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                  <span>Subtotal</span>
+                  <span>{formatPrice(itemsSubtotal)}</span>
+                </div>
+                <div className="mt-1.5 flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                  <span>Frete</span>
+                  <span>{shippingCost > 0 ? formatPrice(shippingCost) : 'Grátis'}</span>
+                </div>
+                <div className="mt-2.5 flex justify-between border-t border-gray-200 dark:border-gray-700 pt-2.5 text-base font-bold text-gray-900 dark:text-white">
+                  <span>Total</span>
+                  <span>{formatPrice(order.total)}</span>
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
 
@@ -236,11 +256,26 @@ export default async function OrderDetailPage({ params }: PageProps) {
       <div className="mt-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
         <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Pagamento</h2>
         <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-          <p>Processado via Stripe</p>
-          {order.stripe_session_id && (
-            <p className="font-mono text-xs text-gray-400 dark:text-gray-500">
-              Ref: ...{order.stripe_session_id.slice(-12).toUpperCase()}
-            </p>
+          {order.payment_provider === 'mercadopago' ? (
+            <>
+              <p>
+                {order.mp_payment_method === 'pix' ? 'PIX' : 'Cartão de crédito'} via Mercado Pago
+              </p>
+              {order.mp_payment_id && (
+                <p className="font-mono text-xs text-gray-400 dark:text-gray-500">
+                  Ref: ...{order.mp_payment_id.slice(-12).toUpperCase()}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <p>Processado via Stripe</p>
+              {order.stripe_session_id && (
+                <p className="font-mono text-xs text-gray-400 dark:text-gray-500">
+                  Ref: ...{order.stripe_session_id.slice(-12).toUpperCase()}
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

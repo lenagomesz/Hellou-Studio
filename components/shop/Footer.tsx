@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
+    <footer className="mt-auto border-t border-pink-100 bg-pink-50/60 dark:border-gray-800 dark:bg-gray-900">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
         <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
           {/* Brand */}
@@ -112,7 +112,7 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-gray-100 dark:border-gray-800">
+      <div className="border-t border-pink-100/60 dark:border-gray-800">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row sm:px-6">
           <span className="text-xs text-gray-400 dark:text-gray-500">
             © {new Date().getFullYear()} helloustudio. Todos os direitos reservados.

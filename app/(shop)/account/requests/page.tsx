@@ -163,36 +163,29 @@ export default function UserRequestsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-700" />
-          <div className="h-24 rounded-xl bg-gray-100 dark:bg-gray-800" />
-          <div className="h-24 rounded-xl bg-gray-100 dark:bg-gray-800" />
-        </div>
+      <div className="space-y-4">
+        <div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="h-24 rounded-xl bg-gray-100 dark:bg-gray-800" />
+        <div className="h-24 rounded-xl bg-gray-100 dark:bg-gray-800" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <Link href="/account" className="text-sm text-gray-500 dark:text-gray-400 hover:text-pink-600 transition">
-            ← Minha Conta
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">Minhas Solicitações</h1>
-        </div>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Minhas Solicitações</h1>
         <Link
           href="/request-print"
-          className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+          className="shrink-0 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
         >
-          + Nova solicitação
+          + Nova
         </Link>
       </div>
 
       {requests.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-12 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-3xl">
+        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 sm:p-12 text-center">
+          <div className="mx-auto flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-2xl sm:text-3xl">
             🖨️
           </div>
           <p className="mt-4 text-sm font-medium text-gray-900 dark:text-white">Nenhuma solicitação ainda</p>
@@ -213,16 +206,16 @@ export default function UserRequestsPage() {
             return (
               <div
                 key={req.id}
-                className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:shadow-md"
+                className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 sm:p-4 shadow-sm transition hover:shadow-md"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-2 sm:gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">{req.title}</p>
-                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">{req.title}</p>
+                    <p className="mt-0.5 text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
                       {req.stl_file_name} · {formatDate(req.created_at)}
                     </p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.color}`}>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-medium ${status.color}`}>
                     {status.label}
                   </span>
                 </div>

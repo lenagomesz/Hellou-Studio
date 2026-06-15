@@ -178,16 +178,31 @@ export default async function ProductsCatalogPage(
       </form>
 
       {products.length === 0 ? (
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-10 text-center shadow-sm">
-          <p className="text-gray-600 dark:text-gray-400">
-            Nenhum produto encontrado com esses filtros.
-          </p>
-          <Link
-            href="/products"
-            className="mt-3 inline-block text-sm font-medium text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
-          >
-            Limpar filtros
-          </Link>
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
+          {category || search ? (
+            <>
+              <p className="text-gray-600 dark:text-gray-400">
+                Nenhum produto encontrado com esses filtros.
+              </p>
+              <Link
+                href="/products"
+                className="mt-3 inline-block text-sm font-medium text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
+              >
+                Limpar filtros
+              </Link>
+            </>
+          ) : (
+            <>
+              <span className="text-5xl">✨🎨</span>
+              <h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
+                Opa! Ainda não chegaram novidades...
+              </h2>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Estamos preparando peças incríveis pra você! 🚀<br />
+                Volte em breve, novidades a caminho!
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

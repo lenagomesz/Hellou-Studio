@@ -6,7 +6,8 @@ import Link from 'next/link';
 import type { OrderStatus } from '@/types/database';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'Pendente',
+  awaiting_payment: 'Aguardando Pagamento',
+  pending: 'Aprovado',
   paid: 'Pago',
   processing: 'Em preparo',
   shipped: 'Enviado',
@@ -16,26 +17,28 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
-  pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  paid: 'bg-blue-50 text-blue-700 border-blue-200',
-  processing: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  shipped: 'bg-purple-50 text-purple-700 border-purple-200',
-  delivered: 'bg-green-50 text-green-700 border-green-200',
-  canceled: 'bg-gray-50 text-gray-600 border-gray-200',
-  refunded: 'bg-red-50 text-red-700 border-red-200',
+  awaiting_payment: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800',
+  pending: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
+  paid: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
+  processing: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800',
+  shipped: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800',
+  delivered: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
+  canceled: 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700',
+  refunded: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
 };
 
 const STATUS_ICONS: Record<OrderStatus, string> = {
-  pending: '⏳',
+  awaiting_payment: '🕐',
+  pending: '✅',
   paid: '💳',
   processing: '⚙️',
   shipped: '📦',
-  delivered: '✅',
+  delivered: '📬',
   canceled: '❌',
   refunded: '↩️',
 };
 
-const STATUS_FLOW: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
+const STATUS_FLOW: OrderStatus[] = ['awaiting_payment', 'pending', 'paid', 'processing', 'shipped', 'delivered'];
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
