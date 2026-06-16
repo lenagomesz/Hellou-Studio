@@ -234,7 +234,7 @@ export default function HomePage() {
           >
             <Link
               href="/products"
-              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-pink-200/30 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-200/40 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-pink-200/30 dark:shadow-none transition-all duration-300 hover:shadow-2xl hover:shadow-orange-200/40 dark:hover:shadow-none hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
               <span className="relative">Explorar Catálogo</span>

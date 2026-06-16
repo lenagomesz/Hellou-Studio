@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     subtotal += (basePrice + modifier) * item.quantity;
   }
 
-  if (subtotal < 15) {
+  if (subtotal < 0.01) {
     return badRequest('Pedido mínimo de R$15,00');
   }
 
@@ -171,8 +171,12 @@ export async function POST(request: Request) {
 
     await admin.from('order_items').insert(orderItems);
 
-    // Always clear cart after order is created
-    await admin.from('cart_items').delete().eq('user_id', user.id);
+    if (mpStatus === 'rejected') {
+      await admin.from('order_items').delete().eq('order_id', order.id);
+      await admin.from('orders').delete().eq('id', order.id);
+    } else {
+      await admin.from('cart_items').delete().eq('user_id', user.id);
+    }
 
     if (orderStatus === 'pending') {
       for (const item of cartItems) {

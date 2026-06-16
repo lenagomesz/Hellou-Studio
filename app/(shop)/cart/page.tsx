@@ -56,6 +56,7 @@ export default function CartPage() {
   const [userCpf, setUserCpf] = useState<string | undefined>(undefined);
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
 
   const isLoading = status === 'loading';
   const isSyncing = status === 'syncing';
@@ -156,7 +157,7 @@ export default function CartPage() {
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !paymentCompleted) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
         <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100">
@@ -305,12 +306,12 @@ export default function CartPage() {
               <p className="text-sm text-pink-700 font-medium">🎉 Primeira compra! Você tem <span className="font-bold">10% de desconto</span> automático no pagamento.</p>
             </div>
           )}
-          {total < 15 && (
+          {total < 0.01 && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
               <p className="text-sm text-red-700 font-medium">O valor mínimo para compra é R$15,00. Adicione mais itens para continuar.</p>
             </div>
           )}
-          {total >= 15 && total < 99 && (
+          {total >= 0.01 && total < 99 && (
             <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
               <p className="text-sm text-orange-700">Falta <span className="font-semibold">{formatPrice(99 - total)}</span> para frete grátis! 🚚</p>
             </div>
@@ -333,7 +334,7 @@ export default function CartPage() {
               </div>
               <button
                 type="button"
-                disabled={total < 15}
+                disabled={total < 0.01}
                 onClick={() => { if (!session) { router.push('/login?callbackUrl=/cart'); return; } setStep(2); }}
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/30 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
               >
@@ -757,6 +758,7 @@ export default function CartPage() {
                     cep: shippingCep.replace(/\D/g, ''),
                   } : undefined}
                   userCpf={userCpf}
+                  onPaymentCompleted={() => setPaymentCompleted(true)}
                 />
               ) : (
                 <div className="text-center space-y-3 py-12">
