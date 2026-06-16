@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import type { Order, OrderItem, Product, ProductOption, OrderStatus } from '@/types/database';
 import ConfirmDeliveryButton from './ConfirmDeliveryButton';
 import PixPaymentSection from './PixPaymentSection';
+import EditableShippingAddress from './EditableShippingAddress';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 
 export const dynamic = 'force-dynamic';
@@ -263,7 +264,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
       {/* Shipping Address */}
       {order.shipping_address && Object.keys(order.shipping_address).length > 0 && (
-        <ShippingAddress address={order.shipping_address} />
+        <EditableShippingAddress
+          orderId={order.id}
+          address={order.shipping_address}
+          canEdit={['awaiting_payment', 'pending', 'paid', 'processing'].includes(order.status)}
+        />
       )}
 
       {/* Payment info */}
@@ -291,6 +296,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
               )}
             </>
           )}
+          {!!(order.shipping_address as Record<string, unknown> | null)?.wants_invoice && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+              </svg>
+              Nota fiscal solicitada
+            </p>
+          )}
         </div>
       </div>
 
@@ -299,44 +312,3 @@ export default async function OrderDetailPage({ params }: PageProps) {
   );
 }
 
-function ShippingAddress({ address }: { address: Record<string, unknown> }) {
-  const name = typeof address.name === 'string' ? address.name : '';
-  const city = typeof address.city === 'string' ? address.city : '';
-  const state = typeof address.state === 'string' ? address.state : '';
-
-  // Support both Stripe format (line1/line2/postal_code) and Brazilian format (street/number/neighborhood/cep)
-  const street = typeof address.street === 'string' ? address.street : '';
-  const number = typeof address.number === 'string' ? address.number : '';
-  const complement = typeof address.complement === 'string' ? address.complement : '';
-  const neighborhood = typeof address.neighborhood === 'string' ? address.neighborhood : '';
-  const cep = typeof address.cep === 'string' ? address.cep : '';
-
-  const line1 = typeof address.line1 === 'string' ? address.line1 : '';
-  const line2 = typeof address.line2 === 'string' ? address.line2 : '';
-  const postalCode = typeof address.postal_code === 'string' ? address.postal_code : '';
-
-  const isBrazilianFormat = !!street;
-
-  return (
-    <div className="mt-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-      <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Endereço de entrega</h2>
-      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5">
-        {name && <p className="font-medium text-gray-900 dark:text-white">{name}</p>}
-        {isBrazilianFormat ? (
-          <>
-            <p>{[street, number].filter(Boolean).join(', ')}</p>
-            {complement && <p>{complement}</p>}
-            {neighborhood && <p>{neighborhood}</p>}
-            <p>{[city, state].filter(Boolean).join(' - ')}{cep ? ` · CEP ${cep}` : ''}</p>
-          </>
-        ) : (
-          <>
-            {line1 && <p>{line1}</p>}
-            {line2 && <p>{line2}</p>}
-            <p>{[city, state, postalCode].filter(Boolean).join(', ')}</p>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}

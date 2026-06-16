@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     shipping_address,
     shipping_cost = 0,
     coupon_code,
+    wants_invoice = false,
   } = body as {
     payment_method: 'pix' | 'credit_card' | 'debit_card';
     token?: string;
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
     shipping_address?: Record<string, unknown>;
     shipping_cost?: number;
     coupon_code?: string;
+    wants_invoice?: boolean;
   };
 
   if (!payment_method) return badRequest('Método de pagamento não informado');
@@ -140,7 +142,7 @@ export async function POST(request: Request) {
     const mpPaymentId = String(result.id);
     const mpStatus = result.status;
 
-    const orderStatus = mpStatus === 'approved' ? 'pending' : 'awaiting_payment';
+    const orderStatus = mpStatus === 'approved' ? 'processing' : 'awaiting_payment';
 
     const { data: order, error: orderError } = await admin
       .from('orders')
@@ -152,7 +154,7 @@ export async function POST(request: Request) {
         payment_provider: 'mercadopago',
         status: orderStatus,
         total: totalAmount,
-        shipping_address: shipping_address ?? null,
+        shipping_address: { ...(shipping_address ?? {}), wants_invoice: !!wants_invoice },
       })
       .select('id')
       .single();
@@ -185,7 +187,7 @@ export async function POST(request: Request) {
       await admin.from('cart_items').delete().eq('user_id', user.id);
     }
 
-    if (orderStatus === 'pending') {
+    if (orderStatus === 'processing') {
       for (const item of cartItems) {
         if (item.product_option_id) {
           const { error: rpcErr } = await admin.rpc('decrement_stock', {

@@ -29,15 +29,29 @@ function LoginForm() {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (!result || result.error) {
+      setLoading(false);
       setError('Email ou senha inválidos. Verifique suas credenciais e tente novamente.');
       return;
     }
 
-    const session = await getSession();
-    const dest = session?.user?.role === 'admin' ? '/dashboard' : callbackUrl;
+    // Poll until session is established (max 5s)
+    let session = await getSession();
+    let attempts = 0;
+    while (!session?.user && attempts < 10) {
+      await new Promise((r) => setTimeout(r, 500));
+      session = await getSession();
+      attempts++;
+    }
+
+    setLoading(false);
+
+    if (!session?.user) {
+      setError('Erro ao estabelecer sessão. Tente novamente.');
+      return;
+    }
+
+    const dest = session.user.role === 'admin' ? '/dashboard' : callbackUrl;
     window.location.href = dest;
   }
 

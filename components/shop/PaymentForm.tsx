@@ -51,6 +51,7 @@ export function PaymentForm({
 
   const [cpf, setCpf] = useState(userCpf ? formatCpf(userCpf) : '');
   const [cpfError, setCpfError] = useState('');
+  const [wantsInvoice, setWantsInvoice] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit' | 'debit'>('pix');
 
   // PIX state
@@ -166,6 +167,7 @@ export function PaymentForm({
           shipping_cost: shippingCost,
           coupon_code: couponCode,
           shipping_address: shippingAddress,
+          wants_invoice: wantsInvoice,
         }),
       });
 
@@ -253,6 +255,7 @@ export function PaymentForm({
           shipping_cost: shippingCost,
           coupon_code: couponCode,
           shipping_address: shippingAddress,
+          wants_invoice: wantsInvoice,
         }),
       });
 
@@ -337,6 +340,7 @@ export function PaymentForm({
           shipping_cost: shippingCost,
           coupon_code: couponCode,
           shipping_address: shippingAddress,
+          wants_invoice: wantsInvoice,
         }),
       });
 
@@ -540,6 +544,23 @@ export function PaymentForm({
               {cpfError && <p className="mt-1 text-xs text-red-500">{cpfError}</p>}
             </div>
           )}
+
+          {/* Nota Fiscal */}
+          <div className="flex items-start gap-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 px-4 py-3">
+            <input
+              id="wants-invoice"
+              type="checkbox"
+              checked={wantsInvoice}
+              onChange={(e) => setWantsInvoice(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+            />
+            <label htmlFor="wants-invoice" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer leading-snug">
+              <span className="font-medium">Desejo nota fiscal</span>
+              <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                A nota será emitida com o CPF informado e enviada por e-mail
+              </span>
+            </label>
+          </div>
 
           {/* Payment method tabs */}
           <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">

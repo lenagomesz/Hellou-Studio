@@ -370,7 +370,7 @@ export default function CartPage() {
           <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm space-y-5">
             {/* CEP */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CEP</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CEP <span className="text-pink-500">*</span></label>
               <div className="flex gap-3">
                 <input
                   type="text"
@@ -413,7 +413,7 @@ export default function CartPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rua / Avenida</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rua / Avenida <span className="text-pink-500">*</span></label>
                   <input
                     type="text"
                     placeholder="Ex: Rua das Flores"
@@ -425,7 +425,7 @@ export default function CartPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número <span className="text-pink-500">*</span></label>
                     <input
                       type="text"
                       placeholder="123"
@@ -447,7 +447,7 @@ export default function CartPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bairro</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bairro <span className="text-pink-500">*</span></label>
                   <input
                     type="text"
                     placeholder="Ex: Centro"

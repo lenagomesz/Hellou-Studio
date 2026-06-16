@@ -410,6 +410,9 @@ export default function OrderDetailPage() {
                 {String(shipping.complement ?? '') && (
                   <p className="text-xs text-gray-500">{String(shipping.complement)}</p>
                 )}
+                {String(shipping.neighborhood ?? '') && (
+                  <p className="text-xs text-gray-500">{String(shipping.neighborhood)}</p>
+                )}
                 {String(shipping.city ?? '') && (
                   <p className="text-sm text-gray-700">{String(shipping.city)} - {String(shipping.state ?? '')}</p>
                 )}
@@ -502,6 +505,14 @@ export default function OrderDetailPage() {
                   {STATUS_LABELS[order.status]}
                 </dd>
               </div>
+              {!!shipping?.wants_invoice && (
+                <div className="flex justify-between items-center">
+                  <dt className="text-xs text-gray-500">Nota Fiscal</dt>
+                  <dd className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                    Solicitada
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
 

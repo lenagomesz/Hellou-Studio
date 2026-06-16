@@ -71,7 +71,7 @@ export async function POST(request: Request) {
 
     console.log('[mp-webhook] found order:', { orderId: order.id, currentStatus: order.status, mpStatus });
 
-    const newStatus = mpStatus === 'approved' ? 'pending' : mpStatus === 'cancelled' ? 'canceled' : order.status;
+    const newStatus = mpStatus === 'approved' ? 'processing' : mpStatus === 'cancelled' ? 'canceled' : order.status;
 
     if (newStatus === order.status) {
       return NextResponse.json({ received: true });
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       console.error('[mp-webhook] notification error:', e);
     }
 
-    if (newStatus === 'pending' && order.status === 'awaiting_payment') {
+    if (newStatus === 'processing' && order.status === 'awaiting_payment') {
       const { data: items } = await admin
         .from('order_items')
         .select('*, option:product_options(*)')
