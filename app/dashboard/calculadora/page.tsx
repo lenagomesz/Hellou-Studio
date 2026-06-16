@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calculator, Zap, Clock, DollarSign, Package, Printer, Info } from 'lucide-react';
+import { Calculator, Zap, Clock, DollarSign, Package, Printer, Info, CreditCard } from 'lucide-react';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -16,7 +16,16 @@ interface Resultado {
   precoSugerido: number;
   lucro: number;
   margemLucro: number;
+  taxaMPValor: number;
+  lucroLiquido: number;
+  margemLiquida: number;
 }
+
+const TAXAS_MP = [
+  { label: 'PIX', value: '0.99' },
+  { label: 'Crédito à vista', value: '4.99' },
+  { label: 'Débito', value: '1.99' },
+];
 
 export default function CalculadoraPage() {
   const [form, setForm] = useState({
@@ -31,6 +40,7 @@ export default function CalculadoraPage() {
     valorHoraMaoDeObra: '30',
     markup: '2.5',
     custosFalha: '10',
+    taxaMP: '4.99',
   });
 
   const [resultado, setResultado] = useState<Resultado | null>(null);
@@ -60,6 +70,11 @@ export default function CalculadoraPage() {
     const lucro = precoSugerido - custoTotal;
     const margemLucro = precoSugerido > 0 ? (lucro / precoSugerido) * 100 : 0;
 
+    const taxaPerc = Number(form.taxaMP) || 0;
+    const taxaMPValor = precoSugerido * (taxaPerc / 100);
+    const lucroLiquido = lucro - taxaMPValor;
+    const margemLiquida = precoSugerido > 0 ? (lucroLiquido / precoSugerido) * 100 : 0;
+
     setResultado({
       custoFilamento,
       custoEnergia,
@@ -69,6 +84,9 @@ export default function CalculadoraPage() {
       precoSugerido,
       lucro,
       margemLucro,
+      taxaMPValor,
+      lucroLiquido,
+      margemLiquida,
     });
   }
 
@@ -295,6 +313,47 @@ export default function CalculadoraPage() {
             </div>
           </div>
 
+          {/* Taxa MP */}
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/30">
+                <CreditCard className="h-4 w-4 text-orange-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Taxa do Meio de Pagamento</h2>
+                <p className="text-[11px] text-gray-500">Percentual cobrado pelo Mercado Pago</p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Método</label>
+                <select
+                  value={TAXAS_MP.find(t => t.value === form.taxaMP)?.value ?? ''}
+                  onChange={(e) => { if (e.target.value) updateField('taxaMP', e.target.value); }}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                >
+                  {TAXAS_MP.map(t => (
+                    <option key={t.value} value={t.value}>{t.label} ({t.value}%)</option>
+                  ))}
+                  <option value="">Personalizado</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Taxa (%)</label>
+                <input
+                  type="number"
+                  value={form.taxaMP}
+                  onChange={(e) => updateField('taxaMP', e.target.value)}
+                  placeholder="Ex: 4.99"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+            </div>
+          </div>
+
           <button type="submit" className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition">
             <Calculator className="inline h-4 w-4 mr-2" />
             Calcular preço
@@ -309,12 +368,20 @@ export default function CalculadoraPage() {
               <div className="rounded-2xl border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50 p-6 shadow-sm dark:border-pink-800 dark:from-pink-950/30 dark:to-orange-950/30">
                 <p className="text-xs font-semibold uppercase tracking-wide text-pink-600">Preço sugerido de venda</p>
                 <p className="mt-2 text-4xl font-bold text-gray-900 dark:text-white">{formatPrice(resultado.precoSugerido)}</p>
-                <div className="mt-3 flex items-center gap-3">
-                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                    Lucro: {formatPrice(resultado.lucro)}
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                    Lucro bruto: {formatPrice(resultado.lucro)}
                   </span>
-                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                     Margem: {resultado.margemLucro.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    Lucro líquido: {formatPrice(resultado.lucroLiquido)}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    Margem líquida: {resultado.margemLiquida.toFixed(1)}%
                   </span>
                 </div>
               </div>
@@ -355,6 +422,19 @@ export default function CalculadoraPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">Custo total (com falha)</span>
                       <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(resultado.custoTotal)}</span>
+                    </div>
+                  </div>
+                  <div className="border-t border-gray-100 pt-3 dark:border-gray-800">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-orange-500" />
+                        <span className="text-sm text-orange-700 dark:text-orange-300">Taxa Mercado Pago ({form.taxaMP}%)</span>
+                      </div>
+                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">-{formatPrice(resultado.taxaMPValor)}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Você recebe (líquido)</span>
+                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{formatPrice(resultado.precoSugerido - resultado.taxaMPValor)}</span>
                     </div>
                   </div>
                 </div>

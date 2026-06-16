@@ -32,7 +32,9 @@ export async function POST(request: Request) {
   const type = body.type as string | undefined;
   const action = body.action as string | undefined;
 
-  if (type !== 'payment' || action !== 'payment.updated') {
+  console.log('[mp-webhook] received:', { type, action, dataId });
+
+  if (type !== 'payment' || (action !== 'payment.updated' && action !== 'payment.created')) {
     return NextResponse.json({ received: true });
   }
 
