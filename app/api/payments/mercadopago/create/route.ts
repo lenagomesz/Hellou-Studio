@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { isValidCpf } from '@/lib/cpf';
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { validateShippingCost } from '@/lib/security';
 
 export async function POST(request: Request) {
   const auth = await requireUser();
@@ -66,9 +67,10 @@ export async function POST(request: Request) {
     subtotal += (basePrice + modifier) * item.quantity;
   }
 
-  if (subtotal < 0.01) {
-    return badRequest('Pedido mínimo de R$15,00');
-  }
+  // TODO: descomentar após testes em prod
+  // if (subtotal < 15) {
+  //   return badRequest('Pedido mínimo de R$15,00');
+  // }
 
   let discountAmount = 0;
   let couponId: string | null = null;
@@ -91,7 +93,8 @@ export async function POST(request: Request) {
     }
   }
 
-  const totalAmount = Math.max(0, subtotal - discountAmount + Number(shipping_cost));
+  const validatedShipping = validateShippingCost(shipping_cost);
+  const totalAmount = Math.max(0, subtotal - discountAmount + validatedShipping);
 
   const { data: userData } = await admin
     .from('users')

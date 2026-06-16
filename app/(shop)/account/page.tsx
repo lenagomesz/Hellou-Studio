@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getCurrentUser } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { Order, OrderStatus } from '@/types/database';
-import ProfileEditForm from '@/components/shop/ProfileEditForm';
+import { ProfileSection } from './ProfileSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -135,15 +135,8 @@ export default async function AccountPage() {
       </div>
 
       {/* Profile Section */}
-      <section className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 sm:p-7 shadow-sm">
-        <div className="mb-5 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-gray-400">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-          </svg>
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Meus dados</h2>
-        </div>
-        <ProfileEditForm />
-      </section>
+      <ProfileSection />
+
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">

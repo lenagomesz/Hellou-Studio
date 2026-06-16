@@ -8,6 +8,7 @@ export async function GET(
 ) {
   const auth = await requireUser();
   if (auth.response) return auth.response;
+  const { user } = auth;
 
   const { id } = await params;
   if (!id) return badRequest('ID do pagamento não informado');
@@ -15,6 +16,11 @@ export async function GET(
   try {
     const payment = getPaymentClient();
     const result = await payment.get({ id });
+
+    const metadata = result.metadata as Record<string, unknown> | undefined;
+    if (metadata?.user_id && metadata.user_id !== user.id) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
+    }
 
     const responseData: Record<string, unknown> = {
       id: result.id,

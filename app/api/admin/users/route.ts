@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdmin, serverError } from '@/lib/api';
+import { sanitizeSearchInput } from '@/lib/security';
 
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin();
   if (auth.response) return auth.response;
 
-  const search = req.nextUrl.searchParams.get('search') ?? '';
+  const rawSearch = req.nextUrl.searchParams.get('search') ?? '';
+  const search = sanitizeSearchInput(rawSearch);
   const admin = getSupabaseAdmin();
 
   let query = admin

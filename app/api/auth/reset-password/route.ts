@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Token e senha são obrigatórios' }, { status: 400 });
   }
 
-  if (password.length < 6) {
-    return NextResponse.json({ error: 'A senha deve ter pelo menos 6 caracteres' }, { status: 400 });
+  if (password.length < 8) {
+    return NextResponse.json({ error: 'A senha deve ter pelo menos 8 caracteres' }, { status: 400 });
   }
 
   const admin = getSupabaseAdmin();

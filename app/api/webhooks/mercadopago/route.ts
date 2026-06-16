@@ -3,6 +3,7 @@ import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderConfirmationEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { verifyWebhookSignature } from '@/lib/security';
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
@@ -12,6 +13,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
+  const dataObj = body.data as Record<string, unknown> | undefined;
+  const dataId = String(dataObj?.id ?? '');
+
+  if (webhookSecret) {
+    const xSignature = request.headers.get('x-signature');
+    const xRequestId = request.headers.get('x-request-id');
+    const isValid = verifyWebhookSignature(dataId, xSignature, xRequestId, webhookSecret);
+    if (!isValid) {
+      console.warn('[mp-webhook] Invalid signature, rejecting request');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+  } else {
+    console.warn('[mp-webhook] MERCADO_PAGO_WEBHOOK_SECRET not set — skipping signature verification');
+  }
+
   const type = body.type as string | undefined;
   const action = body.action as string | undefined;
 
@@ -19,8 +36,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
 
-  const dataObj = body.data as Record<string, unknown> | undefined;
-  const paymentId = dataObj?.id as string | undefined;
+  const paymentId = dataId;
 
   if (!paymentId) {
     return NextResponse.json({ error: 'Missing payment ID' }, { status: 400 });

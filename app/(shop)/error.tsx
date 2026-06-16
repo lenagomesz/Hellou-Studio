@@ -10,7 +10,7 @@ export default function ErrorPage({
 }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-50">
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -27,10 +27,10 @@ export default function ErrorPage({
         </svg>
       </div>
 
-      <h1 className="mt-6 text-2xl font-bold text-gray-900">
+      <h1 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">
         Algo deu errado
       </h1>
-      <p className="mt-2 text-sm text-gray-600">
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
         Ocorreu um erro inesperado. Tente novamente ou volte para a página
         inicial.
       </p>
@@ -44,7 +44,7 @@ export default function ErrorPage({
         </button>
         <Link
           href="/"
-          className="rounded-full border border-gray-200 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          className="rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 transition hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           Ir para início
         </Link>

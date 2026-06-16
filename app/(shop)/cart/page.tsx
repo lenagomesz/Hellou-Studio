@@ -48,7 +48,7 @@ export default function CartPage() {
   const [addressNeighborhood, setAddressNeighborhood] = useState('');
 
   const [couponCode, setCouponCode] = useState('');
-  const [couponDiscount, setCouponDiscount] = useState<{ code: string; discount_amount: number; description: string; free_shipping?: boolean } | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState<{ code: string; discount_amount: number; discount_value: number; description: string; free_shipping?: boolean } | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
 
@@ -133,6 +133,7 @@ export default function CartPage() {
       setCouponDiscount({
         code: data.code,
         discount_amount: data.discount_amount,
+        discount_value: data.discount_value ?? 0,
         description: data.description,
         free_shipping: data.free_shipping ?? false,
       });
@@ -178,7 +179,9 @@ export default function CartPage() {
   }
 
   const shippingCost = couponDiscount?.free_shipping ? 0 : (selectedShipping?.price ?? 0);
-  const discountAmount = couponDiscount?.discount_amount ?? 0;
+  const discountAmount = couponDiscount?.free_shipping && couponDiscount.discount_value === 0
+    ? 0
+    : (couponDiscount?.discount_amount ?? 0);
   const grandTotal = total - discountAmount + shippingCost;
 
   return (
@@ -306,19 +309,20 @@ export default function CartPage() {
               <p className="text-sm text-pink-700 font-medium">🎉 Primeira compra! Você tem <span className="font-bold">10% de desconto</span> automático no pagamento.</p>
             </div>
           )}
-          {total < 0.01 && (
+          {/* TODO: descomentar após testes em prod
+          {total < 15 && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
               <p className="text-sm text-red-700 font-medium">O valor mínimo para compra é R$15,00. Adicione mais itens para continuar.</p>
             </div>
-          )}
+          )} */}
           {total >= 0.01 && total < 99 && (
             <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
               <p className="text-sm text-orange-700">Falta <span className="font-semibold">{formatPrice(99 - total)}</span> para frete grátis! 🚚</p>
             </div>
           )}
           {total >= 99 && (
-            <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
-              <p className="text-sm text-green-700 font-medium">🚚 Você ganhou frete grátis!</p>
+            <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 px-4 py-3">
+              <p className="text-sm text-green-700 dark:text-green-400 font-medium">🚚 Você ganhou frete grátis!</p>
             </div>
           )}
 
@@ -328,15 +332,15 @@ export default function CartPage() {
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Subtotal</p>
                 <p className="mt-0.5 text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(total)}</p>
-                {couponDiscount && (
-                  <p className="mt-0.5 text-xs text-green-700">- {formatPrice(couponDiscount.discount_amount)} desconto</p>
+                {couponDiscount && discountAmount > 0 && (
+                  <p className="mt-0.5 text-xs text-green-700">- {formatPrice(discountAmount)} desconto</p>
                 )}
               </div>
               <button
                 type="button"
                 disabled={total < 0.01}
                 onClick={() => { if (!session) { router.push('/login?callbackUrl=/cart'); return; } setStep(2); }}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/30 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/40 dark:shadow-none transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
               >
                 Continuar
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
@@ -543,7 +547,7 @@ export default function CartPage() {
                 <dt>Subtotal</dt>
                 <dd className="font-medium">{formatPrice(total)}</dd>
               </div>
-              {couponDiscount && (
+              {couponDiscount && discountAmount > 0 && (
                 <div className="flex justify-between text-green-700 dark:text-green-400">
                   <dt>Desconto ({couponDiscount.code})</dt>
                   <dd className="font-medium">-{formatPrice(discountAmount)}</dd>
@@ -582,7 +586,7 @@ export default function CartPage() {
               type="button"
               onClick={() => setStep(3)}
               disabled={!shippingAddress || !addressStreet.trim() || !addressNumber.trim() || !addressNeighborhood.trim() || (!selectedShipping && !couponDiscount?.free_shipping)}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/40 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/40 dark:shadow-none transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
             >
               Revisar pedido
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
@@ -717,7 +721,7 @@ export default function CartPage() {
                     <dt>Subtotal</dt>
                     <dd className="font-medium">{formatPrice(total)}</dd>
                   </div>
-                  {couponDiscount && (
+                  {couponDiscount && discountAmount > 0 && (
                     <div className="flex justify-between text-green-700 dark:text-green-400">
                       <dt>Desconto ({couponDiscount.code})</dt>
                       <dd className="font-medium">-{formatPrice(discountAmount)}</dd>

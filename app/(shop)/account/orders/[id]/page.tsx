@@ -31,7 +31,7 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
   refunded: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
 };
 
-const STATUS_ORDER: OrderStatus[] = ['awaiting_payment', 'pending', 'paid', 'processing', 'shipped', 'delivered'];
+const STATUS_ORDER: OrderStatus[] = ['awaiting_payment', 'pending', 'processing', 'shipped', 'delivered'];
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -69,7 +69,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
   if (!order) notFound();
 
   const isCanceled = order.status === 'canceled' || order.status === 'refunded';
-  const currentStepIndex = STATUS_ORDER.indexOf(order.status);
+  const displayStatus = order.status === 'paid' ? 'processing' : order.status;
+  const currentStepIndex = STATUS_ORDER.indexOf(displayStatus);
 
   return (
     <div>
@@ -94,40 +95,53 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
       {/* Status Timeline */}
       {!isCanceled && (
-        <div className="mb-8 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Status do pedido</h2>
-          <div className="flex items-center justify-between">
-            {STATUS_ORDER.map((status, i) => {
-              const isActive = i <= currentStepIndex;
-              const isCurrent = i === currentStepIndex;
-              return (
-                <div key={status} className="flex flex-1 items-center">
-                  <div className="flex flex-col items-center">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition ${
+        <div className="mb-8 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 sm:p-6 shadow-sm">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-5">Status do pedido</h2>
+          <div className="relative">
+            {/* Connector line background */}
+            <div className="absolute top-4 left-4 right-4 h-0.5 bg-gray-200 dark:bg-gray-700 sm:left-[20px] sm:right-[20px]" />
+            {/* Connector line progress */}
+            {currentStepIndex > 0 && (
+              <div
+                className="absolute top-4 left-4 h-0.5 bg-gradient-to-r from-green-400 to-green-300 sm:left-[20px]"
+                style={{ width: `calc(${(currentStepIndex / (STATUS_ORDER.length - 1)) * 100}% - 40px)` }}
+              />
+            )}
+            {/* Steps */}
+            <div className="relative grid grid-cols-5 gap-0">
+              {STATUS_ORDER.map((status, i) => {
+                const isActive = i <= currentStepIndex;
+                const isCurrent = i === currentStepIndex;
+                return (
+                  <div key={status} className="flex flex-col items-center">
+                    <div className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ring-4 ring-white dark:ring-gray-900 transition ${
                       isCurrent
-                        ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md shadow-pink-200/50'
+                        ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-200/50 dark:shadow-pink-900/30'
                         : isActive
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
                     }`}>
                       {isActive && !isCurrent ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-4 w-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-3.5 w-3.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                         </svg>
                       ) : (
                         i + 1
                       )}
                     </div>
-                    <span className={`mt-1.5 text-[10px] font-medium text-center hidden sm:block ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>
+                    <span className={`mt-2 text-[10px] sm:text-[11px] font-medium text-center leading-tight max-w-[56px] sm:max-w-none ${
+                      isCurrent
+                        ? 'text-pink-600 dark:text-pink-400 font-semibold'
+                        : isActive
+                          ? 'text-gray-700 dark:text-gray-300'
+                          : 'text-gray-400 dark:text-gray-500'
+                    }`}>
                       {STATUS_LABELS[status]}
                     </span>
                   </div>
-                  {i < STATUS_ORDER.length - 1 && (
-                    <div className={`mx-1 h-0.5 flex-1 rounded ${i < currentStepIndex ? 'bg-green-300' : 'bg-gray-200 dark:bg-gray-700'}`} />
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
