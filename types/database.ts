@@ -16,7 +16,9 @@ export interface Product {
   description: string | null;
   category: Category;
   base_price: number;
+  sale_price: number | null;
   image_url: string | null;
+  images: string[] | null;
   active: boolean;
   created_at: string;
   updated_at: string;

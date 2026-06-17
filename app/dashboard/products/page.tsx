@@ -47,10 +47,11 @@ export default function ProductsPage() {
     if (search) params.set('search', search);
     if (category) params.set('category', category);
     if (status === 'active') params.set('active', 'true');
-    if (status === 'inactive') params.set('active', 'false');
+    else if (status === 'inactive') params.set('active', 'false');
+    else params.set('active', 'all');
     fetch(`/api/products?${params.toString()}`)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => { if (!cancelled) { setProducts(data); setLoading(false); } })
+      .then(r => r.ok ? r.json() : { products: [] })
+      .then(data => { if (!cancelled) { setProducts(data.products ?? data); setLoading(false); } })
       .catch(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [category, status, search, fetchKey]);

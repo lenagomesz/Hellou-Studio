@@ -227,6 +227,14 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   refunded: 'Reembolsado',
 };
 
+const ORDER_STATUS_SUBJECTS: Record<string, (nome: string | null) => string> = {
+  processing: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu pedido está sendo preparado!`,
+  shipped: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu pedido foi enviado!`,
+  delivered: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu pedido foi entregue!`,
+  canceled: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu pedido foi cancelado`,
+  refunded: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu reembolso foi processado`,
+};
+
 export async function sendOrderStatusEmail(params: {
   email: string;
   nome: string | null;
@@ -257,7 +265,9 @@ export async function sendOrderStatusEmail(params: {
     const res = await resend.emails.send({
       from: getFrom(),
       to: params.email,
-      subject: `Pedido #${params.orderId.slice(0, 8).toUpperCase()} — ${statusLabel}`,
+      subject: ORDER_STATUS_SUBJECTS[params.newStatus]
+        ? ORDER_STATUS_SUBJECTS[params.newStatus](params.nome)
+        : `Hellou${params.nome ? ` ${params.nome}` : ''}, atualização do seu pedido #${params.orderId.slice(0, 8).toUpperCase()}`,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
           <h2 style="color: #111;">Olá${params.nome ? `, ${params.nome}` : ''}!</h2>

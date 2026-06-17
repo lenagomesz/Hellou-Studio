@@ -73,7 +73,8 @@ export async function calculateShipping(rawCep: string): Promise<ShippingResult>
 
   const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
     next: { revalidate: 86400 },
-  });
+    verbose: true,
+  } as RequestInit);
 
   if (!res.ok) throw new Error('Não foi possível consultar o CEP.');
 

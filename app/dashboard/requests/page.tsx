@@ -68,7 +68,7 @@ export default function RequestsPage() {
     const res = await fetch('/api/print-requests?admin=true');
     if (res.ok) {
       const data = await res.json();
-      setRequests(data);
+      setRequests(data.requests ?? data ?? []);
     }
     setLoading(false);
   }

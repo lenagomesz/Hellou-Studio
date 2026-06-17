@@ -51,7 +51,9 @@ export async function PATCH(
     description?: string | null;
     category?: string;
     base_price?: number;
+    sale_price?: number | null;
     image_url?: string | null;
+    images?: string[] | null;
     active?: boolean;
   };
 
@@ -74,8 +76,14 @@ export async function PATCH(
     }
     update.base_price = input.base_price;
   }
+  if (input.sale_price !== undefined) {
+    update.sale_price = input.sale_price;
+  }
   if (input.image_url !== undefined) {
     update.image_url = input.image_url?.trim() || null;
+  }
+  if (input.images !== undefined) {
+    update.images = input.images;
   }
   if (input.active !== undefined) {
     update.active = !!input.active;

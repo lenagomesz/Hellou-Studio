@@ -640,6 +640,16 @@ export function PaymentForm({
           {/* Credit card content */}
           {paymentMethod === 'credit' && (
             <div className="space-y-4">
+              <div className="flex items-center gap-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900 px-4 py-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50">
+                  <CreditCard className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-purple-800 dark:text-purple-200">Cartão de crédito</p>
+                  <p className="text-xs text-purple-600 dark:text-purple-400">Parcele em até 12x com juros</p>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Número do cartão</label>
                 <input

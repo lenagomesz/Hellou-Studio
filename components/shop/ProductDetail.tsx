@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 
@@ -25,16 +26,21 @@ export function ProductDetail({
   product: Product;
   options: ProductOption[];
 }) {
-  const { addItem, status } = useCart();
+  const { addItem, removeItem, status } = useCart();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const replaceCartItemId = searchParams.get('replace');
   const [feedback, setFeedback] = useState<'idle' | 'added' | 'error'>('idle');
+  const [shared, setShared] = useState(false);
 
   const inStockOptions = useMemo(
     () => options.filter((o) => o.stock > 0),
     [options],
   );
 
+  const preselectedOptionId = searchParams.get('option');
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(() =>
-    inStockOptions[0]?.id ?? null,
+    (preselectedOptionId && options.some(o => o.id === preselectedOptionId)) ? preselectedOptionId : inStockOptions[0]?.id ?? null,
   );
   const [quantity, setQuantity] = useState(1);
 
@@ -51,6 +57,9 @@ export function ProductDetail({
   const handleAddToCart = async () => {
     if (!canAddToCart) return;
     try {
+      if (replaceCartItemId) {
+        await removeItem(replaceCartItemId);
+      }
       await addItem({
         product: {
           id: product.id,
@@ -70,6 +79,10 @@ export function ProductDetail({
           : null,
         quantity,
       });
+      if (replaceCartItemId) {
+        router.push('/cart');
+        return;
+      }
       setFeedback('added');
       window.setTimeout(() => setFeedback('idle'), 2500);
     } catch {
@@ -332,6 +345,26 @@ export function ProductDetail({
                 ? 'Adicionando...'
                 : 'Adicionar ao carrinho'}
           </button>
+          <button
+            type="button"
+            onClick={async () => {
+              const url = window.location.href;
+              if (navigator.share) {
+                try { await navigator.share({ title: product.name, url }); } catch {}
+              } else {
+                await navigator.clipboard.writeText(url);
+                setShared(true);
+                setTimeout(() => setShared(false), 2000);
+              }
+            }}
+            className="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
+            </svg>
+            {shared ? 'Link copiado!' : 'Compartilhar'}
+          </button>
+
           {feedback === 'added' ? (
             <p className="mt-3 rounded-lg bg-green-50 dark:bg-green-950/50 px-3 py-2 text-xs text-green-700 dark:text-green-400">
               Item adicionado ao carrinho.{' '}

@@ -62,6 +62,10 @@ export default function CartPage() {
   const isSyncing = status === 'syncing';
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
+  useEffect(() => {
     if (session?.user) {
       fetch('/api/orders').then(r => r.json()).then((orders) => {
         if (Array.isArray(orders) && orders.length === 0) setIsFirstPurchase(true);
@@ -182,7 +186,8 @@ export default function CartPage() {
   const discountAmount = couponDiscount?.free_shipping && couponDiscount.discount_value === 0
     ? 0
     : (couponDiscount?.discount_amount ?? 0);
-  const grandTotal = total - discountAmount + shippingCost;
+  const firstPurchaseDiscount = isFirstPurchase ? total * 0.1 : 0;
+  const grandTotal = total - firstPurchaseDiscount - discountAmount + shippingCost;
 
   return (
     <div>
@@ -200,7 +205,7 @@ export default function CartPage() {
         </p>
       </div>
 
-      <div className={`mx-auto px-4 py-8 sm:px-6 ${step === 3 ? 'max-w-5xl' : 'max-w-3xl'}`}>
+      <div className={`mx-auto px-4 py-8 sm:px-6 ${step === 3 ? 'max-w-5xl' : step === 1 ? 'max-w-5xl' : 'max-w-3xl'}`}>
       {/* Stepper */}
       <nav className="mb-8">
         <ol className="flex items-center justify-center gap-0">
@@ -239,125 +244,131 @@ export default function CartPage() {
 
       {/* Step 1: Cart Items */}
       {step === 1 && (
-        <div className="space-y-5 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {items.length} {items.length === 1 ? 'produto' : 'produtos'} no carrinho
-            </p>
-            <Link href="/products" className="inline-flex items-center gap-1 text-sm font-medium text-pink-600 hover:text-pink-700 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              Adicionar mais
-            </Link>
-          </div>
+        <div className="space-y-4 animate-fade-in">
+          {/* Resumo do pedido — title */}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Resumo do pedido</h1>
 
-          <ul className="space-y-4">
-            {items.map((item) => (
-              <CartLine
-                key={item.id}
-                item={item}
-                disabled={isSyncing}
-                onIncrease={() => void updateQuantity(item.id, item.quantity + 1)}
-                onDecrease={() => void updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                onRemove={() => void removeItem(item.id)}
-              />
-            ))}
-          </ul>
-
-          {/* Coupon */}
-          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
-            <div className="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-pink-400">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
-              </svg>
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cupom de desconto</h2>
-            </div>
-            {couponDiscount ? (
-              <div className="mt-3 flex items-center justify-between rounded-xl border border-green-200 bg-green-50/50 p-3">
-                <div>
-                  <span className="text-sm font-bold text-green-800">{couponDiscount.code}</span>
-                  <p className="text-xs text-green-700">{couponDiscount.description}</p>
-                </div>
-                <button type="button" onClick={() => { setCouponDiscount(null); setCouponCode(''); }} className="rounded-full p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-500">
+          {/* Two-column: items left, sidebar right on desktop */}
+          <div className="flex flex-col lg:flex-row lg:gap-6">
+            {/* Main column — items */}
+            <div className="flex-1 min-w-0 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {items.length} {items.length === 1 ? 'produto' : 'produtos'} no carrinho
+                </p>
+                <Link href="/products" className="inline-flex items-center gap-1 text-sm font-medium text-pink-600 hover:text-pink-700 transition">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Adicionar mais
+                </Link>
+              </div>
+
+              <ul className="space-y-4">
+                {items.map((item) => (
+                  <CartLine
+                    key={item.id}
+                    item={item}
+                    disabled={isSyncing}
+                    onIncrease={() => void updateQuantity(item.id, item.quantity + 1)}
+                    onDecrease={() => void updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                    onRemove={() => void removeItem(item.id)}
+                  />
+                ))}
+              </ul>
+
+              {/* Frete grátis banner — below products */}
+              {total >= 0.01 && total < 99 && (
+                <div className="rounded-lg bg-orange-50 dark:bg-orange-950/30 px-3 py-2">
+                  <p className="text-xs text-orange-700 dark:text-orange-300">Falta <span className="font-semibold">{formatPrice(99 - total)}</span> para frete grátis! 🚚</p>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar — Prices + Button + Coupon */}
+            <div className="mt-5 lg:mt-0 w-full lg:w-80 lg:flex-shrink-0">
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 pb-12 shadow-sm lg:sticky lg:top-24 space-y-4">
+                {/* Logo */}
+                <div className="flex justify-center">
+                  <img src="/logo.png" alt="Hello Studio" className="h-36 w-auto" />
+                </div>
+
+                {/* Valor total */}
+                <div className="space-y-2">
+                  <p className="text-base font-bold text-gray-900 dark:text-white">Valor total</p>
+                  <div className="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(total)}</span>
+                  </div>
+                  {isFirstPurchase && (
+                    <div className="flex items-center justify-between text-sm text-pink-600 dark:text-pink-400">
+                      <span>-10% primeira compra</span>
+                      <span>- {formatPrice(firstPurchaseDiscount)}</span>
+                    </div>
+                  )}
+                  {couponDiscount && discountAmount > 0 && (
+                    <div className="flex items-center justify-between text-sm text-green-700 dark:text-green-400">
+                      <span>Cupom {couponDiscount.code}</span>
+                      <span>- {formatPrice(discountAmount)}</span>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">Total</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">{formatPrice(total - firstPurchaseDiscount - discountAmount)}</span>
+                  </div>
+                </div>
+
+                {/* Continue button */}
+                <button
+                  type="button"
+                  disabled={total < 0.01}
+                  onClick={() => { if (!session) { router.push('/login?callbackUrl=/cart'); return; } setStep(2); }}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 dark:shadow-pink-500/10 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  Continuar
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                   </svg>
                 </button>
-              </div>
-            ) : (
-              <div className="mt-3 flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Código do cupom"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent focus:bg-white dark:focus:bg-gray-700"
-                />
-                <button type="button" onClick={handleApplyCoupon} disabled={couponLoading} className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50">
-                  {couponLoading ? '...' : 'Aplicar'}
-                </button>
-              </div>
-            )}
-            {couponError && <p className="mt-2 text-xs text-red-600">{couponError}</p>}
-          </div>
 
-          {/* Info banners */}
-          {isFirstPurchase && (
-            <div className="rounded-xl border border-pink-200 bg-gradient-to-r from-pink-50 to-orange-50 px-4 py-3">
-              <p className="text-sm text-pink-700 font-medium">🎉 Primeira compra! Você tem <span className="font-bold">10% de desconto</span> automático no pagamento.</p>
-            </div>
-          )}
-          {/* TODO: descomentar após testes em prod
-          {total < 15 && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-              <p className="text-sm text-red-700 font-medium">O valor mínimo para compra é R$15,00. Adicione mais itens para continuar.</p>
-            </div>
-          )} */}
-          {total >= 0.01 && total < 99 && (
-            <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
-              <p className="text-sm text-orange-700">Falta <span className="font-semibold">{formatPrice(99 - total)}</span> para frete grátis! 🚚</p>
-            </div>
-          )}
-          {total >= 99 && (
-            <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 px-4 py-3">
-              <p className="text-sm text-green-700 dark:text-green-400 font-medium">🚚 Você ganhou frete grátis!</p>
-            </div>
-          )}
-
-          {/* Subtotal bar + Next */}
-          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Subtotal</p>
-                <p className="mt-0.5 text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(total)}</p>
-                {couponDiscount && discountAmount > 0 && (
-                  <p className="mt-0.5 text-xs text-green-700">- {formatPrice(discountAmount)} desconto</p>
-                )}
+                {/* Coupon */}
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-pink-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
+                    </svg>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">Cupom de desconto</span>
+                  </div>
+                  {couponDiscount ? (
+                    <div className="flex items-center justify-between rounded-xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30 p-3">
+                      <div>
+                        <span className="text-sm font-bold text-green-800 dark:text-green-300">{couponDiscount.code}</span>
+                        <p className="text-xs text-green-700 dark:text-green-400">{couponDiscount.description}</p>
+                      </div>
+                      <button type="button" onClick={() => { setCouponDiscount(null); setCouponCode(''); }} className="rounded-full p-1.5 text-gray-400 transition hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Código do cupom"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        className="flex-1 min-w-0 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent focus:bg-white dark:focus:bg-gray-700"
+                      />
+                      <button type="button" onClick={handleApplyCoupon} disabled={couponLoading} className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-2 text-sm font-semibold text-white transition hover:shadow-md disabled:opacity-50">
+                        {couponLoading ? '...' : 'Aplicar'}
+                      </button>
+                    </div>
+                  )}
+                  {couponError && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{couponError}</p>}
+                </div>
               </div>
-              <button
-                type="button"
-                disabled={total < 0.01}
-                onClick={() => { if (!session) { router.push('/login?callbackUrl=/cart'); return; } setStep(2); }}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/40 dark:shadow-none transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
-              >
-                Continuar
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                </svg>
-              </button>
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 dark:border-gray-800 pt-3 text-xs text-gray-400">
-              <span className="inline-flex items-center gap-1">
-                💬 Atendimento humanizado
-              </span>
-              <span className="inline-flex items-center gap-1">
-                ✨ Bom acabamento
-              </span>
-              <span className="inline-flex items-center gap-1">
-                🔒 Pagamento seguro
-              </span>
             </div>
           </div>
         </div>
@@ -547,6 +558,12 @@ export default function CartPage() {
                 <dt>Subtotal</dt>
                 <dd className="font-medium">{formatPrice(total)}</dd>
               </div>
+              {isFirstPurchase && (
+                <div className="flex justify-between text-pink-600 dark:text-pink-400">
+                  <dt>-10% primeira compra</dt>
+                  <dd className="font-medium">- {formatPrice(firstPurchaseDiscount)}</dd>
+                </div>
+              )}
               {couponDiscount && discountAmount > 0 && (
                 <div className="flex justify-between text-green-700 dark:text-green-400">
                   <dt>Desconto ({couponDiscount.code})</dt>
@@ -721,6 +738,12 @@ export default function CartPage() {
                     <dt>Subtotal</dt>
                     <dd className="font-medium">{formatPrice(total)}</dd>
                   </div>
+                  {isFirstPurchase && (
+                    <div className="flex justify-between text-pink-600 dark:text-pink-400">
+                      <dt>-10% primeira compra</dt>
+                      <dd className="font-medium">- {formatPrice(firstPurchaseDiscount)}</dd>
+                    </div>
+                  )}
                   {couponDiscount && discountAmount > 0 && (
                     <div className="flex justify-between text-green-700 dark:text-green-400">
                       <dt>Desconto ({couponDiscount.code})</dt>
@@ -784,7 +807,7 @@ export default function CartPage() {
 
       {/* Sugestões - só mostra no step 1 e abaixo de tudo */}
       {step === 1 && (
-        <div className="mx-auto max-w-3xl px-4 pb-12 sm:px-6">
+        <div className="mx-auto max-w-5xl px-4 pb-12 sm:px-6">
           <ProductRecommendations title="Aproveite e veja também" />
         </div>
       )}
@@ -830,27 +853,44 @@ function CartLine({
               <Link href={`/products/${item.product.id}` as Route} className="block truncate text-sm font-semibold text-gray-900 dark:text-white hover:text-pink-600 dark:hover:text-pink-400 transition">
                 {item.product.name}
               </Link>
-              {item.option && (
-                <p className="mt-0.5 flex items-center gap-1.5 text-xs text-gray-500">
-                  {item.option.color && (
-                    <span className="inline-block h-2.5 w-2.5 rounded-full ring-1 ring-gray-200" style={{ backgroundColor: item.option.color }} />
+              {(item.option?.name || item.option?.color) && (
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  {item.option.name && (
+                    <span className="inline-flex items-center gap-1">
+                      Tamanho: <span className="font-medium text-gray-700 dark:text-gray-300">{item.option.name}</span>
+                    </span>
                   )}
-                  {item.option.name}
-                </p>
+                  {item.option.color && (
+                    <span className="inline-flex items-center gap-1">
+                      Cor: <span className="inline-block h-2.5 w-2.5 rounded-full ring-1 ring-gray-200 dark:ring-gray-600" style={{ backgroundColor: item.option.color }} />
+                    </span>
+                  )}
+                </div>
               )}
               <p className="mt-0.5 text-xs text-gray-400">{formatPrice(unit)} un.</p>
             </div>
-            <button
-              type="button"
-              onClick={onRemove}
-              disabled={disabled}
-              className="flex-shrink-0 rounded-full p-1.5 text-gray-300 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label={`Remover ${item.product.name}`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-              </svg>
-            </button>
+            <div className="flex flex-shrink-0 items-center gap-1">
+              <Link
+                href={`/products/${item.product.id}?replace=${item.id}${item.option ? `&option=${item.option.id}` : ''}` as Route}
+                className="rounded-full p-1.5 text-gray-300 transition hover:bg-pink-50 dark:hover:bg-pink-950/30 hover:text-pink-500"
+                aria-label={`Editar ${item.product.name}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+              </Link>
+              <button
+                type="button"
+                onClick={onRemove}
+                disabled={disabled}
+                className="flex-shrink-0 rounded-full p-1.5 text-gray-300 transition hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label={`Remover ${item.product.name}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div className="mt-auto flex items-end justify-between pt-2">

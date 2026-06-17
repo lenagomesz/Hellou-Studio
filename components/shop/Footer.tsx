@@ -19,6 +19,17 @@ export function Footer() {
             </p>
             <div className="mt-5 flex gap-3">
               <a
+                href="https://wa.me/5547988450461?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all duration-300 hover:bg-green-50 hover:text-green-500 hover:scale-110 dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-green-950/50 dark:hover:text-green-400"
+                aria-label="WhatsApp"
+              >
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+              </a>
+              <a
                 href="https://instagram.com/helloustudio_"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -118,7 +129,8 @@ export function Footer() {
             © {new Date().getFullYear()} helloustudio. Todos os direitos reservados.
           </span>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400 dark:text-gray-500">Formas de pagamento:</span>
+            <div className="flex items-center gap-1.5">
               {/* Visa */}
               <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                 <svg viewBox="0 0 48 32" className="h-4 w-auto" fill="none">
@@ -137,11 +149,40 @@ export function Footer() {
                   <path d="M24 10.3a8 8 0 0 1 0 11.4 8 8 0 0 1 0-11.4z" fill="#FF5F00" />
                 </svg>
               </div>
+              {/* Elo */}
+              <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                <svg viewBox="0 0 48 32" className="h-4 w-auto" fill="none">
+                  <path d="M14.5 12.5a3.5 3.5 0 0 1 2.8 1.4l2-1.5A6 6 0 0 0 14.5 10a6 6 0 0 0-5.9 5h2.5a3.5 3.5 0 0 1 3.4-2.5z" fill="#FFF100" />
+                  <path d="M11.1 17a3.5 3.5 0 0 1 3.4-2.5 3.5 3.5 0 0 1 3.4 2.5h2.5a6 6 0 0 0-5.9-5 6 6 0 0 0-5.9 5h2.5z" fill="#00A4E0" />
+                  <path d="M17.3 19.6a3.5 3.5 0 0 1-2.8 1.4 3.5 3.5 0 0 1-3.4-2.5H8.6a6 6 0 0 0 5.9 5 6 6 0 0 0 4.8-2.4l-2-1.5z" fill="#EF4123" />
+                  <text x="22" y="20" fill="#000" fontSize="8" fontFamily="Arial" fontWeight="bold">elo</text>
+                </svg>
+              </div>
+              {/* Amex */}
+              <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                <svg viewBox="0 0 48 32" className="h-4 w-auto" fill="none">
+                  <rect x="4" y="6" width="40" height="20" rx="2" fill="#016FD0" />
+                  <text x="24" y="19" fill="white" fontSize="7" fontFamily="Arial" fontWeight="bold" textAnchor="middle">AMEX</text>
+                </svg>
+              </div>
               {/* Pix */}
               <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                 <svg viewBox="0 0 48 32" className="h-3.5 w-auto" fill="none">
                   <path d="M30.4 22.5l-4.2-4.2a1.2 1.2 0 0 1 0-1.7l4.2-4.2a4.2 4.2 0 0 1 3-1.2h2.1l-5.5 5.5a.8.8 0 0 0 0 1.1l5.5 5.5h-2.1a4.2 4.2 0 0 1-3-1.2v-.6z" fill="#32BCAD" />
                   <path d="M17.6 22.5l4.2-4.2a1.2 1.2 0 0 0 0-1.7l-4.2-4.2a4.2 4.2 0 0 0-3-1.2h-2.1l5.5 5.5a.8.8 0 0 1 0 1.1l-5.5 5.5h2.1a4.2 4.2 0 0 0 3-1.2v-.6z" fill="#32BCAD" />
+                </svg>
+              </div>
+              {/* Boleto */}
+              <div className="flex h-7 w-10 items-center justify-center rounded border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                <svg viewBox="0 0 24 24" className="h-4 w-auto" fill="none">
+                  <rect x="2" y="4" width="1.5" height="16" fill="#374151" />
+                  <rect x="5" y="4" width="1" height="16" fill="#374151" />
+                  <rect x="7.5" y="4" width="2" height="16" fill="#374151" />
+                  <rect x="11" y="4" width="1" height="16" fill="#374151" />
+                  <rect x="13.5" y="4" width="1.5" height="16" fill="#374151" />
+                  <rect x="16.5" y="4" width="1" height="16" fill="#374151" />
+                  <rect x="19" y="4" width="2" height="16" fill="#374151" />
+                  <rect x="22" y="4" width="1" height="16" fill="#374151" />
                 </svg>
               </div>
             </div>

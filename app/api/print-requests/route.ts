@@ -6,11 +6,25 @@ import type { PrintRequest } from '@/types/database';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireUser();
   if (auth.response) return auth.response;
 
+  const { searchParams } = new URL(request.url);
+  const isAdmin = searchParams.get('admin') === 'true';
+
   const admin = getSupabaseAdmin();
+
+  if (isAdmin && auth.user.role === 'admin') {
+    const { data, error } = await admin
+      .from('print_requests')
+      .select('*, user:users!print_requests_user_id_fkey(id, email, name)')
+      .order('created_at', { ascending: false });
+
+    if (error) return serverError('Erro ao buscar solicitações');
+    return NextResponse.json({ requests: (data ?? []) as (PrintRequest & { user: { id: string; email: string; name: string | null } | null })[] });
+  }
+
   const { data, error } = await admin
     .from('print_requests')
     .select('*')

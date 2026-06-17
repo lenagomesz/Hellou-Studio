@@ -265,7 +265,7 @@ export default function AboutPage() {
               </div>
               <div className="rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900 p-4 transition-transform duration-300 hover:scale-[1.02]">
                 <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Acabamento</p>
-                <p className="mt-1 text-xs text-blue-700 dark:text-blue-400">Cada peça sai com camadas visíveis (faz parte do charme!). Posso lixar e pintar sob encomenda se quiser algo mais liso.</p>
+                <p className="mt-1 text-xs text-blue-700 dark:text-blue-400">Cada peça sai com camadas visíveis (faz parte do charme!). Posso lixar sob encomenda se quiser algo mais liso.</p>
               </div>
             </div>
           </div>
@@ -279,8 +279,7 @@ export default function AboutPage() {
               {[
                 { icon: '⏱️', text: 'Um chaveiro leva de 30 min a 2 horas pra imprimir' },
                 { icon: '🌡️', text: 'O bico da impressora chega a 200°C pra derreter o filamento' },
-                { icon: '📐', text: 'A precisão é de 0.2mm por camada, menor que um fio de cabelo' },
-                { icon: '🎨', text: 'Tenho filamentos em mais de 15 cores diferentes' },
+                { icon: '📐', text: 'A precisão é de 0.4mm por camada' },
                 { icon: '♻️', text: 'O PLA é biodegradável e vem de fontes renováveis' },
                 { icon: '🧵', text: '1kg de filamento rende entre 50 e 100 peças pequenas' },
               ].map((item, i) => (
@@ -326,7 +325,6 @@ export default function AboutPage() {
             >
               Fazer uma encomenda personalizada →
             </Link>
-            <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">clica no card lá em cima pra uma surpresinha ♥</p>
           </div>
         </RevealOnScroll>
       </div>

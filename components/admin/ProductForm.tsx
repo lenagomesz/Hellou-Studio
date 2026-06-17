@@ -26,7 +26,16 @@ export function ProductForm(props: ProductFormProps) {
   const [basePrice, setBasePrice] = useState<string>(
     initial ? String(initial.base_price) : '',
   );
-  const [imageUrl, setImageUrl] = useState(initial?.image_url ?? '');
+  const [salePrice, setSalePrice] = useState<string>(
+    initial?.sale_price ? String(initial.sale_price) : '',
+  );
+  const [images, setImages] = useState<string[]>(() => {
+    const list: string[] = [];
+    if (initial?.images && initial.images.length > 0) return initial.images;
+    if (initial?.image_url) list.push(initial.image_url);
+    return list;
+  });
+  const [newImageUrl, setNewImageUrl] = useState('');
   const [active, setActive] = useState<boolean>(initial?.active ?? true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,12 +56,20 @@ export function ProductForm(props: ProductFormProps) {
 
     setSubmitting(true);
 
+    const salePriceNumber = salePrice ? Number(salePrice) : null;
+    if (salePriceNumber !== null && (Number.isNaN(salePriceNumber) || salePriceNumber < 0)) {
+      setError('Preço promocional inválido');
+      return;
+    }
+
     const payload = {
       name: name.trim(),
       description: description.trim() || null,
       category,
       base_price: priceNumber,
-      image_url: imageUrl.trim() || null,
+      sale_price: salePriceNumber,
+      image_url: images[0] || null,
+      images: images.length > 0 ? images : null,
       active,
     };
 
@@ -75,7 +92,7 @@ export function ProductForm(props: ProductFormProps) {
 
     if (props.mode === 'create') {
       const data = (await res.json()) as { product: Product };
-      router.push(`/dashboard/products/${data.product.id}`);
+      router.push(`/dashboard/products/${data.product.id}/edit`);
     } else {
       router.push(`/dashboard/products/${props.product.id}`);
       router.refresh();
@@ -100,9 +117,9 @@ export function ProductForm(props: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 space-y-4">
+      <div className="rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Nome
           </label>
           <input
@@ -111,12 +128,12 @@ export function ProductForm(props: ProductFormProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
         </div>
 
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Descrição
           </label>
           <textarea
@@ -124,20 +141,20 @@ export function ProductForm(props: ProductFormProps) {
             value={description ?? ''}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Categoria
             </label>
             <select
               id="category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
             >
               {VALID_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
@@ -148,7 +165,7 @@ export function ProductForm(props: ProductFormProps) {
           </div>
 
           <div>
-            <label htmlFor="base_price" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="base_price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Preço base (R$)
             </label>
             <input
@@ -159,23 +176,120 @@ export function ProductForm(props: ProductFormProps) {
               value={basePrice}
               onChange={(e) => setBasePrice(e.target.value)}
               required
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
           </div>
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="sale_price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Preço promocional (R$)
+            </label>
+            <input
+              id="sale_price"
+              type="number"
+              step="0.01"
+              min="0"
+              value={salePrice}
+              onChange={(e) => setSalePrice(e.target.value)}
+              placeholder="Deixe vazio se não houver promoção"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+            {salePrice && basePrice && Number(salePrice) < Number(basePrice) && (
+              <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+                {Math.round((1 - Number(salePrice) / Number(basePrice)) * 100)}% de desconto
+              </p>
+            )}
+          </div>
+          <div />
+        </div>
+
         <div>
-          <label htmlFor="image_url" className="block text-sm font-medium text-gray-700">
-            URL da imagem
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Imagens do produto
           </label>
-          <input
-            id="image_url"
-            type="url"
-            value={imageUrl ?? ''}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://..."
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-          />
+          {images.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+              {images.map((url, idx) => (
+                <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <div className="aspect-square relative bg-gray-100 dark:bg-gray-800">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt={`Imagem ${idx + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1">
+                    {idx > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const arr = [...images];
+                          [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+                          setImages(arr);
+                        }}
+                        className="rounded-full bg-white/90 p-1.5 text-xs font-bold text-gray-800 hover:bg-white"
+                        title="Mover para esquerda"
+                      >
+                        ←
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setImages(images.filter((_, i) => i !== idx))}
+                      className="rounded-full bg-red-500 p-1.5 text-xs font-bold text-white hover:bg-red-600"
+                      title="Remover"
+                    >
+                      ✕
+                    </button>
+                    {idx < images.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const arr = [...images];
+                          [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+                          setImages(arr);
+                        }}
+                        className="rounded-full bg-white/90 p-1.5 text-xs font-bold text-gray-800 hover:bg-white"
+                        title="Mover para direita"
+                      >
+                        →
+                      </button>
+                    )}
+                  </div>
+                  {idx === 0 && (
+                    <span className="absolute top-1 left-1 rounded bg-pink-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                      Capa
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={newImageUrl}
+              onChange={(e) => setNewImageUrl(e.target.value)}
+              placeholder="https://... (cole a URL da imagem)"
+              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const url = newImageUrl.trim();
+                if (url && !images.includes(url)) {
+                  setImages([...images, url]);
+                  setNewImageUrl('');
+                }
+              }}
+              disabled={!newImageUrl.trim()}
+              className="rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition"
+            >
+              Adicionar
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            A primeira imagem será usada como capa. Arraste para reordenar.
+          </p>
         </div>
 
         <label className="flex items-center gap-2">
@@ -185,12 +299,12 @@ export function ProductForm(props: ProductFormProps) {
             onChange={(e) => setActive(e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
           />
-          <span className="text-sm text-gray-700">Produto ativo (visível na loja)</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">Produto ativo (visível na loja)</span>
         </label>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">
           {error}
         </div>
       )}
@@ -210,7 +324,7 @@ export function ProductForm(props: ProductFormProps) {
                 ? `/dashboard/products/${props.product.id}`
                 : '/dashboard/products'
             }
-            className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            className="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
           >
             Cancelar
           </Link>
@@ -221,7 +335,7 @@ export function ProductForm(props: ProductFormProps) {
             type="button"
             onClick={handleDelete}
             disabled={submitting}
-            className="rounded-lg border border-red-300 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 transition"
+            className="rounded-lg border border-red-300 dark:border-red-700 px-4 py-2.5 text-sm font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 disabled:opacity-50 transition"
           >
             Excluir produto
           </button>

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 export const contentType = 'image/png';
-export const size = { width: 32, height: 32 };
+export const size = { width: 48, height: 48 };
 
 export default async function Icon() {
   const logoData = await readFile(join(process.cwd(), 'public/logo-512.png'));
@@ -25,8 +25,8 @@ export default async function Icon() {
       >
         <img
           src={logoBase64}
-          width={32}
-          height={32}
+          width={48}
+          height={48}
           style={{ objectFit: 'cover' }}
         />
       </div>

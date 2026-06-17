@@ -19,7 +19,8 @@ export async function GET(request: Request) {
       `https://api.mercadopago.com/v1/payment_methods/installments?bin=${bin}&amount=${amount}`,
       {
         headers: { Authorization: `Bearer ${accessToken}` },
-      },
+        verbose: true,
+      } as RequestInit,
     );
 
     if (!response.ok) {
