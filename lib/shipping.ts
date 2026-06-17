@@ -1,3 +1,5 @@
+import { calcularPrecoPrazo } from 'correios-brasil';
+
 export interface ShippingOption {
   id: 'pac' | 'sedex';
   name: string;
@@ -20,6 +22,16 @@ interface ViaCepResponse {
   erro?: boolean;
 }
 
+// --- Correios API config ---
+const ORIGIN_CEP = '88304000'; // Itajaí/SC
+const DEFAULT_WEIGHT = '0.3'; // kg
+const DEFAULT_HEIGHT = '10';
+const DEFAULT_WIDTH = '15';
+const DEFAULT_LENGTH = '20';
+const DEFAULT_DIAMETER = '0';
+const API_TIMEOUT_MS = 8000;
+
+// --- Fallback: tabela fixa por região ---
 type Region = 'local' | 'vizinhos' | 'sudeste' | 'centro_oeste' | 'nordeste' | 'norte';
 
 const RATES: Record<Region, { pac: number; sedex: number; pac_min: number; pac_max: number; sedex_min: number; sedex_max: number }> = {
@@ -67,6 +79,72 @@ export function sanitizeCep(raw: string): string | null {
   return digits;
 }
 
+interface CorreiosResponse {
+  Codigo: string;
+  Valor: string;
+  PrazoEntrega: string;
+  Erro: string;
+  MsgErro: string;
+}
+
+function parseCorreiosPrice(value: string): number {
+  return parseFloat(value.replace('.', '').replace(',', '.'));
+}
+
+async function fetchCorreiosRates(destCep: string): Promise<ShippingOption[] | null> {
+  try {
+    const args = {
+      sCepOrigem: ORIGIN_CEP,
+      sCepDestino: destCep,
+      nVlPeso: DEFAULT_WEIGHT,
+      nCdFormato: '1',
+      nVlComprimento: DEFAULT_LENGTH,
+      nVlAltura: DEFAULT_HEIGHT,
+      nVlLargura: DEFAULT_WIDTH,
+      nVlDiametro: DEFAULT_DIAMETER,
+      nCdServico: ['04510', '04014'],
+    };
+
+    const response: CorreiosResponse[] = await Promise.race([
+      calcularPrecoPrazo(args),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), API_TIMEOUT_MS),
+      ),
+    ]);
+
+    const options: ShippingOption[] = [];
+
+    for (const item of response) {
+      if (item.Erro && item.Erro !== '0' && item.Erro !== '010') continue;
+
+      const price = parseCorreiosPrice(item.Valor);
+      if (price <= 0) continue;
+
+      const days = parseInt(item.PrazoEntrega, 10) || 0;
+
+      if (item.Codigo === '04510') {
+        options.push({ id: 'pac', name: 'PAC', price, days_min: days, days_max: days + 3 });
+      } else if (item.Codigo === '04014') {
+        options.push({ id: 'sedex', name: 'SEDEX', price, days_min: days, days_max: days + 1 });
+      }
+    }
+
+    return options.length > 0 ? options : null;
+  } catch (err) {
+    console.warn('[shipping] Correios API failed, using fallback:', (err as Error).message);
+    return null;
+  }
+}
+
+function getFallbackOptions(uf: string): ShippingOption[] {
+  const region = UF_REGION[uf] || 'sudeste';
+  const rate = RATES[region];
+  return [
+    { id: 'pac', name: 'PAC', price: rate.pac, days_min: rate.pac_min, days_max: rate.pac_max },
+    { id: 'sedex', name: 'SEDEX', price: rate.sedex, days_min: rate.sedex_min, days_max: rate.sedex_max },
+  ];
+}
+
 export async function calculateShipping(rawCep: string): Promise<ShippingResult> {
   const cep = sanitizeCep(rawCep);
   if (!cep) throw new Error('CEP inválido. Use 8 dígitos.');
@@ -82,28 +160,13 @@ export async function calculateShipping(rawCep: string): Promise<ShippingResult>
   if (data.erro) throw new Error('CEP não encontrado.');
 
   const uf = data.uf;
-  const region = UF_REGION[uf];
-  if (!region) throw new Error(`Estado ${uf} não suportado.`);
+  if (!UF_REGION[uf]) throw new Error(`Estado ${uf} não suportado.`);
 
-  const rate = RATES[region];
+  const correiosOptions = await fetchCorreiosRates(cep);
+  const options = correiosOptions || getFallbackOptions(uf);
 
   return {
-    options: [
-      {
-        id: 'pac',
-        name: 'PAC',
-        price: rate.pac,
-        days_min: rate.pac_min,
-        days_max: rate.pac_max,
-      },
-      {
-        id: 'sedex',
-        name: 'SEDEX',
-        price: rate.sedex,
-        days_min: rate.sedex_min,
-        days_max: rate.sedex_max,
-      },
-    ],
+    options,
     address: { city: data.localidade, state: data.uf, street: data.logradouro, neighborhood: data.bairro },
   };
 }
