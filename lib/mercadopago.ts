@@ -1,4 +1,4 @@
-import { MercadoPagoConfig, Payment } from 'mercadopago';
+import { MercadoPagoConfig, Payment, PaymentRefund } from 'mercadopago';
 
 let cached: MercadoPagoConfig | null = null;
 
@@ -14,6 +14,10 @@ export function getMercadoPagoClient(): MercadoPagoConfig {
 
 export function getPaymentClient(): Payment {
   return new Payment(getMercadoPagoClient());
+}
+
+export function getRefundClient(): PaymentRefund {
+  return new PaymentRefund(getMercadoPagoClient());
 }
 
 export function getMPPublicKey(): string {

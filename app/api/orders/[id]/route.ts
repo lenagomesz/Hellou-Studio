@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdmin, badRequest, notFound, serverError } from '@/lib/api';
 import { sendOrderStatusEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { getRefundClient } from '@/lib/mercadopago';
 import type { OrderStatus } from '@/types/database';
 
 const VALID_STATUSES: OrderStatus[] = [
@@ -51,8 +52,18 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
 
   const admin = getSupabaseAdmin();
 
-  const { data: current } = await admin.from('orders').select('shipping_address').eq('id', id).single();
+  const { data: current } = await admin.from('orders').select('shipping_address, mp_payment_id, payment_provider').eq('id', id).single();
   if (!current) return notFound('Pedido não encontrado');
+
+  if (status === 'refunded' && current.payment_provider === 'mercadopago' && current.mp_payment_id) {
+    try {
+      const refundClient = getRefundClient();
+      await refundClient.create({ payment_id: Number(current.mp_payment_id), body: {} });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      return NextResponse.json({ error: `Falha ao reembolsar no Mercado Pago: ${msg}` }, { status: 400 });
+    }
+  }
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (status) updates.status = status;

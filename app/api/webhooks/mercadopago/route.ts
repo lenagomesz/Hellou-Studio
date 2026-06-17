@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { sendOrderConfirmationEmail, sendInvoiceRequestEmail } from '@/lib/email';
+import { sendOrderConfirmationEmail, sendInvoiceRequestEmail, sendAdminNewOrderEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { verifyWebhookSignature } from '@/lib/security';
 
@@ -150,6 +150,14 @@ export async function POST(request: Request) {
             precoUnitario: item.unit_price,
           })),
         }).catch((e) => console.error('[mp-webhook] email error:', e));
+
+        sendAdminNewOrderEmail({
+          adminEmail: process.env.ADMIN_EMAIL || 'studiohellou@gmail.com',
+          orderId: order.id,
+          customerName: userData.name || null,
+          customerEmail: userData.email,
+          total: Number(result.transaction_amount) || 0,
+        }).catch((e) => console.error('[mp-webhook] admin email error:', e));
 
         const { data: orderFull } = await admin
           .from('orders')
