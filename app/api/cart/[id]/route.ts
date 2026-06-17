@@ -50,7 +50,7 @@ export async function PATCH(
   if (existingError) return serverError('Erro ao buscar item');
   if (!existing) return notFound('Item não encontrado');
 
-  let cap = 99;
+  let cap = 50;
   if (existing.product_option_id) {
     const { data: optionRow, error: optionError } = await admin
       .from('product_options')
@@ -59,7 +59,7 @@ export async function PATCH(
       .maybeSingle();
     if (optionError) return serverError('Erro ao validar variação');
     const option = optionRow as Pick<ProductOption, 'stock'> | null;
-    if (option) cap = option.stock;
+    if (option) cap = Math.min(option.stock, 50);
   }
 
   const finalQty = Math.max(1, Math.min(cap, Math.floor(quantity)));

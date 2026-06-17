@@ -145,7 +145,7 @@ export async function POST(request: Request) {
   const existing =
     matchRows.find((r) => r.product_option_id === optionId) ?? null;
 
-  const cap = optionStock ?? 99;
+  const cap = Math.min(optionStock ?? 50, 50);
   const targetQty = (existing?.quantity ?? 0) + requestedQty;
   const finalQty = Math.max(1, Math.min(cap, targetQty));
 

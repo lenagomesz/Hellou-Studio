@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Users, Search, Shield, Ban, Trash2, Mail } from 'lucide-react';
 
 interface UserRow {
@@ -112,9 +113,9 @@ export default function UsersPage() {
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
               {users.map((user) => (
-                <tr key={user.id} className="transition hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
+                <tr key={user.id} className="transition hover:bg-gray-50/50 dark:hover:bg-gray-800/50 cursor-pointer">
                   <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-3">
+                    <Link href={`/dashboard/users/${user.id}`} className="flex items-center gap-3">
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-xs font-bold text-pink-600">
                         {(user.name ?? user.email).charAt(0).toUpperCase()}
                       </span>
@@ -124,7 +125,7 @@ export default function UsersPage() {
                           <Mail className="h-3 w-3" /> {user.email}
                         </p>
                       </div>
-                    </div>
+                    </Link>
                   </td>
                   <td className="px-4 py-3.5">
                     {user.role === 'admin' ? (

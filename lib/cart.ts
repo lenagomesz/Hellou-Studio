@@ -54,7 +54,7 @@ export function clampQuantity(
   quantity: number,
   stock: number | undefined,
 ): number {
-  const max = stock ?? 99;
+  const max = Math.min(stock ?? 50, 50);
   return Math.max(1, Math.min(max, Math.floor(quantity)));
 }
 

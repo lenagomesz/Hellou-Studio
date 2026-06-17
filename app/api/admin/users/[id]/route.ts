@@ -4,6 +4,37 @@ import { requireAdmin, badRequest, notFound, serverError } from '@/lib/api';
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
+export async function GET(_req: Request, ctx: RouteCtx) {
+  const auth = await requireAdmin();
+  if (auth.response) return auth.response;
+
+  const { id } = await ctx.params;
+  const admin = getSupabaseAdmin();
+
+  const { data: user } = await admin
+    .from('users')
+    .select('id, email, name, role, cpf, phone, created_at')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (!user) return notFound('Usuário não encontrado');
+
+  const { data: orders } = await admin
+    .from('orders')
+    .select('id, status, total, created_at, shipping_address')
+    .eq('user_id', id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const { data: addresses } = await admin
+    .from('addresses')
+    .select('*')
+    .eq('user_id', id)
+    .limit(5);
+
+  return NextResponse.json({ user, orders: orders ?? [], addresses: addresses ?? [] });
+}
+
 export async function DELETE(_req: Request, ctx: RouteCtx) {
   const auth = await requireAdmin();
   if (auth.response) return auth.response;

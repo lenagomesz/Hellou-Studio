@@ -50,7 +50,7 @@ export function ProductDetail({
   const finalPrice =
     product.base_price + (selectedOption?.price_modifier ?? 0);
 
-  const maxQuantity = selectedOption?.stock ?? 99;
+  const maxQuantity = Math.min(selectedOption?.stock ?? 50, 50);
   const canAddToCart = options.length === 0 || selectedOption !== null;
   const isSyncing = status === 'syncing';
 

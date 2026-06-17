@@ -29,7 +29,7 @@ const DEFAULT_HEIGHT = '10';
 const DEFAULT_WIDTH = '15';
 const DEFAULT_LENGTH = '20';
 const DEFAULT_DIAMETER = '0';
-const API_TIMEOUT_MS = 8000;
+const API_TIMEOUT_MS = 3000;
 
 // --- Fallback: tabela fixa por região ---
 type Region = 'local' | 'vizinhos' | 'sudeste' | 'centro_oeste' | 'nordeste' | 'norte';

@@ -830,7 +830,7 @@ function CartLine({
 }) {
   const unit = computeUnitPrice(item);
   const lineTotal = computeItemTotal(item);
-  const max = item.option?.stock ?? 99;
+  const max = Math.min(item.option?.stock ?? 50, 50);
   const atMax = item.quantity >= max;
 
   return (
