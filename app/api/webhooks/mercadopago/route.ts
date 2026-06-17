@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { sendOrderConfirmationEmail } from '@/lib/email';
+import { sendOrderConfirmationEmail, sendInvoiceRequestEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { verifyWebhookSignature } from '@/lib/security';
 
@@ -139,20 +139,33 @@ export async function POST(request: Request) {
         .single();
 
       if (userData?.email) {
-        try {
-          await sendOrderConfirmationEmail({
-            email: userData.email,
-            nome: userData.name || null,
-            pedidoId: order.id,
+        sendOrderConfirmationEmail({
+          email: userData.email,
+          nome: userData.name || null,
+          pedidoId: order.id,
+          total: Number(result.transaction_amount) || 0,
+          itens: (items || []).map((item) => ({
+            nome: (item.product_snapshot as Record<string, unknown>)?.name as string || 'Produto',
+            quantidade: item.quantity,
+            precoUnitario: item.unit_price,
+          })),
+        }).catch((e) => console.error('[mp-webhook] email error:', e));
+
+        const { data: orderFull } = await admin
+          .from('orders')
+          .select('shipping_address')
+          .eq('id', order.id)
+          .single();
+
+        const shipping = orderFull?.shipping_address as Record<string, unknown> | null;
+        if (shipping?.wants_invoice) {
+          sendInvoiceRequestEmail({
+            adminEmail: process.env.ADMIN_EMAIL || userData.email,
+            orderId: order.id,
+            customerName: userData.name || null,
+            customerEmail: userData.email,
             total: Number(result.transaction_amount) || 0,
-            itens: (items || []).map((item) => ({
-              nome: (item.product_snapshot as Record<string, unknown>)?.name as string || 'Produto',
-              quantidade: item.quantity,
-              precoUnitario: item.unit_price,
-            })),
-          });
-        } catch (e) {
-          console.error('[mp-webhook] email error:', e);
+          }).catch((e) => console.error('[mp-webhook] invoice email error:', e));
         }
       }
     }

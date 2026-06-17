@@ -245,8 +245,11 @@ export async function sendOrderStatusEmail(params: {
     extraContent = `
       <div style="margin: 20px 0; padding: 16px; background: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
         <p style="margin: 0; font-weight: 600; color: #166534;">Código de rastreamento:</p>
-        <p style="margin: 8px 0 0; font-size: 14px; color: #15803D; font-family: monospace;">${params.trackingCode}</p>
+        <p style="margin: 8px 0 0; font-size: 16px; color: #15803D; font-family: monospace; letter-spacing: 0.5px;">${params.trackingCode}</p>
       </div>
+      <a href="https://www.linkcorreios.com.br/?id=${params.trackingCode}" style="display: inline-block; margin: 8px 0 16px; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+        Rastrear encomenda
+      </a>
     `;
   }
 
@@ -323,6 +326,54 @@ export async function sendAdminNewOrderEmail(params: {
     }
   } catch (err) {
     console.error('[email] admin-new-order EXCEPTION:', err);
+  }
+}
+
+export async function sendInvoiceRequestEmail(params: {
+  adminEmail: string;
+  orderId: string;
+  customerName: string | null;
+  customerEmail: string;
+  total: number;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+
+  const baseUrl = getBaseUrl();
+  const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.total);
+
+  try {
+    const res = await resend.emails.send({
+      from: getFrom(),
+      to: params.adminEmail,
+      subject: `Nota Fiscal solicitada — Pedido #${params.orderId.slice(0, 8).toUpperCase()}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+          <h2 style="color: #111;">Nota Fiscal solicitada</h2>
+          <div style="margin: 16px 0; padding: 16px; background: #FFFBEB; border-radius: 8px; border: 1px solid #FDE68A;">
+            <p style="margin: 0; font-weight: 600; color: #92400E;">Pedido #${params.orderId.slice(0, 8).toUpperCase()}</p>
+            <p style="margin: 8px 0 0; font-size: 14px; color: #B45309;">Total: ${price}</p>
+          </div>
+          <p style="color: #555; font-size: 14px;">
+            <strong>Cliente:</strong> ${params.customerName ?? 'N/A'}<br/>
+            <strong>Email:</strong> ${params.customerEmail}
+          </p>
+          <p style="color: #555; font-size: 14px;">
+            O cliente solicitou nota fiscal para este pedido. Por favor emita e envie ao cliente.
+          </p>
+          <a href="${baseUrl}/dashboard/orders/${params.orderId}" style="display: inline-block; margin: 16px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Ver pedido no painel
+          </a>
+        </div>
+      `,
+    });
+    if (res.error) {
+      console.error('[email] invoice-request ERRO:', JSON.stringify(res.error, null, 2));
+    } else {
+      console.log('[email] invoice-request ENVIADO para:', params.adminEmail, '| id:', res.data?.id);
+    }
+  } catch (err) {
+    console.error('[email] invoice-request EXCEPTION:', err);
   }
 }
 

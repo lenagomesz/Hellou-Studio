@@ -181,9 +181,7 @@ export function PaymentForm({
       setPixQrCode(data.pix_qr_code || '');
       setPixQrBase64(data.pix_qr_code_base64 || '');
       setPixOrderId(data.order_id);
-
       onPaymentCompleted?.();
-      void clearCart();
 
       pollingRef.current = setInterval(async () => {
         try {
@@ -191,6 +189,8 @@ export function PaymentForm({
           const statusData = await statusRes.json();
           if (statusData.status === 'approved') {
             if (pollingRef.current) clearInterval(pollingRef.current);
+            onPaymentCompleted?.();
+            void clearCart();
             router.push(`/checkout/success?order_id=${data.order_id}`);
           }
         } catch {}

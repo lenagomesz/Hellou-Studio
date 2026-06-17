@@ -3,7 +3,7 @@ import { requireUser, badRequest, serverError } from '@/lib/api';
 import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { isValidCpf } from '@/lib/cpf';
-import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from '@/lib/email';
+import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { validateShippingCost } from '@/lib/security';
 
@@ -219,27 +219,34 @@ export async function POST(request: Request) {
         console.error('[mp-create] notification error:', e);
       }
 
-      try {
-        await sendOrderConfirmationEmail({
-          email: userData?.email || user.email,
-          nome: userData?.name || null,
-          pedidoId: order.id,
-          total: totalAmount,
-          itens: orderItems.map((item) => ({
-            nome: (item.product_snapshot as Record<string, unknown>)?.name as string || 'Produto',
-            quantidade: item.quantity,
-            precoUnitario: item.unit_price,
-          })),
-        });
-        await sendAdminNewOrderEmail({
+      sendOrderConfirmationEmail({
+        email: userData?.email || user.email,
+        nome: userData?.name || null,
+        pedidoId: order.id,
+        total: totalAmount,
+        itens: orderItems.map((item) => ({
+          nome: (item.product_snapshot as Record<string, unknown>)?.name as string || 'Produto',
+          quantidade: item.quantity,
+          precoUnitario: item.unit_price,
+        })),
+      }).catch((e) => console.error('[mp-create] email error:', e));
+
+      sendAdminNewOrderEmail({
+        adminEmail: process.env.ADMIN_EMAIL || userData?.email || user.email,
+        orderId: order.id,
+        customerName: userData?.name || null,
+        customerEmail: userData?.email || user.email,
+        total: totalAmount,
+      }).catch((e) => console.error('[mp-create] admin email error:', e));
+
+      if (wants_invoice) {
+        sendInvoiceRequestEmail({
           adminEmail: process.env.ADMIN_EMAIL || userData?.email || user.email,
           orderId: order.id,
           customerName: userData?.name || null,
           customerEmail: userData?.email || user.email,
           total: totalAmount,
-        });
-      } catch (e) {
-        console.error('[mp-create] email error:', e);
+        }).catch((e) => console.error('[mp-create] invoice email error:', e));
       }
     }
 
