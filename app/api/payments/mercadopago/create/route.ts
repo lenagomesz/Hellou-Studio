@@ -3,6 +3,7 @@ import { requireUser, badRequest, serverError } from '@/lib/api';
 import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { isValidCpf } from '@/lib/cpf';
+import { validateCartProductTypes } from '@/lib/cart';
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { validateShippingCost } from '@/lib/security';
@@ -60,6 +61,13 @@ export async function POST(request: Request) {
 
   if (!cartItems || cartItems.length === 0) {
     return badRequest('Carrinho vazio');
+  }
+
+  // Validate no mixed product types (digital + physical)
+  try {
+    validateCartProductTypes(cartItems.filter(i => i.product) as Array<{ product: { type: string } }>);
+  } catch (e) {
+    return badRequest((e as Error).message);
   }
 
   let subtotal = 0;
@@ -142,7 +150,15 @@ export async function POST(request: Request) {
     const mpPaymentId = String(result.id);
     const mpStatus = result.status;
 
-    const orderStatus = mpStatus === 'approved' ? 'processing' : 'awaiting_payment';
+    // Check if order contains only digital products
+    const isDigitalOrder = cartItems.every(item => item.product?.type === 'digital');
+
+    let orderStatus: string;
+    if (mpStatus === 'approved') {
+      orderStatus = isDigitalOrder ? 'completed' : 'processing';
+    } else {
+      orderStatus = 'awaiting_payment';
+    }
 
     const { data: order, error: orderError } = await admin
       .from('orders')
@@ -154,6 +170,7 @@ export async function POST(request: Request) {
         payment_provider: 'mercadopago',
         status: orderStatus,
         total: totalAmount,
+        shipped_at: isDigitalOrder && mpStatus === 'approved' ? new Date().toISOString() : null,
         shipping_address: { ...(shipping_address ?? {}), wants_invoice: !!wants_invoice },
       })
       .select('id')
@@ -187,7 +204,7 @@ export async function POST(request: Request) {
       await admin.from('cart_items').delete().eq('user_id', user.id);
     }
 
-    if (orderStatus === 'processing') {
+    if (orderStatus === 'processing' || orderStatus === 'completed') {
       for (const item of cartItems) {
         if (item.product_option_id) {
           const { error: rpcErr } = await admin.rpc('decrement_stock', {

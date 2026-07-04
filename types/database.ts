@@ -5,21 +5,26 @@ export type OrderStatus =
   | 'pending'
   | 'paid'
   | 'processing'
+  | 'completed'
   | 'shipped'
   | 'delivered'
   | 'canceled'
   | 'refunded';
+
+export type ProductType = 'physical' | 'digital';
 
 export interface Product {
   id: string;
   name: string;
   description: string | null;
   category: Category;
+  type: ProductType;
   base_price: number;
   sale_price: number | null;
   image_url: string | null;
   images: string[] | null;
   active: boolean;
+  file_path: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -56,6 +61,7 @@ export interface Order {
   status: OrderStatus;
   total: number;
   shipping_address: Record<string, unknown> | null;
+  shipped_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -194,9 +200,11 @@ export interface Database {
           name: string;
           description?: string | null;
           category: Category;
+          type?: ProductType;
           base_price: number;
           image_url?: string | null;
           active?: boolean;
+          file_path?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -205,9 +213,11 @@ export interface Database {
           name?: string;
           description?: string | null;
           category?: Category;
+          type?: ProductType;
           base_price?: number;
           image_url?: string | null;
           active?: boolean;
+          file_path?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -269,6 +279,7 @@ export interface Database {
           status?: OrderStatus;
           total: number;
           shipping_address?: Record<string, unknown> | null;
+          shipped_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -284,6 +295,7 @@ export interface Database {
           status?: OrderStatus;
           total?: number;
           shipping_address?: Record<string, unknown> | null;
+          shipped_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

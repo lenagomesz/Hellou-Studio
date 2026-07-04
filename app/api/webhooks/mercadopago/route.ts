@@ -71,15 +71,38 @@ export async function POST(request: Request) {
 
     console.log('[mp-webhook] found order:', { orderId: order.id, currentStatus: order.status, mpStatus });
 
-    const newStatus = mpStatus === 'approved' ? 'processing' : mpStatus === 'cancelled' ? 'canceled' : order.status;
+    // Determine new order status
+    let newStatus: string;
+    if (mpStatus === 'approved') {
+      // Check if order contains only digital products for auto-completion
+      const { data: orderItemsForType } = await admin
+        .from('order_items')
+        .select('product_id, product:products(type)')
+        .eq('order_id', order.id);
+
+      const isDigitalOrder = orderItemsForType?.every(
+        (item) => (item.product as unknown as { type: string } | null)?.type === 'digital'
+      ) ?? false;
+
+      newStatus = isDigitalOrder ? 'completed' : 'processing';
+    } else if (mpStatus === 'cancelled') {
+      newStatus = 'canceled';
+    } else {
+      newStatus = order.status;
+    }
 
     if (newStatus === order.status) {
       return NextResponse.json({ received: true });
     }
 
+    const updateData: Record<string, unknown> = { status: newStatus, mp_status: mpStatus };
+    if (newStatus === 'completed') {
+      updateData.shipped_at = new Date().toISOString();
+    }
+
     await admin
       .from('orders')
-      .update({ status: newStatus, mp_status: mpStatus })
+      .update(updateData)
       .eq('id', order.id);
 
     try {
@@ -96,7 +119,7 @@ export async function POST(request: Request) {
       console.error('[mp-webhook] notification error:', e);
     }
 
-    if (newStatus === 'processing' && order.status === 'awaiting_payment') {
+    if ((newStatus === 'processing' || newStatus === 'completed') && order.status === 'awaiting_payment') {
       const { data: items } = await admin
         .from('order_items')
         .select('*, option:product_options(*)')

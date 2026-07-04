@@ -58,4 +58,11 @@ export function clampQuantity(
   return Math.max(1, Math.min(max, Math.floor(quantity)));
 }
 
+export function validateCartProductTypes(items: Array<{ product: { type: string } }>) {
+  const types = new Set(items.map(item => item.product.type));
+  if (types.size > 1) {
+    throw new Error('Não é possível misturar produtos digitais e físicos no mesmo carrinho. Finalize a compra de um tipo antes de adicionar o outro.');
+  }
+}
+
 export const LOCAL_CART_STORAGE_KEY = 'ecommerce-3d:cart';
