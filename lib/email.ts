@@ -1,6 +1,8 @@
 import { Resend } from 'resend';
 import { BoasVindasEmail } from '@/emails/boas-vindas';
 import { PedidoConfirmadoEmail } from '@/emails/pedido-confirmado';
+import { STLOrderConfirmationEmail } from '@/emails/stl-order-confirmation';
+import { STLAdminNotificationEmail } from '@/emails/stl-admin-notification';
 
 let cached: Resend | null = null;
 let warned = false;
@@ -427,5 +429,75 @@ export async function sendAdminNewPrintRequestEmail(params: {
     }
   } catch (err) {
     console.error('[email] admin-new-print-request EXCEPTION:', err);
+  }
+}
+
+export async function sendSTLOrderConfirmationEmail(params: {
+  email: string;
+  nome: string | null;
+  orderId: string;
+  fileName: string;
+  price: number;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+
+  try {
+    const res = await resend.emails.send({
+      from: getFrom(),
+      to: params.email,
+      subject: `Seu arquivo STL está pronto! #${params.orderId.slice(0, 8).toUpperCase()}`,
+      react: STLOrderConfirmationEmail({
+        nome: params.nome,
+        orderId: params.orderId,
+        fileName: params.fileName,
+        price: params.price,
+        baseUrl: getBaseUrl(),
+      }),
+    });
+    if (res.error) {
+      console.error('[email] stl-order-confirmation ERRO:', JSON.stringify(res.error, null, 2));
+    } else {
+      console.log('[email] stl-order-confirmation ENVIADO para:', params.email, '| id:', res.data?.id);
+    }
+  } catch (err) {
+    console.error('[email] stl-order-confirmation EXCEPTION:', err);
+  }
+}
+
+export async function sendSTLAdminNotificationEmail(params: {
+  adminEmail: string;
+  orderId: string;
+  customerName: string | null;
+  customerEmail: string;
+  fileName: string;
+  price: number;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+
+  const baseUrl = getBaseUrl();
+
+  try {
+    const res = await resend.emails.send({
+      from: getFrom(),
+      to: params.adminEmail,
+      subject: `Novo pedido digital! #${params.orderId.slice(0, 8).toUpperCase()} — ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.price)}`,
+      react: STLAdminNotificationEmail({
+        orderId: params.orderId,
+        customerName: params.customerName,
+        customerEmail: params.customerEmail,
+        fileName: params.fileName,
+        price: params.price,
+        baseUrl,
+      }),
+    });
+    if (res.error) {
+      console.error('[email] stl-admin-notification ERRO:', JSON.stringify(res.error, null, 2));
+    } else {
+      console.log('[email] stl-admin-notification ENVIADO para:', params.adminEmail, '| id:', res.data?.id);
+    }
+  } catch (err) {
+    console.error('[email] stl-admin-notification EXCEPTION:', err);
   }
 }

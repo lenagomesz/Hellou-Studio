@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { sendOrderConfirmationEmail, sendInvoiceRequestEmail, sendAdminNewOrderEmail } from '@/lib/email';
+import { sendOrderConfirmationEmail, sendInvoiceRequestEmail, sendAdminNewOrderEmail, sendSTLOrderConfirmationEmail, sendSTLAdminNotificationEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { verifyWebhookSignature } from '@/lib/security';
 
@@ -197,6 +197,33 @@ export async function POST(request: Request) {
             customerEmail: userData.email,
             total: Number(result.transaction_amount) || 0,
           }).catch((e) => console.error('[mp-webhook] invoice email error:', e));
+        }
+
+        // Send STL-specific emails for digital-only orders
+        if (newStatus === 'completed') {
+          const digitalItem = (items || []).find(
+            (item) => (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
+          );
+          const fileName = digitalItem
+            ? ((digitalItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo STL')
+            : 'Arquivo STL';
+
+          await sendSTLOrderConfirmationEmail({
+            email: userData.email,
+            nome: userData.name || null,
+            orderId: order.id,
+            fileName,
+            price: Number(result.transaction_amount) || 0,
+          });
+
+          await sendSTLAdminNotificationEmail({
+            adminEmail: process.env.ADMIN_EMAIL || 'studiohellou@gmail.com',
+            orderId: order.id,
+            customerName: userData.name || null,
+            customerEmail: userData.email,
+            fileName,
+            price: Number(result.transaction_amount) || 0,
+          });
         }
       }
     }
