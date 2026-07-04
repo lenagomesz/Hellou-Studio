@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { Order, OrderItem, Product, ProductOption, OrderStatus } from '@/types/database';
 import ConfirmDeliveryButton from './ConfirmDeliveryButton';
+import DownloadButton from './DownloadButton';
 import PixPaymentSection from './PixPaymentSection';
 import EditableShippingAddress from './EditableShippingAddress';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
@@ -45,7 +46,7 @@ function formatDate(value: string) {
 }
 
 type OrderItemRow = OrderItem & {
-  product: Pick<Product, 'id' | 'name' | 'image_url'> | null;
+  product: Pick<Product, 'id' | 'name' | 'image_url' | 'type'> | null;
   option: Pick<ProductOption, 'id' | 'name' | 'color'> | null;
 };
 type OrderRow = Order & { items: OrderItemRow[] };
@@ -54,7 +55,7 @@ async function getOrder(orderId: string, userId: string): Promise<OrderRow | nul
   const admin = getSupabaseAdmin();
   const { data } = await admin
     .from('orders')
-    .select('*, items:order_items(*, product:products(id, name, image_url), option:product_options(id, name, color))')
+    .select('*, items:order_items(*, product:products(id, name, image_url, type), option:product_options(id, name, color))')
     .eq('id', orderId)
     .eq('user_id', userId)
     .single();
@@ -200,6 +201,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Qtd: {item.quantity} &middot; {formatPrice(item.unit_price)} cada
                 </p>
+                {item.product?.type === 'digital' && (
+                  <DownloadButton
+                    orderId={order.id}
+                    productId={item.product.id}
+                    productName={item.product.name}
+                    userId={user.id}
+                  />
+                )}
               </div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">
                 {formatPrice(item.unit_price * item.quantity)}
