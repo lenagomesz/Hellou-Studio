@@ -45,10 +45,10 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Check order status - STL must be delivered
-    if (order.status !== 'delivered') {
+    // Check order status - STL must be approved or delivered
+    if (order.status !== 'approved' && order.status !== 'delivered') {
       return NextResponse.json(
-        { error: 'O pedido ainda não foi entregue. Aguarde o email de confirmação.' },
+        { error: 'O pedido ainda não foi aprovado. Aguarde a confirmação do pagamento.' },
         { status: 403 }
       );
     }

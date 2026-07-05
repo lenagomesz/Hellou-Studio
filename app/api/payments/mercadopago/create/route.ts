@@ -213,7 +213,9 @@ export async function POST(request: Request) {
 
     let orderStatus: string;
     if (mpStatus === 'approved') {
-      orderStatus = isDigitalOrder ? 'delivered' : 'processing';
+      // For digital orders: go to 'approved' (file will be available)
+      // For physical orders: go to 'processing'
+      orderStatus = isDigitalOrder ? 'approved' : 'processing';
     } else {
       orderStatus = 'awaiting_payment';
     }

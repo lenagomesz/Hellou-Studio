@@ -13,14 +13,15 @@ interface DownloadButtonProps {
 export default function DownloadButton({ orderId, productId, productName, orderStatus }: DownloadButtonProps) {
   const [downloading, setDownloading] = useState(false);
 
-  if (orderStatus !== 'delivered') {
+  const isAvailable = orderStatus === 'approved' || orderStatus === 'delivered';
+  if (!isAvailable) {
     return (
       <div className="mt-2">
         <button
           type="button"
           disabled
           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed"
-          title="O arquivo será disponível quando o pedido for entregue"
+          title="O arquivo será disponível quando o pagamento for aprovado"
         >
           🔒 Indisponível
         </button>
