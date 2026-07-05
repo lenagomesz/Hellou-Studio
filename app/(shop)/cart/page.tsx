@@ -622,11 +622,11 @@ export default function CartPage() {
       {step === 3 && (
         <div className="animate-fade-in">
           {/* Back button */}
-          <div className="mb-5">
+          <div className="mb-4 sm:mb-5">
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
@@ -635,13 +635,13 @@ export default function CartPage() {
             </button>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+          <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
             {/* Summary — shows FIRST on mobile (order-1), RIGHT column on desktop (lg:order-2) */}
-            <div className="space-y-4 order-1 lg:order-2 lg:sticky lg:top-24 lg:self-start">
+            <div className="space-y-4 order-1 lg:order-2 lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
               {/* Items */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Itens ({items.length})</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Itens ({items.length})</h2>
                   <button type="button" onClick={() => setStep(1)} className="text-xs text-pink-600 hover:text-pink-700 transition">
                     Editar
                   </button>
@@ -670,9 +670,9 @@ export default function CartPage() {
               </div>
 
               {/* Shipping */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Entrega</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Entrega</h2>
                   <button type="button" onClick={() => setStep(2)} className="text-xs text-pink-600 hover:text-pink-700 transition">
                     Alterar
                   </button>
@@ -694,13 +694,13 @@ export default function CartPage() {
               </div>
 
               {/* Coupon */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-pink-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-pink-400">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
                   </svg>
-                  <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cupom</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Cupom</h2>
                 </div>
                 {couponDiscount ? (
                   <div className="flex items-center justify-between rounded-xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30 p-3">
@@ -732,8 +732,8 @@ export default function CartPage() {
               </div>
 
               {/* Totals */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-                <dl className="space-y-2 text-sm">
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
+                <dl className="space-y-2 text-xs sm:text-sm">
                   <div className="flex justify-between text-gray-600 dark:text-gray-400">
                     <dt>Subtotal</dt>
                     <dd className="font-medium">{formatPrice(total)}</dd>
@@ -769,7 +769,7 @@ export default function CartPage() {
             </div>
 
             {/* Payment — shows SECOND on mobile (order-2), LEFT column on desktop (lg:order-1) */}
-            <div className="order-2 lg:order-1">
+            <div className="order-2 lg:order-1 lg:col-span-2">
               {session ? (
                 <PaymentForm
                   grandTotal={grandTotal}
