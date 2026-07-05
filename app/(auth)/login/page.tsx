@@ -137,6 +137,22 @@ function LoginForm() {
               </button>
             </div>
 
+            {callbackUrl && callbackUrl !== '/' && (
+              <div className="mb-6 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 p-4 flex gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
+                    Conta necessária para comprar
+                  </p>
+                  <p className="text-xs text-blue-800 dark:text-blue-300">
+                    Para realizar compras ou encomendas, você precisa ter uma conta. Isso nos permite rastrear seus pedidos e manter contato com você sobre suas solicitações.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>

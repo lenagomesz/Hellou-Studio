@@ -45,7 +45,7 @@ export default function RequestPrintPage() {
     e.preventDefault();
 
     if (status !== 'authenticated') {
-      router.push('/login');
+      router.push('/login?callbackUrl=/request-print');
       return;
     }
 
@@ -58,6 +58,8 @@ export default function RequestPrintPage() {
 
     const hasFile = file !== null;
     const hasLink = makerLink.trim().length > 0;
+    const hasDescription = description.trim().length > 0;
+    const hasNotes = notes.trim().length > 0;
 
     if (!hasFile && !hasLink) {
       setError('Você precisa enviar um arquivo STL ou um link do Makerworld');
@@ -66,6 +68,16 @@ export default function RequestPrintPage() {
 
     if (hasFile && hasLink) {
       setError('Escolha apenas uma opção: arquivo STL ou link do Makerworld');
+      return;
+    }
+
+    if (!hasDescription) {
+      setError('Descrição do projeto é obrigatória');
+      return;
+    }
+
+    if (!hasNotes) {
+      setError('Observações adicionais são obrigatórias');
       return;
     }
 

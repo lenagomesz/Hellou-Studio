@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
@@ -28,11 +29,13 @@ export function ProductDetail({
   options: ProductOption[];
 }) {
   const { addItem, removeItem, status } = useCart();
+  const { status: sessionStatus } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const replaceCartItemId = searchParams.get('replace');
   const [feedback, setFeedback] = useState<'idle' | 'added' | 'error'>('idle');
   const [shared, setShared] = useState(false);
+  const isAuthenticated = sessionStatus === 'authenticated';
 
   const inStockOptions = useMemo(
     () => options.filter((o) => o.stock > 0),
@@ -57,6 +60,12 @@ export function ProductDetail({
 
   const handleAddToCart = async () => {
     if (!canAddToCart) return;
+
+    if (!isAuthenticated) {
+      router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname + window.location.search));
+      return;
+    }
+
     try {
       if (replaceCartItemId) {
         await removeItem(replaceCartItemId);
