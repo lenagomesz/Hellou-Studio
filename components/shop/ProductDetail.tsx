@@ -24,10 +24,10 @@ function formatPrice(value: number) {
 export function ProductDetail({
   product,
   options,
-}: {
+}: Readonly<{
   product: Product;
   options: ProductOption[];
-}) {
+}>) {
   const { addItem, removeItem, status } = useCart();
   const { status: sessionStatus } = useSession();
   const searchParams = useSearchParams();
@@ -62,7 +62,7 @@ export function ProductDetail({
     if (!canAddToCart) return;
 
     if (!isAuthenticated) {
-      router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname + window.location.search));
+      router.push(`/login?callbackUrl=${encodeURIComponent(globalThis.location?.pathname ?? '/' + (globalThis.location?.search ?? ''))}`);
       return;
     }
 
@@ -95,7 +95,7 @@ export function ProductDetail({
         return;
       }
       setFeedback('added');
-      window.setTimeout(() => setFeedback('idle'), 2500);
+      globalThis.setTimeout(() => setFeedback('idle'), 2500);
     } catch {
       setFeedback('error');
     }
@@ -334,7 +334,7 @@ export function ProductDetail({
           <button
             type="button"
             onClick={async () => {
-              const url = window.location.href;
+              const url = globalThis.location?.href ?? '';
               if (navigator.share) {
                 try { await navigator.share({ title: product.name, url }); } catch {}
               } else {

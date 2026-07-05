@@ -102,15 +102,15 @@ export async function POST(request: Request) {
     .eq('id', product_id)
     .maybeSingle();
 
-  const product = productRow as Pick<Product, 'id' | 'active'> | null;
   if (productError) {
     console.error('[cart] product lookup error:', productError);
     return serverError('Erro ao validar produto');
   }
-  if (!product || !product.active) {
-    console.error('[cart] product unavailable:', { product_id, product });
+  if (!productRow?.active) {
+    console.error('[cart] product unavailable:', { product_id, productRow });
     return badRequest('Produto indisponível');
   }
+  const product = productRow;
 
   let optionStock: number | null = null;
   if (optionId) {
@@ -120,15 +120,11 @@ export async function POST(request: Request) {
       .eq('id', optionId)
       .maybeSingle();
 
-    const option = optionRow as Pick<
-      ProductOption,
-      'id' | 'product_id' | 'stock'
-    > | null;
     if (optionError) return serverError('Erro ao validar variação');
-    if (!option || option.product_id !== product_id) {
+    if (!optionRow?.product_id || optionRow.product_id !== product_id) {
       return badRequest('Variação inválida');
     }
-    optionStock = option.stock;
+    optionStock = optionRow.stock;
   }
 
   const { data: matches, error: matchError } = await admin

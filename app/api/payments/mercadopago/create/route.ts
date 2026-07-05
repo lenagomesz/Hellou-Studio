@@ -145,7 +145,7 @@ export async function POST(request: Request) {
       if (issuer_id) paymentBody.issuer_id = issuer_id;
     }
 
-    const result = await payment.create({ body: paymentBody as never });
+    const result = await payment.create({ body: paymentBody });
 
     const mpPaymentId = String(result.id);
     const mpStatus = result.status;
@@ -171,7 +171,7 @@ export async function POST(request: Request) {
         status: orderStatus,
         total: totalAmount,
         shipped_at: isDigitalOrder && mpStatus === 'approved' ? new Date().toISOString() : null,
-        shipping_address: { ...(shipping_address ?? {}), wants_invoice: !!wants_invoice },
+        shipping_address: { ...(shipping_address || {}), wants_invoice: !!wants_invoice },
       })
       .select('id')
       .single();
@@ -215,7 +215,7 @@ export async function POST(request: Request) {
             await admin
               .from('product_options')
               .update({ stock: Math.max(0, (item.option?.stock ?? 0) - item.quantity) })
-              .eq('id', item.product_option_id!);
+              .eq('id', item.product_option_id ?? '');
           }
         }
       }
