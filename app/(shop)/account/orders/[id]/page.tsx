@@ -206,7 +206,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     orderId={order.id}
                     productId={item.product.id}
                     productName={item.product.name}
-                    userId={user.id}
+                    orderStatus={order.status}
                   />
                 )}
               </div>
