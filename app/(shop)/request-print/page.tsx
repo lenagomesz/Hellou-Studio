@@ -304,16 +304,6 @@ export default function RequestPrintPage() {
             </div>
           </div>
 
-          {/* Copyright Warning */}
-          <div className="bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-xs font-semibold text-red-900 dark:text-red-200 mb-2">
-              ⚠️ Aviso sobre direitos autorais
-            </p>
-            <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">
-              <strong>Não compactuamos com projetos que tenham restrições de direitos autorais ou uso comercial.</strong> Muitos modelos do Makerworld têm essas limitações. Analisaremos a licença e deixaremos bem claro se podemos prosseguir com o orçamento ou não.
-            </p>
-          </div>
-
           {/* Error Message */}
           {error && (
             <p className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 px-4 py-3 text-sm text-red-700 dark:text-red-300">
