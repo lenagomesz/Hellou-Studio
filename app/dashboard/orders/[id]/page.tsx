@@ -59,7 +59,7 @@ type OrderItem = {
   quantity: number;
   unit_price: number;
   product_snapshot: Record<string, unknown> | null;
-  product: { id: string; name: string; image_url: string | null } | null;
+  product: { id: string; name: string; image_url: string | null; type?: string; file_path?: string } | null;
 };
 
 type OrderDetail = {
@@ -260,7 +260,7 @@ export default function OrderDetailPage() {
                     <p className="text-xs text-gray-500">
                       {item.quantity}x &middot; {formatPrice(item.unit_price)} cada
                     </p>
-                    {item.product && 'type' in item.product && (item.product as any).type === 'digital' && (
+                    {item.product?.type === 'digital' && (
                       <button
                         onClick={() => {
                           const downloadUrl = `/api/orders/${id}/download/${item.product?.id}`;
