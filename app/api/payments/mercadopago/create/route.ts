@@ -217,8 +217,12 @@ export async function POST(request: Request) {
     // Check if order contains only digital products
     const isDigitalOrder = cartItems.every(item => item.product?.type === 'digital');
 
+    // Determine order status based on payment status
+    // 'approved' = confirmed, 'authorized' = authorized (some card payments), 'in_process' = processing
+    const isPaymentApproved = mpStatus && ['approved', 'authorized', 'in_process'].includes(mpStatus);
+
     let orderStatus: string;
-    if (mpStatus === 'approved') {
+    if (isPaymentApproved) {
       // For digital orders: go to 'approved' (file will be available)
       // For physical orders: go to 'processing'
       orderStatus = isDigitalOrder ? 'approved' : 'processing';
@@ -350,10 +354,10 @@ export async function POST(request: Request) {
       console.log('[mp-create] STL items found:', {
         stlCount: stlItems.length,
         mpStatus,
-        shouldSendEmail: stlItems.length > 0 && mpStatus === 'approved',
+        shouldSendEmail: stlItems.length > 0 && isPaymentApproved,
       });
 
-      if (stlItems.length > 0 && mpStatus === 'approved') {
+      if (stlItems.length > 0 && isPaymentApproved) {
         // For digital-only orders: notify immediately
         if (isDigitalOrder) {
           try {
@@ -383,7 +387,7 @@ export async function POST(request: Request) {
         }
 
         // Send STL delivery email with file info automatically
-        if (stlItems.length > 0 && mpStatus === 'approved') {
+        if (stlItems.length > 0 && isPaymentApproved) {
           for (const stlItem of stlItems) {
             const fileName = (stlItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo STL';
 

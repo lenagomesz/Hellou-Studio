@@ -73,7 +73,10 @@ export async function POST(request: Request) {
 
     // Determine new order status
     let newStatus: string;
-    if (mpStatus === 'approved') {
+    // 'approved' = confirmed, 'authorized' = authorized (card payments), 'in_process' = processing
+    const isPaymentApproved = ['approved', 'authorized', 'in_process'].includes(mpStatus);
+
+    if (isPaymentApproved) {
       // Check if order contains only digital products for auto-completion
       const { data: orderItemsForType } = await admin
         .from('order_items')
