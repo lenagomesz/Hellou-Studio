@@ -60,8 +60,18 @@ export async function GET(
     );
 
     if (!item || !item.product?.file_path) {
+      console.error('[download] Item or file_path not found:', {
+        itemFound: !!item,
+        filePath: item?.product?.file_path,
+      });
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
+
+    console.log('[download] Attempting to download:', {
+      filePath: item.product.file_path,
+      bucket: 'products',
+      productName: item.product.name,
+    });
 
     // Download file from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -69,7 +79,12 @@ export async function GET(
       .download(item.product.file_path);
 
     if (downloadError || !fileData) {
-      console.error('[download] Storage error:', downloadError);
+      console.error('[download] Storage error:', {
+        error: downloadError,
+        filePath: item.product.file_path,
+        errorStatus: (downloadError as any)?.status,
+        errorMessage: (downloadError as any)?.message,
+      });
       return NextResponse.json({ error: 'Failed to download file' }, { status: 500 });
     }
 
