@@ -334,14 +334,30 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
               <div className="flex-1 text-center md:text-left">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/50 mb-3">
-                  💾 Arquivos STL
+                  💾 Modelos 3D
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                  Modelos 3D Exclusivos
+                  Arquivos STL da<br />Hellou Studio
                 </h2>
-                <p className="text-sm sm:text-base text-white/95 mb-4 leading-relaxed">
-                  Compre arquivos STL prontos para imprimir. Modelos exclusivos da Hellou Studio otimizados para impressoras 3D. Download imediato e reutilização ilimitada.
-                </p>
+                <div className="space-y-3 text-sm sm:text-base text-white/95 mb-4">
+                  <p className="leading-relaxed">
+                    Compre arquivos STL prontos para imprimir em sua impressora 3D. Modelos originais e personalizáveis criados pela Hellou Studio.
+                  </p>
+                  <div className="space-y-2 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">✓</span>
+                      <span>Uso comercial permitido - impresso de forma livre</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">✓</span>
+                      <span>Arquivos prontos - otimizados para FDM</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">✓</span>
+                      <span>Personalizáveis - adapte do seu jeito</span>
+                    </div>
+                  </div>
+                </div>
                 <Link
                   href="/stl"
                   className="inline-flex items-center gap-2 rounded-full bg-white text-pink-600 px-5 py-2.5 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm sm:text-base"

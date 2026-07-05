@@ -77,10 +77,9 @@ export async function POST(request: Request) {
     subtotal += (basePrice + modifier) * item.quantity;
   }
 
-  // TODO: descomentar após testes em prod
-  // if (subtotal < 15) {
-  //   return badRequest('Pedido mínimo de R$15,00');
-  // }
+  if (totalAmount < 0.01) {
+    return badRequest('O valor do pedido deve ser maior que R$ 0,01');
+  }
 
   let discountAmount = 0;
   let couponId: string | null = null;
