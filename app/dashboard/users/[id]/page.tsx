@@ -9,6 +9,7 @@ import type { OrderStatus } from '@/types/database';
 const STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_payment: 'Aguardando Pagamento',
   pending: 'Aprovado',
+  approved: 'Aprovado',
   paid: 'Pago',
   processing: 'Em preparo',
   completed: 'Concluído',
@@ -21,6 +22,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 const STATUS_STYLES: Record<OrderStatus, string> = {
   awaiting_payment: 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300',
   pending: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300',
+  approved: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300',
   paid: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300',
   processing: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300',
   completed: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300',

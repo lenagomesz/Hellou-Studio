@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 const STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_payment: 'Aguardando Pagamento',
   pending: 'Aprovado',
+  approved: 'Aprovado',
   paid: 'Pago',
   processing: 'Em preparo',
   completed: 'Concluído',
@@ -21,6 +22,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 const STATUS_STYLES: Record<OrderStatus, string> = {
   awaiting_payment: 'bg-orange-50 text-orange-700 ring-1 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:ring-orange-800',
   pending: 'bg-green-50 text-green-700 ring-1 ring-green-200 dark:bg-green-900/30 dark:text-green-300 dark:ring-green-800',
+  approved: 'bg-green-50 text-green-700 ring-1 ring-green-200 dark:bg-green-900/30 dark:text-green-300 dark:ring-green-800',
   paid: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800',
   processing: 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:ring-indigo-800',
   completed: 'bg-green-50 text-green-700 ring-1 ring-green-200 dark:bg-green-900/30 dark:text-green-300 dark:ring-green-800',

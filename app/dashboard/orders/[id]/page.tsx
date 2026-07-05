@@ -8,6 +8,7 @@ import type { OrderStatus } from '@/types/database';
 const STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_payment: 'Aguardando Pagamento',
   pending: 'Aprovado',
+  approved: 'Aprovado',
   paid: 'Pago',
   processing: 'Em preparo',
   completed: 'Concluído',
@@ -20,6 +21,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 const STATUS_STYLES: Record<OrderStatus, string> = {
   awaiting_payment: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800',
   pending: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
+  approved: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
   paid: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
   processing: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800',
   completed: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
@@ -32,6 +34,7 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
 const STATUS_ICONS: Record<OrderStatus, string> = {
   awaiting_payment: '🕐',
   pending: '✅',
+  approved: '✅',
   paid: '💳',
   processing: '⚙️',
   completed: '✅',
@@ -41,8 +44,8 @@ const STATUS_ICONS: Record<OrderStatus, string> = {
   refunded: '↩️',
 };
 
-const STATUS_FLOW_PHYSICAL: OrderStatus[] = ['awaiting_payment', 'pending', 'paid', 'processing', 'shipped', 'delivered'];
-const STATUS_FLOW_DIGITAL: OrderStatus[] = ['awaiting_payment', 'delivered'];
+const STATUS_FLOW_PHYSICAL: OrderStatus[] = ['awaiting_payment', 'approved', 'processing', 'shipped', 'delivered'];
+const STATUS_FLOW_DIGITAL: OrderStatus[] = ['awaiting_payment', 'approved', 'delivered'];
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);

@@ -3,6 +3,7 @@ export type Category = 'chaveiros' | 'escritorio' | 'criaturas' | 'encomenda';
 export type OrderStatus =
   | 'awaiting_payment'
   | 'pending'
+  | 'approved'
   | 'paid'
   | 'processing'
   | 'completed'
