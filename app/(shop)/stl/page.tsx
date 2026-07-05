@@ -134,7 +134,7 @@ export default async function STLMarketplacePage() {
                         {new Intl.NumberFormat('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
-                        }).format(product.price)}
+                        }).format(product.base_price)}
                       </span>
                       <button className="px-3 py-1 bg-pink-500 hover:bg-pink-600 dark:bg-pink-600 dark:hover:bg-pink-700 text-white text-xs font-semibold rounded transition">
                         Comprar

@@ -22,6 +22,7 @@ export interface Product {
   base_price: number;
   sale_price: number | null;
   image_url: string | null;
+  image_url_2: string | null;
   images: string[] | null;
   active: boolean;
   file_path: string | null;
@@ -203,6 +204,7 @@ export interface Database {
           type?: ProductType;
           base_price: number;
           image_url?: string | null;
+          image_url_2?: string | null;
           active?: boolean;
           file_path?: string | null;
           created_at?: string;
@@ -216,6 +218,7 @@ export interface Database {
           type?: ProductType;
           base_price?: number;
           image_url?: string | null;
+          image_url_2?: string | null;
           active?: boolean;
           file_path?: string | null;
           created_at?: string;

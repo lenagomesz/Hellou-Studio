@@ -6,7 +6,7 @@ SELECT
   active,
   image_url,
   image_url_2,
-  price,
+  base_price,
   category,
   created_at
 FROM products
