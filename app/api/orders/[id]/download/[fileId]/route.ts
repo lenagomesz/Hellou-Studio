@@ -102,10 +102,10 @@ export async function GET(
     });
 
     // Stream file
-    const fileName = `${item.product.name.replace(/\s+/g, '_')}.stl`;
+    const downloadFileName = `${item.product.name.replace(/\s+/g, '_')}.stl`;
     return new NextResponse(fileData, {
       headers: {
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Disposition': `attachment; filename="${downloadFileName}"`,
         'Content-Type': 'application/octet-stream',
       },
     });
