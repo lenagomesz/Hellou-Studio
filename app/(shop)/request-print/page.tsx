@@ -13,6 +13,7 @@ export default function RequestPrintPage() {
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [makerLink, setMakerLink] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,8 +55,17 @@ export default function RequestPrintPage() {
       setError('Título é obrigatório');
       return;
     }
-    if (!file) {
-      setError('Selecione um arquivo .stl');
+
+    const hasFile = file !== null;
+    const hasLink = makerLink.trim().length > 0;
+
+    if (!hasFile && !hasLink) {
+      setError('Você precisa enviar um arquivo STL ou um link do Makerworld');
+      return;
+    }
+
+    if (hasFile && hasLink) {
+      setError('Escolha apenas uma opção: arquivo STL ou link do Makerworld');
       return;
     }
 
@@ -65,7 +75,13 @@ export default function RequestPrintPage() {
     formData.set('title', title.trim());
     formData.set('description', description.trim());
     formData.set('notes', notes.trim());
-    formData.set('file', file);
+
+    if (hasFile) {
+      formData.set('file', file);
+    }
+    if (hasLink) {
+      formData.set('makerworld_link', makerLink.trim());
+    }
 
     const res = await fetch('/api/print-requests', {
       method: 'POST',
@@ -124,76 +140,13 @@ export default function RequestPrintPage() {
           </ol>
         </div>
 
-        {/* Two Options Section */}
-        <div className="rounded-2xl border border-pink-100 dark:border-pink-900/30 bg-pink-50/50 dark:bg-pink-950/20 p-5 sm:p-6">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-5">Como enviar seu projeto?</h3>
-
-          <div className="grid md:grid-cols-2 gap-5 mb-5">
-            {/* Option 1: Own File */}
-            <div className="rounded-xl border border-pink-200 dark:border-pink-800 bg-white dark:bg-gray-900 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">📁</span>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Arquivo próprio</h4>
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                Você tem um arquivo STL que você criou ou tem direitos autorais para usar? Envie direto para mim! Vou analisar e fazer um orçamento.
-              </p>
-              <div className="flex items-center gap-2 text-xs font-medium text-pink-600 dark:text-pink-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900 text-[10px] font-bold">✓</span>{' '}
-                Use o formulário abaixo
-              </div>
-            </div>
-
-            {/* Option 2: Makerworld */}
-            <div className="rounded-xl border border-pink-200 dark:border-pink-800 bg-white dark:bg-gray-900 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🔗</span>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Projeto do Makerworld</h4>
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                Encontrou algo legal no <a href="https://www.makerworld.com.br" target="_blank" rel="noopener noreferrer" className="font-semibold text-pink-600 dark:text-pink-400 hover:underline">Makerworld</a>? Cole o link na descrição e vou avaliar a licença para você.
-              </p>
-              <div className="flex items-center gap-2 text-xs font-medium text-pink-600 dark:text-pink-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900 text-[10px] font-bold">✓</span>{' '}
-                Cole o link abaixo
-              </div>
-            </div>
-          </div>
-
-          {/* Input for Makerworld link */}
-          <div className="bg-orange-50/60 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-5">
-            <label htmlFor="makerworld-link" className="block text-xs font-semibold text-gray-900 dark:text-white mb-2">
-              Link do Makerworld (opcional)
-            </label>
-            <input
-              id="makerworld-link"
-              type="url"
-              placeholder="Ex: https://www.makerworld.com.br/pt/models/12345"
-              className="w-full px-3 py-2 border border-orange-300 dark:border-orange-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Se enviar um link do Makerworld, deixe este campo preenchido e vou avaliar a licença.
-            </p>
-          </div>
-
-          {/* Copyright Warning */}
-          <div className="bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
-            <p className="text-xs font-semibold text-red-900 dark:text-red-200 mb-2">
-              ⚠️ Aviso sobre direitos autorais
-            </p>
-            <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">
-              <strong>Não compactuamos com projetos que tenham restrições de direitos autorais ou uso comercial.</strong> Muitos modelos do Makerworld têm essas limitações. Analisaremos a licença e deixaremos bem claro se podemos prosseguir com o orçamento ou não.
-            </p>
-          </div>
-        </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 pb-10 pt-6 sm:px-6">
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="title" className="block text-sm font-semibold text-gray-900 dark:text-white">
+      <div className="mx-auto max-w-4xl px-4 pb-10 pt-6 sm:px-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title - Common to both options */}
+          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+            <label htmlFor="title" className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
               Título do projeto *
             </label>
             <input
@@ -202,100 +155,166 @@ export default function RequestPrintPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Suporte para celular personalizado"
-              className="mt-1.5 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
           </div>
 
-          {/* Dropzone */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 dark:text-white">Arquivo STL *</label>
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`mt-1.5 flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed p-8 text-center transition ${
-                dragOver
-                  ? 'border-pink-500 bg-pink-50 dark:bg-pink-950/30'
-                  : file
-                    ? 'border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-950/30'
-                    : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-pink-300 hover:bg-pink-50/30 dark:hover:bg-pink-950/20'
-              }`}
-            >
-              {file ? (
-                <>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-6 w-6">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                    </svg>
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{file.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</p>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                    className="mt-2 text-xs font-medium text-red-600 hover:text-red-700"
-                  >
-                    Remover arquivo
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-pink-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                    </svg>
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Arraste seu arquivo .stl aqui
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">ou clique para selecionar (máx. 50MB)</p>
-                </>
-              )}
+          {/* Two Options Section */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Option 1: STL File */}
+            <div className={`rounded-2xl border-2 transition ${
+              makerLink.trim() ? 'border-gray-200 dark:border-gray-800 opacity-50' : 'border-pink-200 dark:border-pink-800'
+            } bg-white dark:bg-gray-900 p-6 shadow-sm`}>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">📁</span>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Opção 1: Arquivo STL</h3>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                Você tem um arquivo STL que criou ou tem direitos autorais para usar? Envie direto para mim!
+              </p>
+
+              {/* Dropzone */}
+              <div
+                onDragOver={(e) => { if (!makerLink.trim()) { e.preventDefault(); setDragOver(true); } }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => { if (!makerLink.trim()) handleDrop(e); }}
+                onClick={() => !makerLink.trim() && fileInputRef.current?.click()}
+                className={`flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed p-6 text-center transition ${
+                  makerLink.trim()
+                    ? 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-not-allowed opacity-50'
+                    : dragOver
+                      ? 'border-pink-500 bg-pink-50 dark:bg-pink-950/30'
+                      : file
+                        ? 'border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-950/30'
+                        : 'border-pink-300 dark:border-pink-700 bg-pink-50/30 dark:bg-pink-950/20 hover:border-pink-500 hover:bg-pink-50/50'
+                }`}
+              >
+                {file ? (
+                  <>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-6 w-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                      </svg>
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{file.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</p>
+                    {!makerLink.trim() && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                        className="mt-2 text-xs font-medium text-red-600 hover:text-red-700"
+                      >
+                        Remover arquivo
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-pink-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                      </svg>
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {makerLink.trim() ? 'Desabilitado' : 'Arraste seu arquivo .stl aqui'}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{makerLink.trim() ? '' : 'ou clique para selecionar (máx. 50MB)'}</p>
+                  </>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".stl"
+                  onChange={handleFileChange}
+                  disabled={makerLink.trim().length > 0}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            {/* Option 2: Makerworld Link */}
+            <div className={`rounded-2xl border-2 transition ${
+              file ? 'border-gray-200 dark:border-gray-800 opacity-50' : 'border-blue-200 dark:border-blue-800'
+            } bg-white dark:bg-gray-900 p-6 shadow-sm`}>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">🔗</span>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Opção 2: Link Makerworld</h3>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                Encontrou algo legal no Makerworld? Cole o link e vou avaliar a licença para você.
+              </p>
+
+              <label htmlFor="makerworld-link" className="block text-xs font-semibold text-gray-900 dark:text-white mb-2">
+                Link do projeto
+              </label>
               <input
-                ref={fileInputRef}
-                type="file"
-                accept=".stl"
-                onChange={handleFileChange}
-                className="hidden"
+                id="makerworld-link"
+                type="url"
+                value={makerLink}
+                onChange={(e) => setMakerLink(e.target.value)}
+                placeholder="https://www.makerworld.com.br/pt/models/..."
+                disabled={file !== null}
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                  file
+                    ? 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-not-allowed opacity-50 text-gray-500'
+                    : 'border-blue-300 dark:border-blue-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                }`}
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                {file ? 'Remova o arquivo para usar esta opção' : 'Cole o link completo do projeto'}
+              </p>
+            </div>
+          </div>
+
+          {/* Description and Notes */}
+          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm space-y-5">
+            <div>
+              <label htmlFor="description" className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                Descrição
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Descreva o que você gostaria (cor, material, acabamento, especificações...)"
+                rows={3}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="notes" className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                Observações adicionais
+              </label>
+              <textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Quantidade, prazo, uso pretendido, cores específicas..."
+                rows={2}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
               />
             </div>
           </div>
 
-          <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-gray-900 dark:text-white">
-              Descrição
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descreva o que você gostaria (cor, material, acabamento...)"
-              rows={3}
-              className="mt-1.5 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-            />
+          {/* Copyright Warning */}
+          <div className="bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <p className="text-xs font-semibold text-red-900 dark:text-red-200 mb-2">
+              ⚠️ Aviso sobre direitos autorais
+            </p>
+            <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">
+              <strong>Não compactuamos com projetos que tenham restrições de direitos autorais ou uso comercial.</strong> Muitos modelos do Makerworld têm essas limitações. Analisaremos a licença e deixaremos bem claro se podemos prosseguir com o orçamento ou não.
+            </p>
           </div>
 
-          <div>
-            <label htmlFor="notes" className="block text-sm font-semibold text-gray-900 dark:text-white">
-              Observações adicionais
-            </label>
-            <textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Quantidade, prazo, uso pretendido..."
-              rows={2}
-              className="mt-1.5 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-            />
-          </div>
-
+          {/* Error Message */}
           {error && (
-            <p className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+            <p className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 px-4 py-3 text-sm text-red-700 dark:text-red-300">
               {error}
             </p>
           )}
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={submitting}
@@ -304,7 +323,6 @@ export default function RequestPrintPage() {
             {submitting ? 'Enviando...' : 'Enviar Solicitação'}
           </button>
         </form>
-      </div>
       </div>
     </div>
   );
