@@ -37,9 +37,12 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
   refunded: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
 };
 
-const STATUS_ORDER: OrderStatus[] = ['awaiting_payment', 'approved', 'processing', 'shipped', 'delivered'];
-// Note: Shows same status flow for all orders (digital and physical)
-// Admin panel has different flows for digital vs physical
+const STATUS_ORDER_DIGITAL: OrderStatus[] = ['awaiting_payment', 'approved', 'delivered'];
+const STATUS_ORDER_PHYSICAL: OrderStatus[] = ['awaiting_payment', 'approved', 'processing', 'shipped', 'delivered'];
+
+function getStatusOrder(isDigitalOnly: boolean): OrderStatus[] {
+  return isDigitalOnly ? STATUS_ORDER_DIGITAL : STATUS_ORDER_PHYSICAL;
+}
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -77,8 +80,10 @@ export default async function OrderDetailPage({ params }: PageProps) {
   if (!order) notFound();
 
   const isCanceled = order.status === 'canceled' || order.status === 'refunded';
+  const isDigitalOnly = order.items.every(item => item.product?.type === 'digital');
+  const statusOrder = getStatusOrder(isDigitalOnly);
   const displayStatus = order.status === 'paid' ? 'processing' : order.status;
-  const currentStepIndex = STATUS_ORDER.indexOf(displayStatus);
+  const currentStepIndex = statusOrder.indexOf(displayStatus);
 
   return (
     <div>
@@ -112,12 +117,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
             {currentStepIndex > 0 && (
               <div
                 className="absolute top-4 left-4 h-0.5 bg-gradient-to-r from-green-400 to-green-300 sm:left-[20px]"
-                style={{ width: `calc(${(currentStepIndex / (STATUS_ORDER.length - 1)) * 100}% - 40px)` }}
+                style={{ width: `calc(${(currentStepIndex / (statusOrder.length - 1)) * 100}% - 40px)` }}
               />
             )}
             {/* Steps */}
-            <div className="relative grid grid-cols-5 gap-0">
-              {STATUS_ORDER.map((status, i) => {
+            <div className={`relative grid gap-0 ${isDigitalOnly ? 'grid-cols-3' : 'grid-cols-5'}`}>
+              {statusOrder.map((status, i) => {
                 const isActive = i <= currentStepIndex;
                 const isCurrent = i === currentStepIndex;
                 return (
