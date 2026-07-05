@@ -104,12 +104,12 @@ export async function POST(request: Request) {
     subtotal += (basePrice + modifier) * item.quantity;
   }
 
-  // Check if first purchase for 10% discount
+  // Check if first purchase for 10% discount (include awaiting_payment to prevent double discount)
   const { count: orderCount } = await admin
     .from('orders')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
-    .in('status', ['approved', 'completed', 'paid', 'processing', 'shipped', 'delivered']);
+    .in('status', ['awaiting_payment', 'approved', 'completed', 'paid', 'processing', 'shipped', 'delivered']);
 
   const isFirstPurchase = (orderCount ?? 0) === 0;
   const firstPurchaseDiscount = isFirstPurchase ? subtotal * 0.1 : 0;

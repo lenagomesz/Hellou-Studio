@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         (item) => (item.product as unknown as { type: string } | null)?.type === 'digital'
       ) ?? false;
 
-      newStatus = isDigitalOrder ? 'completed' : 'processing';
+      newStatus = isDigitalOrder ? 'approved' : 'processing';
     } else if (mpStatus === 'cancelled') {
       newStatus = 'canceled';
     } else {
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
       console.error('[mp-webhook] notification error:', e);
     }
 
-    if ((newStatus === 'processing' || newStatus === 'completed') && order.status === 'awaiting_payment') {
+    if ((newStatus === 'approved' || newStatus === 'processing') && order.status === 'awaiting_payment') {
       const { data: items } = await admin
         .from('order_items')
         .select('*, option:product_options(*)')
@@ -200,7 +200,11 @@ export async function POST(request: Request) {
         }
 
         // Send STL-specific emails for digital-only orders
-        if (newStatus === 'completed') {
+        const hasDigitalItems = (items || []).some(
+          (item) => (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
+        );
+
+        if (hasDigitalItems && newStatus === 'approved') {
           const digitalItem = (items || []).find(
             (item) => (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
           );
