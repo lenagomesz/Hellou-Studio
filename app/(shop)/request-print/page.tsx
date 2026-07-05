@@ -125,19 +125,61 @@ export default function RequestPrintPage() {
         </div>
 
         {/* Makerworld Info Card */}
-        <div className="rounded-2xl border border-red-200 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/20 p-5 sm:p-6">
-          <h3 className="text-sm font-semibold text-red-900 dark:text-red-200 mb-3 flex items-center gap-2">
-            <span>🔗</span> Encontrou um modelo no Makerworld?
+        <div className="rounded-2xl border border-blue-200 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-950/20 p-5 sm:p-6">
+          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-4 flex items-center gap-2">
+            <span>🔗</span> Como pegar um modelo do Makerworld
           </h3>
-          <p className="text-sm text-red-800 dark:text-red-300 mb-3">
-            Você pode enviar o link de um projeto do <a href="https://www.makerworld.com.br" target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline">Makerworld</a> na descrição. Farei uma avaliação e, se a licença permitir, devolvo o orçamento para você.
-          </p>
-          <div className="bg-red-100/50 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-3">
+
+          <div className="space-y-4 mb-4">
+            <div className="flex gap-3">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800 text-xs font-bold text-blue-900 dark:text-blue-200">
+                1
+              </div>
+              <div>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                  Acesse o Makerworld
+                </p>
+                <p className="text-xs text-blue-800 dark:text-blue-300 mt-0.5">
+                  Visite <a href="https://www.makerworld.com.br" target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline">makerworld.com.br</a> e busque por modelos 3D que te interessam
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800 text-xs font-bold text-blue-900 dark:text-blue-200">
+                2
+              </div>
+              <div>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                  Copie o link do projeto
+                </p>
+                <p className="text-xs text-blue-800 dark:text-blue-300 mt-0.5">
+                  Clique no modelo que gostou e copie o link da página (ex: makerworld.com.br/pt/models/12345)
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800 text-xs font-bold text-blue-900 dark:text-blue-200">
+                3
+              </div>
+              <div>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                  Envie para nós
+                </p>
+                <p className="text-xs text-blue-800 dark:text-blue-300 mt-0.5">
+                  Preencha o formulário abaixo, selecione um arquivo (pode ser um arquivo teste), e cole o link do Makerworld na descrição. Vou avaliar a licença e fazer um orçamento!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
             <p className="text-xs font-semibold text-red-900 dark:text-red-200 mb-2">
-              ⚠️ Aviso importante:
+              ⚠️ Atenção: Direitos Autorais
             </p>
             <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">
-              Não trabalhamos com projetos que tenham restrições de direitos autorais ou uso comercial. Muitos modelos no Makerworld proíbem isso. Se o projeto tiver essas limitações, não poderemos fazer o orçamento. Deixaremos claro na análise se podemos prosseguir ou não.
+              <strong>Não compactuamos com projetos que tenham restrições de direitos autorais ou uso comercial.</strong> Muitos modelos do Makerworld proíbem isso. Analisaremos a licença e deixaremos bem claro se podemos prosseguir com o orçamento ou não. Se tiver dúvidas sobre a licença, converse comigo!
             </p>
           </div>
         </div>
