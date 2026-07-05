@@ -30,6 +30,7 @@ type ProductRow = {
   image_url: string | null;
   active: boolean;
   created_at: string;
+  type?: string;
 };
 
 export default function ProductsPage() {
@@ -40,6 +41,12 @@ export default function ProductsPage() {
   const [status, setStatus] = useState('');
   const [toast, setToast] = useState('');
   const [fetchKey, setFetchKey] = useState(0);
+  const [filter, setFilter] = useState<'all' | 'physical' | 'digital'>('all');
+
+  const filteredProducts = products.filter(p => {
+    if (filter === 'all') return true;
+    return p.type === filter;
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -125,18 +132,39 @@ export default function ProductsPage() {
         <button type="submit" className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800">Buscar</button>
       </form>
 
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setFilter('all')}
+          className={`px-4 py-2 rounded font-medium transition ${filter === 'all' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+        >
+          Todos
+        </button>
+        <button
+          onClick={() => setFilter('physical')}
+          className={`px-4 py-2 rounded font-medium transition ${filter === 'physical' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+        >
+          Produtos Fisicos
+        </button>
+        <button
+          onClick={() => setFilter('digital')}
+          className={`px-4 py-2 rounded font-medium transition ${filter === 'digital' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+        >
+          Arquivos Digitais
+        </button>
+      </div>
+
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />)}
         </div>
-      ) : products.length === 0 ? (
+      ) : filteredProducts.length === 0 ? (
         <div className="rounded-2xl bg-white p-12 text-center border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
           <Package className="mx-auto h-12 w-12 text-gray-300" />
           <p className="mt-3 text-sm text-gray-500">Nenhum produto encontrado</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <div key={product.id} className="group relative rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition hover:shadow-md hover:border-pink-200 dark:border-gray-800 dark:bg-gray-900">
               <div className="h-36 bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
                 {product.image_url ? (
@@ -145,6 +173,15 @@ export default function ProductsPage() {
                 ) : (
                   <div className="flex h-full items-center justify-center"><Package className="h-10 w-10 text-pink-200" /></div>
                 )}
+              </div>
+              <div className="absolute top-2 left-2 z-10">
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                  product.type === 'digital'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {product.type === 'digital' ? '📥 Digital' : '📦 Fisico'}
+                </span>
               </div>
               <div className="absolute top-2 right-2">
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${product.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
