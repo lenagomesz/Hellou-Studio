@@ -1,8 +1,6 @@
 import { Resend } from 'resend';
 import { BoasVindasEmail } from '@/emails/boas-vindas';
 import { PedidoConfirmadoEmail } from '@/emails/pedido-confirmado';
-import { STLOrderConfirmationEmail } from '@/emails/stl-order-confirmation';
-import { STLAdminNotificationEmail } from '@/emails/stl-admin-notification';
 
 let cached: Resend | null = null;
 let warned = false;
@@ -442,18 +440,33 @@ export async function sendSTLOrderConfirmationEmail(params: {
   const resend = getResend();
   if (!resend) return;
 
+  const baseUrl = getBaseUrl();
+  const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.price);
+
   try {
     const res = await resend.emails.send({
       from: getFrom(),
       to: params.email,
       subject: `Seu arquivo STL está pronto! #${params.orderId.slice(0, 8).toUpperCase()}`,
-      react: STLOrderConfirmationEmail({
-        nome: params.nome,
-        orderId: params.orderId,
-        fileName: params.fileName,
-        price: params.price,
-        baseUrl: getBaseUrl(),
-      }),
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+          <h2 style="color: #111;">Olá${params.nome ? `, ${params.nome}` : ''}! ✨</h2>
+          <p style="color: #555; line-height: 1.6;">
+            Seu arquivo STL <strong>"${params.fileName}"</strong> está pronto para download!
+          </p>
+          <div style="margin: 20px 0; padding: 16px; background: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
+            <p style="margin: 0; color: #15803D; font-size: 14px;">
+              Valor: ${price}
+            </p>
+          </div>
+          <a href="${baseUrl}/account/orders" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Acessar Meus Pedidos
+          </a>
+          <p style="color: #888; font-size: 13px; margin-top: 24px; line-height: 1.5;">
+            O arquivo estará disponível em sua conta helloustudio por tempo ilimitado. Você pode fazer o download quantas vezes precisar.
+          </p>
+        </div>
+      `,
     });
     if (res.error) {
       console.error('[email] stl-order-confirmation ERRO:', JSON.stringify(res.error, null, 2));
@@ -477,20 +490,30 @@ export async function sendSTLAdminNotificationEmail(params: {
   if (!resend) return;
 
   const baseUrl = getBaseUrl();
+  const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.price);
 
   try {
     const res = await resend.emails.send({
       from: getFrom(),
       to: params.adminEmail,
-      subject: `Novo pedido digital! #${params.orderId.slice(0, 8).toUpperCase()} — ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.price)}`,
-      react: STLAdminNotificationEmail({
-        orderId: params.orderId,
-        customerName: params.customerName,
-        customerEmail: params.customerEmail,
-        fileName: params.fileName,
-        price: params.price,
-        baseUrl,
-      }),
+      subject: `Novo pedido digital! #${params.orderId.slice(0, 8).toUpperCase()} — ${price}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+          <h2 style="color: #111;">Novo pedido digital recebido!</h2>
+          <div style="margin: 16px 0; padding: 16px; background: #EFF6FF; border-radius: 8px; border: 1px solid #BFDBFE;">
+            <p style="margin: 0; font-weight: 600; color: #1E40AF;">Pedido #${params.orderId.slice(0, 8).toUpperCase()}</p>
+            <p style="margin: 8px 0 0; font-size: 14px; color: #3B82F6;">Total: ${price}</p>
+          </div>
+          <p style="color: #555; font-size: 14px;">
+            <strong>Arquivo:</strong> ${params.fileName}<br/>
+            <strong>Cliente:</strong> ${params.customerName ?? 'N/A'}<br/>
+            <strong>Email:</strong> ${params.customerEmail}
+          </p>
+          <a href="${baseUrl}/dashboard/orders/${params.orderId}" style="display: inline-block; margin: 16px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Ver pedido no painel
+          </a>
+        </div>
+      `,
     });
     if (res.error) {
       console.error('[email] stl-admin-notification ERRO:', JSON.stringify(res.error, null, 2));
