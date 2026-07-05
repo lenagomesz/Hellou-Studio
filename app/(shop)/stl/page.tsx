@@ -32,9 +32,9 @@ export default async function STLMarketplacePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
       {/* Full-width Banner */}
-      <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-6 text-center sm:px-10 sm:py-8">
+      <div className="mx-2 my-4 rounded-2xl bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-6 text-center sm:mx-4 sm:px-10 sm:py-8">
         <h1 className="text-xl font-bold text-white sm:text-2xl">
-          Bem-vindo, Makers!
+          Bem vindos, Makers! 🎨
         </h1>
         <p className="mt-1 text-xs text-white/90 sm:text-sm">
           Compre arquivos STL prontos para imprimir em sua impressora 3D.

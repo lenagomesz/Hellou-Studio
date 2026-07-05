@@ -290,13 +290,24 @@ export async function POST(request: Request) {
       }
 
       try {
-        await createNotification(
-          user.id,
-          'order_status',
-          'Pagamento aprovado!',
-          `Seu pedido #${order.id.slice(0, 8).toUpperCase()} foi confirmado e já está sendo preparado.`,
-          { order_id: order.id, event: 'card_approved' },
-        );
+        // Create different notifications based on product type
+        if (isDigitalOrder) {
+          await createNotification(
+            user.id,
+            'order_status',
+            'Pagamento aprovado! ✅',
+            `Seu arquivo STL está pronto para download em #${order.id.slice(0, 8).toUpperCase()}.`,
+            { order_id: order.id, event: 'card_approved' },
+          );
+        } else {
+          await createNotification(
+            user.id,
+            'order_status',
+            'Pagamento aprovado!',
+            `Seu pedido #${order.id.slice(0, 8).toUpperCase()} foi confirmado e já está sendo preparado.`,
+            { order_id: order.id, event: 'card_approved' },
+          );
+        }
       } catch (e) {
         console.error('[mp-create] notification error:', e);
       }
