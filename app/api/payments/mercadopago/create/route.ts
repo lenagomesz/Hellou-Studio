@@ -119,13 +119,12 @@ export async function POST(request: Request) {
   try {
     const payment = getPaymentClient();
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_URL}`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
     const notificationUrl = `${appUrl}/api/webhooks/mercadopago`;
 
     const paymentBody: Record<string, unknown> = {
       transaction_amount: Math.round(totalAmount * 100) / 100,
       description: `Pedido - ${cartItems.length} item(ns)`,
-      payment_method_id: payment_method === 'pix' ? 'pix' : undefined,
       notification_url: notificationUrl,
       payer: {
         email: userData?.email || user.email,
@@ -139,7 +138,9 @@ export async function POST(request: Request) {
       },
     };
 
-    if (payment_method === 'credit_card' || payment_method === 'debit_card') {
+    if (payment_method === 'pix') {
+      paymentBody.payment_method_id = 'pix';
+    } else if (payment_method === 'credit_card' || payment_method === 'debit_card') {
       paymentBody.token = token;
       paymentBody.installments = Number(installments);
       if (issuer_id) paymentBody.issuer_id = issuer_id;

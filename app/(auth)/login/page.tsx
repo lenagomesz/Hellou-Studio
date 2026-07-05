@@ -35,23 +35,13 @@ function LoginForm() {
       return;
     }
 
-    // Poll until session is established (max 5s)
-    let session = await getSession();
-    let attempts = 0;
-    while (!session?.user && attempts < 10) {
-      await new Promise((r) => setTimeout(r, 500));
-      session = await getSession();
-      attempts++;
-    }
+    // Wait a bit for session to be established before polling
+    await new Promise((r) => setTimeout(r, 1000));
 
     setLoading(false);
 
-    if (!session?.user) {
-      setError('Erro ao estabelecer sessão. Tente novamente.');
-      return;
-    }
-
-    const dest = session.user.role === 'admin' ? '/dashboard' : callbackUrl;
+    // Redirect immediately - session will be established
+    const dest = callbackUrl;
     window.location.href = dest;
   }
 
