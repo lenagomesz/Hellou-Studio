@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       .select('id')
       .eq('user_id', user.id)
       .eq('payment_provider', 'mercadopago')
-      .in('status', ['completed', 'processing', 'paid', 'shipped', 'delivered'])
+      .in('status', ['approved', 'completed', 'processing', 'paid', 'shipped', 'delivered'])
       .single();
 
     if (existingPurchase) {
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
     .from('orders')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
-    .in('status', ['completed', 'paid', 'processing', 'shipped', 'delivered']);
+    .in('status', ['approved', 'completed', 'paid', 'processing', 'shipped', 'delivered']);
 
   const isFirstPurchase = (orderCount ?? 0) === 0;
   const firstPurchaseDiscount = isFirstPurchase ? subtotal * 0.1 : 0;
