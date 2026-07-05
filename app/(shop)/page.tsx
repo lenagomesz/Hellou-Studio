@@ -181,9 +181,9 @@ export default function HomePage() {
         </p>
       </div>
 
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/* HERO */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden">
         {/* Animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-50/80 via-orange-50 to-amber-50 dark:from-gray-900 dark:via-pink-950/10 dark:to-gray-900" />
@@ -275,16 +275,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/* MARQUEE STRIP */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       <div className="border-y border-orange-200/40 dark:border-gray-800 bg-white dark:bg-gray-950">
         <Marquee items={MARQUEE_ITEMS} speed={35} />
       </div>
 
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/* CATEGORIES */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       <section className="bg-white/80 dark:bg-gray-950/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <ScrollReveal direction="scale">
@@ -338,9 +338,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/* CAROUSEL BANNER */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       <section className="bg-white dark:bg-gray-950 py-16">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <ScrollReveal direction="scale">
@@ -349,16 +349,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/* FEATURED PRODUCTS */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       <Suspense fallback={<FeaturedSkeleton />}>
         <FeaturedProducts />
       </Suspense>
 
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/* WHY CHOOSE US */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       <section className="bg-white/80 dark:bg-gray-950/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <ScrollReveal direction="right">
@@ -402,9 +402,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/* STATS — comentado até ter dados reais */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/*
       <section className="relative overflow-hidden bg-gradient-to-r from-pink-50 via-orange-50 to-pink-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 py-16">
         <div className="absolute inset-0 overflow-hidden">
@@ -431,9 +431,9 @@ export default function HomePage() {
       </section>
       */}
 
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/* SOCIAL PROOF / REVIEWS — comentado até ter depoimentos reais */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/*
       <section className="bg-white/80 dark:bg-gray-950/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -487,9 +487,9 @@ export default function HomePage() {
       </section>
       */}
 
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       {/* CTA FINAL — Catálogo + Sob Demanda */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* =========================================== */}
       <section className="relative overflow-hidden bg-gradient-to-b from-white via-pink-50/40 to-orange-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 py-24">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -right-32 top-0 h-64 w-64 rounded-full bg-pink-200/30 blur-3xl dark:bg-pink-500/10" />
