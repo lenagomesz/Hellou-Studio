@@ -36,7 +36,6 @@ export default function CartPage() {
   const [step, setStep] = useState(1);
 
   const hasOnlyDigitalProducts = items.length > 0 && items.every(item => item.product?.type === 'digital');
-  const hasMixedProducts = items.length > 0 && items.some(item => item.product?.type === 'digital') && items.some(item => item.product?.type !== 'digital');
 
   const [shippingCep, setShippingCep] = useState('');
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
@@ -58,7 +57,6 @@ export default function CartPage() {
   const [isFirstPurchase, setIsFirstPurchase] = useState(false);
   const [userCpf, setUserCpf] = useState<string | undefined>(undefined);
 
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
   const isLoading = status === 'loading';
@@ -192,23 +190,33 @@ export default function CartPage() {
   const firstPurchaseDiscount = isFirstPurchase ? total * 0.1 : 0;
   const grandTotal = total - firstPurchaseDiscount - discountAmount + shippingCost;
 
+  const pageTitle = step === 1 ? 'Meu Carrinho' : step === 2 ? 'Entrega' : 'Finalizar Pedido';
+  const itemsLabel = items.length === 1 ? 'item selecionado' : 'itens selecionados';
+  const pageSubtitle = step === 1
+    ? `${items.length} ${itemsLabel}`
+    : step === 2
+      ? 'Informe o endereço de entrega'
+      : 'Revise e confirme seu pedido';
+  const containerClass = step === 3 || step === 1 ? 'max-w-5xl' : 'max-w-3xl';
+  const paymentShippingAddress = hasOnlyDigitalProducts ? undefined : (shippingAddress ? {
+    street: addressStreet,
+    number: addressNumber,
+    complement: addressComplement || undefined,
+    neighborhood: addressNeighborhood,
+    city: shippingAddress.city,
+    state: shippingAddress.state,
+    cep: shippingCep.replace(/\D/g, ''),
+  } : undefined);
+
   return (
     <div>
       {/* Full-width Banner */}
       <div className="bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-8 text-center sm:px-10 sm:py-10">
-        <h2 className="text-xl font-bold text-white sm:text-2xl">
-          {step === 1 ? 'Meu Carrinho' : step === 2 ? 'Entrega' : 'Finalizar Pedido'}
-        </h2>
-        <p className="mt-1 text-sm text-white/80">
-          {step === 1
-            ? `${items.length} ${items.length === 1 ? 'item selecionado' : 'itens selecionados'}`
-            : step === 2
-              ? 'Informe o endereço de entrega'
-              : 'Revise e confirme seu pedido'}
-        </p>
+        <h2 className="text-xl font-bold text-white sm:text-2xl">{pageTitle}</h2>
+        <p className="mt-1 text-sm text-white/80">{pageSubtitle}</p>
       </div>
 
-      <div className={`mx-auto px-4 py-8 sm:px-6 ${step === 3 ? 'max-w-5xl' : step === 1 ? 'max-w-5xl' : 'max-w-3xl'}`}>
+      <div className={`mx-auto px-4 py-8 sm:px-6 ${containerClass}`}>
       {/* Stepper */}
       <nav className="mb-8">
         <ol className="flex items-center justify-center gap-0">
@@ -273,9 +281,9 @@ export default function CartPage() {
                     key={item.id}
                     item={item}
                     disabled={isSyncing}
-                    onIncrease={() => void updateQuantity(item.id, item.quantity + 1)}
-                    onDecrease={() => void updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                    onRemove={() => void removeItem(item.id)}
+                    onIncrease={() => updateQuantity(item.id, item.quantity + 1)}
+                    onDecrease={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                    onRemove={() => removeItem(item.id)}
                   />
                 ))}
               </ul>
@@ -390,9 +398,10 @@ export default function CartPage() {
           <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm space-y-5">
             {/* CEP */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CEP <span className="text-pink-500">*</span></label>
+              <label htmlFor="shipping-cep" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CEP <span className="text-pink-500">*</span></label>
               <div className="flex gap-3">
                 <input
+                  id="shipping-cep"
                   type="text"
                   inputMode="numeric"
                   placeholder="00000-000"
@@ -433,8 +442,9 @@ export default function CartPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rua / Avenida <span className="text-pink-500">*</span></label>
+                  <label htmlFor="address-street" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rua / Avenida <span className="text-pink-500">*</span></label>
                   <input
+                    id="address-street"
                     type="text"
                     placeholder="Ex: Rua das Flores"
                     value={addressStreet}
@@ -445,8 +455,9 @@ export default function CartPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número <span className="text-pink-500">*</span></label>
+                    <label htmlFor="address-number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número <span className="text-pink-500">*</span></label>
                     <input
+                      id="address-number"
                       type="text"
                       placeholder="123"
                       value={addressNumber}
@@ -455,8 +466,9 @@ export default function CartPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Complemento</label>
+                    <label htmlFor="address-complement" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Complemento</label>
                     <input
+                      id="address-complement"
                       type="text"
                       placeholder="Apto, bloco... (opcional)"
                       value={addressComplement}
@@ -467,8 +479,9 @@ export default function CartPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bairro <span className="text-pink-500">*</span></label>
+                  <label htmlFor="address-neighborhood" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bairro <span className="text-pink-500">*</span></label>
                   <input
+                    id="address-neighborhood"
                     type="text"
                     placeholder="Ex: Centro"
                     value={addressNeighborhood}
@@ -479,8 +492,9 @@ export default function CartPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cidade</label>
+                    <label htmlFor="address-city" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cidade</label>
                     <input
+                      id="address-city"
                       type="text"
                       value={shippingAddress.city}
                       disabled
@@ -488,8 +502,9 @@ export default function CartPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
+                    <label htmlFor="address-state" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
                     <input
+                      id="address-state"
                       type="text"
                       value={shippingAddress.state}
                       disabled
@@ -788,15 +803,7 @@ export default function CartPage() {
                   grandTotal={grandTotal}
                   shippingCost={shippingCost}
                   couponCode={couponDiscount?.code}
-                  shippingAddress={hasOnlyDigitalProducts ? undefined : (shippingAddress ? {
-                    street: addressStreet,
-                    number: addressNumber,
-                    complement: addressComplement || undefined,
-                    neighborhood: addressNeighborhood,
-                    city: shippingAddress.city,
-                    state: shippingAddress.state,
-                    cep: shippingCep.replace(/\D/g, ''),
-                  } : undefined)}
+                  shippingAddress={paymentShippingAddress}
                   userCpf={userCpf}
                   onPaymentCompleted={() => setPaymentCompleted(true)}
                 />
@@ -834,13 +841,13 @@ function CartLine({
   onIncrease,
   onDecrease,
   onRemove,
-}: {
+}: Readonly<{
   item: CartItemView;
   disabled: boolean;
   onIncrease: () => void;
   onDecrease: () => void;
   onRemove: () => void;
-}) {
+}>) {
   const unit = computeUnitPrice(item);
   const lineTotal = computeItemTotal(item);
   const max = Math.min(item.option?.stock ?? 50, 50);
