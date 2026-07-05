@@ -644,12 +644,12 @@ export default function CartPage() {
             </button>
           </div>
 
-          <div className="grid gap-4 sm:gap-6 md:gap-8 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 md:gap-8 lg:grid-cols-3 mx-auto w-full px-0">
             {/* Summary — shows FIRST on mobile (order-1), RIGHT column on desktop (lg:order-2) */}
-            <div className="space-y-4 order-1 lg:order-2 lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
+            <div className="space-y-3 sm:space-y-4 order-1 lg:order-2 lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
               {/* Items */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
+              <div className="rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 sm:p-4 md:p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Itens ({items.length})</h2>
                   <button type="button" onClick={() => setStep(1)} className="text-xs text-pink-600 hover:text-pink-700 transition">
                     Editar
@@ -680,8 +680,8 @@ export default function CartPage() {
 
               {/* Shipping — hidden if only digital products */}
               {!hasOnlyDigitalProducts && (
-                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 sm:p-4 md:p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
                     <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Entrega</h2>
                     <button type="button" onClick={() => setStep(2)} className="text-xs text-pink-600 hover:text-pink-700 transition">
                       Alterar
@@ -705,8 +705,8 @@ export default function CartPage() {
               )}
 
               {/* Coupon */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-3">
+              <div className="rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 sm:p-4 md:p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-2 sm:mb-3">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-pink-400">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
@@ -743,8 +743,8 @@ export default function CartPage() {
               </div>
 
               {/* Totals */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
-                <dl className="space-y-2 text-xs sm:text-sm">
+              <div className="rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 sm:p-4 md:p-5 shadow-sm">
+                <dl className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                   <div className="flex justify-between text-gray-600 dark:text-gray-400">
                     <dt>Subtotal</dt>
                     <dd className="font-medium">{formatPrice(total)}</dd>
@@ -773,16 +773,16 @@ export default function CartPage() {
                       </dd>
                     </div>
                   )}
-                  <div className="flex justify-between border-t border-gray-100 dark:border-gray-800 pt-2.5">
-                    <dt className="text-base font-bold text-gray-900 dark:text-white">Total</dt>
-                    <dd className="text-lg font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">{formatPrice(grandTotal)}</dd>
+                  <div className="flex justify-between border-t border-gray-100 dark:border-gray-800 pt-1.5 sm:pt-2.5">
+                    <dt className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">Total</dt>
+                    <dd className="text-base sm:text-lg font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">{formatPrice(grandTotal)}</dd>
                   </div>
                 </dl>
               </div>
             </div>
 
             {/* Payment — shows SECOND on mobile (order-2), LEFT column on desktop (lg:order-1) */}
-            <div className="order-2 lg:order-1 lg:col-span-2">
+            <div className="order-2 lg:order-1 lg:col-span-2 max-w-full">
               {session ? (
                 <PaymentForm
                   grandTotal={grandTotal}
