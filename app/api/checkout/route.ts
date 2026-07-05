@@ -10,7 +10,7 @@ import type { CartItem, Coupon, Product, ProductOption } from '@/types/database'
 type RawCartRow = CartItem & {
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'active'
+    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'type' | 'active'
   > | null;
   option:
     | Pick<ProductOption, 'id' | 'product_id' | 'name' | 'price_modifier' | 'stock' | 'color'>
@@ -31,6 +31,7 @@ function toView(row: RawCartRow): CartItemView | null {
       base_price: row.product.base_price,
       image_url: row.product.image_url,
       category: row.product.category,
+      type: row.product.type,
     },
     option: row.option
       ? {
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
   const { data, error } = await admin
     .from('cart_items')
     .select(
-      'id, user_id, product_id, product_option_id, quantity, created_at, product:products(id, name, base_price, image_url, category, active), option:product_options(id, product_id, name, price_modifier, stock, color)',
+      'id, user_id, product_id, product_option_id, quantity, created_at, product:products(id, name, base_price, image_url, category, type, active), option:product_options(id, product_id, name, price_modifier, stock, color)',
     )
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: true });

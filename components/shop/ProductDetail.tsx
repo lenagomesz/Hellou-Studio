@@ -77,6 +77,7 @@ export function ProductDetail({
           base_price: product.base_price,
           image_url: product.image_url,
           category: product.category,
+          type: product.type,
         },
         option: selectedOption
           ? {

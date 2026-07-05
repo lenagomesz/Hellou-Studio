@@ -77,10 +77,6 @@ export async function POST(request: Request) {
     subtotal += (basePrice + modifier) * item.quantity;
   }
 
-  if (totalAmount < 0.01) {
-    return badRequest('O valor do pedido deve ser maior que R$ 0,01');
-  }
-
   let discountAmount = 0;
   let couponId: string | null = null;
 
@@ -104,6 +100,10 @@ export async function POST(request: Request) {
 
   const validatedShipping = validateShippingCost(shipping_cost);
   const totalAmount = Math.max(0, subtotal - discountAmount + validatedShipping);
+
+  if (totalAmount < 0.01) {
+    return badRequest('O valor do pedido deve ser maior que R$ 0,01');
+  }
 
   const { data: userData } = await admin
     .from('users')

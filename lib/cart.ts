@@ -8,7 +8,7 @@ export interface CartItemView {
   created_at?: string;
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'image_url' | 'category'
+    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'type'
   >;
   option: Pick<
     ProductOption,

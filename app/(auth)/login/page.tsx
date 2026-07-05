@@ -1,9 +1,9 @@
 'use client';
 
-import { signIn, getSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Suspense, useState, type FormEvent } from 'react';
+import { Suspense, useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Loader2, Check, ShieldCheck, ChevronLeft, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -18,7 +18,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -42,7 +42,7 @@ function LoginForm() {
 
     // Redirect immediately - session will be established
     const dest = callbackUrl;
-    window.location.href = dest;
+    globalThis.location.href = dest;
   }
 
   return (
