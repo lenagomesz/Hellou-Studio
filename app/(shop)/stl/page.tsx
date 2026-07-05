@@ -113,7 +113,7 @@ export default async function STLMarketplacePage() {
                   <div className="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
                     <ImageCarousel
                       image1={product.image_url || 'https://via.placeholder.com/300'}
-                      image2={product.image_url_2}
+                      image2={product.image_url_2 || undefined}
                       alt={product.name}
                     />
                     <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
