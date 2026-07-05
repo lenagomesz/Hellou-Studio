@@ -20,7 +20,7 @@ export function FeaturedProductsClient({
   if (featured.length === 0) return null;
 
   return (
-    <section className="bg-white/80 dark:bg-gray-950/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+    <section className="bg-white/80 dark:bg-gray-950/80 py-12 sm:py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <ScrollReveal direction="left">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-6">

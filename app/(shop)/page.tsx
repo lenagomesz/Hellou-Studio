@@ -250,7 +250,7 @@ export default function HomePage() {
       {/* =========================================== */}
       {/* CATEGORIES */}
       {/* =========================================== */}
-      <section className="bg-white/80 dark:bg-gray-950/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+      <section className="bg-white/80 dark:bg-gray-950/80 py-12 sm:py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <ScrollReveal direction="scale">
             <div className="text-center">
@@ -306,7 +306,7 @@ export default function HomePage() {
       {/* =========================================== */}
       {/* CAROUSEL BANNER */}
       {/* =========================================== */}
-      <section className="bg-white dark:bg-gray-950 py-16">
+      <section className="bg-white dark:bg-gray-950 py-8 sm:py-16">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <ScrollReveal direction="scale">
             <HeroCarousel />
@@ -324,52 +324,38 @@ export default function HomePage() {
       {/* =========================================== */}
       {/* STL MARKETPLACE BANNER */}
       {/* =========================================== */}
-      <section className="bg-gradient-to-r from-blue-500 via-blue-600 to-cyan-500 py-16 sm:py-20 overflow-hidden relative">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-10 -right-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+      <section className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 py-10 sm:py-16 overflow-hidden relative">
+        <div className="absolute inset-0 overflow-hidden opacity-20">
+          <div className="absolute -top-10 -right-10 h-64 w-64 rounded-full bg-white/30 blur-3xl" />
+          <div className="absolute -bottom-10 -left-10 h-56 w-56 rounded-full bg-white/30 blur-3xl" />
         </div>
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
           <ScrollReveal direction="left">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/30 mb-4">
-                  💾 Para Makers
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
+              <div className="flex-1 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/50 mb-3">
+                  💾 Arquivos STL
                 </div>
-                <h2 className="text-3xl font-bold text-white sm:text-4xl mb-3">
-                  Venda seus Arquivos STL
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                  Modelos 3D Exclusivos
                 </h2>
-                <p className="text-base text-white/90 mb-4 leading-relaxed">
-                  Seja um criador na nossa plataforma! Compartilhe seus modelos 3D com makers de todo o Brasil e ganhe com cada download. Sem complicações, sem estoque, 100% digital.
+                <p className="text-sm sm:text-base text-white/95 mb-4 leading-relaxed">
+                  Compre arquivos STL prontos para imprimir. Modelos exclusivos da Hellou Studio otimizados para impressoras 3D. Download imediato e reutilização ilimitada.
                 </p>
-                <div className="space-y-2 mb-6">
-                  <div className="flex items-start gap-3 text-white/95">
-                    <span className="text-lg mt-0.5">✨</span>
-                    <span>Upload de arquivos STL</span>
-                  </div>
-                  <div className="flex items-start gap-3 text-white/95">
-                    <span className="text-lg mt-0.5">💰</span>
-                    <span>Ganhe com cada venda</span>
-                  </div>
-                  <div className="flex items-start gap-3 text-white/95">
-                    <span className="text-lg mt-0.5">📊</span>
-                    <span>Acompanhe suas vendas em tempo real</span>
-                  </div>
-                </div>
                 <Link
                   href="/stl"
-                  className="inline-flex items-center gap-2 rounded-full bg-white text-blue-600 px-6 py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                  className="inline-flex items-center gap-2 rounded-full bg-white text-pink-600 px-5 py-2.5 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm sm:text-base"
                 >
-                  Explorar Marketplace
+                  Explorar Modelos
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-4 w-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                   </svg>
                 </Link>
               </div>
-              <div className="flex-1 flex justify-center">
-                <div className="relative h-64 w-64">
+              <div className="hidden md:flex flex-1 justify-end">
+                <div className="relative h-56 w-56">
                   <div className="absolute inset-0 bg-white/20 rounded-3xl backdrop-blur-sm flex items-center justify-center">
-                    <span className="text-8xl">📥</span>
+                    <span className="text-7xl">📥</span>
                   </div>
                 </div>
               </div>
@@ -381,7 +367,7 @@ export default function HomePage() {
       {/* =========================================== */}
       {/* WHY CHOOSE US */}
       {/* =========================================== */}
-      <section className="bg-white/80 dark:bg-gray-950/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+      <section className="bg-white/80 dark:bg-gray-950/80 py-12 sm:py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <ScrollReveal direction="right">
             <div className="text-center">
