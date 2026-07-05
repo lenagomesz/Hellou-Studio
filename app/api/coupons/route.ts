@@ -82,8 +82,8 @@ export async function DELETE(request: Request) {
   const auth = await requireAdmin();
   if (auth.response) return auth.response;
 
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+  const body = await request.json();
+  const id = typeof body.id === 'string' ? body.id : '';
   if (!id) return badRequest('ID é obrigatório');
 
   const admin = getSupabaseAdmin();
