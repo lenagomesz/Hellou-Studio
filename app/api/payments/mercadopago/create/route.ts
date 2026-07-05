@@ -281,6 +281,7 @@ export async function POST(request: Request) {
         console.error('[mp-create] notification error:', e);
       }
 
+      // Send order confirmation email
       sendOrderConfirmationEmail({
         email: userData?.email || user.email,
         nome: userData?.name || null,
@@ -292,6 +293,21 @@ export async function POST(request: Request) {
           precoUnitario: item.unit_price,
         })),
       }).catch((e) => console.error('[mp-create] email error:', e));
+
+      // For digital orders, send delivery notification immediately
+      if (isDigitalOrder && mpStatus === 'approved') {
+        try {
+          await createNotification(
+            user.id,
+            'order_status',
+            'Seu arquivo está pronto! ✨',
+            `Acesse seu pedido #${order.id.slice(0, 8).toUpperCase()} para baixar os arquivos STL.`,
+            { order_id: order.id, event: 'stl_delivered' },
+          );
+        } catch (e) {
+          console.error('[mp-create] stl notification error:', e);
+        }
+      }
 
       sendAdminNewOrderEmail({
         adminEmail: process.env.ADMIN_EMAIL || userData?.email || user.email,

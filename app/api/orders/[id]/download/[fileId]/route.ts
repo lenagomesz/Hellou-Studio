@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
@@ -8,21 +10,14 @@ export async function GET(
   try {
     const { id, fileId } = await params;
     const supabase = getSupabaseAdmin();
-    const auth = request.headers.get('authorization');
 
-    if (!auth?.startsWith('Bearer ')) {
+    // Get user from NextAuth session
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = auth.slice(7);
-
-    // Verify user
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(token);
-    if (userError || !userData?.user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    const userId = userData.user.id;
+    const userId = session.user.id;
 
     // Fetch order with items and products
     const { data: order, error: orderError } = await supabase
