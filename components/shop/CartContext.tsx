@@ -152,8 +152,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // Auth mode
       setStatus('loading');
       try {
+        let server: CartItemView[] = [];
+
         if (lastModeRef.current === 'guest' || !hydratedRef.current) {
           const guestItems = readLocalCart();
+
+          // Try to merge guest items to server
+          const syncedItems: string[] = [];
           for (const item of guestItems) {
             try {
               await postServerItem({
@@ -161,13 +166,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 option: item.option,
                 quantity: item.quantity,
               });
+              syncedItems.push(item.id);
             } catch {
               // best-effort merge, continue
             }
           }
-          if (guestItems.length > 0) clearLocalCart();
+
+          // Only clear localStorage if items were successfully synced
+          if (syncedItems.length > 0 && syncedItems.length === guestItems.length) {
+            clearLocalCart();
+          }
         }
-        const server = await fetchServerCart();
+
+        server = await fetchServerCart();
+
+        // If server is empty but localStorage has items, use localStorage
+        if (server.length === 0) {
+          const localItems = readLocalCart();
+          if (localItems.length > 0) {
+            server = localItems;
+          }
+        }
+
         if (!cancelled) {
           setItems(server);
           setStatus('idle');
@@ -176,7 +196,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
       } catch {
         if (!cancelled) {
-          setStatus('error');
+          // On error, fall back to localStorage
+          const localItems = readLocalCart();
+          setItems(localItems);
+          setStatus('idle');
           hydratedRef.current = true;
           lastModeRef.current = 'auth';
         }
