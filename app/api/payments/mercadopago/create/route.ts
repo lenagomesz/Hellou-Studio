@@ -294,22 +294,38 @@ export async function POST(request: Request) {
         })),
       }).catch((e) => console.error('[mp-create] email error:', e));
 
-      // For digital orders, send delivery notification and email immediately
-      if (isDigitalOrder && mpStatus === 'approved') {
-        try {
-          await createNotification(
-            user.id,
-            'order_status',
-            'Seu arquivo está pronto! ✨',
-            `Acesse seu pedido #${order.id.slice(0, 8).toUpperCase()} para baixar os arquivos STL.`,
-            { order_id: order.id, event: 'stl_delivered' },
-          );
-        } catch (e) {
-          console.error('[mp-create] stl notification error:', e);
+      // Handle STL delivery notifications and emails
+      const stlItems = orderItems.filter(item => (item.product_snapshot as Record<string, unknown>)?.type === 'digital');
+      if (stlItems.length > 0 && mpStatus === 'approved') {
+        // For digital-only orders: notify immediately
+        if (isDigitalOrder) {
+          try {
+            await createNotification(
+              user.id,
+              'order_status',
+              'Seu arquivo está pronto! ✨',
+              `Acesse seu pedido #${order.id.slice(0, 8).toUpperCase()} para baixar os arquivos STL.`,
+              { order_id: order.id, event: 'stl_delivered' },
+            );
+          } catch (e) {
+            console.error('[mp-create] stl notification error:', e);
+          }
+        } else {
+          // For mixed orders: notify that STL is available (even if order is processing)
+          try {
+            await createNotification(
+              user.id,
+              'order_status',
+              'Arquivo STL disponível! 📥',
+              `Seu arquivo STL já está disponível para download em #${order.id.slice(0, 8).toUpperCase()}, enquanto preparamos seu pedido.`,
+              { order_id: order.id, event: 'stl_available' },
+            );
+          } catch (e) {
+            console.error('[mp-create] mixed order stl notification error:', e);
+          }
         }
 
         // Send STL delivery email with file info
-        const stlItems = orderItems.filter(item => (item.product_snapshot as Record<string, unknown>)?.type === 'digital');
         for (const stlItem of stlItems) {
           const fileName = (stlItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo STL';
           sendSTLDeliveryEmail({
