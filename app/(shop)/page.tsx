@@ -333,55 +333,55 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
           <ScrollReveal direction="scale">
-            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
               {/* Esquerda - Content */}
               <div className="text-center md:text-left">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/25 backdrop-blur-sm px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/40 mb-4">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/25 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/40 mb-3">
                   <span>📥</span>
                   <span>Modelos 3D</span>
                 </div>
 
-                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3 leading-tight">
-                  Arquivos STL<br />
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 leading-tight">
+                  Arquivos STL<br className="hidden md:block" />
                   <span className="text-white/90">da Hellou Studio</span>
                 </h2>
 
-                <p className="text-base sm:text-lg text-white/90 mb-6 leading-relaxed">
+                <p className="text-sm sm:text-base md:text-lg text-white/90 mb-4 sm:mb-6 leading-relaxed">
                   Modelos 3D prontos para imprimir. Originais, personalizáveis e com uso comercial livre.
                 </p>
 
-                {/* Benefícios em cards */}
-                <div className="space-y-3 mb-7">
-                  <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <span className="text-xl mt-0.5 flex-shrink-0">✓</span>
-                    <div>
-                      <p className="font-semibold text-white text-sm">Uso comercial livre</p>
-                      <p className="text-xs text-white/80">Imprima e venda sem restrições</p>
+                {/* Benefícios em cards - Otimizado para mobile */}
+                <div className="space-y-2 mb-5 sm:mb-7">
+                  <div className="flex items-start gap-2.5 bg-white/10 backdrop-blur-sm rounded-lg p-2.5 sm:p-3">
+                    <span className="text-lg sm:text-xl mt-0.5 flex-shrink-0">✓</span>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-white text-xs sm:text-sm">Uso comercial livre</p>
+                      <p className="text-xs text-white/80 hidden sm:block">Imprima e venda sem restrições</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <span className="text-xl mt-0.5 flex-shrink-0">✓</span>
-                    <div>
-                      <p className="font-semibold text-white text-sm">Prontos para FDM</p>
-                      <p className="text-xs text-white/80">Otimizados para impressoras 3D</p>
+                  <div className="flex items-start gap-2.5 bg-white/10 backdrop-blur-sm rounded-lg p-2.5 sm:p-3">
+                    <span className="text-lg sm:text-xl mt-0.5 flex-shrink-0">✓</span>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-white text-xs sm:text-sm">Prontos para FDM</p>
+                      <p className="text-xs text-white/80 hidden sm:block">Otimizados para impressoras 3D</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <span className="text-xl mt-0.5 flex-shrink-0">✓</span>
-                    <div>
-                      <p className="font-semibold text-white text-sm">Personalizáveis</p>
-                      <p className="text-xs text-white/80">Adapte cores, tamanhos e detalhes</p>
+                  <div className="flex items-start gap-2.5 bg-white/10 backdrop-blur-sm rounded-lg p-2.5 sm:p-3">
+                    <span className="text-lg sm:text-xl mt-0.5 flex-shrink-0">✓</span>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-white text-xs sm:text-sm">Personalizáveis</p>
+                      <p className="text-xs text-white/80 hidden sm:block">Adapte cores, tamanhos e detalhes</p>
                     </div>
                   </div>
                 </div>
 
                 <Link
                   href="/stl"
-                  className="inline-flex items-center gap-2.5 rounded-full bg-white text-pink-600 px-6 py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                  className="w-full sm:w-auto inline-flex items-center justify-center sm:justify-start gap-2 rounded-full bg-white text-pink-600 px-5 sm:px-6 py-2.5 sm:py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm sm:text-base"
                 >
-                  Ver Modelos Disponíveis
+                  Ver Modelos
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-4 w-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                   </svg>
