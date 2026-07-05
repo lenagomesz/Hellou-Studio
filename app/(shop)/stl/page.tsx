@@ -31,22 +31,14 @@ export default function STLMarketplacePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-pink-500 to-orange-500 text-white py-12 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            🎨 Bem-vindo, Makers!
-          </h1>
-          <p className="text-lg text-white mb-6 max-w-2xl mx-auto">
-            Compre arquivos STL prontos para imprimir em sua impressora 3D. Modelos 3D originais da Hellou Studio para hobistas, makers e profissionais.
-          </p>
-          <Link
-            href="#marketplace"
-            className="inline-block px-6 py-2 bg-white text-pink-600 font-semibold rounded-lg hover:bg-gray-100 transition"
-          >
-            Ver Modelos
-          </Link>
-        </div>
+      {/* Full-width Banner */}
+      <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
+        <h1 className="text-2xl font-bold text-white sm:text-3xl">
+          Bem-vindo, Makers!
+        </h1>
+        <p className="mt-2 text-sm text-white/90 sm:text-base">
+          Compre arquivos STL prontos para imprimir em sua impressora 3D.
+        </p>
       </div>
 
       {/* Info Cards */}
