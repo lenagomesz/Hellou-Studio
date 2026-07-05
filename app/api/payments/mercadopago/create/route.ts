@@ -196,6 +196,12 @@ export async function POST(request: Request) {
     const mpPaymentId = String(result.id);
     const mpStatus = result.status;
 
+    console.log('[mp-create] Payment created:', {
+      paymentId: mpPaymentId,
+      status: mpStatus,
+      itemCount: cartItems.length,
+    });
+
     // Check if order contains only digital products
     const isDigitalOrder = cartItems.every(item => item.product?.type === 'digital');
 
@@ -205,6 +211,12 @@ export async function POST(request: Request) {
     } else {
       orderStatus = 'awaiting_payment';
     }
+
+    console.log('[mp-create] Order status set:', {
+      mpStatus,
+      isDigitalOrder,
+      orderStatus,
+    });
 
     const { data: order, error: orderError } = await admin
       .from('orders')
@@ -296,6 +308,12 @@ export async function POST(request: Request) {
 
       // Handle STL delivery notifications and emails
       const stlItems = orderItems.filter(item => (item.product_snapshot as Record<string, unknown>)?.type === 'digital');
+      console.log('[mp-create] STL items found:', {
+        stlCount: stlItems.length,
+        mpStatus,
+        shouldSendEmail: stlItems.length > 0 && mpStatus === 'approved',
+      });
+
       if (stlItems.length > 0 && mpStatus === 'approved') {
         // For digital-only orders: notify immediately
         if (isDigitalOrder) {
