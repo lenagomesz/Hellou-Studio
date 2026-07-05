@@ -324,54 +324,88 @@ export default function HomePage() {
       {/* =========================================== */}
       {/* STL MARKETPLACE BANNER */}
       {/* =========================================== */}
-      <section className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 py-10 sm:py-16 overflow-hidden relative">
-        <div className="absolute inset-0 overflow-hidden opacity-20">
-          <div className="absolute -top-10 -right-10 h-64 w-64 rounded-full bg-white/30 blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 h-56 w-56 rounded-full bg-white/30 blur-3xl" />
+      <section className="bg-gradient-to-br from-pink-500 via-pink-600 to-orange-400 py-12 sm:py-20 overflow-hidden relative">
+        <div className="absolute inset-0 overflow-hidden opacity-10">
+          <div className="absolute top-0 right-0 h-80 w-80 rounded-full bg-white blur-3xl" />
+          <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-white blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-white blur-3xl" />
         </div>
+
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-          <ScrollReveal direction="left">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
-              <div className="flex-1 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/50 mb-3">
-                  💾 Modelos 3D
+          <ScrollReveal direction="scale">
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+              {/* Esquerda - Content */}
+              <div className="text-center md:text-left">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/25 backdrop-blur-sm px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/40 mb-4">
+                  <span>📥</span>
+                  <span>Modelos 3D</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                  Arquivos STL da<br />Hellou Studio
+
+                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3 leading-tight">
+                  Arquivos STL<br />
+                  <span className="text-white/90">da Hellou Studio</span>
                 </h2>
-                <div className="space-y-3 text-sm sm:text-base text-white/95 mb-4">
-                  <p className="leading-relaxed">
-                    Compre arquivos STL prontos para imprimir em sua impressora 3D. Modelos originais e personalizáveis criados pela Hellou Studio.
-                  </p>
-                  <div className="space-y-2 text-xs sm:text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">✓</span>
-                      <span>Uso comercial permitido - impresso de forma livre</span>
+
+                <p className="text-base sm:text-lg text-white/90 mb-6 leading-relaxed">
+                  Modelos 3D prontos para imprimir. Originais, personalizáveis e com uso comercial livre.
+                </p>
+
+                {/* Benefícios em cards */}
+                <div className="space-y-3 mb-7">
+                  <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <span className="text-xl mt-0.5 flex-shrink-0">✓</span>
+                    <div>
+                      <p className="font-semibold text-white text-sm">Uso comercial livre</p>
+                      <p className="text-xs text-white/80">Imprima e venda sem restrições</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">✓</span>
-                      <span>Arquivos prontos - otimizados para FDM</span>
+                  </div>
+
+                  <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <span className="text-xl mt-0.5 flex-shrink-0">✓</span>
+                    <div>
+                      <p className="font-semibold text-white text-sm">Prontos para FDM</p>
+                      <p className="text-xs text-white/80">Otimizados para impressoras 3D</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">✓</span>
-                      <span>Personalizáveis - adapte do seu jeito</span>
+                  </div>
+
+                  <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <span className="text-xl mt-0.5 flex-shrink-0">✓</span>
+                    <div>
+                      <p className="font-semibold text-white text-sm">Personalizáveis</p>
+                      <p className="text-xs text-white/80">Adapte cores, tamanhos e detalhes</p>
                     </div>
                   </div>
                 </div>
+
                 <Link
                   href="/stl"
-                  className="inline-flex items-center gap-2 rounded-full bg-white text-pink-600 px-5 py-2.5 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm sm:text-base"
+                  className="inline-flex items-center gap-2.5 rounded-full bg-white text-pink-600 px-6 py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                 >
-                  Explorar Modelos
+                  Ver Modelos Disponíveis
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-4 w-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                   </svg>
                 </Link>
               </div>
-              <div className="hidden md:flex flex-1 justify-end">
-                <div className="relative h-56 w-56">
-                  <div className="absolute inset-0 bg-white/20 rounded-3xl backdrop-blur-sm flex items-center justify-center">
-                    <span className="text-7xl">📥</span>
+
+              {/* Direita - Visual */}
+              <div className="hidden md:flex justify-center items-center">
+                <div className="relative">
+                  {/* Card principal */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-md rounded-3xl border border-white/30 transform scale-100 group-hover:scale-105 transition" />
+
+                  <div className="relative h-80 w-80 flex items-center justify-center rounded-3xl overflow-hidden">
+                    <div className="absolute inset-0 bg-white/5 backdrop-blur-sm" />
+
+                    {/* Ícone grande */}
+                    <div className="relative z-10 text-center">
+                      <div className="text-8xl mb-4 animate-float">📥</div>
+                      <div className="text-white/80 text-sm font-medium">Arquivo STL</div>
+                    </div>
+
+                    {/* Decoração */}
+                    <div className="absolute top-4 right-4 h-24 w-24 rounded-full bg-white/10 backdrop-blur-sm" />
+                    <div className="absolute bottom-4 left-4 h-20 w-20 rounded-full bg-white/10 backdrop-blur-sm" />
                   </div>
                 </div>
               </div>
