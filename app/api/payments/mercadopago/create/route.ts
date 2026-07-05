@@ -4,7 +4,7 @@ import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { isValidCpf } from '@/lib/cpf';
 import { validateCartProductTypes } from '@/lib/cart';
-import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestEmail } from '@/lib/email';
+import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestEmail, sendSTLDeliveryEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { validateShippingCost } from '@/lib/security';
 
@@ -294,7 +294,7 @@ export async function POST(request: Request) {
         })),
       }).catch((e) => console.error('[mp-create] email error:', e));
 
-      // For digital orders, send delivery notification immediately
+      // For digital orders, send delivery notification and email immediately
       if (isDigitalOrder && mpStatus === 'approved') {
         try {
           await createNotification(
@@ -306,6 +306,18 @@ export async function POST(request: Request) {
           );
         } catch (e) {
           console.error('[mp-create] stl notification error:', e);
+        }
+
+        // Send STL delivery email with file info
+        const stlItems = orderItems.filter(item => (item.product_snapshot as Record<string, unknown>)?.type === 'digital');
+        for (const stlItem of stlItems) {
+          const fileName = (stlItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo STL';
+          sendSTLDeliveryEmail({
+            email: userData?.email || user.email,
+            nome: userData?.name || null,
+            orderId: order.id,
+            fileName: fileName,
+          }).catch((e) => console.error('[mp-create] stl delivery email error:', e));
         }
       }
 

@@ -501,3 +501,50 @@ export async function sendSTLAdminNotificationEmail(params: {
     console.error('[email] stl-admin-notification EXCEPTION:', err);
   }
 }
+
+export async function sendSTLDeliveryEmail(params: {
+  email: string;
+  nome: string | null;
+  orderId: string;
+  fileName: string;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+
+  const baseUrl = getBaseUrl();
+  const downloadUrl = `${baseUrl}/dashboard/orders/${params.orderId}`;
+
+  try {
+    const res = await resend.emails.send({
+      from: getFrom(),
+      to: params.email,
+      subject: `Seu arquivo está pronto! #${params.orderId.slice(0, 8).toUpperCase()}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+          <h2 style="color: #111;">Olá${params.nome ? `, ${params.nome}` : ''}! ✨</h2>
+          <p style="color: #555; line-height: 1.6;">
+            Seu arquivo STL <strong>"${params.fileName}"</strong> está pronto para download!
+          </p>
+          <div style="margin: 20px 0; padding: 16px; background: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
+            <p style="margin: 0; color: #15803D; font-size: 14px;">
+              Acesse seu pedido para fazer o download do arquivo.
+            </p>
+          </div>
+          <a href="${downloadUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Acessar Pedido e Baixar
+          </a>
+          <p style="color: #888; font-size: 13px; margin-top: 24px; line-height: 1.5;">
+            O arquivo estará disponível em sua conta helloustudio por tempo ilimitado. Você pode fazer o download quantas vezes precisar.
+          </p>
+        </div>
+      `,
+    });
+    if (res.error) {
+      console.error('[email] stl-delivery ERRO:', JSON.stringify(res.error, null, 2));
+    } else {
+      console.log('[email] stl-delivery ENVIADO para:', params.email, '| id:', res.data?.id);
+    }
+  } catch (err) {
+    console.error('[email] stl-delivery EXCEPTION:', err);
+  }
+}
