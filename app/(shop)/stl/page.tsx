@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getSupabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { ImageCarousel } from '@/components/shop/ImageCarousel';
 
 export default function STLMarketplacePage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -39,6 +40,26 @@ export default function STLMarketplacePage() {
         <p className="mt-2 text-sm text-white/90 sm:text-base">
           Compre arquivos STL prontos para imprimir em sua impressora 3D.
         </p>
+      </div>
+
+      {/* Purpose Clarification Card */}
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="rounded-2xl border border-orange-200 dark:border-orange-800 bg-orange-50/60 dark:bg-orange-950/20 p-5 sm:p-6">
+          <div className="flex gap-4">
+            <div className="text-3xl">💾</div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-orange-900 dark:text-orange-200 mb-2">
+                Arquivos STL para Impressão 3D
+              </h3>
+              <p className="text-sm text-orange-800 dark:text-orange-300 mb-3">
+                Aqui você compra <strong>arquivos digitais STL</strong> para imprimir em sua própria impressora 3D. Você faz o download, personaliza como quiser e imprime quantas cópias precisar!
+              </p>
+              <p className="text-xs text-orange-700 dark:text-orange-400">
+                💡 <strong>Procurando produtos já prontos?</strong> Acesse nosso <Link href="/products" className="font-semibold hover:underline">Catálogo de Produtos</Link> para ver peças impressas e enviadas prontas para usar.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Info Cards */}
@@ -95,10 +116,10 @@ export default function STLMarketplacePage() {
                 <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition border border-gray-200 dark:border-gray-800">
                   {/* Product Image */}
                   <div className="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
-                    <img
-                      src={product.image_url || 'https://via.placeholder.com/300'}
+                    <ImageCarousel
+                      image1={product.image_url || 'https://via.placeholder.com/300'}
+                      image2={product.image_url_2}
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition"
                     />
                     <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                       📥 Digital
