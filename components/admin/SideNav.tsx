@@ -18,6 +18,7 @@ import {
   LogOut,
   Menu,
   X,
+  FileText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -46,6 +47,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/dashboard/orders', label: 'Pedidos', icon: Package },
       { href: '/dashboard/requests', label: 'Solicitações', icon: Printer },
       { href: '/dashboard/products', label: 'Produtos', icon: Box },
+      { href: '/dashboard/products/stl', label: 'Upload STL', icon: FileText },
       { href: '/dashboard/users', label: 'Usuários', icon: Users },
       { href: '/dashboard/coupons', label: 'Cupons', icon: Tag },
 
