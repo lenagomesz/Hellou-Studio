@@ -235,7 +235,7 @@ export default function RequestPrintPage() {
             {/* Option 2: Makerworld Link */}
             <div className={`rounded-2xl border-2 transition ${
               file ? 'border-gray-200 dark:border-gray-800 opacity-50' : 'border-blue-200 dark:border-blue-800'
-            } bg-white dark:bg-gray-900 p-6 shadow-sm`}>
+            } bg-white dark:bg-gray-900 p-6 shadow-sm flex flex-col`}>
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-2xl">🔗</span>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Opção 2: Link Makerworld</h3>
@@ -254,15 +254,22 @@ export default function RequestPrintPage() {
                 onChange={(e) => setMakerLink(e.target.value)}
                 placeholder="https://www.makerworld.com.br/pt/models/..."
                 disabled={file !== null}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition mb-3 ${
                   file
                     ? 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-not-allowed opacity-50 text-gray-500'
                     : 'border-blue-300 dark:border-blue-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
                 }`}
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                {file ? 'Remova o arquivo para usar esta opção' : 'Cole o link completo do projeto'}
-              </p>
+
+              {/* Copyright Warning for Makerworld Option */}
+              <div className="bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3 mt-auto">
+                <p className="text-xs font-semibold text-red-900 dark:text-red-200 mb-1">
+                  ⚠️ Direitos Autorais
+                </p>
+                <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">
+                  Muitos modelos têm restrições. Analisaremos a licença e deixaremos claro se podemos prosseguir.
+                </p>
+              </div>
             </div>
           </div>
 
