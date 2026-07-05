@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { ImageCarousel } from '@/components/shop/ImageCarousel';
+import { ProductCard } from '@/components/shop/ProductCard';
 import type { Product } from '@/types/database';
 
 async function getSTLProducts(): Promise<Product[]> {
@@ -91,50 +91,30 @@ export default async function STLMarketplacePage() {
       </div>
 
       {/* Marketplace */}
-      <div id="marketplace" className="max-w-6xl mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">Modelos Disponíveis</h2>
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <header className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">Modelos Disponíveis</h1>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {products.length}{' '}
+            {products.length === 1 ? 'modelo encontrado' : 'modelos encontrados'}
+          </p>
+        </header>
 
         {products.length === 0 ? (
-          <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-8 text-center">
-            <p className="text-yellow-800 dark:text-yellow-300">
-              Nenhum modelo disponível no momento. Volte em breve!
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
+            <span className="text-5xl">✨🎨</span>
+            <h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
+              Opa! Ainda não chegaram modelos...
+            </h2>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              Estamos preparando arquivos incríveis pra você! 🚀<br />
+              Volte em breve, novidades a caminho!
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {products.map(product => (
-              <Link
-                key={product.id}
-                href={`/products/${product.id}`}
-                className="group"
-              >
-                <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition border border-gray-200 dark:border-gray-800">
-                  {/* Product Image */}
-                  <div className="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
-                    <ImageCarousel
-                      image1={product.image_url || 'https://via.placeholder.com/300'}
-                      image2={product.image_url_2 || undefined}
-                      alt={product.name}
-                    />
-                    <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      📥 Digital
-                    </div>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-sm mb-3 line-clamp-2 text-gray-900 dark:text-white">
-                      {product.name}
-                    </h3>
-                    <span className="text-lg font-bold text-pink-600 dark:text-pink-400">
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }).format(product.base_price)}
-                    </span>
-                  </div>
-                </div>
-              </Link>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
