@@ -260,6 +260,30 @@ export default function OrderDetailPage() {
                     <p className="text-xs text-gray-500">
                       {item.quantity}x &middot; {formatPrice(item.unit_price)} cada
                     </p>
+                    {item.product && 'type' in item.product && (item.product as any).type === 'digital' && (
+                      <button
+                        onClick={() => {
+                          const downloadUrl = `/api/orders/${id}/download/${item.product?.id}`;
+                          const link = document.createElement('a');
+                          link.href = downloadUrl;
+                          link.download = '';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                        disabled={order.status !== 'delivered'}
+                        className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                          order.status === 'delivered'
+                            ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                            : 'bg-gray-50 text-gray-400 border border-gray-200 cursor-not-allowed'
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M7.5 12l4.72-4.72a.75.75 0 0 1 1.06 0l4.72 4.72m-6-6v12" />
+                        </svg>
+                        {order.status === 'delivered' ? 'Baixar' : 'Indisponível'}
+                      </button>
+                    )}
                   </div>
                   <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">
                     {formatPrice(item.quantity * item.unit_price)}

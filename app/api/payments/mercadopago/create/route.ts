@@ -109,7 +109,7 @@ export async function POST(request: Request) {
     .from('orders')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
-    .in('status', ['paid', 'processing', 'shipped', 'delivered']);
+    .in('status', ['completed', 'paid', 'processing', 'shipped', 'delivered']);
 
   const isFirstPurchase = (orderCount ?? 0) === 0;
   const firstPurchaseDiscount = isFirstPurchase ? subtotal * 0.1 : 0;
@@ -201,7 +201,7 @@ export async function POST(request: Request) {
 
     let orderStatus: string;
     if (mpStatus === 'approved') {
-      orderStatus = isDigitalOrder ? 'completed' : 'processing';
+      orderStatus = isDigitalOrder ? 'delivered' : 'processing';
     } else {
       orderStatus = 'awaiting_payment';
     }
