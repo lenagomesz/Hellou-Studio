@@ -188,14 +188,15 @@ export function PaymentForm({
           const statusData = await statusRes.json();
           if (statusData.status === 'approved') {
             if (pollingRef.current) clearInterval(pollingRef.current);
-            router.push(`/checkout/success?order_id=${data.order_id}`);
+            setPixQrCode('');
+            setPixQrBase64('');
+            setCardSuccess(data.order_id);
+            setTimeout(() => {
+              router.push(`/checkout/success?order_id=${data.order_id}`);
+            }, 3000);
           }
         } catch {}
       }, 5000);
-
-      setTimeout(() => {
-        router.push(`/orders/${data.order_id}`);
-      }, 500);
     } catch {
       setErrorAndScroll('Erro de conexão. Tente novamente.');
     } finally {
