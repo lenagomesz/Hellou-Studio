@@ -67,16 +67,23 @@ export async function GET(
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
+    // Extract filename from file_path (handle both full URL and just filename)
+    let fileName = item.product.file_path;
+    if (fileName.includes('/')) {
+      fileName = fileName.split('/').pop() ?? fileName;
+    }
+
     console.log('[download] Attempting to download:', {
-      filePath: item.product.file_path,
-      bucket: 'products',
+      originalPath: item.product.file_path,
+      extractedFileName: fileName,
+      bucket: 'stl-uploads',
       productName: item.product.name,
     });
 
     // Download file from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage
-      .from('products')
-      .download(item.product.file_path);
+      .from('stl-uploads')
+      .download(fileName);
 
     if (downloadError || !fileData) {
       console.error('[download] Storage error:', {
