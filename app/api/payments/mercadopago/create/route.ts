@@ -202,6 +202,12 @@ export async function POST(request: Request) {
     const mpPaymentId = String(result.id);
     const mpStatus = result.status;
 
+    console.log('[mp-create] Payment response from Mercado Pago:', {
+      mpPaymentId,
+      mpStatus,
+      result_status_detail: (result as unknown as Record<string, unknown>).status_detail,
+    });
+
     console.log('[mp-create] Payment created:', {
       paymentId: mpPaymentId,
       status: mpStatus,
@@ -245,6 +251,13 @@ export async function POST(request: Request) {
       console.error('[mp-create] order insert error:', orderError);
       return serverError('Erro ao criar pedido');
     }
+
+    console.log('[mp-create] Order inserted successfully:', {
+      orderId: order.id,
+      status: orderStatus,
+      mpStatus,
+      isDigitalOrder,
+    });
 
     const orderItems = cartItems.map((item) => ({
       order_id: order.id,
@@ -369,35 +382,30 @@ export async function POST(request: Request) {
           }
         }
 
-        // Send STL delivery email with file info
-        let stlEmailSent = false;
-        for (const stlItem of stlItems) {
-          const fileName = (stlItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo STL';
-          const emailSent = await sendSTLDeliveryEmail({
-            email: userData?.email || user.email,
-            nome: userData?.name || null,
-            orderId: order.id,
-            fileName: fileName,
-          }).catch((e) => {
-            console.error('[mp-create] stl delivery email error:', e);
-            return false;
-          });
+        // Send STL delivery email with file info automatically
+        if (stlItems.length > 0 && mpStatus === 'approved') {
+          for (const stlItem of stlItems) {
+            const fileName = (stlItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo STL';
 
-          if (emailSent) {
-            stlEmailSent = true;
+            sendSTLDeliveryEmail({
+              email: userData?.email || user.email,
+              nome: userData?.name || null,
+              orderId: order.id,
+              fileName: fileName,
+            }).catch((e) => console.error('[mp-create] stl delivery email error:', e));
           }
-        }
 
-        // If STL email was sent successfully, update order status to 'delivered'
-        if (stlEmailSent && isDigitalOrder) {
-          await admin
-            .from('orders')
-            .update({ status: 'delivered' })
-            .eq('id', order.id);
+          // For digital-only orders, update status to 'delivered' after email is sent
+          if (isDigitalOrder) {
+            await admin
+              .from('orders')
+              .update({ status: 'delivered' })
+              .eq('id', order.id);
 
-          console.log('[mp-create] Order status updated to delivered after STL email sent:', {
-            orderId: order.id,
-          });
+            console.log('[mp-create] Digital order status updated to delivered:', {
+              orderId: order.id,
+            });
+          }
         }
       }
 

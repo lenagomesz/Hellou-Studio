@@ -38,6 +38,8 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
 };
 
 const STATUS_ORDER: OrderStatus[] = ['awaiting_payment', 'approved', 'processing', 'shipped', 'delivered'];
+// Note: Shows same status flow for all orders (digital and physical)
+// Admin panel has different flows for digital vs physical
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
