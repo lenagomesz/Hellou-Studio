@@ -326,7 +326,48 @@ export default function OrderDetailPage() {
               <p className="text-xs text-gray-500 mt-0.5">Avance o status ou atualize informações de envio</p>
             </div>
 
-            {/* Código de rastreamento */}
+            {/* STL Delivery Button */}
+            {isDigitalOnly && order.status !== 'delivered' && (
+            <div className="mb-5 rounded-xl border border-green-100 bg-green-50 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-green-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L3 3m0 0h18M3 3l4.72 4.72a.75.75 0 0 0 1.28-.531V3H7.5m13.5 0v4.191a.75.75 0 0 0 1.28.531L21 3" />
+                </svg>
+                <span className="text-xs font-semibold text-green-700">Entregar Arquivo STL</span>
+              </div>
+              <p className="text-xs text-green-600 mb-3">Enviar email de entrega e marcar pedido como entregue</p>
+              <button
+                type="button"
+                onClick={async () => {
+                  setUpdating(true);
+                  try {
+                    const res = await fetch(`/api/orders/${id}/send-stl-delivery`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                    });
+                    if (res.ok) {
+                      setOrder({ ...order, status: 'delivered' });
+                      setSaveMsg('Email STL enviado e pedido marcado como entregue!');
+                    } else {
+                      const err = await res.json();
+                      setSaveMsg(err.error || 'Erro ao enviar email');
+                    }
+                  } catch (err) {
+                    setSaveMsg('Erro ao enviar email');
+                  } finally {
+                    setUpdating(false);
+                  }
+                }}
+                disabled={updating}
+                className="w-full rounded-lg bg-green-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
+              >
+                📧 Enviar Email de Entrega
+              </button>
+            </div>
+            )}
+
+            {/* Código de rastreamento - Hidden for digital-only orders */}
+            {!isDigitalOnly && (
             <div className="mb-5 rounded-xl border border-gray-100 bg-gray-50 p-4">
               <div className="flex items-center gap-2 mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-purple-600">
@@ -362,9 +403,10 @@ export default function OrderDetailPage() {
                 <p className="mt-2 text-xs text-red-600">{shippingError}</p>
               )}
             </div>
+            )}
 
-            {/* Próximo passo */}
-            {order.status !== 'delivered' && order.status !== 'canceled' && order.status !== 'refunded' && (
+            {/* Próximo passo - Physical products only */}
+            {!isDigitalOnly && order.status !== 'delivered' && order.status !== 'canceled' && order.status !== 'refunded' && (
               <div className="mb-4">
                 <p className="text-xs font-medium text-gray-500 mb-2">Próximo passo:</p>
                 <div className="flex flex-wrap gap-2">
@@ -394,26 +436,59 @@ export default function OrderDetailPage() {
 
             {/* Outros status */}
             <div className="border-t border-gray-100 pt-4">
-              <p className="text-xs font-medium text-gray-500 mb-2">Ir para status:</p>
+              <p className="text-xs font-medium text-gray-500 mb-2">
+                {isDigitalOnly ? 'Apenas STL - Status limitado:' : 'Ir para status:'}
+              </p>
               <div className="flex flex-wrap gap-2">
-                {STATUS_FLOW.map((s) => {
-                  const isCurrent = s === order.status;
-                  return (
+                {isDigitalOnly ? (
+                  // For digital-only: show minimal statuses
+                  <>
                     <button
-                      key={s}
                       type="button"
-                      disabled={updating || isCurrent}
-                      onClick={() => updateStatus(s)}
+                      disabled={updating || order.status === 'awaiting_payment'}
+                      onClick={() => updateStatus('awaiting_payment')}
                       className={`rounded-lg border px-3 py-1.5 text-[11px] font-medium transition ${
-                        isCurrent
+                        order.status === 'awaiting_payment'
                           ? 'border-pink-200 bg-pink-50 text-pink-700 cursor-default'
                           : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300'
                       } disabled:opacity-40`}
                     >
-                      {STATUS_LABELS[s]}
+                      Aguardando Pagamento
                     </button>
-                  );
-                })}
+                    <button
+                      type="button"
+                      disabled={updating || order.status === 'delivered'}
+                      onClick={() => updateStatus('delivered')}
+                      className={`rounded-lg border px-3 py-1.5 text-[11px] font-medium transition ${
+                        order.status === 'delivered'
+                          ? 'border-green-200 bg-green-50 text-green-700 cursor-default'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                      } disabled:opacity-40`}
+                    >
+                      Entregue
+                    </button>
+                  </>
+                ) : (
+                  // For physical: show full status flow
+                  STATUS_FLOW.map((s) => {
+                    const isCurrent = s === order.status;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        disabled={updating || isCurrent}
+                        onClick={() => updateStatus(s)}
+                        className={`rounded-lg border px-3 py-1.5 text-[11px] font-medium transition ${
+                          isCurrent
+                            ? 'border-pink-200 bg-pink-50 text-pink-700 cursor-default'
+                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                        } disabled:opacity-40`}
+                      >
+                        {STATUS_LABELS[s]}
+                      </button>
+                    );
+                  })
+                )}
                 <div className="w-px bg-gray-200 mx-1 self-stretch" />
                 <button type="button" disabled={updating} onClick={() => updateStatus('canceled')} className="rounded-lg border border-red-200 px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-40">
                   Cancelar
