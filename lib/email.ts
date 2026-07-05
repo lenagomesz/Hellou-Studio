@@ -227,12 +227,16 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   refunded: 'Reembolsado',
 };
 
+function formatSubjectName(nome: string | null): string {
+  return nome ? ` ${nome}` : '';
+}
+
 const ORDER_STATUS_SUBJECTS: Record<string, (nome: string | null) => string> = {
-  processing: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu pedido está sendo preparado!`,
-  shipped: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu pedido foi enviado!`,
-  delivered: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu pedido foi entregue!`,
-  canceled: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu pedido foi cancelado`,
-  refunded: (nome) => `Hellou${nome ? ` ${nome}` : ''}, seu reembolso foi processado`,
+  processing: (nome) => `Hellou${formatSubjectName(nome)}, seu pedido está sendo preparado!`,
+  shipped: (nome) => `Hellou${formatSubjectName(nome)}, seu pedido foi enviado!`,
+  delivered: (nome) => `Hellou${formatSubjectName(nome)}, seu pedido foi entregue!`,
+  canceled: (nome) => `Hellou${formatSubjectName(nome)}, seu pedido foi cancelado`,
+  refunded: (nome) => `Hellou${formatSubjectName(nome)}, seu reembolso foi processado`,
 };
 
 export async function sendOrderStatusEmail(params: {
@@ -262,12 +266,17 @@ export async function sendOrderStatusEmail(params: {
   }
 
   try {
+    const orderIdRef = params.orderId.slice(0, 8).toUpperCase();
+    const subjectName = formatSubjectName(params.nome);
+    const defaultSubject = `Hellou${subjectName}, atualização do seu pedido #${orderIdRef}`;
+    const subject = ORDER_STATUS_SUBJECTS[params.newStatus]
+      ? ORDER_STATUS_SUBJECTS[params.newStatus](params.nome)
+      : defaultSubject;
+
     const res = await resend.emails.send({
       from: getFrom(),
       to: params.email,
-      subject: ORDER_STATUS_SUBJECTS[params.newStatus]
-        ? ORDER_STATUS_SUBJECTS[params.newStatus](params.nome)
-        : `Hellou${params.nome ? ` ${params.nome}` : ''}, atualização do seu pedido #${params.orderId.slice(0, 8).toUpperCase()}`,
+      subject,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
           <h2 style="color: #111;">Olá${params.nome ? `, ${params.nome}` : ''}!</h2>
