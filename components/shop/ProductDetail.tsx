@@ -132,7 +132,7 @@ export function ProductDetail({
           )}
         </div>
 
-        {product.description ? (
+        {product.type !== 'digital' && product.description ? (
           <p className="mt-4 whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
             {product.description}
           </p>

@@ -40,27 +40,34 @@ function getProductWithOptions(id: string) {
   )();
 }
 
-function getRelatedProducts(category: string, excludeId: string) {
+function getRelatedProducts(category: string, excludeId: string, productType: string) {
   return unstable_cache(
     () =>
       withTimeout(
         (async () => {
           const admin = getSupabaseAdmin();
-          const { data } = await admin
+          let query = admin
             .from('products')
             .select('*')
             .eq('active', true)
+            .eq('category', category)
+            .neq('id', excludeId);
+
+          if (productType === 'digital') {
+            query = query.eq('type', 'digital');
+          } else {
+            query = query.neq('type', 'digital');
+          }
+
+          const { data } = await query
             .in('category', ['chaveiros', 'escritorio', 'criaturas'])
             .not('name', 'ilike', 'Encomenda%')
-            .neq('type', 'digital')
-            .eq('category', category)
-            .neq('id', excludeId)
             .order('created_at', { ascending: false })
             .limit(4);
           return (data ?? []) as Product[];
         })(),
       ).catch(() => [] as Product[]),
-    [`related-${category}-${excludeId}`],
+    [`related-${category}-${excludeId}-${productType}`],
     { revalidate: 60 },
   )();
 }
@@ -77,7 +84,7 @@ export default async function ProductDetailPage(
   if (product.category === 'encomenda') notFound();
 
   const [related, user] = await Promise.all([
-    getRelatedProducts(product.category, product.id),
+    getRelatedProducts(product.category, product.id, product.type),
     getCurrentUser(),
   ]);
 

@@ -101,7 +101,7 @@ export default async function STLMarketplacePage() {
             </p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {products.map(product => (
               <Link
                 key={product.id}
@@ -123,23 +123,15 @@ export default async function STLMarketplacePage() {
 
                   {/* Product Info */}
                   <div className="p-4">
-                    <h3 className="font-semibold text-sm mb-2 line-clamp-2 text-gray-900 dark:text-white">
+                    <h3 className="font-semibold text-sm mb-3 line-clamp-2 text-gray-900 dark:text-white">
                       {product.name}
                     </h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
-                      {product.description}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-pink-600 dark:text-pink-400">
-                        {new Intl.NumberFormat('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        }).format(product.base_price)}
-                      </span>
-                      <button className="px-3 py-1 bg-pink-500 hover:bg-pink-600 dark:bg-pink-600 dark:hover:bg-pink-700 text-white text-xs font-semibold rounded transition">
-                        Comprar
-                      </button>
-                    </div>
+                    <span className="text-lg font-bold text-pink-600 dark:text-pink-400">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(product.base_price)}
+                    </span>
                   </div>
                 </div>
               </Link>

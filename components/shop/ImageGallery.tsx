@@ -45,12 +45,12 @@ export function ImageGallery({ image1, image2 }: ImageGalleryProps) {
 
       {/* Minigaleria - mostrar apenas se tiver 2 imagens */}
       {hasMultiple && (
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-2 flex gap-2">
           {images.map((img, i) => (
             <button
               key={i}
               onClick={() => setCurrentImageIndex(i)}
-              className={`aspect-square overflow-hidden rounded-lg transition ${
+              className={`h-12 w-12 overflow-hidden rounded transition flex-shrink-0 ${
                 currentImageIndex === i
                   ? 'ring-2 ring-pink-500'
                   : 'opacity-60 hover:opacity-100'
