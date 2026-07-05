@@ -359,14 +359,34 @@ export async function POST(request: Request) {
         }
 
         // Send STL delivery email with file info
+        let stlEmailSent = false;
         for (const stlItem of stlItems) {
           const fileName = (stlItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo STL';
-          sendSTLDeliveryEmail({
+          const emailSent = await sendSTLDeliveryEmail({
             email: userData?.email || user.email,
             nome: userData?.name || null,
             orderId: order.id,
             fileName: fileName,
-          }).catch((e) => console.error('[mp-create] stl delivery email error:', e));
+          }).catch((e) => {
+            console.error('[mp-create] stl delivery email error:', e);
+            return false;
+          });
+
+          if (emailSent) {
+            stlEmailSent = true;
+          }
+        }
+
+        // If STL email was sent successfully, update order status to 'delivered'
+        if (stlEmailSent && isDigitalOrder) {
+          await admin
+            .from('orders')
+            .update({ status: 'delivered' })
+            .eq('id', order.id);
+
+          console.log('[mp-create] Order status updated to delivered after STL email sent:', {
+            orderId: order.id,
+          });
         }
       }
 

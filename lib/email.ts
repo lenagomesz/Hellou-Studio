@@ -545,9 +545,12 @@ export async function sendSTLDeliveryEmail(params: {
   nome: string | null;
   orderId: string;
   fileName: string;
-}) {
+}): Promise<boolean> {
   const resend = getResend();
-  if (!resend) return;
+  if (!resend) {
+    console.log('[email] sendSTLDeliveryEmail: RESEND_API_KEY not configured');
+    return false;
+  }
 
   const baseUrl = getBaseUrl();
   const downloadUrl = `${baseUrl}/dashboard/orders/${params.orderId}`;
@@ -579,10 +582,13 @@ export async function sendSTLDeliveryEmail(params: {
     });
     if (res.error) {
       console.error('[email] stl-delivery ERRO:', JSON.stringify(res.error, null, 2));
+      return false;
     } else {
       console.log('[email] stl-delivery ENVIADO para:', params.email, '| id:', res.data?.id);
+      return true;
     }
   } catch (err) {
     console.error('[email] stl-delivery EXCEPTION:', err);
+    return false;
   }
 }
