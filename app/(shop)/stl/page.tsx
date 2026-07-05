@@ -1,38 +1,33 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { getSupabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { ImageCarousel } from '@/components/shop/ImageCarousel';
+import type { Product } from '@/types/database';
 
-export default function STLMarketplacePage() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+async function getSTLProducts(): Promise<Product[]> {
+  try {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from('products')
+      .select('*')
+      .eq('type', 'digital')
+      .eq('active', true)
+      .order('created_at', { ascending: false });
 
-  useEffect(() => {
-    loadSTLProducts();
-  }, []);
-
-  const loadSTLProducts = async () => {
-    try {
-      const supabase = getSupabase();
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('type', 'digital')
-        .eq('active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('[stl-page] Query error:', error);
-      }
-      setProducts(data || []);
-    } catch (error) {
-      console.error('[stl-page] Error loading products:', error);
-    } finally {
-      setLoading(false);
+    if (error) {
+      console.error('[stl-page] Query error:', error);
+      return [];
     }
-  };
+
+    console.log('[stl-page] Loaded digital products:', data?.length || 0);
+    return (data || []) as Product[];
+  } catch (error) {
+    console.error('[stl-page] Error loading products:', error);
+    return [];
+  }
+}
+
+export default async function STLMarketplacePage() {
+  const products = await getSTLProducts();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
@@ -99,11 +94,7 @@ export default function STLMarketplacePage() {
       <div id="marketplace" className="max-w-6xl mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">Modelos Disponíveis</h2>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Carregando modelos...</p>
-          </div>
-        ) : products.length === 0 ? (
+        {products.length === 0 ? (
           <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-8 text-center">
             <p className="text-yellow-800 dark:text-yellow-300">
               Nenhum modelo disponível no momento. Volte em breve!

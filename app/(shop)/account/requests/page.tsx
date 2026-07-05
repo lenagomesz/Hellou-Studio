@@ -254,21 +254,26 @@ export default function UserRequestsPage() {
             <h3 className="font-semibold text-purple-900 mb-3">
               Como enviar seu arquivo STL?
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
                 <p className="font-medium text-purple-900 text-sm mb-1">✅ Opção 1: Arquivo próprio</p>
                 <p className="text-purple-800 text-sm">
-                  Clique em <strong>"+ Nova"</strong> e envie seu arquivo STL para receber um orçamento. Você pode enviar arquivos que você próprio criou ou tem direitos autorais.
+                  Clique em <strong>"+ Nova"</strong> e envie seu arquivo STL para receber um orçamento. Você pode enviar arquivos que você próprio criou ou tem direitos autorais para usar comercialmente.
                 </p>
               </div>
-              <div className="border-t border-purple-200 pt-3">
-                <p className="font-medium text-purple-900 text-sm mb-1">🔗 Opção 2: Projeto do Makerworld</p>
+              <div className="border-t border-purple-200 pt-4">
+                <p className="font-medium text-purple-900 text-sm mb-2">🔗 Opção 2: Link do Makerworld</p>
                 <p className="text-purple-800 text-sm mb-2">
-                  Encontrou um modelo interessante no <a href="https://www.makerworld.com.br" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-purple-700">Makerworld</a>? Você pode compartilhar o link comigo e farei uma avaliação. Se a licença permitir e você tiver direitos, posso fazer um orçamento para você.
+                  Encontrou um modelo interessante no <a href="https://www.makerworld.com.br" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-purple-700">Makerworld</a>? Você pode me enviar o link via <strong>"+ Nova"</strong> (na descrição) e farei uma avaliação da licença do projeto.
                 </p>
-                <p className="text-purple-700 text-xs italic">
-                  ⚠️ <strong>Importante:</strong> Verifique a licença do projeto. Alguns modelos têm restrições de uso comercial ou de redistribuição. Deixamos isso claro na avaliação.
-                </p>
+                <div className="bg-red-50 border border-red-200 rounded p-3 mt-2">
+                  <p className="text-red-700 text-xs font-semibold mb-1">
+                    ⚠️ Aviso importante sobre direitos autorais:
+                  </p>
+                  <p className="text-red-700 text-xs leading-relaxed">
+                    <strong>Não compactuamos com projetos que tenham restrições de direitos autorais.</strong> Muitos modelos do Makerworld proíbem uso comercial ou redistribuição. Se o projeto tiver essas restrições, não poderemos fazer o orçamento ou precisaremos de autorização do criador original. Deixaremos isso bem claro na avaliação.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

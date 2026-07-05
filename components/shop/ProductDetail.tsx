@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
+import { ImageGallery } from '@/components/shop/ImageGallery';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -93,19 +94,13 @@ export function ProductDetail({
   return (
     <div className="grid gap-8 lg:grid-cols-2">
       <div className="space-y-3">
-        <div className="group relative aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 shadow-sm">
-          {product.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-7xl text-pink-200">
-              ◇
-            </div>
-          )}
+        {product.image_url ? (
+          <ImageGallery image1={product.image_url} image2={product.image_url_2 || undefined} />
+        ) : (
+          <div className="group relative aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 shadow-sm flex h-full w-full items-center justify-center text-7xl text-pink-200">
+            ◇
+          </div>
+        )}
           {/* Badge de categoria */}
           <span className="absolute top-3 left-3 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-3 py-1 text-[11px] font-semibold text-pink-600 dark:text-pink-400 shadow-sm">
             {CATEGORY_LABELS[product.category] ?? product.category}
