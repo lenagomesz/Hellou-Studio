@@ -148,6 +148,12 @@ export async function POST(request: Request) {
     .eq('id', user.id)
     .single();
 
+  console.log('[mp-create] userData fetched:', {
+    user_id: user.id,
+    userData_email: userData?.email,
+    userData_name: userData?.name,
+  });
+
   const nameParts = (userData?.name || 'Cliente').split(' ');
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(' ') || firstName;
