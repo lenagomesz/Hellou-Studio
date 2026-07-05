@@ -35,8 +35,11 @@ export default function STLMarketplacePage() {
       <div className="bg-gradient-to-r from-pink-500 to-orange-500 text-white py-12 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            🎨 Bem-vindos, Makers!
+            🎨 Hellou Studio
           </h1>
+          <p className="text-lg text-white mb-4">
+            Bem-vindos, Makers!
+          </p>
           <p className="text-lg text-white mb-6 max-w-2xl mx-auto">
             Aqui você pode comprar as criações da <strong>hellou studio</strong>. Arquivos STL prontos para imprimir em sua impressora 3D.
           </p>

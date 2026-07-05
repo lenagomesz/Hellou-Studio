@@ -102,7 +102,7 @@ export default function RequestPrintPage() {
 
       {/* Explicação do fluxo */}
       <div className="mx-auto max-w-2xl px-4 pt-8 sm:px-6">
-        <div className="rounded-2xl border border-pink-100 dark:border-pink-900/30 bg-pink-50/50 dark:bg-pink-950/20 p-5 sm:p-6">
+        <div className="rounded-2xl border border-pink-100 dark:border-pink-900/30 bg-pink-50/50 dark:bg-pink-950/20 p-5 sm:p-6 mb-6">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Como funciona?</h3>
           <ol className="space-y-2.5 text-sm text-gray-600 dark:text-gray-400">
             <li className="flex items-start gap-2.5">
@@ -122,6 +122,24 @@ export default function RequestPrintPage() {
               <span>Se tiver qualquer dúvida, entro em contato para alinharmos tudo antes de começar.</span>
             </li>
           </ol>
+        </div>
+
+        {/* Makerworld Info Card */}
+        <div className="rounded-2xl border border-red-200 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/20 p-5 sm:p-6">
+          <h3 className="text-sm font-semibold text-red-900 dark:text-red-200 mb-3 flex items-center gap-2">
+            <span>🔗</span> Encontrou um modelo no Makerworld?
+          </h3>
+          <p className="text-sm text-red-800 dark:text-red-300 mb-3">
+            Você pode enviar o link de um projeto do <a href="https://www.makerworld.com.br" target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline">Makerworld</a> na descrição. Farei uma avaliação e, se a licença permitir, devolvo o orçamento para você.
+          </p>
+          <div className="bg-red-100/50 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-3">
+            <p className="text-xs font-semibold text-red-900 dark:text-red-200 mb-2">
+              ⚠️ Aviso importante:
+            </p>
+            <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">
+              Não trabalhamos com projetos que tenham restrições de direitos autorais ou uso comercial. Muitos modelos no Makerworld proíbem isso. Se o projeto tiver essas limitações, não poderemos fazer o orçamento. Deixaremos claro na análise se podemos prosseguir ou não.
+            </p>
+          </div>
         </div>
       </div>
 
