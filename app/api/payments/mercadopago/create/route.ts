@@ -179,7 +179,6 @@ export async function POST(request: Request) {
         payment_provider: 'mercadopago',
         status: orderStatus,
         total: totalAmount,
-        shipped_at: isDigitalOrder && mpStatus === 'approved' ? new Date().toISOString() : null,
         shipping_address: { ...shipping_address, wants_invoice: !!wants_invoice },
       })
       .select('id')
