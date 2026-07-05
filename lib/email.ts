@@ -194,6 +194,12 @@ export async function sendOrderConfirmationEmail(params: {
   const resend = getResend();
   if (!resend) return;
 
+  console.log('[email] sendOrderConfirmationEmail called with:', {
+    email: params.email,
+    nome: params.nome,
+    pedidoId: params.pedidoId,
+  });
+
   try {
     const res = await resend.emails.send({
       from: getFrom(),

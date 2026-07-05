@@ -294,8 +294,15 @@ export async function POST(request: Request) {
       }
 
       // Send order confirmation email
+      const customerEmail = userData?.email || user.email;
+      console.log('[mp-create] Order confirmation email:', {
+        userData_email: userData?.email,
+        user_email: user.email,
+        final_email: customerEmail,
+        user_id: user.id,
+      });
       sendOrderConfirmationEmail({
-        email: userData?.email || user.email,
+        email: customerEmail,
         nome: userData?.name || null,
         pedidoId: order.id,
         total: totalAmount,
