@@ -30,7 +30,7 @@ export default function STLMarketplacePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
       {/* Full-width Banner */}
       <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
         <h1 className="text-2xl font-bold text-white sm:text-3xl">
@@ -44,26 +44,26 @@ export default function STLMarketplacePage() {
       {/* Info Cards */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
             <div className="text-3xl mb-2">🔧</div>
-            <h3 className="font-semibold text-lg mb-2">Pronto para Imprimir</h3>
-            <p className="text-gray-600 text-sm">
+            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Pronto para Imprimir</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               Modelos otimizados para impressoras 3D FDM. Arquivos em formato STL de alta qualidade.
             </p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
             <div className="text-3xl mb-2">📥</div>
-            <h3 className="font-semibold text-lg mb-2">Download Imediato</h3>
-            <p className="text-gray-600 text-sm">
+            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Download Imediato</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               Receba seu arquivo via email e baixe quantas vezes quiser da sua conta.
             </p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
             <div className="text-3xl mb-2">💳</div>
-            <h3 className="font-semibold text-lg mb-2">Pagamento Seguro</h3>
-            <p className="text-gray-600 text-sm">
+            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Pagamento Seguro</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               Compre com cartão ou Pix. Processamento seguro via Mercado Pago.
             </p>
           </div>
@@ -72,15 +72,15 @@ export default function STLMarketplacePage() {
 
       {/* Marketplace */}
       <div id="marketplace" className="max-w-6xl mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold mb-8">Modelos Disponíveis</h2>
+        <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">Modelos Disponíveis</h2>
 
         {loading ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">Carregando modelos...</p>
+            <p className="text-gray-500 dark:text-gray-400">Carregando modelos...</p>
           </div>
         ) : products.length === 0 ? (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
-            <p className="text-yellow-800">
+          <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-8 text-center">
+            <p className="text-yellow-800 dark:text-yellow-300">
               Nenhum modelo disponível no momento. Volte em breve!
             </p>
           </div>
@@ -92,9 +92,9 @@ export default function STLMarketplacePage() {
                 href={`/products/${product.id}`}
                 className="group"
               >
-                <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition border border-gray-200">
+                <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition border border-gray-200 dark:border-gray-800">
                   {/* Product Image */}
-                  <div className="aspect-square bg-gray-100 overflow-hidden relative">
+                  <div className="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
                     <img
                       src={product.image_url || 'https://via.placeholder.com/300'}
                       alt={product.name}
@@ -107,20 +107,20 @@ export default function STLMarketplacePage() {
 
                   {/* Product Info */}
                   <div className="p-4">
-                    <h3 className="font-semibold text-sm mb-2 line-clamp-2">
+                    <h3 className="font-semibold text-sm mb-2 line-clamp-2 text-gray-900 dark:text-white">
                       {product.name}
                     </h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 mb-3">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
                       {product.description}
                     </p>
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-pink-600">
+                      <span className="text-lg font-bold text-pink-600 dark:text-pink-400">
                         {new Intl.NumberFormat('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
                         }).format(product.price)}
                       </span>
-                      <button className="px-3 py-1 bg-pink-500 text-white text-xs font-semibold rounded hover:bg-pink-600 transition">
+                      <button className="px-3 py-1 bg-pink-500 hover:bg-pink-600 dark:bg-pink-600 dark:hover:bg-pink-700 text-white text-xs font-semibold rounded transition">
                         Comprar
                       </button>
                     </div>
