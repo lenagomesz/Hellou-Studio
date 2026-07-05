@@ -68,10 +68,8 @@ export async function GET(
     }
 
     // Extract filename from file_path (handle both full URL and just filename)
-    let fileName = item.product.file_path;
-    if (fileName.includes('/')) {
-      fileName = fileName.split('/').pop() ?? fileName;
-    }
+    const filePath = item.product.file_path;
+    const fileName = filePath.includes('/') ? (filePath.split('/').pop() ?? filePath) : filePath;
 
     console.log('[download] Attempting to download:', {
       originalPath: item.product.file_path,

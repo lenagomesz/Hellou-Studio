@@ -409,7 +409,7 @@ export default function OrderDetailPage() {
             )}
 
             {/* Próximo passo - Physical products only */}
-            {!isDigitalOnly && order.status !== 'delivered' && order.status !== 'canceled' && order.status !== 'refunded' && (
+            {!isDigitalOnly && order.status !== 'canceled' && order.status !== 'refunded' && (
               <div className="mb-4">
                 <p className="text-xs font-medium text-gray-500 mb-2">Próximo passo:</p>
                 <div className="flex flex-wrap gap-2">
