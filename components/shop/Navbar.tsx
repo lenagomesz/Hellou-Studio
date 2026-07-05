@@ -46,38 +46,39 @@ export function Navbar() {
         scrolled ? 'border-pink-100/60 shadow-sm shadow-pink-100/30 dark:border-gray-800 dark:shadow-gray-900/50' : 'border-transparent'
       }`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
-          <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">
-            helloustudio
-          </span>
-        </Link>
+      <div className="mx-auto w-full px-4 py-3.5 sm:px-6">
+        <div className="flex items-center justify-between gap-4">
+          {/* Logo - Left */}
+          <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl shrink-0">
+            <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">
+              helloustudio
+            </span>
+          </Link>
 
-        {/* Desktop nav - centered */}
-        <nav className="hidden flex-1 items-center justify-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => {
-            const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`relative text-sm font-medium transition ${
-                  isActive
-                    ? 'text-pink-600 dark:text-pink-400'
-                    : 'text-gray-600 hover:text-pink-600 dark:text-gray-300 dark:hover:text-pink-400'
-                }`}
-              >
-                {link.label}
-                {isActive && (
-                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-orange-400" />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+          {/* Desktop nav - centered */}
+          <nav className="hidden flex-1 items-center justify-center gap-8 md:flex">
+            {NAV_LINKS.map((link) => {
+              const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`relative text-sm font-medium transition ${
+                    isActive
+                      ? 'text-pink-600 dark:text-pink-400'
+                      : 'text-gray-600 hover:text-pink-600 dark:text-gray-300 dark:hover:text-pink-400'
+                  }`}
+                >
+                  {link.label}
+                  {isActive && (
+                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-orange-400" />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
 
-        {/* Right side */}
+          {/* Right side */}
         <div className="flex items-center gap-3">
           {/* Theme toggle */}
           {mounted && (
@@ -170,6 +171,7 @@ export function Navbar() {
               )}
             </svg>
           </button>
+        </div>
         </div>
       </div>
 
