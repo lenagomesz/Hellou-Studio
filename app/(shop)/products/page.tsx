@@ -43,7 +43,7 @@ async function getProductsRaw(filters: {
     return [];
   }
 
-  let query = admin.from('products').select('*').eq('active', true).in('category', ['chaveiros', 'escritorio', 'criaturas']).not('name', 'ilike', 'Encomenda%');
+  let query = admin.from('products').select('*').eq('active', true).in('category', ['chaveiros', 'escritorio', 'criaturas']).not('name', 'ilike', 'Encomenda%').neq('type', 'digital');
 
   if (filters.category && isCategory(filters.category)) {
     query = query.eq('category', filters.category);
@@ -95,7 +95,7 @@ export default async function ProductsCatalogPage(
   const activeCategory = category && isCategory(category) ? category : 'all';
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
       {/* Full-width Banner */}
       <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
         <h2 className="text-2xl font-bold text-white sm:text-3xl">
@@ -147,7 +147,7 @@ export default async function ProductsCatalogPage(
           <input type="hidden" name="category" value={category} />
         ) : null}
         <div className="relative col-span-2 sm:col-span-1">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-600">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
           <input
@@ -155,16 +155,16 @@ export default async function ProductsCatalogPage(
             name="search"
             defaultValue={search ?? ''}
             placeholder="Buscar por nome..."
-            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all focus:bg-white dark:focus:bg-gray-700 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
           />
         </div>
         <select
           name="sort"
           defaultValue={sort ?? 'recent'}
-          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-3 sm:px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 transition-all focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-3 sm:px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 transition-all focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20 dark:focus:bg-gray-700"
         >
           {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <option key={opt.value} value={opt.value} className="dark:bg-gray-800 dark:text-gray-100">
               {opt.label}
             </option>
           ))}

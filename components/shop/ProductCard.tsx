@@ -30,7 +30,7 @@ export function ProductCard({ product }: { product: Product }) {
       href={`/products/${product.id}`}
       className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:shadow-gray-900/50"
     >
-      <div className="aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-800">
+      <div className="aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
         {product.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -39,7 +39,7 @@ export function ProductCard({ product }: { product: Product }) {
             className={`h-full w-full object-cover transition-transform duration-[4000ms] ease-in-out ${zoomed ? 'scale-[1.08]' : 'scale-100'} group-hover:scale-[1.03]`}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-4xl text-pink-200">
+          <div className="flex h-full w-full items-center justify-center text-4xl text-pink-200 dark:text-gray-700">
             ◇
           </div>
         )}
