@@ -35,6 +35,9 @@ export default function CartPage() {
 
   const [step, setStep] = useState(1);
 
+  const hasOnlyDigitalProducts = items.length > 0 && items.every(item => item.product?.type === 'digital');
+  const hasMixedProducts = items.length > 0 && items.some(item => item.product?.type === 'digital') && items.some(item => item.product?.type !== 'digital');
+
   const [shippingCep, setShippingCep] = useState('');
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
@@ -322,7 +325,13 @@ export default function CartPage() {
                 <button
                   type="button"
                   disabled={total < 0.01}
-                  onClick={() => { if (!session) { router.push('/login?callbackUrl=/cart'); return; } setStep(2); }}
+                  onClick={() => {
+                    if (!session) {
+                      router.push('/login?callbackUrl=/cart');
+                      return;
+                    }
+                    setStep(hasOnlyDigitalProducts ? 3 : 2);
+                  }}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 dark:shadow-pink-500/10 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                 >
                   Continuar
@@ -374,8 +383,8 @@ export default function CartPage() {
         </div>
       )}
 
-      {/* Step 2: Shipping */}
-      {step === 2 && (
+      {/* Step 2: Shipping — hidden if only digital products */}
+      {step === 2 && !hasOnlyDigitalProducts && (
         <div className="space-y-5 animate-fade-in">
 
           <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm space-y-5">
@@ -625,7 +634,7 @@ export default function CartPage() {
           <div className="mb-4 sm:mb-5">
             <button
               type="button"
-              onClick={() => setStep(2)}
+              onClick={() => setStep(hasOnlyDigitalProducts ? 1 : 2)}
               className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
@@ -635,7 +644,7 @@ export default function CartPage() {
             </button>
           </div>
 
-          <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 md:gap-8 lg:grid-cols-3">
             {/* Summary — shows FIRST on mobile (order-1), RIGHT column on desktop (lg:order-2) */}
             <div className="space-y-4 order-1 lg:order-2 lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
               {/* Items */}
@@ -669,29 +678,31 @@ export default function CartPage() {
                 </ul>
               </div>
 
-              {/* Shipping */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Entrega</h2>
-                  <button type="button" onClick={() => setStep(2)} className="text-xs text-pink-600 hover:text-pink-700 transition">
-                    Alterar
-                  </button>
-                </div>
-                {shippingAddress && (
-                  <div className="space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
-                    <p>{addressStreet}, {addressNumber}{addressComplement ? ` - ${addressComplement}` : ''}</p>
-                    <p>{addressNeighborhood} — {shippingAddress.city}/{shippingAddress.state}</p>
+              {/* Shipping — hidden if only digital products */}
+              {!hasOnlyDigitalProducts && (
+                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Entrega</h2>
+                    <button type="button" onClick={() => setStep(2)} className="text-xs text-pink-600 hover:text-pink-700 transition">
+                      Alterar
+                    </button>
                   </div>
-                )}
-                {selectedShipping && (
-                  <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {selectedShipping.name} · {selectedShipping.days_min}-{selectedShipping.days_max} dias úteis
-                  </p>
-                )}
-                {couponDiscount?.free_shipping && (
-                  <p className="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400">Frete grátis (cupom)</p>
-                )}
-              </div>
+                  {shippingAddress && (
+                    <div className="space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
+                      <p>{addressStreet}, {addressNumber}{addressComplement ? ` - ${addressComplement}` : ''}</p>
+                      <p>{addressNeighborhood} — {shippingAddress.city}/{shippingAddress.state}</p>
+                    </div>
+                  )}
+                  {selectedShipping && (
+                    <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      {selectedShipping.name} · {selectedShipping.days_min}-{selectedShipping.days_max} dias úteis
+                    </p>
+                  )}
+                  {couponDiscount?.free_shipping && (
+                    <p className="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400">Frete grátis (cupom)</p>
+                  )}
+                </div>
+              )}
 
               {/* Coupon */}
               <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm">
@@ -750,16 +761,18 @@ export default function CartPage() {
                       <dd className="font-medium">-{formatPrice(discountAmount)}</dd>
                     </div>
                   )}
-                  <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                    <dt>Frete</dt>
-                    <dd className="font-medium">
-                      {couponDiscount?.free_shipping
-                        ? <span className="text-green-700 dark:text-green-400">Grátis</span>
-                        : selectedShipping
-                          ? formatPrice(selectedShipping.price)
-                          : '—'}
-                    </dd>
-                  </div>
+                  {!hasOnlyDigitalProducts && (
+                    <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                      <dt>Frete</dt>
+                      <dd className="font-medium">
+                        {couponDiscount?.free_shipping
+                          ? <span className="text-green-700 dark:text-green-400">Grátis</span>
+                          : selectedShipping
+                            ? formatPrice(selectedShipping.price)
+                            : '—'}
+                      </dd>
+                    </div>
+                  )}
                   <div className="flex justify-between border-t border-gray-100 dark:border-gray-800 pt-2.5">
                     <dt className="text-base font-bold text-gray-900 dark:text-white">Total</dt>
                     <dd className="text-lg font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">{formatPrice(grandTotal)}</dd>
@@ -775,7 +788,7 @@ export default function CartPage() {
                   grandTotal={grandTotal}
                   shippingCost={shippingCost}
                   couponCode={couponDiscount?.code}
-                  shippingAddress={shippingAddress ? {
+                  shippingAddress={hasOnlyDigitalProducts ? undefined : (shippingAddress ? {
                     street: addressStreet,
                     number: addressNumber,
                     complement: addressComplement || undefined,
@@ -783,7 +796,7 @@ export default function CartPage() {
                     city: shippingAddress.city,
                     state: shippingAddress.state,
                     cep: shippingCep.replace(/\D/g, ''),
-                  } : undefined}
+                  } : undefined)}
                   userCpf={userCpf}
                   onPaymentCompleted={() => setPaymentCompleted(true)}
                 />
