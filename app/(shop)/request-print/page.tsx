@@ -124,62 +124,65 @@ export default function RequestPrintPage() {
           </ol>
         </div>
 
-        {/* Makerworld Info Card */}
-        <div className="rounded-2xl border border-blue-200 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-950/20 p-5 sm:p-6">
-          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-4 flex items-center gap-2">
-            <span>🔗</span> Como pegar um modelo do Makerworld
-          </h3>
+        {/* Two Options Section */}
+        <div className="rounded-2xl border border-pink-100 dark:border-pink-900/30 bg-pink-50/50 dark:bg-pink-950/20 p-5 sm:p-6">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-5">Como enviar seu projeto?</h3>
 
-          <div className="space-y-4 mb-4">
-            <div className="flex gap-3">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800 text-xs font-bold text-blue-900 dark:text-blue-200">
-                1
+          <div className="grid md:grid-cols-2 gap-5 mb-5">
+            {/* Option 1: Own File */}
+            <div className="rounded-xl border border-pink-200 dark:border-pink-800 bg-white dark:bg-gray-900 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">📁</span>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Arquivo próprio</h4>
               </div>
-              <div>
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                  Acesse o Makerworld
-                </p>
-                <p className="text-xs text-blue-800 dark:text-blue-300 mt-0.5">
-                  Visite <a href="https://www.makerworld.com.br" target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline">makerworld.com.br</a> e busque por modelos 3D que te interessam
-                </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                Você tem um arquivo STL que você criou ou tem direitos autorais para usar? Envie direto para mim! Vou analisar e fazer um orçamento.
+              </p>
+              <div className="flex items-center gap-2 text-xs font-medium text-pink-600 dark:text-pink-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900 text-[10px] font-bold">✓</span>{' '}
+                Use o formulário abaixo
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800 text-xs font-bold text-blue-900 dark:text-blue-200">
-                2
+            {/* Option 2: Makerworld */}
+            <div className="rounded-xl border border-pink-200 dark:border-pink-800 bg-white dark:bg-gray-900 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🔗</span>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Projeto do Makerworld</h4>
               </div>
-              <div>
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                  Copie o link do projeto
-                </p>
-                <p className="text-xs text-blue-800 dark:text-blue-300 mt-0.5">
-                  Clique no modelo que gostou e copie o link da página (ex: makerworld.com.br/pt/models/12345)
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800 text-xs font-bold text-blue-900 dark:text-blue-200">
-                3
-              </div>
-              <div>
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                  Envie para nós
-                </p>
-                <p className="text-xs text-blue-800 dark:text-blue-300 mt-0.5">
-                  Preencha o formulário abaixo, selecione um arquivo (pode ser um arquivo teste), e cole o link do Makerworld na descrição. Vou avaliar a licença e fazer um orçamento!
-                </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                Encontrou algo legal no <a href="https://www.makerworld.com.br" target="_blank" rel="noopener noreferrer" className="font-semibold text-pink-600 dark:text-pink-400 hover:underline">Makerworld</a>? Cole o link na descrição e vou avaliar a licença para você.
+              </p>
+              <div className="flex items-center gap-2 text-xs font-medium text-pink-600 dark:text-pink-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900 text-[10px] font-bold">✓</span>{' '}
+                Cole o link abaixo
               </div>
             </div>
           </div>
 
+          {/* Input for Makerworld link */}
+          <div className="bg-orange-50/60 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-5">
+            <label htmlFor="makerworld-link" className="block text-xs font-semibold text-gray-900 dark:text-white mb-2">
+              Link do Makerworld (opcional)
+            </label>
+            <input
+              id="makerworld-link"
+              type="url"
+              placeholder="Ex: https://www.makerworld.com.br/pt/models/12345"
+              className="w-full px-3 py-2 border border-orange-300 dark:border-orange-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Se enviar um link do Makerworld, deixe este campo preenchido e vou avaliar a licença.
+            </p>
+          </div>
+
+          {/* Copyright Warning */}
           <div className="bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
             <p className="text-xs font-semibold text-red-900 dark:text-red-200 mb-2">
-              ⚠️ Atenção: Direitos Autorais
+              ⚠️ Aviso sobre direitos autorais
             </p>
             <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">
-              <strong>Não compactuamos com projetos que tenham restrições de direitos autorais ou uso comercial.</strong> Muitos modelos do Makerworld proíbem isso. Analisaremos a licença e deixaremos bem claro se podemos prosseguir com o orçamento ou não. Se tiver dúvidas sobre a licença, converse comigo!
+              <strong>Não compactuamos com projetos que tenham restrições de direitos autorais ou uso comercial.</strong> Muitos modelos do Makerworld têm essas limitações. Analisaremos a licença e deixaremos bem claro se podemos prosseguir com o orçamento ou não.
             </p>
           </div>
         </div>
