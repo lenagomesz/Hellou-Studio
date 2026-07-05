@@ -29,7 +29,29 @@ function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
 
-function NeedsInfoResponse({ requestId, adminNotes, onSent }: { requestId: string; adminNotes: string | null; onSent: (updated: PrintRequest) => void }) {
+function getApprovedButtonLabel(added: boolean, adding: boolean): string {
+  if (added) return 'Adicionado!';
+  if (adding) return 'Adicionando...';
+  return 'Prosseguir com a compra';
+}
+
+function getReorderButtonLabel(done: boolean, loading: boolean): string {
+  if (done) return 'Solicitação enviada!';
+  if (loading) return 'Enviando...';
+  return 'Solicitar novamente';
+}
+
+function updateRequestInList(prev: PrintRequest[], updatedRequest: PrintRequest): PrintRequest[] {
+  return prev.map((r) => (r.id === updatedRequest.id ? updatedRequest : r));
+}
+
+interface NeedsInfoResponseProps {
+  readonly requestId: string;
+  readonly adminNotes: string | null;
+  readonly onSent: (updated: PrintRequest) => void;
+}
+
+function NeedsInfoResponse({ requestId, adminNotes, onSent }: NeedsInfoResponseProps) {
   const [response, setResponse] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -75,7 +97,12 @@ function NeedsInfoResponse({ requestId, adminNotes, onSent }: { requestId: strin
   );
 }
 
-function ApprovedBuyButton({ requestId, quotedPrice }: { requestId: string; quotedPrice: number | null }) {
+interface ApprovedBuyButtonProps {
+  readonly requestId: string;
+  readonly quotedPrice: number | null;
+}
+
+function ApprovedBuyButton({ requestId, quotedPrice }: ApprovedBuyButtonProps) {
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [error, setError] = useState('');
@@ -89,7 +116,7 @@ function ApprovedBuyButton({ requestId, quotedPrice }: { requestId: string; quot
     });
     if (res.ok) {
       setAdded(true);
-      window.location.href = '/cart';
+      globalThis.location.href = '/cart';
     } else {
       const data = await res.json().catch(() => null);
       setError(data?.error ?? 'Erro ao adicionar ao carrinho');
@@ -113,14 +140,19 @@ function ApprovedBuyButton({ requestId, quotedPrice }: { requestId: string; quot
         disabled={adding || added}
         className="mt-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
       >
-        {added ? 'Adicionado!' : adding ? 'Adicionando...' : 'Prosseguir com a compra'}
+        {getApprovedButtonLabel(added, adding)}
       </button>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }
 
-function ReorderButton({ requestId, onReordered }: { requestId: string; onReordered: (req: PrintRequest) => void }) {
+interface ReorderButtonProps {
+  readonly requestId: string;
+  readonly onReordered: (req: PrintRequest) => void;
+}
+
+function ReorderButton({ requestId, onReordered }: ReorderButtonProps) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -143,7 +175,7 @@ function ReorderButton({ requestId, onReordered }: { requestId: string; onReorde
         disabled={loading || done}
         className="inline-flex items-center gap-1 rounded-lg border border-pink-200 dark:border-pink-800 bg-white dark:bg-gray-900 px-4 py-2 text-xs font-semibold text-pink-600 dark:text-pink-400 transition hover:bg-pink-50 dark:hover:bg-pink-950/50 disabled:opacity-50"
       >
-        {done ? 'Solicitação enviada!' : loading ? 'Enviando...' : 'Solicitar novamente'}
+        {getReorderButtonLabel(done, loading)}
       </button>
     </div>
   );
@@ -181,6 +213,37 @@ export default function UserRequestsPage() {
         >
           + Nova
         </Link>
+      </div>
+
+      {/* STL Education Card */}
+      <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-6 mb-6">
+        <div className="flex gap-4">
+          <div className="text-3xl">📋</div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-indigo-900 mb-2">
+              O que é arquivo STL?
+            </h3>
+            <p className="text-indigo-800 text-sm mb-3">
+              Arquivo STL é um formato 3D aberto usado em impressoras 3D e softwares de modelagem. Na hellou studio, você pode comprar modelos STL prontos para imprimir ou editar em programas como Blender, Fusion 360 e Tinkercad.
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              <a
+                href="/stl"
+                className="inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+              >
+                → Explorar STLs →
+              </a>
+              <a
+                href="https://www.makerworld.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+              >
+                → Makerworld →
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       {requests.length === 0 ? (
@@ -236,9 +299,7 @@ export default function UserRequestsPage() {
                     requestId={req.id}
                     adminNotes={req.admin_notes}
                     onSent={(updated) => {
-                      setRequests((prev) =>
-                        prev.map((r) => (r.id === updated.id ? updated : r)),
-                      );
+                      setRequests((prev) => updateRequestInList(prev, updated));
                     }}
                   />
                 )}
