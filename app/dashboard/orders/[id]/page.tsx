@@ -41,7 +41,8 @@ const STATUS_ICONS: Record<OrderStatus, string> = {
   refunded: '↩️',
 };
 
-const STATUS_FLOW: OrderStatus[] = ['awaiting_payment', 'pending', 'paid', 'processing', 'shipped', 'delivered'];
+const STATUS_FLOW_PHYSICAL: OrderStatus[] = ['awaiting_payment', 'pending', 'paid', 'processing', 'shipped', 'delivered'];
+const STATUS_FLOW_DIGITAL: OrderStatus[] = ['awaiting_payment', 'delivered'];
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -83,6 +84,7 @@ export default function OrderDetailPage() {
   const [trackingCode, setTrackingCode] = useState('');
   const [saveMsg, setSaveMsg] = useState('');
   const [shippingError, setShippingError] = useState('');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -168,6 +170,8 @@ export default function OrderDetailPage() {
     );
   }
 
+  const isDigitalOnly = order.items.every(item => item.product?.type === 'digital');
+  const STATUS_FLOW = isDigitalOnly ? STATUS_FLOW_DIGITAL : STATUS_FLOW_PHYSICAL;
   const currentStepIndex = STATUS_FLOW.indexOf(order.status);
   const shipping = order.shipping_address as Record<string, unknown> | null;
 
@@ -262,26 +266,44 @@ export default function OrderDetailPage() {
                     </p>
                     {item.product?.type === 'digital' && (
                       <button
-                        onClick={() => {
-                          const downloadUrl = `/api/orders/${id}/download/${item.product?.id}`;
-                          const link = document.createElement('a');
-                          link.href = downloadUrl;
-                          link.download = '';
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
+                        onClick={async () => {
+                          if (!item.product?.id) return;
+                          try {
+                            setDownloadingId(item.product.id);
+                            const downloadUrl = `/api/orders/${id}/download/${item.product.id}`;
+                            const res = await fetch(downloadUrl);
+                            if (!res.ok) {
+                              const error = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+                              console.error('[download-error]', error);
+                              alert(`Erro ao baixar: ${error.error || 'Tente novamente'}`);
+                              return;
+                            }
+                            const blob = await res.blob();
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = `${item.product.name}.stl`;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            URL.revokeObjectURL(link.href);
+                          } catch (error) {
+                            console.error('[download-exception]', error);
+                            alert('Erro ao baixar o arquivo');
+                          } finally {
+                            setDownloadingId(null);
+                          }
                         }}
-                        disabled={order.status !== 'delivered'}
+                        disabled={order.status !== 'delivered' || downloadingId === item.product?.id}
                         className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                           order.status === 'delivered'
-                            ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                            ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 disabled:opacity-50'
                             : 'bg-gray-50 text-gray-400 border border-gray-200 cursor-not-allowed'
                         }`}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M7.5 12l4.72-4.72a.75.75 0 0 1 1.06 0l4.72 4.72m-6-6v12" />
                         </svg>
-                        {order.status === 'delivered' ? 'Baixar' : 'Indisponível'}
+                        {downloadingId === item.product?.id ? 'Baixando...' : order.status === 'delivered' ? 'Baixar' : 'Indisponível'}
                       </button>
                     )}
                   </div>
@@ -426,7 +448,8 @@ export default function OrderDetailPage() {
             <p className="text-xs text-gray-500 mt-0.5">{order.user?.email ?? '—'}</p>
           </div>
 
-          {/* Shipping */}
+          {/* Shipping - Hidden for digital-only orders */}
+          {!isDigitalOnly && (
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-700 mb-3">Entrega</h2>
             {shipping ? (
@@ -462,8 +485,10 @@ export default function OrderDetailPage() {
               <p className="text-xs text-gray-400">Sem informações de entrega</p>
             )}
           </div>
+          )}
 
-          {/* Etiqueta de envio */}
+          {/* Etiqueta de envio - Hidden for digital-only orders */}
+          {!isDigitalOnly && (
           <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-gray-700">Etiqueta de envio</h2>
@@ -509,6 +534,7 @@ export default function OrderDetailPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Payment */}
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
