@@ -116,10 +116,6 @@ export async function POST(request: Request) {
   const lastName = nameParts.slice(1).join(' ') || firstName;
 
   try {
-    if (!payerCpf || !isValidCpf(payerCpf)) {
-      return badRequest('CPF inválido');
-    }
-
     const payment = getPaymentClient();
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
@@ -131,8 +127,8 @@ export async function POST(request: Request) {
       notification_url: notificationUrl,
       payer: {
         email: userData?.email || user.email,
-        first_name: firstName,
-        last_name: lastName,
+        first_name: firstName || 'Cliente',
+        last_name: lastName || 'Cliente',
         identification: { type: 'CPF', number: payerCpf },
       },
       metadata: {
@@ -152,7 +148,12 @@ export async function POST(request: Request) {
       if (issuer_id) paymentBody.issuer_id = issuer_id;
     }
 
-    console.log('[mp-create] payment body:', JSON.stringify({ ...paymentBody, token: '[REDACTED]' }));
+    console.log('[mp-create] creating payment:', {
+      method: payment_method,
+      amount: paymentBody.transaction_amount,
+      items: cartItems.length,
+      user: user.id,
+    });
     const result = await payment.create({ body: paymentBody });
 
     const mpPaymentId = String(result.id);
@@ -318,13 +319,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json(responseData);
   } catch (err: unknown) {
+    console.error('[mp-create] payment error stack:', err instanceof Error ? err.stack : String(err));
     const mpErr = err as { status?: number; statusCode?: number; message?: string; cause?: unknown[]; apiResponse?: unknown };
-    console.error('[mp-create] payment error:', JSON.stringify({
+    console.error('[mp-create] payment error details:', {
       message: mpErr.message,
       status: mpErr.status ?? mpErr.statusCode,
       cause: mpErr.cause,
       apiResponse: mpErr.apiResponse,
-    }, null, 2));
+    });
 
     const errStatus = mpErr.status ?? mpErr.statusCode;
     if (errStatus && errStatus >= 400 && errStatus < 500) {
@@ -337,6 +339,7 @@ export async function POST(request: Request) {
       );
     }
     const message = err instanceof Error ? err.message : 'Erro ao processar pagamento';
+    console.error('[mp-create] returning error response:', message);
     return serverError(message);
   }
 }

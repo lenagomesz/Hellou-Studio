@@ -683,11 +683,13 @@ export default function CartPage() {
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-900 dark:text-white truncate text-xs break-words">{item.product.name}</p>
-                          <p className="text-xs text-gray-400 truncate">×{item.quantity}{item.option ? ` · ${item.option.name}` : ''}</p>
+                          <p className="font-medium text-gray-900 dark:text-white text-xs line-clamp-2">{item.product.name}</p>
+                          <p className="text-xs text-gray-400">×{item.quantity}{item.option ? ` · ${item.option.name}` : ''}</p>
                         </div>
                       </div>
-                      <span className="font-medium text-gray-900 dark:text-white text-xs flex-shrink-0">{formatPrice(computeItemTotal(item))}</span>
+                      <div className="flex-shrink-0 text-right">
+                        <span className="font-medium text-gray-900 dark:text-white text-xs block">{formatPrice(computeItemTotal(item))}</span>
+                      </div>
                     </li>
                   ))}
                 </ul>
