@@ -70,6 +70,33 @@ export async function POST(request: Request) {
     return badRequest((e as Error).message);
   }
 
+  // Validate STL products can only be purchased once per user
+  const stlItems = cartItems.filter(item => item.product?.type === 'digital');
+  for (const stlItem of stlItems) {
+    if (!stlItem.product_id) continue;
+
+    const { data: existingPurchase } = await admin
+      .from('orders')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('payment_provider', 'mercadopago')
+      .in('status', ['completed', 'processing', 'paid', 'shipped', 'delivered'])
+      .single();
+
+    if (existingPurchase) {
+      const { count: hasPurchasedStl } = await admin
+        .from('order_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('order_id', existingPurchase.id)
+        .eq('product_id', stlItem.product_id);
+
+      if ((hasPurchasedStl ?? 0) > 0) {
+        const productName = stlItem.product?.name || 'Arquivo STL';
+        return badRequest(`Você já adquiriu "${productName}". Cada arquivo STL pode ser comprado apenas uma vez.`);
+      }
+    }
+  }
+
   let subtotal = 0;
   for (const item of cartItems) {
     const basePrice = item.product?.base_price ?? 0;
