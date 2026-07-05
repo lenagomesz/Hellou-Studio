@@ -657,8 +657,8 @@ export default function CartPage() {
                 </div>
                 <ul className="space-y-2.5">
                   {items.map((item) => (
-                    <li key={item.id} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
+                    <li key={item.id} className="flex items-start justify-between gap-2 text-xs">
+                      <div className="flex items-start gap-2 min-w-0 flex-1">
                         <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-950/30 dark:to-orange-950/30">
                           {item.product.image_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -667,12 +667,12 @@ export default function CartPage() {
                             <div className="flex h-full w-full items-center justify-center text-xs text-pink-200">◇</div>
                           )}
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-medium text-gray-900 dark:text-white truncate text-xs">{item.product.name}</p>
-                          <p className="text-xs text-gray-400">×{item.quantity}{item.option ? ` · ${item.option.name}` : ''}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 dark:text-white truncate text-xs break-words">{item.product.name}</p>
+                          <p className="text-xs text-gray-400 truncate">×{item.quantity}{item.option ? ` · ${item.option.name}` : ''}</p>
                         </div>
                       </div>
-                      <span className="font-medium text-gray-900 dark:text-white text-xs">{formatPrice(computeItemTotal(item))}</span>
+                      <span className="font-medium text-gray-900 dark:text-white text-xs flex-shrink-0">{formatPrice(computeItemTotal(item))}</span>
                     </li>
                   ))}
                 </ul>

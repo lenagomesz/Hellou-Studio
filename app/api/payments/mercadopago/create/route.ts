@@ -116,6 +116,10 @@ export async function POST(request: Request) {
   const lastName = nameParts.slice(1).join(' ') || firstName;
 
   try {
+    if (!payerCpf || !isValidCpf(payerCpf)) {
+      return badRequest('CPF inválido');
+    }
+
     const payment = getPaymentClient();
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
@@ -133,18 +137,22 @@ export async function POST(request: Request) {
       },
       metadata: {
         user_id: user.id,
-        coupon_id: couponId,
+        coupon_id: couponId || null,
       },
     };
 
     if (payment_method === 'pix') {
       paymentBody.payment_method_id = 'pix';
     } else if (payment_method === 'credit_card' || payment_method === 'debit_card') {
+      if (!token) {
+        return badRequest('Token do cartão é obrigatório');
+      }
       paymentBody.token = token;
-      paymentBody.installments = Number(installments);
+      paymentBody.installments = Math.max(1, Math.min(12, Number(installments) || 1));
       if (issuer_id) paymentBody.issuer_id = issuer_id;
     }
 
+    console.log('[mp-create] payment body:', JSON.stringify({ ...paymentBody, token: '[REDACTED]' }));
     const result = await payment.create({ body: paymentBody });
 
     const mpPaymentId = String(result.id);
