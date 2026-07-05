@@ -52,6 +52,7 @@ function getRelatedProducts(category: string, excludeId: string) {
             .eq('active', true)
             .in('category', ['chaveiros', 'escritorio', 'criaturas'])
             .not('name', 'ilike', 'Encomenda%')
+            .neq('type', 'digital')
             .eq('category', category)
             .neq('id', excludeId)
             .order('created_at', { ascending: false })
@@ -82,16 +83,16 @@ export default async function ProductDetailPage(
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <nav className="mb-6 text-sm text-gray-600">
-        <Link href="/" className="hover:text-gray-900">
+      <nav className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+        <Link href="/" className="hover:text-gray-900 dark:hover:text-gray-100">
           Início
         </Link>
         <span className="mx-2">/</span>
-        <Link href="/products" className="hover:text-gray-900">
+        <Link href="/products" className="hover:text-gray-900 dark:hover:text-gray-100">
           Catálogo
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900">{product.name}</span>
+        <span className="text-gray-900 dark:text-gray-100">{product.name}</span>
       </nav>
 
       <ProductDetail product={product} options={options} />

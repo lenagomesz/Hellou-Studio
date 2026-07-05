@@ -117,26 +117,6 @@ export function ProductDetail({
             </span>
           )}
         </div>
-        {/* Mini galeria placeholder com gradientes */}
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            'from-pink-100 to-orange-50',
-            'from-orange-100 to-pink-50',
-            'from-purple-100 to-pink-50',
-            'from-amber-100 to-orange-50',
-          ].map((gradient, i) => (
-            <div key={i} className={`aspect-square rounded-xl bg-gradient-to-br ${gradient} ${i === 0 && product.image_url ? 'ring-2 ring-pink-400' : ''} overflow-hidden`}>
-              {i === 0 && product.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={product.image_url} alt="" className="h-full w-full object-cover opacity-80" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-lg text-gray-300/60">
-                  {['📸', '🎨', '📐', '✨'][i]}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="flex flex-col">

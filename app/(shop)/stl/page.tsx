@@ -16,12 +16,16 @@ export default function STLMarketplacePage() {
   const loadSTLProducts = async () => {
     try {
       const supabase = getSupabase();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('type', 'digital')
+        .eq('active', true)
         .order('created_at', { ascending: false });
 
+      if (error) {
+        console.error('[stl-page] Query error:', error);
+      }
       setProducts(data || []);
     } catch (error) {
       console.error('[stl-page] Error loading products:', error);
