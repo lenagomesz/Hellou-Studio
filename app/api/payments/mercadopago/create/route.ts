@@ -104,12 +104,19 @@ export async function POST(request: Request) {
     subtotal += (basePrice + modifier) * item.quantity;
   }
 
-  // Check if first purchase for 10% discount (include awaiting_payment to prevent double discount)
+  // Check if first purchase for 10% discount
+  // Count all orders EXCEPT rejected (payment failed) - anything else counts as an order attempt
   const { count: orderCount } = await admin
     .from('orders')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
-    .in('status', ['awaiting_payment', 'approved', 'completed', 'paid', 'processing', 'shipped', 'delivered']);
+    .not('status', 'in', '("rejected")');
+
+  console.log('[mp-create] First purchase check:', {
+    user_id: user.id,
+    orderCount,
+    isFirstPurchase: (orderCount ?? 0) === 0,
+  });
 
   const isFirstPurchase = (orderCount ?? 0) === 0;
   const firstPurchaseDiscount = isFirstPurchase ? subtotal * 0.1 : 0;
