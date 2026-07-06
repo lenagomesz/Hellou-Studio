@@ -105,16 +105,15 @@ export async function POST(request: Request) {
   }
 
   // Check if first purchase for 10% discount
-  // Count all orders EXCEPT rejected (payment failed) - anything else counts as an order attempt
+  // Count ALL orders regardless of status - any order record means not first purchase
   const { count: orderCount } = await admin
     .from('orders')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .not('status', 'in', '("rejected")');
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id);
 
   console.log('[mp-create] First purchase check:', {
     user_id: user.id,
-    orderCount,
+    totalOrders: orderCount,
     isFirstPurchase: (orderCount ?? 0) === 0,
   });
 
