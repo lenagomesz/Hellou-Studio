@@ -206,10 +206,6 @@ export function PaymentForm({
 
   async function handleCardPayment() {
     if (!validateCpf()) return;
-    if (!mpRef.current) {
-      setErrorAndScroll('SDK de pagamento não carregado. Recarregue a página.');
-      return;
-    }
 
     const digits = cardNumber.replace(/\D/g, '');
     if (digits.length < 13) {
@@ -291,10 +287,6 @@ export function PaymentForm({
 
   async function handleDebitPayment() {
     if (!validateCpf()) return;
-    if (!mpRef.current) {
-      setErrorAndScroll('SDK de pagamento não carregado. Recarregue a página.');
-      return;
-    }
 
     const digits = cardNumber.replace(/\D/g, '');
     if (digits.length < 13) {
