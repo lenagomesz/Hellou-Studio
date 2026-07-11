@@ -227,6 +227,12 @@ export function PaymentForm({
     setError('');
 
     try {
+      if (!mpRef.current) {
+        setErrorAndScroll('Erro ao processar pagamento. Tente novamente.');
+        setCardLoading(false);
+        return;
+      }
+
       const fullYear = expYear.length === 2 ? `20${expYear}` : expYear;
       const tokenResult = await mpRef.current.createCardToken({
         cardNumber: digits,
@@ -308,6 +314,12 @@ export function PaymentForm({
     setError('');
 
     try {
+      if (!mpRef.current) {
+        setErrorAndScroll('Erro ao processar pagamento. Tente novamente.');
+        setCardLoading(false);
+        return;
+      }
+
       const fullYear = expYear.length === 2 ? `20${expYear}` : expYear;
       const tokenResult = await mpRef.current.createCardToken({
         cardNumber: digits,
