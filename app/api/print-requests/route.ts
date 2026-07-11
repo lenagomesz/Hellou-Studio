@@ -5,14 +5,7 @@ import { sendAdminNewPrintRequestEmail, sendPrintRequestStatusEmail } from '@/li
 import type { PrintRequest } from '@/types/database';
 
 // Configure larger payload size for STL file uploads
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '100mb',
-    },
-  },
-  maxDuration: 300,
-};
+export const maxDuration = 300;
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 

@@ -4,14 +4,7 @@ import { requireAdmin } from '@/lib/api';
 import type { Category } from '@/types/database';
 
 // Configure larger payload size for STL file uploads
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '100mb',
-    },
-  },
-  maxDuration: 300,
-};
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin();
