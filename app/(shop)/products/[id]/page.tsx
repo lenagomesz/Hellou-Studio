@@ -95,8 +95,8 @@ export default async function ProductDetailPage(
           Início
         </Link>
         <span className="mx-2">/</span>
-        <Link href="/products" className="hover:text-gray-900 dark:hover:text-gray-100">
-          Catálogo
+        <Link href={product.type === 'digital' ? '/stl' : '/products'} className="hover:text-gray-900 dark:hover:text-gray-100">
+          {product.type === 'digital' ? 'Arquivos STL' : 'Catálogo'}
         </Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900 dark:text-gray-100">{product.name}</span>
