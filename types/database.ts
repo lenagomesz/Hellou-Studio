@@ -37,6 +37,8 @@ export interface ProductOption {
   name: string;
   price_modifier: number;
   stock: number;
+  reorder_point: number;
+  standard_order_qty: number;
   dimensions: string | null;
   color: string | null;
   image_url: string | null;
@@ -138,6 +140,30 @@ export interface Notification {
   created_at: string;
 }
 
+export type AdminNotificationType =
+  | 'production_reminder'
+  | 'shipping_reminder'
+  | 'order_overdue'
+  | 'low_stock'
+  | 'new_print_request';
+
+export type AdminNotificationPriority = 'normal' | 'high' | 'urgent';
+
+export interface AdminNotification {
+  id: string;
+  type: AdminNotificationType;
+  title: string;
+  body: string | null;
+  priority: AdminNotificationPriority;
+  read: boolean;
+  archived: boolean;
+  related_order_id: string | null;
+  related_product_id: string | null;
+  related_product_option_id: string | null;
+  due_date: string | null;
+  created_at: string;
+}
+
 export interface Review {
   id: string;
   user_id: string;
@@ -153,6 +179,39 @@ export interface BannedEmail {
   reason: string | null;
   banned_at: string;
   banned_by: string | null;
+}
+
+export interface ProductTag {
+  id: string;
+  name: string;
+  color: string;
+  created_at: string;
+}
+
+export interface ProductTagAssignment {
+  id: string;
+  product_id: string;
+  tag_id: string;
+  assigned_at: string;
+}
+
+export interface ProductPriceHistory {
+  id: string;
+  product_id: string;
+  old_price: number;
+  new_price: number;
+  price_type: 'base_price' | 'sale_price';
+  changed_by: string | null;
+  changed_at: string;
+}
+
+export interface SavedFilter {
+  id: string;
+  name: string;
+  filters: Record<string, unknown>;
+  user_id: string;
+  is_default: boolean;
+  created_at: string;
 }
 
 export interface User {
@@ -236,6 +295,8 @@ export interface Database {
           name: string;
           price_modifier?: number;
           stock?: number;
+          reorder_point?: number;
+          standard_order_qty?: number;
           color?: string | null;
           created_at?: string;
         };
@@ -245,6 +306,8 @@ export interface Database {
           name?: string;
           price_modifier?: number;
           stock?: number;
+          reorder_point?: number;
+          standard_order_qty?: number;
           color?: string | null;
           created_at?: string;
         };

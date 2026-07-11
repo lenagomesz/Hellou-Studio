@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdmin, requireUser, badRequest, notFound, serverError } from '@/lib/api';
 import { sendOrderStatusEmail, sendSTLDeliveryEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { createTimelineEvent } from '@/lib/order-management';
 import { getRefundClient } from '@/lib/mercadopago';
 import type { OrderStatus } from '@/types/database';
 
@@ -148,8 +149,24 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     updates.shipping_address = shippingData;
   }
 
+  // Get previous status before updating
+  const { data: prevOrder } = await admin.from('orders').select('status').eq('id', id).single();
+  const previousStatus = prevOrder?.status ?? null;
+
   const { error } = await admin.from('orders').update(updates).eq('id', id);
   if (error) return serverError('Erro ao atualizar pedido');
+
+  // Create timeline event for status change
+  if (status && status !== previousStatus) {
+    createTimelineEvent({
+      orderId: id,
+      status,
+      previousStatus,
+      changedBy: auth.user.id,
+      changedByName: auth.user.name ?? auth.user.email,
+      message: null,
+    }).catch(() => {});
+  }
 
   // Send email to user when status changes
   if (status) {

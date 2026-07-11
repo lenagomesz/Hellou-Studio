@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Mail, Loader2, ArrowLeft, CheckCircle2, ShieldCheck, ChevronLeft, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 export default function ForgotPasswordPage() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -138,7 +140,7 @@ export default function ForgotPasswordPage() {
               className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition"
               aria-label="Alternar tema"
             >
-              {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+              {mounted && (theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />)}
             </button>
           </div>
           <h1 className="text-xl font-bold text-white font-display">Esqueceu a senha?</h1>
@@ -165,7 +167,7 @@ export default function ForgotPasswordPage() {
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                 aria-label="Alternar tema"
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {mounted && (theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />)}
               </button>
             </div>
 

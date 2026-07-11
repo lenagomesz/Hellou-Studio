@@ -2,8 +2,12 @@ import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import { subDays, subMonths, startOfMonth, format, startOfDay } from 'date-fns';
-import type { Order, PrintRequest, User } from '@/types/database';
+import type { Order, PrintRequest, User, AdminNotification } from '@/types/database';
 import { DashboardCharts } from '@/components/admin/charts/DashboardCharts';
+import { UrgentAlerts } from '@/components/admin/UrgentAlerts';
+import { AdvancedAnalyticsDashboard } from '@/components/admin/analytics/AdvancedAnalyticsDashboard';
+import { getAlertLevel } from '@/lib/inventory';
+import type { StockAlertLevel } from '@/types/inventory';
 
 type OrderRow = Order & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
 type RequestRow = PrintRequest & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
@@ -44,6 +48,8 @@ const getDashboardData = unstable_cache(
           printRequestsRes,
           revenueRes,
           revenueChartRes,
+          urgentAlertsRes,
+          stockOptionsRes,
         ] = await Promise.all([
           admin.from('products').select('*', { count: 'exact', head: true }).eq('active', true),
           admin.from('orders').select('*', { count: 'exact', head: true }),
@@ -56,6 +62,8 @@ const getDashboardData = unstable_cache(
           admin.from('print_requests').select('*, user:users(id, email, name)').eq('status', 'pending').order('created_at', { ascending: false }).limit(10),
           admin.from('orders').select('total, created_at, status').in('status', ['paid', 'processing', 'shipped', 'delivered']),
           admin.from('orders').select('total, created_at').in('status', ['paid', 'processing', 'shipped', 'delivered']).gte('created_at', thirtyDaysAgo.toISOString()).order('created_at', { ascending: true }),
+          admin.from('admin_notifications').select('*').eq('priority', 'urgent').eq('read', false).eq('archived', false).order('created_at', { ascending: false }).limit(3),
+          admin.from('product_options').select('id, product_id, name, stock, reorder_point, product:products(name)').order('stock', { ascending: true }).limit(50),
         ]);
 
         const allOrders = revenueRes.data ?? [];
@@ -93,6 +101,22 @@ const getDashboardData = unstable_cache(
           count: v.count,
         }));
 
+        // Process stock alerts
+        const stockOptions = (stockOptionsRes.data ?? []) as unknown as Array<{
+          id: string; product_id: string; name: string; stock: number; reorder_point: number;
+          product: { name: string } | null;
+        }>;
+        const stockAlerts = stockOptions
+          .filter(o => o.stock <= o.reorder_point)
+          .map(o => ({
+            product_option_id: o.id,
+            product_name: o.product?.name || 'Unknown',
+            option_name: o.name,
+            current_stock: o.stock,
+            reorder_point: o.reorder_point,
+            level: getAlertLevel(o.stock, o.reorder_point),
+          }));
+
         return {
           activeProducts: activeRes.count ?? 0,
           totalOrders,
@@ -113,6 +137,8 @@ const getDashboardData = unstable_cache(
           shippedOrders: (shippedOrdersRes.data ?? []) as OrderRow[],
           pendingRequests: (printRequestsRes.data ?? []) as RequestRow[],
           recentUsers: (recentUsersRes.data ?? []) as Pick<User, 'id' | 'email' | 'name' | 'created_at'>[],
+          urgentAlerts: (urgentAlertsRes.data ?? []) as AdminNotification[],
+          stockAlerts,
         };
       })(),
     ).catch(() => ({
@@ -131,6 +157,8 @@ const getDashboardData = unstable_cache(
       shippedOrders: [] as OrderRow[],
       pendingRequests: [] as RequestRow[],
       recentUsers: [] as Pick<User, 'id' | 'email' | 'name' | 'created_at'>[],
+      urgentAlerts: [] as AdminNotification[],
+      stockAlerts: [] as { product_option_id: string; product_name: string; option_name: string; current_stock: number; reorder_point: number; level: StockAlertLevel }[],
     })),
   ['dashboard-overview-v2'],
   { revalidate: 15 },
@@ -197,6 +225,9 @@ export default async function DashboardHome() {
         </div>
       </header>
 
+      {/* Urgent Alerts */}
+      <UrgentAlerts alerts={data.urgentAlerts} />
+
       {/* KPI Cards with growth */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link href="/dashboard/orders" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
@@ -235,6 +266,50 @@ export default async function DashboardHome() {
 
       {/* Charts section */}
       <DashboardCharts data={data.chartData} />
+
+      {/* Advanced Analytics Dashboard */}
+      <AdvancedAnalyticsDashboard />
+
+      {/* Stock Alerts Widget */}
+      {data.stockAlerts.length > 0 && (
+        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-sm dark:bg-red-900/30">📦</span>
+              <h2 className="font-semibold text-gray-800 dark:text-gray-200">Alertas de Estoque</h2>
+              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                {data.stockAlerts.length}
+              </span>
+            </div>
+            <Link href="/dashboard/inventory" className="text-xs font-medium text-pink-500 hover:text-pink-600">
+              Ver estoque →
+            </Link>
+          </div>
+          <div className="divide-y divide-gray-50 px-2 py-2 dark:divide-gray-800">
+            {data.stockAlerts.slice(0, 5).map((alert) => (
+              <div
+                key={alert.product_option_id}
+                className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={`flex h-2.5 w-2.5 shrink-0 rounded-full ${alert.level === 'critical' ? 'bg-red-500' : 'bg-yellow-500'}`} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">{alert.product_name}</p>
+                    <p className="text-xs text-gray-400">{alert.option_name}</p>
+                  </div>
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  alert.level === 'critical'
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                }`}>
+                  {alert.current_stock} un.
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main grid: Action sections */}
       <div className="grid gap-6 lg:grid-cols-2">

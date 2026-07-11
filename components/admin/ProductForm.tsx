@@ -54,13 +54,13 @@ export function ProductForm(props: ProductFormProps) {
       return;
     }
 
-    setSubmitting(true);
-
     const salePriceNumber = salePrice ? Number(salePrice) : null;
     if (salePriceNumber !== null && (Number.isNaN(salePriceNumber) || salePriceNumber < 0)) {
       setError('Preço promocional inválido');
       return;
     }
+
+    setSubmitting(true);
 
     const payload = {
       name: name.trim(),

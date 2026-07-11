@@ -2,7 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
-import { useState, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { User, Mail, Phone, Lock, Eye, EyeOff, Loader2, Check, ShieldCheck, ChevronLeft, Sun, Moon, FileText } from 'lucide-react';
 import { formatCpf, isValidCpf, cleanCpf } from '@/lib/cpf';
 import { useTheme } from 'next-themes';
@@ -29,6 +29,8 @@ function getPasswordStrength(pw: string): { score: number; label: string; color:
 
 export default function RegisterPage() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -161,7 +163,7 @@ export default function RegisterPage() {
               className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition"
               aria-label="Alternar tema"
             >
-              {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+              {mounted && (theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />)}
             </button>
           </div>
           <h1 className="text-xl font-bold text-white font-display">Criar sua conta</h1>
@@ -189,7 +191,7 @@ export default function RegisterPage() {
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                 aria-label="Alternar tema"
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {mounted && (theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />)}
               </button>
             </div>
 

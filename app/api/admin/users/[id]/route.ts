@@ -13,7 +13,7 @@ export async function GET(_req: Request, ctx: RouteCtx) {
 
   const { data: user } = await admin
     .from('users')
-    .select('id, email, name, role, cpf, phone, created_at')
+    .select('id, email, name, role, cpf, phone, is_vip, created_at')
     .eq('id', id)
     .maybeSingle();
 

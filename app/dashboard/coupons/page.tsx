@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Tag, Plus, Trash2, ToggleLeft, ToggleRight, Percent, DollarSign, Truck } from 'lucide-react';
+import { Tag, Plus, Trash2, ToggleLeft, ToggleRight, Percent, DollarSign, Truck, Pencil } from 'lucide-react';
 import type { Coupon } from '@/types/database';
 
 function formatPrice(value: number) {
@@ -13,6 +13,14 @@ export default function CouponsPage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    discount_value: '',
+    min_purchase: '',
+    max_uses: '',
+    free_shipping: false,
+    expires_at: '',
+  });
   const [form, setForm] = useState({
     code: '',
     discount_type: 'percent' as 'percent' | 'fixed',
@@ -40,7 +48,7 @@ export default function CouponsPage() {
       body: JSON.stringify({
         code: form.code.toUpperCase(),
         discount_type: form.discount_type,
-        discount_value: Number(form.discount_value),
+        discount_value: form.discount_value ? Number(form.discount_value) : 0,
         min_purchase: Number(form.min_purchase) || 0,
         max_uses: form.max_uses ? Number(form.max_uses) : null,
         expires_at: form.expires_at || null,
@@ -77,6 +85,39 @@ export default function CouponsPage() {
     setTimeout(() => setToast(''), 3000);
   }
 
+  function startEditing(coupon: Coupon) {
+    setEditingId(coupon.id);
+    setEditForm({
+      discount_value: String(coupon.discount_value),
+      min_purchase: String(coupon.min_purchase),
+      max_uses: coupon.max_uses ? String(coupon.max_uses) : '',
+      free_shipping: coupon.free_shipping,
+      expires_at: coupon.expires_at ? coupon.expires_at.slice(0, 10) : '',
+    });
+  }
+
+  async function saveEdit(id: string) {
+    const res = await fetch('/api/coupons', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id,
+        discount_value: editForm.discount_value ? Number(editForm.discount_value) : 0,
+        min_purchase: Number(editForm.min_purchase) || 0,
+        max_uses: editForm.max_uses ? Number(editForm.max_uses) : null,
+        free_shipping: editForm.free_shipping,
+        expires_at: editForm.expires_at || null,
+      }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setCoupons(prev => prev.map(c => c.id === id ? updated : c));
+      setEditingId(null);
+      setToast('Cupom atualizado!');
+      setTimeout(() => setToast(''), 3000);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {toast && (
@@ -103,7 +144,7 @@ export default function CouponsPage() {
               <option value="percent">Porcentagem (%)</option>
               <option value="fixed">Valor fixo (R$)</option>
             </select>
-            <input type="number" value={form.discount_value} onChange={e => setForm({...form, discount_value: e.target.value})} placeholder="Valor do desconto" required min="0" step="0.01" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+            <input type="number" value={form.discount_value} onChange={e => setForm({...form, discount_value: e.target.value})} placeholder={form.free_shipping ? "Desconto (opcional)" : "Valor do desconto"} required={!form.free_shipping} min="0" step="0.01" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
             <input type="number" value={form.min_purchase} onChange={e => setForm({...form, min_purchase: e.target.value})} placeholder="Compra mínima (R$)" min="0" step="0.01" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
             <input type="number" value={form.max_uses} onChange={e => setForm({...form, max_uses: e.target.value})} placeholder="Usos max (vazio = ilimitado)" min="1" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
             <input type="date" value={form.expires_at} onChange={e => setForm({...form, expires_at: e.target.value})} className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
@@ -130,37 +171,78 @@ export default function CouponsPage() {
       ) : (
         <div className="space-y-3">
           {coupons.map(coupon => (
-            <div key={coupon.id} className="flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-              <div className="flex items-center gap-4 min-w-0">
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${coupon.active ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
-                  {coupon.discount_type === 'percent' ? <Percent className="h-5 w-5" /> : <DollarSign className="h-5 w-5" />}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-bold text-gray-900 dark:text-white">{coupon.code}</span>
-                    {coupon.free_shipping && (
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
-                        <Truck className="h-2.5 w-2.5" /> Frete grátis
-                      </span>
-                    )}
-                    {!coupon.active && <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">Inativo</span>}
+            <div key={coupon.id} className="rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <div className="flex items-center justify-between gap-4 p-4">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${coupon.active ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
+                    {coupon.discount_value === 0 && coupon.free_shipping
+                      ? <Truck className="h-5 w-5" />
+                      : coupon.discount_type === 'percent' ? <Percent className="h-5 w-5" /> : <DollarSign className="h-5 w-5" />}
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {coupon.discount_type === 'percent' ? `${coupon.discount_value}% off` : formatPrice(coupon.discount_value)}
-                    {coupon.min_purchase > 0 && ` · min ${formatPrice(coupon.min_purchase)}`}
-                    {coupon.max_uses && ` · ${coupon.used_count}/${coupon.max_uses} usos`}
-                    {coupon.expires_at && ` · expira ${new Date(coupon.expires_at).toLocaleDateString('pt-BR')}`}
-                  </p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-bold text-gray-900 dark:text-white">{coupon.code}</span>
+                      {coupon.free_shipping && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
+                          <Truck className="h-2.5 w-2.5" /> Frete grátis
+                        </span>
+                      )}
+                      {!coupon.active && <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">Inativo</span>}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {coupon.discount_value === 0 && coupon.free_shipping
+                        ? 'Só frete grátis'
+                        : coupon.discount_type === 'percent' ? `${coupon.discount_value}% off` : formatPrice(coupon.discount_value)}
+                      {coupon.min_purchase > 0 && ` · min ${formatPrice(coupon.min_purchase)}`}
+                      {coupon.max_uses && ` · ${coupon.used_count}/${coupon.max_uses} usos`}
+                      {coupon.expires_at && ` · expira ${new Date(coupon.expires_at).toLocaleDateString('pt-BR')}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button onClick={() => editingId === coupon.id ? setEditingId(null) : startEditing(coupon)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 transition dark:hover:bg-gray-800" title="Editar">
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => toggleCoupon(coupon.id, coupon.active)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 transition dark:hover:bg-gray-800" title={coupon.active ? 'Desativar' : 'Ativar'}>
+                    {coupon.active ? <ToggleRight className="h-5 w-5 text-green-600" /> : <ToggleLeft className="h-5 w-5" />}
+                  </button>
+                  <button onClick={() => deleteCoupon(coupon.id, coupon.code)} className="rounded-lg p-2 text-red-500 hover:bg-red-50 transition" title="Excluir">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <button onClick={() => toggleCoupon(coupon.id, coupon.active)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 transition dark:hover:bg-gray-800" title={coupon.active ? 'Desativar' : 'Ativar'}>
-                  {coupon.active ? <ToggleRight className="h-5 w-5 text-green-600" /> : <ToggleLeft className="h-5 w-5" />}
-                </button>
-                <button onClick={() => deleteCoupon(coupon.id, coupon.code)} className="rounded-lg p-2 text-red-500 hover:bg-red-50 transition" title="Excluir">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
+
+              {/* Inline Edit Form */}
+              {editingId === coupon.id && (
+                <div className="border-t border-gray-100 p-4 space-y-4 dark:border-gray-800">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Valor do desconto</label>
+                      <input type="number" value={editForm.discount_value} onChange={e => setEditForm({...editForm, discount_value: e.target.value})} placeholder={editForm.free_shipping ? "0 (opcional)" : "Valor"} min="0" step="0.01" className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Compra mínima (R$)</label>
+                      <input type="number" value={editForm.min_purchase} onChange={e => setEditForm({...editForm, min_purchase: e.target.value})} min="0" step="0.01" className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Usos max</label>
+                      <input type="number" value={editForm.max_uses} onChange={e => setEditForm({...editForm, max_uses: e.target.value})} placeholder="Ilimitado" min="1" className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Expira em</label>
+                      <input type="date" value={editForm.expires_at} onChange={e => setEditForm({...editForm, expires_at: e.target.value})} className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" checked={editForm.free_shipping} onChange={e => setEditForm({...editForm, free_shipping: e.target.checked})} className="rounded" />
+                    Frete grátis
+                  </label>
+                  <div className="flex gap-2">
+                    <button onClick={() => saveEdit(coupon.id)} className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200">Salvar</button>
+                    <button onClick={() => setEditingId(null)} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">Cancelar</button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

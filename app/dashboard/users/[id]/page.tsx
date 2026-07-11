@@ -3,8 +3,30 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Mail, Phone, MapPin, ShoppingBag, Calendar, Shield, User } from 'lucide-react';
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  ShoppingBag,
+  Calendar,
+  Shield,
+  User,
+  Star,
+  TrendingUp,
+  AlertTriangle,
+  Target,
+  DollarSign,
+} from 'lucide-react';
 import type { OrderStatus } from '@/types/database';
+import type { CustomerMetrics } from '@/lib/customer-analytics';
+import {
+  SEGMENT_LABELS,
+  SEGMENT_BG_CLASSES,
+  getRfmScoreColor,
+  getChurnRiskColor,
+  getLtvLevelColor,
+} from '@/lib/customer-analytics';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_payment: 'Aguardando Pagamento',
@@ -12,7 +34,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   approved: 'Aprovado',
   paid: 'Pago',
   processing: 'Em preparo',
-  completed: 'Concluído',
+  completed: 'Concluido',
   shipped: 'Enviado',
   delivered: 'Entregue',
   canceled: 'Cancelado',
@@ -39,6 +61,7 @@ interface UserDetail {
   role: 'user' | 'admin';
   cpf: string | null;
   phone: string | null;
+  is_vip?: boolean;
   created_at: string;
 }
 
@@ -77,21 +100,52 @@ export default function UserDetailPage() {
   const [user, setUser] = useState<UserDetail | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [analytics, setAnalytics] = useState<CustomerMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [vipLoading, setVipLoading] = useState(false);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     async function load() {
-      const res = await fetch(`/api/admin/users/${id}`);
-      if (res.ok) {
-        const data = await res.json();
+      const [userRes, analyticsRes] = await Promise.all([
+        fetch(`/api/admin/users/${id}`),
+        fetch(`/api/admin/analytics/customers?limit=500`),
+      ]);
+
+      if (userRes.ok) {
+        const data = await userRes.json();
         setUser(data.user);
         setOrders(data.orders);
         setAddresses(data.addresses);
       }
+
+      if (analyticsRes.ok) {
+        const data = await analyticsRes.json();
+        const customerData = (data.customers ?? []).find((c: CustomerMetrics) => c.userId === id);
+        if (customerData) setAnalytics(customerData);
+      }
+
       setLoading(false);
     }
     load();
   }, [id]);
+
+  async function toggleVip() {
+    if (!user) return;
+    setVipLoading(true);
+    const newVip = !user.is_vip;
+    const res = await fetch('/api/admin/users/vip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id, isVip: newVip }),
+    });
+    if (res.ok) {
+      setUser({ ...user, is_vip: newVip });
+      setToast(newVip ? 'Cliente marcado como VIP!' : 'VIP removido');
+      setTimeout(() => setToast(''), 3000);
+    }
+    setVipLoading(false);
+  }
 
   if (loading) {
     return (
@@ -104,7 +158,7 @@ export default function UserDetailPage() {
   if (!user) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Usuário não encontrado.</p>
+        <p className="text-gray-500">Usuario nao encontrado.</p>
         <Link href="/dashboard/users" className="mt-4 inline-block text-sm text-pink-600 hover:underline">
           Voltar
         </Link>
@@ -117,6 +171,12 @@ export default function UserDetailPage() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">
+          {toast}
+        </div>
+      )}
+
       <Link href="/dashboard/users" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition">
         <ArrowLeft className="h-4 w-4" /> Voltar
       </Link>
@@ -136,7 +196,12 @@ export default function UserDetailPage() {
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                  <User className="h-3 w-3" /> Usuário
+                  <User className="h-3 w-3" /> Usuario
+                </span>
+              )}
+              {user.is_vip && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                  <Star className="h-3 w-3 fill-amber-500" /> VIP
                 </span>
               )}
             </div>
@@ -147,9 +212,124 @@ export default function UserDetailPage() {
               {user.cpf && <p className="flex items-center gap-2 font-mono text-xs">CPF: {user.cpf}</p>}
               <p className="flex items-center gap-2"><Calendar className="h-4 w-4 text-gray-400" /> Cadastro: {formatDate(user.created_at)}</p>
             </div>
+
+            {/* VIP Toggle */}
+            {user.role !== 'admin' && (
+              <button
+                onClick={toggleVip}
+                disabled={vipLoading}
+                className={`mt-3 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  user.is_vip
+                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                } disabled:opacity-50`}
+              >
+                <Star className={`h-3.5 w-3.5 ${user.is_vip ? 'fill-amber-500 text-amber-500' : ''}`} />
+                {user.is_vip ? 'Remover VIP' : 'Marcar como VIP'}
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Analytics Profile Card */}
+      {analytics && (
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 dark:bg-gray-900 dark:border-gray-800">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+            <Target className="h-4 w-4 text-pink-500" /> Perfil Analitico
+          </h2>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+            {/* LTV */}
+            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
+              <p className="text-xs text-gray-500 flex items-center gap-1"><DollarSign className="h-3 w-3" /> LTV</p>
+              <p className={`text-lg font-bold ${getLtvLevelColor(analytics.ltvLevel)}`}>
+                {formatPrice(analytics.ltv)}
+              </p>
+              <p className="text-[10px] text-gray-400">Projecao 12m: {formatPrice(analytics.ltvProjected12m)}</p>
+            </div>
+
+            {/* RFM Score */}
+            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
+              <p className="text-xs text-gray-500 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> RFM Score</p>
+              <p className={`text-lg font-bold ${getRfmScoreColor(analytics.rfm.score)}`}>
+                {analytics.rfm.score.toFixed(1)}/5
+              </p>
+              <p className="text-[10px] text-gray-400">R:{analytics.rfm.recency} F:{analytics.rfm.frequency} M:{analytics.rfm.monetary}</p>
+            </div>
+
+            {/* Segment */}
+            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
+              <p className="text-xs text-gray-500">Segmento</p>
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium mt-1 ${SEGMENT_BG_CLASSES[analytics.rfm.segment]}`}>
+                {SEGMENT_LABELS[analytics.rfm.segment]}
+              </span>
+            </div>
+
+            {/* Churn Risk */}
+            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
+              <p className="text-xs text-gray-500 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Risco de Churn</p>
+              <p className={`text-lg font-bold ${getChurnRiskColor(analytics.churnRisk)}`}>
+                {analytics.churnRisk}%
+              </p>
+              {analytics.churnRisk >= 70 && (
+                <p className="text-[10px] text-red-500 font-medium">ALERTA: Risco alto!</p>
+              )}
+            </div>
+          </div>
+
+          {/* Detailed Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Historico</p>
+              <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                <p>{analytics.totalOrders} compras realizadas</p>
+                <p>{formatPrice(analytics.totalSpent)} total gasto</p>
+                <p>Ultima compra: {analytics.daysSinceLastPurchase !== null ? `${analytics.daysSinceLastPurchase} dias atras` : 'Nunca'}</p>
+                <p>Ticket medio: {formatPrice(analytics.averageTicket)}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Preferencias & Recomendacao</p>
+              <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                {analytics.topCategory && (
+                  <p>Categoria favorita: <span className="font-medium capitalize">{analytics.topCategory}</span> ({analytics.topCategoryCount} itens)</p>
+                )}
+                {analytics.churnRisk >= 70 ? (
+                  <p className="text-red-600 dark:text-red-400 font-medium mt-2">
+                    Sugestao: Oferecer desconto em {analytics.topCategory ?? 'produtos'} para reativacao
+                  </p>
+                ) : analytics.rfm.segment === 'champion' ? (
+                  <p className="text-green-600 dark:text-green-400 font-medium mt-2">
+                    Este e um cliente VIP! Priorize atendimento especial.
+                  </p>
+                ) : analytics.rfm.segment === 'potential' ? (
+                  <p className="text-purple-600 dark:text-purple-400 font-medium mt-2">
+                    Sugestao: Enviar novidades e ofertas para fidelizar
+                  </p>
+                ) : (
+                  <p className="text-blue-600 dark:text-blue-400 font-medium mt-2">
+                    Manter engajamento com newsletter e ofertas personalizadas
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Churn Factors */}
+          {analytics.churnRisk > 0 && analytics.churnFactors.length > 0 && (
+            <div className="mt-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 p-3">
+              <p className="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">Fatores de risco de churn:</p>
+              <ul className="space-y-0.5">
+                {analytics.churnFactors.map((f, i) => (
+                  <li key={i} className="text-xs text-red-600 dark:text-red-400">- {f}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -167,7 +347,7 @@ export default function UserDetailPage() {
         </div>
         <div className="rounded-xl bg-white border border-gray-100 p-4 dark:bg-gray-900 dark:border-gray-800">
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{addresses.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Endereços</p>
+          <p className="text-xs text-gray-500 mt-0.5">Enderecos</p>
         </div>
       </div>
 
@@ -175,7 +355,7 @@ export default function UserDetailPage() {
       {addresses.length > 0 && (
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 dark:bg-gray-900 dark:border-gray-800">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
-            <MapPin className="h-4 w-4" /> Endereços
+            <MapPin className="h-4 w-4" /> Enderecos
           </h2>
           <div className="space-y-2">
             {addresses.map((addr) => (

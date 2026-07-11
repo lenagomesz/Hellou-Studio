@@ -3,7 +3,7 @@
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, Loader2, Check, ShieldCheck, ChevronLeft, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -12,6 +12,8 @@ function LoginForm() {
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [twoFACode, setTwoFACode] = useState('');
@@ -112,7 +114,7 @@ function LoginForm() {
               className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition"
               aria-label="Alternar tema"
             >
-              {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+              {mounted && (theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />)}
             </button>
           </div>
           <h1 className="text-xl font-bold text-white font-display">Bem-vindo(a)</h1>
@@ -140,7 +142,7 @@ function LoginForm() {
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                 aria-label="Alternar tema"
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {mounted && (theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />)}
               </button>
             </div>
 

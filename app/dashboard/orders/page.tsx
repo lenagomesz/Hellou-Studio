@@ -58,28 +58,34 @@ export default function OrdersListPage() {
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<{ page: number; limit: number; total: number; pages: number }>({ page: 1, limit: 20, total: 0, pages: 0 });
 
-  async function fetchOrders() {
+  async function fetchOrders(currentPage = page) {
     setLoading(true);
     const params = new URLSearchParams();
+    params.set('page', String(currentPage));
+    params.set('limit', '20');
     if (statusFilter) params.set('status', statusFilter);
     if (search) params.set('search', search);
 
     const res = await fetch(`/api/admin/orders?${params.toString()}`);
     if (res.ok) {
       const data = await res.json();
-      setOrders(data);
+      setOrders(data.orders);
+      setPagination(data.pagination);
     }
     setLoading(false);
   }
 
   useEffect(() => {
-    fetchOrders();
-  }, [statusFilter]);
+    fetchOrders(page);
+  }, [statusFilter, page]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    fetchOrders();
+    setPage(1);
+    fetchOrders(1);
   }
 
   async function quickUpdateStatus(orderId: string, newStatus: OrderStatus, trackingCode?: string) {
@@ -121,7 +127,7 @@ export default function OrdersListPage() {
           </p>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-          {orders.length} total
+          {pagination.total} total
         </span>
       </header>
 
@@ -161,7 +167,7 @@ export default function OrdersListPage() {
         </div>
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => { setPage(1); setStatusFilter(e.target.value); }}
           className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         >
           <option value="">Todos os status</option>
@@ -240,6 +246,32 @@ export default function OrdersListPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination controls */}
+      {!loading && pagination.pages > 1 && (
+        <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Pagina {pagination.page} de {pagination.pages}
+            <span className="ml-2 text-xs text-gray-400">({pagination.total} pedidos)</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
+              disabled={page >= pagination.pages}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Proximo
+            </button>
+          </div>
         </div>
       )}
     </div>

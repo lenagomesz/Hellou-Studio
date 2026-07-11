@@ -79,6 +79,16 @@ type OrderDetail = {
   items: OrderItem[];
 };
 
+type TimelineEvent = {
+  id: string;
+  order_id: string;
+  status: string;
+  previous_status: string | null;
+  changed_by_name: string | null;
+  message: string | null;
+  created_at: string;
+};
+
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -88,6 +98,7 @@ export default function OrderDetailPage() {
   const [saveMsg, setSaveMsg] = useState('');
   const [shippingError, setShippingError] = useState('');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -99,6 +110,11 @@ export default function OrderDetailPage() {
       })
       .catch(() => setOrder(null))
       .finally(() => setLoading(false));
+
+    fetch(`/api/admin/orders/timeline?orderId=${id}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setTimeline(data))
+      .catch(() => setTimeline([]));
   }, [id]);
 
   async function updateStatus(status: OrderStatus) {
@@ -649,17 +665,56 @@ export default function OrderDetailPage() {
 
           {/* Timeline */}
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">Datas</h2>
-            <dl className="space-y-2">
-              <div className="flex justify-between">
-                <dt className="text-xs text-gray-500">Criado em</dt>
-                <dd className="text-xs font-medium text-gray-700">{formatDate(order.created_at)}</dd>
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">Timeline</h2>
+            {timeline.length === 0 ? (
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-xs text-gray-500">Criado em</span>
+                  <span className="text-xs font-medium text-gray-700">{formatDate(order.created_at)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs text-gray-500">Atualizado em</span>
+                  <span className="text-xs font-medium text-gray-700">{formatDate(order.updated_at)}</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-xs text-gray-500">Atualizado em</dt>
-                <dd className="text-xs font-medium text-gray-700">{formatDate(order.updated_at)}</dd>
+            ) : (
+              <div className="relative">
+                <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gray-200" />
+                <ul className="space-y-4">
+                  {timeline.map((event, idx) => {
+                    const statusKey = event.status as OrderStatus;
+                    const icon = STATUS_ICONS[statusKey] ?? '●';
+                    const label = STATUS_LABELS[statusKey] ?? event.status;
+                    const isLatest = idx === timeline.length - 1;
+                    return (
+                      <li key={event.id} className="relative flex gap-3 pl-0">
+                        <div className={`relative z-10 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[10px] ${
+                          isLatest
+                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          <span className="text-[8px]">{icon}</span>
+                        </div>
+                        <div className="flex-1 min-w-0 -mt-0.5">
+                          <p className={`text-xs font-medium ${isLatest ? 'text-gray-900' : 'text-gray-700'}`}>
+                            {label}
+                          </p>
+                          {event.message && (
+                            <p className="text-[11px] text-gray-500 mt-0.5 truncate">{event.message}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-gray-400">{formatDate(event.created_at)}</span>
+                            {event.changed_by_name && (
+                              <span className="text-[10px] text-gray-400">por {event.changed_by_name}</span>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-            </dl>
+            )}
           </div>
         </aside>
       </div>

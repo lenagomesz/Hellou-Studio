@@ -12,24 +12,33 @@ export async function GET(req: NextRequest) {
 
   const status = req.nextUrl.searchParams.get('status') ?? '';
   const search = req.nextUrl.searchParams.get('search') ?? '';
+  const page = Math.max(1, parseInt(req.nextUrl.searchParams.get('page') ?? '1', 10));
+  const limit = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get('limit') ?? '20', 10)));
 
   const admin = getSupabaseAdmin();
-  let query = admin
+
+  // Build base query with filters
+  let countQuery = admin
+    .from('orders')
+    .select('id', { count: 'exact', head: true });
+
+  let dataQuery = admin
     .from('orders')
     .select('id, status, total, created_at, user:users(id, email, name)')
-    .order('created_at', { ascending: false })
-    .limit(200);
+    .order('created_at', { ascending: false });
 
   if (status && VALID_STATUSES.includes(status as OrderStatus)) {
-    query = query.eq('status', status);
+    countQuery = countQuery.eq('status', status);
+    dataQuery = dataQuery.eq('status', status);
   }
 
-  const { data, error } = await query;
-  if (error) return serverError('Erro ao buscar pedidos');
-
-  let rows = (data ?? []) as unknown as { id: string; status: OrderStatus; total: number; created_at: string; user: { id: string; email: string; name: string | null } | null }[];
-
+  // If searching, we need to fetch more rows and filter in-memory (Supabase doesn't support OR across relations easily)
   if (search) {
+    const { data, error } = await dataQuery.limit(1000);
+    if (error) return serverError('Erro ao buscar pedidos');
+
+    let rows = (data ?? []) as unknown as { id: string; status: OrderStatus; total: number; created_at: string; user: { id: string; email: string; name: string | null } | null }[];
+
     const term = search.toLowerCase();
     rows = rows.filter((order) => {
       if (order.id.toLowerCase().includes(term)) return true;
@@ -37,9 +46,36 @@ export async function GET(req: NextRequest) {
       const name = order.user?.name?.toLowerCase() ?? '';
       return email.includes(term) || name.includes(term);
     });
+
+    const total = rows.length;
+    const pages = Math.ceil(total / limit);
+    const start = (page - 1) * limit;
+    const paginatedRows = rows.slice(start, start + limit);
+
+    return NextResponse.json({
+      orders: paginatedRows,
+      pagination: { page, limit, total, pages },
+    });
   }
 
-  return NextResponse.json(rows);
+  // No search: use database-level pagination
+  const { count, error: countError } = await countQuery;
+  if (countError) return serverError('Erro ao contar pedidos');
+
+  const total = count ?? 0;
+  const pages = Math.ceil(total / limit);
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, error } = await dataQuery.range(from, to);
+  if (error) return serverError('Erro ao buscar pedidos');
+
+  const rows = (data ?? []) as unknown as { id: string; status: OrderStatus; total: number; created_at: string; user: { id: string; email: string; name: string | null } | null }[];
+
+  return NextResponse.json({
+    orders: rows,
+    pagination: { page, limit, total, pages },
+  });
 }
 
 export async function PATCH(request: Request) {

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   let query = admin
     .from('users')
-    .select('id, email, name, role, created_at')
+    .select('id, email, name, role, is_vip, created_at')
     .order('created_at', { ascending: false })
     .limit(100);
 

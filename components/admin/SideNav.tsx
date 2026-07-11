@@ -18,7 +18,16 @@ import {
   LogOut,
   Menu,
   X,
-  FileText,
+  Star,
+  Shield,
+  AlertCircle,
+  Warehouse,
+  TrendingUp,
+  PieChart,
+  AlertTriangle,
+  Calendar,
+  Sliders,
+  Mail,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -27,6 +36,7 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   exact?: boolean;
+  badgeKey?: string;
 }
 
 interface NavSection {
@@ -39,6 +49,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'Principal',
     items: [
       { href: '/dashboard', label: 'Visão geral', icon: LayoutDashboard, exact: true },
+      { href: '/dashboard/admin-alerts', label: 'Alertas', icon: AlertCircle, badgeKey: 'alerts' },
     ],
   },
   {
@@ -47,16 +58,32 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/dashboard/orders', label: 'Pedidos', icon: Package },
       { href: '/dashboard/requests', label: 'Solicitações', icon: Printer },
       { href: '/dashboard/products', label: 'Produtos', icon: Box },
-      { href: '/dashboard/products/stl', label: 'Upload STL', icon: FileText },
       { href: '/dashboard/users', label: 'Usuários', icon: Users },
       { href: '/dashboard/coupons', label: 'Cupons', icon: Tag },
-
+      { href: '/dashboard/order-ratings', label: 'Avaliações', icon: Star },
+    ],
+  },
+  {
+    label: 'Marketing',
+    items: [
+      { href: '/dashboard/campaigns', label: 'Email Marketing', icon: Mail },
+    ],
+  },
+  {
+    label: 'Estoque',
+    items: [
+      { href: '/dashboard/inventory', label: 'Estoque', icon: Warehouse },
     ],
   },
   {
     label: 'Relatorios',
     items: [
-      { href: '/dashboard/analytics', label: 'Analíticos', icon: BarChart3 },
+      { href: '/dashboard/analytics', label: 'Analiticos', icon: BarChart3, exact: true },
+      { href: '/dashboard/analytics/rfm', label: 'RFM', icon: TrendingUp },
+      { href: '/dashboard/analytics/segments', label: 'Segmentos', icon: PieChart },
+      { href: '/dashboard/analytics/churn', label: 'Churn', icon: AlertTriangle },
+      { href: '/dashboard/analytics/ltv', label: 'LTV', icon: DollarSign },
+      { href: '/dashboard/analytics/cohorts', label: 'Coortes', icon: Calendar },
       { href: '/dashboard/financeiro', label: 'Financeiro', icon: DollarSign },
       { href: '/dashboard/calculadora', label: 'Calculadora', icon: Calculator },
     ],
@@ -65,11 +92,13 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'Sistema',
     items: [
       { href: '/dashboard/notifications', label: 'Notificações', icon: Bell },
+      { href: '/admin/security', label: 'Segurança 2FA', icon: Shield },
+      { href: '/dashboard/settings/features', label: 'Feature Flags', icon: Sliders },
     ],
   },
 ];
 
-export function SideNav({ userEmail }: { userEmail: string | null }) {
+export function SideNav({ userEmail, alertCount = 0 }: { userEmail: string | null; alertCount?: number }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -118,6 +147,7 @@ export function SideNav({ userEmail }: { userEmail: string | null }) {
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href, item.exact);
+                  const badgeCount = item.badgeKey === 'alerts' ? alertCount : 0;
                   return (
                     <Link
                       key={item.href}
@@ -130,6 +160,11 @@ export function SideNav({ userEmail }: { userEmail: string | null }) {
                     >
                       <Icon className="h-4 w-4 shrink-0" />
                       {item.label}
+                      {item.badgeKey && badgeCount > 0 && (
+                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                          {badgeCount > 99 ? '99+' : badgeCount}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

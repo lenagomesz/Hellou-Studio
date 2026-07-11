@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search } from 'lucide-react';
+import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search, Download, Edit3 } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -39,13 +39,17 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [toast, setToast] = useState('');
   const [fetchKey, setFetchKey] = useState(0);
   const [filter, setFilter] = useState<'all' | 'physical' | 'digital'>('all');
 
   const filteredProducts = products.filter(p => {
-    if (filter === 'all') return true;
-    return p.type === filter;
+    if (filter !== 'all' && p.type !== filter) return false;
+    if (minPrice && p.base_price < parseFloat(minPrice)) return false;
+    if (maxPrice && p.base_price > parseFloat(maxPrice)) return false;
+    return true;
   });
 
   useEffect(() => {
@@ -108,9 +112,20 @@ export default function ProductsPage() {
             {products.length} produtos · {activeCount} ativos
           </p>
         </div>
-        <Link href="/dashboard/products/new" className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition">
-          <Plus className="h-4 w-4" /> Novo produto
-        </Link>
+        <div className="flex gap-2">
+          <a
+            href="/api/admin/products/export"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <Download className="h-4 w-4" /> Exportar CSV
+          </a>
+          <Link href="/dashboard/products/bulk-edit" className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+            <Edit3 className="h-4 w-4" /> Edicao em Massa
+          </Link>
+          <Link href="/dashboard/products/new" className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition">
+            <Plus className="h-4 w-4" /> Novo produto
+          </Link>
+        </div>
       </header>
 
       <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3">
@@ -129,6 +144,24 @@ export default function ProductsPage() {
           <option value="active">Ativos</option>
           <option value="inactive">Inativos</option>
         </select>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={minPrice}
+          onChange={(e) => setMinPrice(e.target.value)}
+          placeholder="Preco min"
+          className="w-28 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+        />
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={maxPrice}
+          onChange={(e) => setMaxPrice(e.target.value)}
+          placeholder="Preco max"
+          className="w-28 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+        />
         <button type="submit" className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800">Buscar</button>
       </form>
 

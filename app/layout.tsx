@@ -3,7 +3,6 @@ import { Inter, Sora } from 'next/font/google';
 import { SessionProvider } from '@/components/auth/SessionProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
-import { PWAInstaller } from '@/components/PWAInstaller';
 import './globals.css';
 
 const inter = Inter({
@@ -30,7 +29,6 @@ export const metadata: Metadata = {
   title: 'Hellou Studio',
   description:
     'Marketplace de produtos impressos em 3D. Chaveiros, escritório e criaturas feitas sob demanda.',
-  manifest: '/manifest.json',
   viewport: {
     width: 'device-width',
     initialScale: 1,
@@ -53,7 +51,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans antialiased bg-[var(--color-background)] text-[var(--color-foreground)]">
         <ThemeProvider>
           <SessionProvider>
-            <PWAInstaller />
             {children}
             <ToastProvider />
           </SessionProvider>

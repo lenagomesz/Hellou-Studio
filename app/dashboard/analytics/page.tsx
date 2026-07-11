@@ -5,6 +5,7 @@ import { RevenueChart } from '@/components/admin/charts/RevenueChart';
 import { OrdersChart } from '@/components/admin/charts/OrdersChart';
 import { CategoryPieChart } from '@/components/admin/charts/CategoryPieChart';
 import { TopProductsChart } from '@/components/admin/charts/TopProductsChart';
+import { TopViewedTable } from '@/components/admin/charts/TopViewedTable';
 import { UsersChart } from '@/components/admin/charts/UsersChart';
 
 type Period = '7d' | '30d' | '90d' | '12m';
@@ -13,12 +14,14 @@ interface RevenueData { date: string; revenue: number; count: number }
 interface CategoryData { name: string; revenue: number; units: number }
 interface ProductData { name: string; revenue: number; units: number; category: string }
 interface UserData { date: string; count: number }
+interface TopViewedProduct { id: string; name: string; category: string; views: number; revenue: number; units_sold: number }
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState<Period>('30d');
   const [revenueData, setRevenueData] = useState<{ data: RevenueData[]; groupBy: string }>({ data: [], groupBy: 'day' });
   const [productsData, setProductsData] = useState<{ topProducts: ProductData[]; categories: CategoryData[] }>({ topProducts: [], categories: [] });
   const [usersData, setUsersData] = useState<{ data: UserData[]; groupBy: string }>({ data: [], groupBy: 'day' });
+  const [topViewedData, setTopViewedData] = useState<TopViewedProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,10 +30,12 @@ export default function AnalyticsPage() {
       fetch(`/api/admin/analytics/revenue?period=${period}`).then(r => r.json()),
       fetch(`/api/admin/analytics/products?period=${period}`).then(r => r.json()),
       fetch(`/api/admin/analytics/users?period=${period}`).then(r => r.json()),
-    ]).then(([rev, prod, usr]) => {
+      fetch(`/api/admin/analytics/top-viewed?period=${period}`).then(r => r.json()),
+    ]).then(([rev, prod, usr, topViewed]) => {
       setRevenueData(rev);
       setProductsData(prod);
       setUsersData(usr);
+      setTopViewedData(topViewed.products ?? []);
     }).finally(() => setLoading(false));
   }, [period]);
 
@@ -97,10 +102,16 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Top Products */}
+          {/* Top Products by Revenue */}
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <h3 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Top 10 produtos</h3>
+            <h3 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Top 10 produtos (receita)</h3>
             <TopProductsChart data={productsData.topProducts} />
+          </div>
+
+          {/* Top Products by Views */}
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Top Produtos Mais Vistos</h3>
+            <TopViewedTable data={topViewedData} />
           </div>
         </>
       )}
