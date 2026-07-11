@@ -119,42 +119,6 @@ export default function RequestPrintPage() {
 
   return (
     <div>
-      {/* Full-width Banner */}
-      <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
-        <h2 className="text-2xl font-bold text-white sm:text-3xl">
-          Encomendas personalizadas
-        </h2>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-white/90 sm:text-base">
-          Transforme sua ideia em realidade! Envie seu arquivo .stl com o que precisa e nós cuidamos do resto.
-        </p>
-      </div>
-
-      {/* Explicação do fluxo */}
-      <div className="mx-auto max-w-2xl px-4 pt-8 sm:px-6">
-        <div className="rounded-2xl border border-pink-100 dark:border-pink-900/30 bg-pink-50/50 dark:bg-pink-950/20 p-5 sm:p-6 mb-6">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Como funciona?</h3>
-          <ol className="space-y-2.5 text-sm text-gray-600 dark:text-gray-400">
-            <li className="flex items-start gap-2.5">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">1</span>
-              <span>Você envia sua solicitação com o arquivo .stl e descreve o que precisa.</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">2</span>
-              <span>Eu verifico se tenho o material disponível e analiso o projeto.</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">3</span>
-              <span>Envio o valor do orçamento para você avaliar.</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">4</span>
-              <span>Se tiver qualquer dúvida, entro em contato para alinharmos tudo antes de começar.</span>
-            </li>
-          </ol>
-        </div>
-
-      </div>
-
       <div className="mx-auto max-w-4xl px-4 pb-10 pt-6 sm:px-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title - Common to both options */}
