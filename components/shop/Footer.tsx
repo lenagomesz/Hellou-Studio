@@ -41,7 +41,9 @@ export function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="https://www.tiktok.com/@helloustudio_"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all duration-300 hover:bg-pink-50 hover:text-pink-500 hover:scale-110 dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-pink-950/50 dark:hover:text-pink-400"
                 aria-label="TikTok"
               >
