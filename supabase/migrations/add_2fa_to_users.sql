@@ -21,4 +21,3 @@ CREATE TABLE IF NOT EXISTS two_fa_attempts (
 
 -- Create index for rate limiting queries
 CREATE INDEX IF NOT EXISTS idx_two_fa_attempts_user_time ON two_fa_attempts(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_two_fa_attempts_user_recent ON two_fa_attempts(user_id) WHERE created_at > NOW() - INTERVAL '15 minutes';

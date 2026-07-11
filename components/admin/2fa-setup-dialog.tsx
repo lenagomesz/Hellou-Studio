@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Copy, Check, X, Loader2, Download } from 'lucide-react';
-import QRCode from 'qrcode';
 
 interface Setup2FADialogProps {
   isOpen: boolean;
