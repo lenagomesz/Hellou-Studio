@@ -78,7 +78,6 @@ export function PaymentForm({
   const [installmentsLoading, setInstallmentsLoading] = useState(false);
 
   const [error, setError] = useState('');
-  const [sdkReady, setSdkReady] = useState(false);
 
   function scrollToTop() {
     formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -95,7 +94,6 @@ export function PaymentForm({
 
     if (window.MercadoPago) {
       mpRef.current = new window.MercadoPago(publicKey);
-      setSdkReady(true);
       return;
     }
 
@@ -103,7 +101,6 @@ export function PaymentForm({
     script.src = 'https://sdk.mercadopago.com/js/v2';
     script.onload = () => {
       mpRef.current = new window.MercadoPago(publicKey);
-      setSdkReady(true);
     };
     document.head.appendChild(script);
 
