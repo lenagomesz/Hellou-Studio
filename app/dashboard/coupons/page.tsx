@@ -61,6 +61,14 @@ export default function CouponsPage() {
       setShowForm(false);
       setForm({ code: '', discount_type: 'percent', discount_value: '', min_purchase: '0', max_uses: '', expires_at: '', free_shipping: false });
       fetchCoupons();
+    } else {
+      try {
+        const errorData = await res.json() as { error?: string };
+        setToast(errorData.error || 'Erro ao criar cupom');
+      } catch {
+        setToast('Erro ao criar cupom');
+      }
+      setTimeout(() => setToast(''), 5000);
     }
   }
 
