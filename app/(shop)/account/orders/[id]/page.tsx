@@ -210,10 +210,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Qtd: {item.quantity} &middot; {formatPrice(item.unit_price)} cada
                 </p>
-                {item.product?.type === 'digital' && (
+                {item.product?.type === 'digital' && item.product?.id && (
                   <DownloadButton
                     order={order}
                     isDigitalOnly={isDigitalOnly}
+                    productId={item.product.id}
                   />
                 )}
               </div>

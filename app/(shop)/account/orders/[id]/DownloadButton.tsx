@@ -6,9 +6,10 @@ import type { Order } from '@/types/database';
 interface DownloadButtonProps {
   order: Order;
   isDigitalOnly: boolean;
+  productId: string;
 }
 
-export default function DownloadButton({ order, isDigitalOnly }: DownloadButtonProps) {
+export default function DownloadButton({ order, isDigitalOnly, productId }: DownloadButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +35,7 @@ export default function DownloadButton({ order, isDigitalOnly }: DownloadButtonP
       }
 
       // Proceed with download
-      const downloadUrl = `/api/orders/${order.id}/download`;
+      const downloadUrl = `/api/orders/${order.id}/download/${productId}`;
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.click();
