@@ -34,79 +34,108 @@ export async function PATCH(
   request: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireAdmin();
-  if (auth.response) return auth.response;
-
-  const { id } = await ctx.params;
-
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return badRequest('JSON inválido');
-  }
+    const auth = await requireAdmin();
+    if (auth.response) return auth.response;
 
-  const input = (body ?? {}) as {
-    name?: string;
-    description?: string | null;
-    category?: string;
-    base_price?: number;
-    sale_price?: number | null;
-    image_url?: string | null;
-    images?: string[] | null;
-    active?: boolean;
-  };
+    const { id } = await ctx.params;
+    console.log('[products-patch] updating product:', id);
 
-  const update: Record<string, unknown> = {};
-
-  if (input.name !== undefined) {
-    if (!input.name.trim()) return badRequest('Nome não pode ser vazio');
-    update.name = input.name.trim();
-  }
-  if (input.description !== undefined) {
-    update.description = input.description?.trim() || null;
-  }
-  if (input.category !== undefined) {
-    if (!isCategory(input.category)) return badRequest('Categoria inválida');
-    update.category = input.category;
-  }
-  if (input.base_price !== undefined) {
-    if (typeof input.base_price !== 'number' || input.base_price < 0) {
-      return badRequest('Preço base inválido');
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return badRequest('JSON inválido');
     }
-    update.base_price = input.base_price;
-  }
-  if (input.sale_price !== undefined) {
-    update.sale_price = input.sale_price;
-  }
-  if (input.image_url !== undefined) {
-    update.image_url = input.image_url?.trim() || null;
-  }
-  if (input.images !== undefined) {
-    update.images = input.images;
-  }
-  if (input.active !== undefined) {
-    update.active = !!input.active;
-  }
 
-  if (Object.keys(update).length === 0) {
-    return badRequest('Nenhum campo para atualizar');
+    const input = (body ?? {}) as {
+      name?: string;
+      description?: string | null;
+      category?: string;
+      base_price?: number;
+      sale_price?: number | null;
+      image_url?: string | null;
+      images?: string[] | null;
+      active?: boolean;
+    };
+
+    const update: Record<string, unknown> = {};
+
+    if (input.name !== undefined) {
+      if (!input.name.trim()) return badRequest('Nome não pode ser vazio');
+      update.name = input.name.trim();
+    }
+    if (input.description !== undefined) {
+      update.description = input.description?.trim() || null;
+    }
+    if (input.category !== undefined) {
+      if (!isCategory(input.category)) return badRequest('Categoria inválida');
+      update.category = input.category;
+    }
+    if (input.base_price !== undefined) {
+      if (typeof input.base_price !== 'number' || input.base_price < 0) {
+        return badRequest('Preço base inválido');
+      }
+      update.base_price = input.base_price;
+    }
+    if (input.sale_price !== undefined) {
+      update.sale_price = input.sale_price;
+    }
+    if (input.image_url !== undefined) {
+      update.image_url = input.image_url?.trim() || null;
+    }
+    if (input.images !== undefined) {
+      update.images = input.images;
+    }
+    if (input.active !== undefined) {
+      update.active = !!input.active;
+    }
+
+    if (Object.keys(update).length === 0) {
+      return badRequest('Nenhum campo para atualizar');
+    }
+
+    update.updated_at = new Date().toISOString();
+
+    console.log('[products-patch] update payload:', update);
+
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from('products')
+      .update(update)
+      .eq('id', id)
+      .select('*')
+      .maybeSingle();
+
+    if (error) {
+      console.error('[products-patch] db error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      return NextResponse.json(
+        { error: `Erro ao atualizar produto: ${error.message}` },
+        { status: 400 }
+      );
+    }
+    if (!data) {
+      console.error('[products-patch] product not found after update:', id);
+      return notFound('Produto não encontrado');
+    }
+
+    console.log('[products-patch] product updated successfully:', id);
+    return NextResponse.json({ product: data as Product });
+  } catch (err) {
+    console.error('[products-patch] exception:', {
+      type: typeof err,
+      message: err instanceof Error ? err.message : String(err),
+    });
+    return NextResponse.json(
+      { error: `Erro interno: ${err instanceof Error ? err.message : 'desconhecido'}` },
+      { status: 500 }
+    );
   }
-
-  update.updated_at = new Date().toISOString();
-
-  const admin = getSupabaseAdmin();
-  const { data, error } = await admin
-    .from('products')
-    .update(update)
-    .eq('id', id)
-    .select('*')
-    .maybeSingle();
-
-  if (error) return serverError('Erro ao atualizar produto');
-  if (!data) return notFound('Produto não encontrado');
-
-  return NextResponse.json({ product: data as Product });
 }
 
 export async function DELETE(
