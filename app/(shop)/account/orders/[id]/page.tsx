@@ -9,6 +9,7 @@ import PixPaymentSection from './PixPaymentSection';
 import EditableShippingAddress from './EditableShippingAddress';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import RatingPrompt from './RatingPrompt';
+import ProductReviewSuggestion from './ProductReviewSuggestion';
 
 export const dynamic = 'force-dynamic';
 
@@ -216,6 +217,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     order={order}
                     isDigitalOnly={isDigitalOnly}
                     productId={item.product.id}
+                  />
+                )}
+                {order.status === 'delivered' && item.product?.id && (
+                  <ProductReviewSuggestion
+                    productId={item.product.id}
+                    productName={item.product.name ?? 'este produto'}
                   />
                 )}
               </div>
