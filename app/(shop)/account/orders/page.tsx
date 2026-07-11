@@ -16,6 +16,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   delivered: 'Entregue',
   canceled: 'Cancelado',
   refunded: 'Reembolsado',
+  rejected: 'Pagamento Recusado',
 };
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
@@ -29,6 +30,7 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
   delivered: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   canceled: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
   refunded: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  rejected: 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300',
 };
 
 function formatPrice(value: number) {

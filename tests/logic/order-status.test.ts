@@ -14,6 +14,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   delivered: 'Entregue',
   canceled: 'Cancelado',
   refunded: 'Reembolsado',
+  rejected: 'Pagamento Recusado',
 };
 
 function isValidStatus(status: string): status is OrderStatus {
