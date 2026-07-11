@@ -66,7 +66,7 @@ export async function POST(request: Request) {
   if (!title?.trim()) return badRequest('Título é obrigatório');
 
   const hasFile = file !== null;
-  const hasLink = makerLink?.trim().length ?? 0 > 0;
+  const hasLink = (makerLink?.trim().length ?? 0) > 0;
 
   if (!hasFile && !hasLink) {
     return badRequest('Envie um arquivo STL ou um link do Makerworld');
