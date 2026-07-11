@@ -58,26 +58,14 @@ export default function RequestPrintPage() {
 
     const hasFile = file !== null;
     const hasLink = makerLink.trim().length > 0;
-    const hasDescription = description.trim().length > 0;
-    const hasNotes = notes.trim().length > 0;
 
     if (!hasFile && !hasLink) {
-      setError('Você precisa enviar um arquivo STL ou um link do Makerworld');
+      setError('Envie um arquivo STL ou um link do Makerworld');
       return;
     }
 
     if (hasFile && hasLink) {
-      setError('Escolha apenas uma opção: arquivo STL ou link do Makerworld');
-      return;
-    }
-
-    if (!hasDescription) {
-      setError('Descrição do projeto é obrigatória');
-      return;
-    }
-
-    if (!hasNotes) {
-      setError('Observações adicionais são obrigatórias');
+      setError('Escolha uma opção: arquivo ou link (não ambos)');
       return;
     }
 
@@ -85,8 +73,8 @@ export default function RequestPrintPage() {
 
     const formData = new FormData();
     formData.set('title', title.trim());
-    formData.set('description', description.trim());
-    formData.set('notes', notes.trim());
+    if (description.trim()) formData.set('description', description.trim());
+    if (notes.trim()) formData.set('notes', notes.trim());
 
     if (hasFile) {
       formData.set('file', file);

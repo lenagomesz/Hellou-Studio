@@ -137,25 +137,100 @@ export default function CouponsPage() {
       {/* Create Form */}
       {showForm && (
         <form onSubmit={createCoupon} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm space-y-4 dark:border-gray-800 dark:bg-gray-900">
-          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Criar cupom</h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <input type="text" value={form.code} onChange={e => setForm({...form, code: e.target.value})} placeholder="Código (ex: PROMO10)" required className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm uppercase dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
-            <select value={form.discount_type} onChange={e => setForm({...form, discount_type: e.target.value as 'percent' | 'fixed'})} className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-              <option value="percent">Porcentagem (%)</option>
-              <option value="fixed">Valor fixo (R$)</option>
-            </select>
-            <input type="number" value={form.discount_value} onChange={e => setForm({...form, discount_value: e.target.value})} placeholder={form.free_shipping ? "Desconto (opcional)" : "Valor do desconto"} required={!form.free_shipping} min="0" step="0.01" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
-            <input type="number" value={form.min_purchase} onChange={e => setForm({...form, min_purchase: e.target.value})} placeholder="Compra mínima (R$)" min="0" step="0.01" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
-            <input type="number" value={form.max_uses} onChange={e => setForm({...form, max_uses: e.target.value})} placeholder="Usos max (vazio = ilimitado)" min="1" className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
-            <input type="date" value={form.expires_at} onChange={e => setForm({...form, expires_at: e.target.value})} className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Novo Cupom</h3>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Código do cupom *</label>
+              <input
+                type="text"
+                value={form.code}
+                onChange={e => setForm({...form, code: e.target.value})}
+                placeholder="Ex: PROMO10"
+                required
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm uppercase dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Tipo *</label>
+                <select
+                  value={form.discount_type}
+                  onChange={e => setForm({...form, discount_type: e.target.value as 'percent' | 'fixed'})}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="percent">Porcentagem (%)</option>
+                  <option value="fixed">Valor (R$)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Valor *</label>
+                <input
+                  type="number"
+                  value={form.discount_value}
+                  onChange={e => setForm({...form, discount_value: e.target.value})}
+                  placeholder="Ex: 10"
+                  required={!form.free_shipping}
+                  min="0"
+                  step="0.01"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Compra mínima (opcional)</label>
+              <input
+                type="number"
+                value={form.min_purchase}
+                onChange={e => setForm({...form, min_purchase: e.target.value})}
+                placeholder="R$ 0"
+                min="0"
+                step="0.01"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Usos máximos (opcional)</label>
+                <input
+                  type="number"
+                  value={form.max_uses}
+                  onChange={e => setForm({...form, max_uses: e.target.value})}
+                  placeholder="Ilimitado"
+                  min="1"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Expira em (opcional)</label>
+                <input
+                  type="date"
+                  value={form.expires_at}
+                  onChange={e => setForm({...form, expires_at: e.target.value})}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <input
+                type="checkbox"
+                checked={form.free_shipping}
+                onChange={e => setForm({...form, free_shipping: e.target.checked})}
+                className="rounded"
+              />
+              <span>Cupom oferece apenas frete grátis</span>
+            </label>
           </div>
-          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-            <input type="checkbox" checked={form.free_shipping} onChange={e => setForm({...form, free_shipping: e.target.checked})} className="rounded" />
-            Frete grátis
-          </label>
+
           <div className="flex gap-2">
-            <button type="submit" className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800">Criar</button>
-            <button type="button" onClick={() => setShowForm(false)} className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">Cancelar</button>
+            <button type="submit" className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90">Criar cupom</button>
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">Cancelar</button>
           </div>
         </form>
       )}
