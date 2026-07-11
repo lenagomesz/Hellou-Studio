@@ -83,10 +83,6 @@ Quando quiser receber pagamentos reais:
 - Se precisa migrar: rodar `supabase db push` ou aplicar as migrations manualmente
 - Rodar seed do admin se necessário: ajustar o script para apontar para prod
 
-### 9. Limpar scripts de dev
-
-O script `"dev"` tem `NODE_TLS_REJECT_UNAUTHORIZED=0` — isso é só para dev local, não afeta produção na Vercel (ela usa o script `build`).
-
 ---
 
 ## Depois do deploy
