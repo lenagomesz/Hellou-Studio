@@ -138,6 +138,14 @@ export default function OrderDetailPage() {
     if (res.ok && order) {
       setOrder({ ...order, status });
       setSaveMsg('Status atualizado!');
+    } else {
+      try {
+        const errorData = await res.json() as { error?: string };
+        setSaveMsg(`Erro: ${errorData.error || 'Falha ao atualizar status'}`);
+        console.error('[order-update-error]', errorData);
+      } catch {
+        setSaveMsg('Erro ao atualizar status');
+      }
     }
     setUpdating(false);
   }
@@ -519,8 +527,8 @@ export default function OrderDetailPage() {
             </div>
 
             {saveMsg && (
-              <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-xs font-medium text-green-700">
-                ✓ {saveMsg}
+              <div className={`mt-4 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium ${saveMsg.startsWith('Erro') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
+                {saveMsg.startsWith('Erro') ? '✕' : '✓'} {saveMsg}
               </div>
             )}
           </div>
