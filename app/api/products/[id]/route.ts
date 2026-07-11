@@ -113,15 +113,39 @@ export async function DELETE(
   _request: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireAdmin();
-  if (auth.response) return auth.response;
+  try {
+    const auth = await requireAdmin();
+    if (auth.response) return auth.response;
 
-  const { id } = await ctx.params;
+    const { id } = await ctx.params;
+    console.log('[products-delete] deleting product:', id);
 
-  const admin = getSupabaseAdmin();
-  const { error } = await admin.from('products').delete().eq('id', id);
+    const admin = getSupabaseAdmin();
+    const { error } = await admin.from('products').delete().eq('id', id);
 
-  if (error) return serverError('Erro ao excluir produto');
+    if (error) {
+      console.error('[products-delete] error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      return NextResponse.json(
+        { error: `Erro ao excluir produto: ${error.message}` },
+        { status: 400 }
+      );
+    }
 
-  return new NextResponse(null, { status: 204 });
+    console.log('[products-delete] product deleted successfully:', id);
+    return new NextResponse(null, { status: 204 });
+  } catch (err) {
+    console.error('[products-delete] exception:', {
+      type: typeof err,
+      message: err instanceof Error ? err.message : String(err),
+    });
+    return NextResponse.json(
+      { error: `Erro interno: ${err instanceof Error ? err.message : 'desconhecido'}` },
+      { status: 500 }
+    );
+  }
 }
