@@ -68,7 +68,7 @@ export async function PATCH(request: Request) {
 
   // Idempotent: if status hasn't changed, return early
   if (order.status === status) {
-    return NextResponse.json({ received: true, status });
+    return NextResponse.json({ success: true, status, message: `Pedido atualizado para ${status}` });
   }
 
   // Update status
