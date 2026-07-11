@@ -127,16 +127,18 @@ export default async function OrderDetailPage({ params }: PageProps) {
               {statusOrder.map((status, i) => {
                 const isActive = i <= currentStepIndex;
                 const isCurrent = i === currentStepIndex;
+                const isLastStep = i === statusOrder.length - 1;
+                const showCheckmark = isActive && (!isCurrent || (isCurrent && isLastStep && order.status === 'delivered'));
                 return (
                   <div key={status} className="flex flex-col items-center">
                     <div className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ring-4 ring-white dark:ring-gray-900 transition ${
-                      isCurrent
+                      isCurrent && !(isLastStep && order.status === 'delivered')
                         ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-200/50 dark:shadow-pink-900/30'
                         : isActive
                           ? 'bg-green-500 text-white'
                           : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
                     }`}>
-                      {isActive && !isCurrent ? (
+                      {showCheckmark ? (
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-3.5 w-3.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                         </svg>
