@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderStatusEmail } from '@/lib/email';
 import type { OrderStatus } from '@/types/database';
 
-const VALID_STATUSES: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded'];
+const VALID_STATUSES: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded', 'rejected'];
 
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin();

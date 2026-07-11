@@ -10,7 +10,8 @@ export type OrderStatus =
   | 'shipped'
   | 'delivered'
   | 'canceled'
-  | 'refunded';
+  | 'refunded'
+  | 'rejected';
 
 export type ProductType = 'physical' | 'digital';
 
