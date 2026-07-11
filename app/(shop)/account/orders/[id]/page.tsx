@@ -8,6 +8,7 @@ import DownloadButton from './DownloadButton';
 import PixPaymentSection from './PixPaymentSection';
 import EditableShippingAddress from './EditableShippingAddress';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
+import RatingPrompt from './RatingPrompt';
 
 export const dynamic = 'force-dynamic';
 
@@ -327,6 +328,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
       </div>
 
       <ProductRecommendations title="Veja outros produtos" />
+
+      {/* Rating modal for delivered orders */}
+      <RatingPrompt orderId={order.id} orderStatus={order.status} />
     </div>
   );
 }
