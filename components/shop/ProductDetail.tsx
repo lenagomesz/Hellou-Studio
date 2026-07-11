@@ -103,7 +103,7 @@ export function ProductDetail({
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
-      <div className="space-y-3">
+      <div className="space-y-6">
         <div className="group relative">
           {product.image_url ? (
             <ImageGallery image1={product.image_url} image2={product.image_url_2 || undefined} />
@@ -123,6 +123,30 @@ export function ProductDetail({
             </span>
           )}
         </div>
+
+        {product.type !== 'digital' && (
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gradient-to-br from-gray-50 to-pink-50/30 dark:from-gray-900 dark:to-gray-900 p-5">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Sobre este produto</p>
+            <div className="space-y-2.5 text-xs text-gray-600 dark:text-gray-300">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-950/50 text-[10px]">🖨️</span>
+                <span>Impresso em 3D sob demanda após a confirmação do pedido</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950/50 text-[10px]">⏱️</span>
+                <span>Prazo de produção: 3 a 5 dias úteis + frete</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/50 text-[10px]">♻️</span>
+                <span>Material PLA biodegradável de alta qualidade</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/50 text-[10px]">🚚</span>
+                <span>Frete grátis acima de R$99</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col">
@@ -364,30 +388,6 @@ export function ProductDetail({
             </p>
           ) : null}
         </div>
-
-        {product.type !== 'digital' && (
-          <div className="mt-8 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gradient-to-br from-gray-50 to-pink-50/30 dark:from-gray-900 dark:to-gray-900 p-5">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Sobre este produto</p>
-            <div className="space-y-2.5 text-xs text-gray-600 dark:text-gray-300">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-950/50 text-[10px]">🖨️</span>
-                <span>Impresso em 3D sob demanda após a confirmação do pedido</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950/50 text-[10px]">⏱️</span>
-                <span>Prazo de produção: 3 a 5 dias úteis + frete</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/50 text-[10px]">♻️</span>
-                <span>Material PLA biodegradável de alta qualidade</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/50 text-[10px]">🚚</span>
-                <span>Frete grátis acima de R$99</span>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="mt-4 flex flex-wrap gap-3 text-[11px] text-gray-400 dark:text-gray-500">
           <span className="inline-flex items-center gap-1">🔒 Pagamento seguro</span>
