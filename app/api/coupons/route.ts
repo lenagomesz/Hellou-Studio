@@ -17,39 +17,54 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdmin();
-  if (auth.response) return auth.response;
+  try {
+    const auth = await requireAdmin();
+    if (auth.response) return auth.response;
 
-  const body = await request.json();
-  const code = typeof body.code === 'string' ? body.code.trim().toUpperCase() : '';
-  if (!code) return badRequest('Código é obrigatório');
+    const body = await request.json();
+    const code = typeof body.code === 'string' ? body.code.trim().toUpperCase() : '';
+    if (!code) return badRequest('Código é obrigatório');
 
-  const discount_type = body.discount_type === 'percent' ? 'percent' : 'fixed';
-  const discount_value = typeof body.discount_value === 'number' ? body.discount_value : 0;
-  const min_purchase = typeof body.min_purchase === 'number' ? body.min_purchase : 0;
-  const max_uses = typeof body.max_uses === 'number' ? body.max_uses : null;
-  const free_shipping = body.free_shipping === true;
-  const expires_at = typeof body.expires_at === 'string' && body.expires_at ? body.expires_at : null;
+    const discount_type = body.discount_type === 'percent' ? 'percent' : 'fixed';
+    const discount_value = typeof body.discount_value === 'number' ? body.discount_value : 0;
+    const min_purchase = typeof body.min_purchase === 'number' ? body.min_purchase : 0;
+    const max_uses = typeof body.max_uses === 'number' ? body.max_uses : null;
+    const free_shipping = body.free_shipping === true;
+    const expires_at = typeof body.expires_at === 'string' && body.expires_at ? body.expires_at : null;
 
-  const admin = getSupabaseAdmin();
-  const { data, error } = await admin
-    .from('coupons')
-    .insert({ code, discount_type, discount_value, min_purchase, max_uses, free_shipping, expires_at })
-    .select()
-    .single();
+    console.log('[coupons-post] creating coupon:', { code, discount_type, discount_value, min_purchase, max_uses, free_shipping, expires_at });
 
-  if (error) {
-    console.error('[coupons-post] error:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from('coupons')
+      .insert({ code, discount_type, discount_value, min_purchase, max_uses, free_shipping, expires_at })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[coupons-post] db error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      if (error.code === '23505') return badRequest('Já existe um cupom com este código');
+      return NextResponse.json({ error: `Erro ao criar cupom: ${error.message}` }, { status: 400 });
+    }
+
+    console.log('[coupons-post] coupon created successfully:', data.id);
+    return NextResponse.json(data, { status: 201 });
+  } catch (err) {
+    console.error('[coupons-post] exception:', {
+      type: typeof err,
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
     });
-    if (error.code === '23505') return badRequest('Já existe um cupom com este código');
-    return NextResponse.json({ error: `Erro ao criar cupom: ${error.message}` }, { status: 400 });
+    return NextResponse.json(
+      { error: `Erro interno: ${err instanceof Error ? err.message : 'desconhecido'}` },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(data, { status: 201 });
 }
 
 export async function PATCH(request: Request) {
