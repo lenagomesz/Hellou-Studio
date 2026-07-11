@@ -4,6 +4,15 @@ import { requireUser, serverError, badRequest } from '@/lib/api';
 import { sendAdminNewPrintRequestEmail } from '@/lib/email';
 import type { PrintRequest } from '@/types/database';
 
+// Configure larger payload size for STL file uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
+};
+
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export async function GET(request: Request) {
