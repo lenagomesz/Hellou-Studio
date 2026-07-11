@@ -264,53 +264,6 @@ export default async function DashboardHome() {
         </Link>
       </div>
 
-      {/* Charts section */}
-      <DashboardCharts data={data.chartData} />
-
-      {/* Advanced Analytics Dashboard */}
-      <AdvancedAnalyticsDashboard />
-
-      {/* Stock Alerts Widget */}
-      {data.stockAlerts.length > 0 && (
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-sm dark:bg-red-900/30">📦</span>
-              <h2 className="font-semibold text-gray-800 dark:text-gray-200">Alertas de Estoque</h2>
-              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
-                {data.stockAlerts.length}
-              </span>
-            </div>
-            <Link href="/dashboard/inventory" className="text-xs font-medium text-pink-500 hover:text-pink-600">
-              Ver estoque →
-            </Link>
-          </div>
-          <div className="divide-y divide-gray-50 px-2 py-2 dark:divide-gray-800">
-            {data.stockAlerts.slice(0, 5).map((alert) => (
-              <div
-                key={alert.product_option_id}
-                className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className={`flex h-2.5 w-2.5 shrink-0 rounded-full ${alert.level === 'critical' ? 'bg-red-500' : 'bg-yellow-500'}`} />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">{alert.product_name}</p>
-                    <p className="text-xs text-gray-400">{alert.option_name}</p>
-                  </div>
-                </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  alert.level === 'critical'
-                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
-                }`}>
-                  {alert.current_stock} un.
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Main grid: Action sections */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Para preparar */}
@@ -445,6 +398,53 @@ export default async function DashboardHome() {
           </div>
         </div>
       </div>
+
+      {/* Charts section */}
+      <DashboardCharts data={data.chartData} />
+
+      {/* Advanced Analytics Dashboard */}
+      <AdvancedAnalyticsDashboard />
+
+      {/* Stock Alerts Widget */}
+      {data.stockAlerts.length > 0 && (
+        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-sm dark:bg-red-900/30">📦</span>
+              <h2 className="font-semibold text-gray-800 dark:text-gray-200">Alertas de Estoque</h2>
+              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                {data.stockAlerts.length}
+              </span>
+            </div>
+            <Link href="/dashboard/inventory" className="text-xs font-medium text-pink-500 hover:text-pink-600">
+              Ver estoque →
+            </Link>
+          </div>
+          <div className="divide-y divide-gray-50 px-2 py-2 dark:divide-gray-800">
+            {data.stockAlerts.slice(0, 5).map((alert) => (
+              <div
+                key={alert.product_option_id}
+                className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={`flex h-2.5 w-2.5 shrink-0 rounded-full ${alert.level === 'critical' ? 'bg-red-500' : 'bg-yellow-500'}`} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">{alert.product_name}</p>
+                    <p className="text-xs text-gray-400">{alert.option_name}</p>
+                  </div>
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  alert.level === 'critical'
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                }`}>
+                  {alert.current_stock} un.
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

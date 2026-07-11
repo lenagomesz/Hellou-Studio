@@ -6,6 +6,7 @@ import { isValidCpf } from '@/lib/cpf';
 import { validateCartProductTypes } from '@/lib/cart';
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestEmail, sendSTLDeliveryEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { createAdminAlert } from '@/lib/admin-alerts';
 import { validateShippingCost } from '@/lib/security';
 
 export async function POST(request: Request) {
@@ -334,6 +335,15 @@ export async function POST(request: Request) {
       } catch (e) {
         console.error('[mp-create] notification error:', e);
       }
+
+      // Create admin alert for real-time notification
+      createAdminAlert({
+        type: 'new_order',
+        title: `Novo pedido: ${isDigitalOrder ? 'STL' : 'Produto físico'}`,
+        body: `Cliente: ${userData?.name || user.email} | Total: R$ ${totalAmount.toFixed(2)}`,
+        priority: isDigitalOrder ? 'normal' : 'high',
+        related_order_id: order.id,
+      }).catch(err => console.error('[admin-alerts] create failed:', err));
 
       // Send order confirmation email
       const customerEmail = userData?.email || user.email;

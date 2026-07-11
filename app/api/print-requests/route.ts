@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireUser, serverError, badRequest } from '@/lib/api';
 import { sendAdminNewPrintRequestEmail, sendPrintRequestStatusEmail } from '@/lib/email';
+import { createAdminAlert } from '@/lib/admin-alerts';
 import type { PrintRequest } from '@/types/database';
 
 // Configure larger payload size for STL file uploads
@@ -127,18 +128,26 @@ export async function POST(request: Request) {
     return serverError(`Erro ao criar solicitação: ${error.message || error.code || 'desconhecido'}`);
   }
 
+  const { data: currentUser } = await admin
+    .from('users')
+    .select('email, name')
+    .eq('id', auth.user.id)
+    .single();
+
+  // Create admin alert for real-time notification
+  createAdminAlert({
+    type: 'new_print_request',
+    title: `Nova solicitação de impressão: ${data.title}`,
+    body: `Solicitado por: ${currentUser?.name || auth.user.email}`,
+    priority: 'normal',
+  }).catch(err => console.error('[admin-alerts] create failed:', err));
+
   // Notify admin and user
   const { data: admins } = await admin
     .from('users')
     .select('email')
     .eq('role', 'admin')
     .limit(5);
-
-  const { data: currentUser } = await admin
-    .from('users')
-    .select('email, name')
-    .eq('id', auth.user.id)
-    .single();
 
   // Send confirmation email to user
   if (currentUser?.email) {

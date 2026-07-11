@@ -3,6 +3,7 @@ import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderConfirmationEmail, sendInvoiceRequestEmail, sendAdminNewOrderEmail, sendSTLOrderConfirmationEmail, sendSTLAdminNotificationEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { createAdminAlert } from '@/lib/admin-alerts';
 import { verifyWebhookSignature } from '@/lib/security';
 import { hasDigitalItems, hasPhysicalItems, type OrderItemWithProduct } from '@/lib/order-helpers';
 
@@ -128,6 +129,15 @@ export async function POST(request: Request) {
           `O pagamento do pedido #${order.id.slice(0, 8).toUpperCase()} foi recusado. Tente novamente ou use outro método de pagamento.`,
           { order_id: order.id, event: 'payment_rejected' },
         );
+
+        // Create admin alert for rejected payment
+        createAdminAlert({
+          type: 'payment_rejected',
+          title: `Pagamento rejeitado: Pedido #${order.id.slice(0, 8).toUpperCase()}`,
+          body: 'Cliente será notificado para retentar',
+          priority: 'urgent',
+          related_order_id: order.id,
+        }).catch(err => console.error('[admin-alerts] create failed:', err));
       }
     } catch (e) {
       console.error('[mp-webhook] notification error:', e);
@@ -237,6 +247,18 @@ export async function POST(request: Request) {
           customerEmail: userData.email,
           total: Number(result.transaction_amount) || 0,
         }).catch((e) => console.error('[mp-webhook] admin email error:', e));
+
+        // Create admin alert for real-time notification
+        const isDigitalWebhook = (items || []).some(
+          (item) => (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
+        );
+        createAdminAlert({
+          type: 'new_order',
+          title: `Novo pedido: ${isDigitalWebhook ? 'STL' : 'Produto físico'}`,
+          body: `Cliente: ${userData.name || userData.email} | Total: R$ ${(Number(result.transaction_amount) || 0).toFixed(2)}`,
+          priority: isDigitalWebhook ? 'normal' : 'high',
+          related_order_id: order.id,
+        }).catch(err => console.error('[admin-alerts] create failed:', err));
 
         const { data: orderFull } = await admin
           .from('orders')
