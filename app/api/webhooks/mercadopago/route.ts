@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderConfirmationEmail, sendInvoiceRequestEmail, sendAdminNewOrderEmail, sendSTLOrderConfirmationEmail, sendSTLAdminNotificationEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { verifyWebhookSignature } from '@/lib/security';
+import { hasDigitalItems, hasPhysicalItems, type OrderItemWithProduct } from '@/lib/order-helpers';
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
@@ -142,12 +143,35 @@ export async function POST(request: Request) {
       await admin.from('cart_items').delete().eq('user_id', order.user_id);
 
       try {
+        const items = (await admin
+          .from('order_items')
+          .select('*, product:products(type)')
+          .eq('order_id', order.id)) as { data: OrderItemWithProduct[] | null };
+
+        const itemsData = items.data ?? [];
+        const hasDigital = hasDigitalItems(itemsData);
+        const hasPhysical = hasPhysicalItems(itemsData);
+
+        let notifTitle = '';
+        let notifBody = '';
+
+        if (hasDigital && !hasPhysical) {
+          notifTitle = '✨ Seu arquivo STL está pronto!';
+          notifBody = 'Acesse sua conta para fazer download do arquivo';
+        } else if (!hasDigital && hasPhysical) {
+          notifTitle = '🎉 Pedido aprovado!';
+          notifBody = 'Sua peça será impressa em até 3 dias úteis';
+        } else {
+          notifTitle = '📦 Arquivo pronto + Pedido em produção!';
+          notifBody = 'Seu arquivo está disponível. A peça será impressa em até 3 dias úteis.';
+        }
+
         await createNotification(
           order.user_id,
           'order_status',
-          'PIX confirmado!',
-          `O pagamento do pedido #${order.id.slice(0, 8).toUpperCase()} foi aprovado. Já estamos preparando!`,
-          { order_id: order.id, event: 'pix_approved' },
+          notifTitle,
+          notifBody,
+          { order_id: order.id, event: 'order_approved' },
         );
       } catch (e) {
         console.error('[mp-webhook] notification error:', e);
