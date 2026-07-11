@@ -403,9 +403,6 @@ export default function HomePage() {
                       <div className="text-white/80 text-sm font-medium">Arquivo STL</div>
                     </div>
 
-                    {/* Decoração */}
-                    <div className="absolute top-4 right-4 h-24 w-24 rounded-full bg-white/10 backdrop-blur-sm" />
-                    <div className="absolute bottom-4 left-4 h-20 w-20 rounded-full bg-white/10 backdrop-blur-sm" />
                   </div>
                 </div>
               </div>
