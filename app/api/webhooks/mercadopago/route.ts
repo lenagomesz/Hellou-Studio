@@ -91,6 +91,8 @@ export async function POST(request: Request) {
       newStatus = isDigitalOrder ? 'approved' : 'processing';
     } else if (mpStatus === 'cancelled') {
       newStatus = 'canceled';
+    } else if (['rejected', 'declined', 'refunded'].includes(mpStatus)) {
+      newStatus = 'rejected';
     } else {
       newStatus = order.status;
     }
@@ -118,9 +120,36 @@ export async function POST(request: Request) {
           `O PIX do pedido #${order.id.slice(0, 8).toUpperCase()} expirou ou foi cancelado. Faça um novo pedido se desejar.`,
           { order_id: order.id, event: 'payment_cancelled' },
         );
+      } else if (newStatus === 'rejected' && order.status !== 'rejected') {
+        await createNotification(
+          order.user_id,
+          'order_status',
+          'Pagamento recusado',
+          `O pagamento do pedido #${order.id.slice(0, 8).toUpperCase()} foi recusado. Tente novamente ou use outro método de pagamento.`,
+          { order_id: order.id, event: 'payment_rejected' },
+        );
       }
     } catch (e) {
       console.error('[mp-webhook] notification error:', e);
+    }
+
+    if (newStatus === 'rejected' && (order.status === 'approved' || order.status === 'processing')) {
+      // Restore stock if payment was rejected after approval
+      const { data: items } = await admin
+        .from('order_items')
+        .select('*, option:product_options(*)')
+        .eq('order_id', order.id);
+
+      if (items) {
+        for (const item of items) {
+          if (item.product_option_id) {
+            await admin
+              .from('product_options')
+              .update({ stock: (item.option?.stock ?? 0) + item.quantity })
+              .eq('id', item.product_option_id);
+          }
+        }
+      }
     }
 
     if ((newStatus === 'approved' || newStatus === 'processing') && order.status === 'awaiting_payment') {
