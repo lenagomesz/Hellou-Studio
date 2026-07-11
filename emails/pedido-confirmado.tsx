@@ -1,227 +1,114 @@
-import {
-  Body,
-  Button,
-  Container,
-  Column,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Preview,
-  Row,
-  Section,
-  Text,
-} from '@react-email/components';
-
-interface PedidoConfirmadoEmailProps {
-  nome: string | null;
-  pedidoId: string;
-  total: number;
-  itens: Array<{ nome: string; quantidade: number; precoUnitario: number }>;
-  baseUrl: string;
-}
-
-export function PedidoConfirmadoEmail({
+export const PedidoConfirmadoEmail = ({
   nome,
   pedidoId,
   total,
   itens,
   baseUrl,
-}: PedidoConfirmadoEmailProps) {
-  const shortId = pedidoId.slice(0, 8).toUpperCase();
-  const greeting = nome ? `Olá, ${nome}!` : 'Olá!';
+}: {
+  nome: string | null;
+  pedidoId: string;
+  total: number;
+  itens: Array<{ nome: string; quantidade: number; precoUnitario: number }>;
+  baseUrl: string;
+}) => {
+  const formattedTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+  const formattedDate = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 
   return (
-    <Html>
-      <Head />
-      <Preview>Pedido #{shortId} confirmado — helloustudio</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <Section style={headerSection}>
-            <Text style={brand}>helloustudio</Text>
-          </Section>
+    <div style={{ fontFamily: 'sans-serif', maxWidth: '480px', margin: '0 auto', padding: '32px 24px', backgroundColor: '#ffffff' }}>
+      {/* Header */}
+      <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
+        <h1 style={{ color: '#111', margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' }}>
+          Pedido Confirmado! 🎉
+        </h1>
+        <p style={{ color: '#666', margin: '0', fontSize: '14px' }}>
+          Pedido #{pedidoId.slice(0, 8).toUpperCase()} • {formattedDate}
+        </p>
+      </div>
 
-          <Section style={content}>
-            <Heading style={heading}>{greeting}</Heading>
-            <Text style={paragraph}>
-              Seu pedido <strong>#{shortId}</strong> foi confirmado! Já estamos preparando tudo com carinho.
-            </Text>
+      {/* Personal greeting */}
+      <p style={{ color: '#555', lineHeight: '1.6', margin: '0 0 24px 0' }}>
+        Olá{nome ? `, ${nome}` : ''}! Seu pedido foi confirmado e está sendo preparado com muito carinho. ✨
+      </p>
 
-            <Section style={tableContainer}>
-              <Row style={tableHeader}>
-                <Column style={colItem}>Item</Column>
-                <Column style={colQty}>Qtd</Column>
-                <Column style={colPrice}>Preço</Column>
-              </Row>
-              {itens.map((item, i) => (
-                <Row key={i} style={tableRow}>
-                  <Column style={colItem}>
-                    <Text style={itemName}>{item.nome}</Text>
-                  </Column>
-                  <Column style={colQty}>
-                    <Text style={itemText}>{item.quantidade}</Text>
-                  </Column>
-                  <Column style={colPrice}>
-                    <Text style={itemText}>
-                      {formatBRL(item.precoUnitario * item.quantidade)}
-                    </Text>
-                  </Column>
-                </Row>
-              ))}
-              <Hr style={tableHr} />
-              <Row>
-                <Column style={colItem}>
-                  <Text style={totalLabel}>Total</Text>
-                </Column>
-                <Column style={colQty} />
-                <Column style={colPrice}>
-                  <Text style={totalValue}>{formatBRL(total)}</Text>
-                </Column>
-              </Row>
-            </Section>
+      {/* Items */}
+      <div style={{ margin: '24px 0', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+        <p style={{ margin: '0 0 16px 0', fontSize: '12px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Itens do pedido
+        </p>
+        {itens.map((item, idx) => (
+          <div key={idx} style={{ marginBottom: idx < itens.length - 1 ? '16px' : '0', paddingBottom: idx < itens.length - 1 ? '16px' : '0', borderBottom: idx < itens.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+              <p style={{ color: '#1f2937', fontWeight: '600', margin: '0', flex: '1' }}>{item.nome}</p>
+              <p style={{ color: '#1f2937', fontWeight: '600', margin: '0 0 0 12px', whiteSpace: 'nowrap' }}>
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.precoUnitario * item.quantidade)}
+              </p>
+            </div>
+            <p style={{ color: '#888', margin: '0', fontSize: '13px' }}>
+              Quantidade: {item.quantidade} × {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.precoUnitario)}
+            </p>
+          </div>
+        ))}
+      </div>
 
-            <Section style={buttonSection}>
-              <Button style={button} href={`${baseUrl}/account/orders/${pedidoId}`}>
-                Ver meu pedido
-              </Button>
-            </Section>
-          </Section>
+      {/* Total */}
+      <div style={{ margin: '24px 0', padding: '16px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+        <p style={{ margin: '0', fontSize: '12px', color: '#666', marginBottom: '8px' }}>TOTAL DO PEDIDO</p>
+        <p style={{ margin: '0', fontSize: '20px', fontWeight: '700', color: '#15803d' }}>
+          {formattedTotal}
+        </p>
+      </div>
 
-          <Hr style={hr} />
-          <Text style={footer}>
-            helloustudio — Produtos 3D únicos, feitos sob demanda.
-          </Text>
-        </Container>
-      </Body>
-    </Html>
+      {/* Timeline */}
+      <div style={{ margin: '24px 0' }}>
+        <p style={{ margin: '0 0 16px 0', fontSize: '12px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Próximas etapas
+        </p>
+        <div style={{ position: 'relative', paddingLeft: '32px' }}>
+          {[
+            { icon: '✓', title: 'Pagamento confirmado', desc: 'Seu pagamento foi processado com sucesso.' },
+            { icon: '🖨️', title: 'Produção', desc: 'Sua peça será impressa em até 3 dias úteis.' },
+            { icon: '📦', title: 'Envio', desc: 'Você receberá o código de rastreamento por email.' },
+            { icon: '✅', title: 'Entrega', desc: 'Sua peça chegará com segurança.' },
+          ].map((step, idx) => (
+            <div key={idx} style={{ marginBottom: idx < 3 ? '24px' : '0', position: 'relative' }}>
+              <div style={{ position: 'absolute', left: '-32px', top: '0px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: idx === 0 ? '#15803d' : '#e5e7eb', color: idx === 0 ? '#fff' : '#666', fontWeight: '600', fontSize: '12px' }}>
+                {step.icon}
+              </div>
+              <p style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>{step.title}</p>
+              <p style={{ margin: '0', fontSize: '13px', color: '#888' }}>{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <a
+        href={`${baseUrl}/account/orders/${pedidoId}`}
+        style={{
+          display: 'inline-block',
+          margin: '32px 0 24px 0',
+          padding: '12px 24px',
+          background: 'linear-gradient(to right, #ec4899, #f97316)',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '8px',
+          fontWeight: '600',
+          fontSize: '14px',
+        }}
+      >
+        Acompanhe seu pedido
+      </a>
+
+      {/* Support links */}
+      <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
+        <p style={{ margin: '0 0 12px 0', color: '#555', fontSize: '13px' }}>
+          Dúvidas? Acesse sua conta em <a href={`${baseUrl}/account/orders`} style={{ color: '#ec4899', textDecoration: 'none' }}>helloustudio</a> para mais detalhes.
+        </p>
+        <p style={{ margin: '0', color: '#999', fontSize: '12px' }}>
+          © helloustudio • Feito com ❤️ em 3D
+        </p>
+      </div>
+    </div>
   );
-}
-
-function formatBRL(cents: number): string {
-  return (cents / 100).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  });
-}
-
-const main = {
-  backgroundColor: '#f9fafb',
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-};
-
-const container = {
-  margin: '0 auto',
-  padding: '40px 20px',
-  maxWidth: '560px',
-};
-
-const headerSection = {
-  textAlign: 'center' as const,
-  padding: '32px 0 24px',
-};
-
-const brand = {
-  fontSize: '28px',
-  fontWeight: '700',
-  background: 'linear-gradient(to right, #ec4899, #f97316)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  margin: '0',
-};
-
-const content = {
-  backgroundColor: '#ffffff',
-  borderRadius: '12px',
-  padding: '32px',
-  border: '1px solid #e5e7eb',
-};
-
-const heading = {
-  fontSize: '22px',
-  fontWeight: '600',
-  color: '#111827',
-  margin: '0 0 16px',
-};
-
-const paragraph = {
-  fontSize: '15px',
-  lineHeight: '1.6',
-  color: '#4b5563',
-  margin: '0 0 20px',
-};
-
-const tableContainer = {
-  margin: '16px 0',
-};
-
-const tableHeader = {
-  borderBottom: '1px solid #e5e7eb',
-  paddingBottom: '8px',
-  marginBottom: '8px',
-};
-
-const tableRow = {
-  borderBottom: '1px solid #f3f4f6',
-};
-
-const colItem = { width: '60%' };
-const colQty = { width: '15%', textAlign: 'center' as const };
-const colPrice = { width: '25%', textAlign: 'right' as const };
-
-const itemName = {
-  fontSize: '14px',
-  color: '#374151',
-  margin: '8px 0',
-};
-
-const itemText = {
-  fontSize: '14px',
-  color: '#6b7280',
-  margin: '8px 0',
-};
-
-const tableHr = {
-  borderColor: '#e5e7eb',
-  margin: '8px 0',
-};
-
-const totalLabel = {
-  fontSize: '14px',
-  fontWeight: '600',
-  color: '#111827',
-  margin: '8px 0',
-};
-
-const totalValue = {
-  fontSize: '14px',
-  fontWeight: '600',
-  color: '#111827',
-  margin: '8px 0',
-};
-
-const buttonSection = {
-  textAlign: 'center' as const,
-  margin: '28px 0 8px',
-};
-
-const button = {
-  backgroundColor: '#ec4899',
-  borderRadius: '9999px',
-  color: '#ffffff',
-  fontSize: '14px',
-  fontWeight: '600',
-  textDecoration: 'none',
-  padding: '12px 28px',
-  display: 'inline-block',
-};
-
-const hr = {
-  borderColor: '#e5e7eb',
-  margin: '32px 0 16px',
-};
-
-const footer = {
-  fontSize: '12px',
-  color: '#9ca3af',
-  textAlign: 'center' as const,
 };
