@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { OrderStatus } from '@/types/database';
 
-const STATUS_LABELS: Record<OrderStatus | 'rejected', string> = {
+const STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_payment: 'Aguardando Pgto',
   pending: 'Aprovado',
   approved: 'Aprovado',
@@ -16,10 +16,9 @@ const STATUS_LABELS: Record<OrderStatus | 'rejected', string> = {
   delivered: 'Entregue',
   canceled: 'Cancelado',
   refunded: 'Reembolsado',
-  rejected: 'Pagamento Recusado',
 };
 
-const STATUS_STYLES: Record<OrderStatus | 'rejected', string> = {
+const STATUS_STYLES: Record<OrderStatus, string> = {
   awaiting_payment: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
   pending: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   approved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
@@ -30,10 +29,9 @@ const STATUS_STYLES: Record<OrderStatus | 'rejected', string> = {
   delivered: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   canceled: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
   refunded: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 };
 
-const VALID_STATUSES: (OrderStatus | 'rejected')[] = ['approved', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded', 'rejected'];
+const VALID_STATUSES: OrderStatus[] = ['approved', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded'];
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -225,7 +223,7 @@ export default function OrdersListPage() {
                     {formatPrice(order.total)}
                   </td>
                   <td className="px-4 py-3.5">
-                    {order.mp_status === 'rejected' || order.status === 'rejected' ? (
+                    {order.mp_status === 'rejected' ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
                         <span className="text-red-500">✕</span> Recusado
                       </span>
