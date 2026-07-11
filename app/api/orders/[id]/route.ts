@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, badRequest, notFound, serverError } from '@/lib/api';
-import { sendOrderStatusEmail } from '@/lib/email';
+import { requireAdmin, requireUser, badRequest, notFound, serverError } from '@/lib/api';
+import { sendOrderStatusEmail, sendSTLDeliveryEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { getRefundClient } from '@/lib/mercadopago';
 import type { OrderStatus } from '@/types/database';
@@ -31,7 +31,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 }
 
 export async function PATCH(req: NextRequest, ctx: RouteCtx) {
-  const auth = await requireAdmin();
+  const auth = await requireUser();
   if (auth.response) return auth.response;
 
   const { id } = await ctx.params;
@@ -42,6 +42,72 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     admin_notes?: string;
   };
 
+  if (!status) {
+    return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+  }
+
+  const admin = getSupabaseAdmin();
+
+  // --- Customer flow: only allow digital-only order self-delivery ---
+  if (auth.user.role !== 'admin') {
+    // Fetch order to verify ownership and current state
+    const { data: order, error: fetchError } = await admin
+      .from('orders')
+      .select('id, user_id, status, items:order_items(*, product:products(type))')
+      .eq('id', id)
+      .eq('user_id', auth.user.id)
+      .single();
+
+    if (fetchError || !order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    // Check if this is a digital-only order
+    const items = order.items as Array<{ product?: { type?: string } }>;
+    const isDigitalOnly = items?.length > 0 && items.every((i) => i.product?.type === 'digital');
+
+    // If already delivered, just acknowledge
+    if (isDigitalOnly && order.status === 'delivered') {
+      return NextResponse.json({ received: true, status: order.status });
+    }
+
+    // Update status
+    const { error: updateError } = await admin
+      .from('orders')
+      .update({ status })
+      .eq('id', id);
+
+    if (updateError) {
+      return serverError('Erro ao atualizar pedido');
+    }
+
+    // Send email to customer if status changed to delivered for digital-only
+    try {
+      const { data: userData } = await admin
+        .from('users')
+        .select('email, name')
+        .eq('id', order.user_id)
+        .single();
+
+      if (userData?.email && status === 'delivered' && isDigitalOnly) {
+        // Get file name for email
+        const fileName = (order.items?.[0] as any)?.product_snapshot?.name || 'Arquivo STL';
+        await sendSTLDeliveryEmail({
+          email: userData.email,
+          nome: userData.name || null,
+          orderId: id,
+          fileName,
+        });
+      }
+    } catch (err) {
+      console.error('[order-patch] email error:', err);
+      // Don't fail the request if email fails
+    }
+
+    return NextResponse.json({ success: true, status, message: 'Status atualizado' });
+  }
+
+  // --- Admin flow (unchanged) ---
   if (status && !VALID_STATUSES.includes(status as OrderStatus)) {
     return badRequest('Status inválido');
   }
@@ -49,8 +115,6 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   if (status === 'shipped' && !tracking_code?.trim()) {
     return badRequest('Código de rastreio é obrigatório para envio');
   }
-
-  const admin = getSupabaseAdmin();
 
   const { data: current } = await admin.from('orders').select('shipping_address, mp_payment_id, payment_provider').eq('id', id).single();
   if (!current) return notFound('Pedido não encontrado');
