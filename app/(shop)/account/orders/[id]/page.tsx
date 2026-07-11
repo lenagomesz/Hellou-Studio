@@ -212,10 +212,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 </p>
                 {item.product?.type === 'digital' && (
                   <DownloadButton
-                    orderId={order.id}
-                    productId={item.product.id}
-                    productName={item.product.name}
-                    orderStatus={order.status}
+                    order={order}
+                    isDigitalOnly={isDigitalOnly}
                   />
                 )}
               </div>

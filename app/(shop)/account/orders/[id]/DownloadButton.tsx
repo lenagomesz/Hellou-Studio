@@ -1,72 +1,58 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'react-toastify';
+import type { Order } from '@/types/database';
 
 interface DownloadButtonProps {
-  orderId: string;
-  productId: string;
-  productName: string;
-  orderStatus: string;
+  order: Order;
+  isDigitalOnly: boolean;
 }
 
-export default function DownloadButton({ orderId, productId, productName, orderStatus }: DownloadButtonProps) {
-  const [downloading, setDownloading] = useState(false);
+export default function DownloadButton({ order, isDigitalOnly }: DownloadButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const isAvailable = orderStatus === 'approved' || orderStatus === 'delivered';
-  if (!isAvailable) {
-    return (
-      <div className="mt-2">
-        <button
-          type="button"
-          disabled
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed"
-          title="O arquivo será disponível quando o pagamento for aprovado"
-        >
-          🔒 Indisponível
-        </button>
-      </div>
-    );
-  }
-
-  async function handleDownload() {
-    setDownloading(true);
+  const handleDownload = async () => {
     try {
-      const response = await fetch(`/api/orders/${orderId}/download/${productId}`);
+      setIsLoading(true);
+      setError(null);
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || 'Falha ao baixar arquivo');
+      // If digital-only and in 'approved' status, update to 'delivered'
+      if (isDigitalOnly && order.status === 'approved') {
+        const response = await fetch(`/api/orders/${order.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'delivered' }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Falha ao atualizar pedido');
+        }
+
+        const result = await response.json();
+        console.log('[DownloadButton] Status updated:', result);
       }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Proceed with download
+      const downloadUrl = `/api/orders/${order.id}/download`;
       const link = document.createElement('a');
-      link.href = url;
-      link.download = `${productName.replace(/\s+/g, '_')}.stl`;
-      document.body.appendChild(link);
+      link.href = downloadUrl;
       link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success('Arquivo baixado com sucesso!');
-    } catch (error) {
-      console.error('[download] Error:', error);
-      toast.error(error instanceof Error ? error.message : 'Falha ao baixar arquivo');
+    } catch (err) {
+      console.error('[DownloadButton] error:', err);
+      setError('Erro ao fazer download. Tente novamente.');
     } finally {
-      setDownloading(false);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="mt-2">
-      <button
-        type="button"
-        onClick={handleDownload}
-        disabled={downloading}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-lg hover:opacity-90 text-sm font-medium disabled:opacity-50 transition"
-      >
-        {downloading ? 'Baixando...' : '📥 Baixar Arquivo'}
-      </button>
-    </div>
+    <button
+      onClick={handleDownload}
+      disabled={isLoading}
+      className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/30 transition-all hover:shadow-xl hover:scale-[1.02] disabled:opacity-50"
+    >
+      {isLoading ? 'Processando...' : '📥 Baixar arquivo'}
+    </button>
   );
 }
