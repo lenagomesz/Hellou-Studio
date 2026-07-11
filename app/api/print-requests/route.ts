@@ -150,18 +150,14 @@ export async function POST(request: Request) {
     }).catch(err => console.error('[email] user confirmation failed:', err));
   }
 
-  // Notify admins
-  if (admins?.length) {
-    for (const adm of admins) {
-      sendAdminNewPrintRequestEmail({
-        adminEmail: adm.email,
-        requestId: data.id,
-        title: data.title,
-        customerName: currentUser?.name ?? null,
-        customerEmail: currentUser?.email ?? auth.user.email ?? '',
-      }).catch(err => console.error('[email] admin notification failed:', err));
-    }
-  }
+  // Notify admin
+  sendAdminNewPrintRequestEmail({
+    adminEmail: 'studiohellou@gmail.com',
+    requestId: data.id,
+    title: data.title,
+    customerName: currentUser?.name ?? null,
+    customerEmail: currentUser?.email ?? auth.user.email ?? '',
+  }).catch(err => console.error('[email] admin notification failed:', err));
 
   return NextResponse.json({ request: data as PrintRequest }, { status: 201 });
 }

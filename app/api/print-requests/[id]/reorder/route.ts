@@ -43,29 +43,19 @@ export async function POST(
     return serverError('Erro ao criar solicitação');
   }
 
-  const { data: admins } = await admin
+  const { data: currentUser } = await admin
     .from('users')
-    .select('email')
-    .eq('role', 'admin')
-    .limit(5);
+    .select('email, name')
+    .eq('id', auth.user.id)
+    .single();
 
-  if (admins?.length) {
-    const { data: currentUser } = await admin
-      .from('users')
-      .select('email, name')
-      .eq('id', auth.user.id)
-      .single();
-
-    for (const adm of admins) {
-      sendAdminNewPrintRequestEmail({
-        adminEmail: adm.email,
-        requestId: data.id,
-        title: data.title,
-        customerName: currentUser?.name ?? null,
-        customerEmail: currentUser?.email ?? auth.user.email ?? '',
-      }).catch(() => {});
-    }
-  }
+  sendAdminNewPrintRequestEmail({
+    adminEmail: 'studiohellou@gmail.com',
+    requestId: data.id,
+    title: data.title,
+    customerName: currentUser?.name ?? null,
+    customerEmail: currentUser?.email ?? auth.user.email ?? '',
+  }).catch(() => {});
 
   return NextResponse.json({ request: data as PrintRequest }, { status: 201 });
 }
