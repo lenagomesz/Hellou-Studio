@@ -13,10 +13,6 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://sdk.mercadopago.com; connect-src 'self' https:; default-src 'self'",
-          },
         ],
       },
       {
