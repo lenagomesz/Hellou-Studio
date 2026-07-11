@@ -10,11 +10,8 @@ import {
   Printer,
   Box,
   Users,
-  Bell,
   Tag,
   BarChart3,
-  DollarSign,
-  Calculator,
   LogOut,
   Menu,
   X,
@@ -22,11 +19,6 @@ import {
   Shield,
   AlertCircle,
   Warehouse,
-  TrendingUp,
-  PieChart,
-  AlertTriangle,
-  Calendar,
-  Sliders,
   Mail,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -48,7 +40,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Principal',
     items: [
-      { href: '/dashboard', label: 'Visão geral', icon: LayoutDashboard, exact: true },
+      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
       { href: '/dashboard/admin-alerts', label: 'Alertas', icon: AlertCircle, badgeKey: 'alerts' },
     ],
   },
@@ -56,44 +48,25 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'Gerenciamento',
     items: [
       { href: '/dashboard/orders', label: 'Pedidos', icon: Package },
-      { href: '/dashboard/requests', label: 'Solicitações', icon: Printer },
+      { href: '/dashboard/requests', label: 'Solicitações de Impressão', icon: Printer },
       { href: '/dashboard/products', label: 'Produtos', icon: Box },
-      { href: '/dashboard/users', label: 'Usuários', icon: Users },
+      { href: '/dashboard/users', label: 'Clientes', icon: Users },
       { href: '/dashboard/coupons', label: 'Cupons', icon: Tag },
       { href: '/dashboard/order-ratings', label: 'Avaliações', icon: Star },
     ],
   },
   {
-    label: 'Marketing',
+    label: 'Negócio',
     items: [
       { href: '/dashboard/campaigns', label: 'Email Marketing', icon: Mail },
-    ],
-  },
-  {
-    label: 'Estoque',
-    items: [
       { href: '/dashboard/inventory', label: 'Estoque', icon: Warehouse },
+      { href: '/dashboard/analytics', label: 'Relatórios', icon: BarChart3, exact: true },
     ],
   },
   {
-    label: 'Relatorios',
+    label: 'Configuração',
     items: [
-      { href: '/dashboard/analytics', label: 'Analiticos', icon: BarChart3, exact: true },
-      { href: '/dashboard/analytics/rfm', label: 'RFM', icon: TrendingUp },
-      { href: '/dashboard/analytics/segments', label: 'Segmentos', icon: PieChart },
-      { href: '/dashboard/analytics/churn', label: 'Churn', icon: AlertTriangle },
-      { href: '/dashboard/analytics/ltv', label: 'LTV', icon: DollarSign },
-      { href: '/dashboard/analytics/cohorts', label: 'Coortes', icon: Calendar },
-      { href: '/dashboard/financeiro', label: 'Financeiro', icon: DollarSign },
-      { href: '/dashboard/calculadora', label: 'Calculadora', icon: Calculator },
-    ],
-  },
-  {
-    label: 'Sistema',
-    items: [
-      { href: '/dashboard/notifications', label: 'Notificações', icon: Bell },
-      { href: '/admin/security', label: 'Segurança 2FA', icon: Shield },
-      { href: '/dashboard/settings/features', label: 'Feature Flags', icon: Sliders },
+      { href: '/admin/security', label: 'Segurança (2FA)', icon: Shield },
     ],
   },
 ];
