@@ -230,9 +230,6 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   )}
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                {formatPrice(item.unit_price * item.quantity)}
-              </p>
             </li>
           ))}
         </ul>

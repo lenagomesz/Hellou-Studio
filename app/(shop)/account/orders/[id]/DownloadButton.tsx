@@ -51,9 +51,9 @@ export default function DownloadButton({ order, isDigitalOnly, productId }: Down
     <button
       onClick={handleDownload}
       disabled={isLoading}
-      className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-pink-200/30 transition-all hover:shadow-xl hover:scale-[1.02] disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-pink-200/30 transition-all hover:shadow-lg hover:scale-[1.02] disabled:opacity-50"
     >
-      {isLoading ? 'Processando...' : '📥 Baixar'}
+      {isLoading ? 'Processando...' : '📥 Baixar arquivo'}
     </button>
   );
 }
