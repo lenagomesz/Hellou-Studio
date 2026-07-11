@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import {
   badRequest,
@@ -125,6 +126,11 @@ export async function PATCH(
     }
 
     console.log('[products-patch] product updated successfully:', id);
+
+    // Invalidate cache for product pages
+    revalidatePath(`/products/${id}`, 'page');
+    revalidatePath(`/dashboard/products/${id}`, 'page');
+
     return NextResponse.json({ product: data as Product });
   } catch (err) {
     console.error('[products-patch] exception:', {
