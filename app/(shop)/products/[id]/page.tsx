@@ -74,7 +74,7 @@ function getRelatedProducts(category: string, excludeId: string, productType: st
 }
 
 export default async function ProductDetailPage(
-  props: PageProps<'/products/[id]'>,
+  props: { params: Promise<{ id: string }> },
 ) {
   const { id } = await props.params;
   const result = await getProductWithOptions(id);

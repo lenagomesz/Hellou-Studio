@@ -64,7 +64,7 @@ function getRelatedProducts(excludeId: string) {
 }
 
 export default async function STLProductDetailPage(
-  props: PageProps<'/stl/[id]'>,
+  props: { params: Promise<{ id: string }> },
 ) {
   const { id } = await props.params;
   const result = await getProductWithOptions(id);
