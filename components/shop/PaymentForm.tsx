@@ -810,10 +810,6 @@ export function PaymentForm({
             </div>
           )}
 
-          {!sdkReady && (
-            <p className="text-center text-xs text-gray-400">Carregando módulo de segurança...</p>
-          )}
-
           {/* Trust badges */}
           <div className="flex items-center justify-center gap-4 border-t border-gray-100 dark:border-gray-800 pt-4 mt-1">
             <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
