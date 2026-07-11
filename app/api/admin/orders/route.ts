@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   let dataQuery = admin
     .from('orders')
-    .select('id, status, total, created_at, user:users(id, email, name)')
+    .select('id, status, total, created_at, mp_status, user:users(id, email, name)')
     .order('created_at', { ascending: false });
 
   if (status && VALID_STATUSES.includes(status as OrderStatus)) {
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await dataQuery.limit(1000);
     if (error) return serverError('Erro ao buscar pedidos');
 
-    let rows = (data ?? []) as unknown as { id: string; status: OrderStatus; total: number; created_at: string; user: { id: string; email: string; name: string | null } | null }[];
+    let rows = (data ?? []) as unknown as { id: string; status: OrderStatus; total: number; created_at: string; mp_status?: string; user: { id: string; email: string; name: string | null } | null }[];
 
     const term = search.toLowerCase();
     rows = rows.filter((order) => {
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await dataQuery.range(from, to);
   if (error) return serverError('Erro ao buscar pedidos');
 
-  const rows = (data ?? []) as unknown as { id: string; status: OrderStatus; total: number; created_at: string; user: { id: string; email: string; name: string | null } | null }[];
+  const rows = (data ?? []) as unknown as { id: string; status: OrderStatus; total: number; created_at: string; mp_status?: string; user: { id: string; email: string; name: string | null } | null }[];
 
   return NextResponse.json({
     orders: rows,

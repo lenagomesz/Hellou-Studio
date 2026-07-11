@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { OrderStatus } from '@/types/database';
 
-const STATUS_LABELS: Record<OrderStatus, string> = {
+const STATUS_LABELS: Record<OrderStatus | 'rejected', string> = {
   awaiting_payment: 'Aguardando Pgto',
   pending: 'Aprovado',
   approved: 'Aprovado',
@@ -16,9 +16,10 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   delivered: 'Entregue',
   canceled: 'Cancelado',
   refunded: 'Reembolsado',
+  rejected: 'Pagamento Recusado',
 };
 
-const STATUS_STYLES: Record<OrderStatus, string> = {
+const STATUS_STYLES: Record<OrderStatus | 'rejected', string> = {
   awaiting_payment: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
   pending: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   approved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
@@ -29,9 +30,10 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
   delivered: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   canceled: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
   refunded: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 };
 
-const VALID_STATUSES: OrderStatus[] = ['approved', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded'];
+const VALID_STATUSES: (OrderStatus | 'rejected')[] = ['approved', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded', 'rejected'];
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -46,6 +48,7 @@ type OrderRow = {
   status: OrderStatus;
   total: number;
   created_at: string;
+  mp_status?: string;
   user: { id: string; email: string; name: string | null } | null;
 };
 
@@ -199,6 +202,7 @@ export default function OrdersListPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Pedido</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cliente</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Total</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Pgto</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Ação rápida</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Data</th>
@@ -219,6 +223,21 @@ export default function OrdersListPage() {
                   </td>
                   <td className="px-4 py-3.5 text-sm font-semibold text-gray-900 dark:text-white">
                     {formatPrice(order.total)}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    {order.mp_status === 'rejected' || order.status === 'rejected' ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                        <span className="text-red-500">✕</span> Recusado
+                      </span>
+                    ) : order.mp_status === 'approved' || ['approved', 'processing', 'completed', 'shipped', 'delivered'].includes(order.status) ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                        <span className="text-green-500">✓</span> Aprovado
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                        <span className="text-orange-500">⏱</span> Pendente
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[order.status]}`}>
