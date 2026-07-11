@@ -129,9 +129,23 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   if (status === 'refunded' && current.payment_provider === 'mercadopago' && current.mp_payment_id) {
     try {
       const refundClient = getRefundClient();
+      console.log('[refund] Attempting refund for payment:', current.mp_payment_id);
       await refundClient.create({ payment_id: Number(current.mp_payment_id), body: {} });
+      console.log('[refund] Refund successful for payment:', current.mp_payment_id);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      console.error('[refund] Error details:', {
+        type: typeof err,
+        message: err instanceof Error ? err.message : String(err),
+        data: err instanceof Error ? err.stack : JSON.stringify(err),
+      });
+
+      let msg = 'Erro desconhecido';
+      if (err instanceof Error) {
+        msg = err.message;
+      } else if (typeof err === 'object' && err !== null) {
+        const errObj = err as Record<string, unknown>;
+        msg = (errObj.message as string) || (errObj.status as string) || String(err);
+      }
       return NextResponse.json({ error: `Falha ao reembolsar no Mercado Pago: ${msg}` }, { status: 400 });
     }
   }
