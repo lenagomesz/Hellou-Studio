@@ -17,7 +17,7 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, basePath = "/products" }: { product: Product; basePath?: string }) {
   const [zoomed, setZoomed] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link
-      href={`/products/${product.id}`}
+      href={`${basePath}/${product.id}`}
       className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:shadow-gray-900/50"
     >
       <div className="aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
