@@ -8,12 +8,13 @@ import type { PrintRequest } from '@/types/database';
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '50mb',
+      sizeLimit: '100mb',
     },
   },
+  maxDuration: 300,
 };
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
 export async function GET(request: Request) {
   const auth = await requireUser();

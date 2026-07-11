@@ -7,9 +7,10 @@ import type { Category } from '@/types/database';
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '50mb',
+      sizeLimit: '100mb',
     },
   },
+  maxDuration: 300,
 };
 
 export async function POST(request: NextRequest) {
@@ -37,8 +38,8 @@ export async function POST(request: NextRequest) {
     if (!stlFile.name.toLowerCase().endsWith('.stl')) {
       return NextResponse.json({ error: 'Apenas arquivos .stl sao aceitos' }, { status: 400 });
     }
-    if (stlFile.size > 50 * 1024 * 1024) {
-      return NextResponse.json({ error: 'Arquivo deve ter menos de 50MB' }, { status: 400 });
+    if (stlFile.size > 100 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Arquivo deve ter menos de 100MB' }, { status: 400 });
     }
 
     const validCategories: Category[] = ['chaveiros', 'escritorio', 'criaturas', 'encomenda'];

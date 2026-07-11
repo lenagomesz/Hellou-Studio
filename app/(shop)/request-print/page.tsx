@@ -218,7 +218,7 @@ export default function RequestPrintPage() {
                     <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       {makerLink.trim() ? 'Desabilitado' : 'Arraste seu arquivo .stl aqui'}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{makerLink.trim() ? '' : 'ou clique para selecionar (máx. 50MB)'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{makerLink.trim() ? '' : 'ou clique para selecionar (máx. 100MB)'}</p>
                   </>
                 )}
                 <input
