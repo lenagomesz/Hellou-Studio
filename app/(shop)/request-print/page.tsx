@@ -69,6 +69,15 @@ export default function RequestPrintPage() {
       return;
     }
 
+    // Validate Makerworld link format
+    if (hasLink) {
+      const linkTrim = makerLink.trim().toLowerCase();
+      if (!linkTrim.includes('makerworld') && !linkTrim.includes('printables')) {
+        setError('Link inválido. Use um link do Makerworld ou Printables');
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     const formData = new FormData();
@@ -90,7 +99,11 @@ export default function RequestPrintPage() {
 
     if (!res.ok) {
       const data = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(data.error ?? 'Erro ao enviar solicitação');
+      if (data.error?.includes('STL')) {
+        setError('Arquivo STL é obrigatório quando não há link Makerworld');
+      } else {
+        setError(data.error ?? 'Erro ao enviar solicitação');
+      }
       setSubmitting(false);
       return;
     }

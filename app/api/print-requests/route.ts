@@ -61,38 +61,56 @@ export async function POST(request: Request) {
   const description = formData.get('description') as string | null;
   const notes = formData.get('notes') as string | null;
   const file = formData.get('file') as File | null;
+  const makerLink = formData.get('makerworld_link') as string | null;
 
   if (!title?.trim()) return badRequest('Título é obrigatório');
-  if (!file) return badRequest('Arquivo STL é obrigatório');
 
-  if (!file.name.toLowerCase().endsWith('.stl')) {
-    return badRequest('Apenas arquivos .stl são aceitos');
+  const hasFile = file !== null;
+  const hasLink = makerLink?.trim().length ?? 0 > 0;
+
+  if (!hasFile && !hasLink) {
+    return badRequest('Envie um arquivo STL ou um link do Makerworld');
   }
 
-  if (file.size > MAX_FILE_SIZE) {
-    return badRequest('Arquivo muito grande (máximo 50MB)');
+  if (hasFile && hasLink) {
+    return badRequest('Escolha uma opção: arquivo ou link (não ambos)');
   }
 
   const admin = getSupabaseAdmin();
+  let stlFileUrl = null;
+  let stlFileName = null;
+  let stlFileSize = null;
 
-  const fileName = `${auth.user.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
+  // Handle STL file upload
+  if (hasFile) {
+    if (!file.name.toLowerCase().endsWith('.stl')) {
+      return badRequest('Apenas arquivos .stl são aceitos');
+    }
 
-  const { error: uploadError } = await admin.storage
-    .from('stl-uploads')
-    .upload(fileName, buffer, {
-      contentType: 'application/octet-stream',
-      upsert: false,
-    });
+    if (file.size > MAX_FILE_SIZE) {
+      return badRequest('Arquivo muito grande (máximo 100MB)');
+    }
 
-  if (uploadError) {
-    console.error('[print-requests] upload error:', uploadError);
-    return serverError('Erro ao fazer upload do arquivo');
+    const fileName = `${auth.user.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const { error: uploadError } = await admin.storage
+      .from('stl-uploads')
+      .upload(fileName, buffer, {
+        contentType: 'application/octet-stream',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('[print-requests] upload error:', uploadError);
+      return serverError('Erro ao fazer upload do arquivo');
+    }
+
+    const { data: urlData } = admin.storage.from('stl-uploads').getPublicUrl(fileName);
+    stlFileUrl = urlData.publicUrl;
+    stlFileName = file.name;
+    stlFileSize = file.size;
   }
-
-  const { data: urlData } = admin.storage
-    .from('stl-uploads')
-    .getPublicUrl(fileName);
 
   const { data, error } = await admin
     .from('print_requests')
@@ -101,9 +119,10 @@ export async function POST(request: Request) {
       title: title.trim(),
       description: description?.trim() || null,
       notes: notes?.trim() || null,
-      stl_file_url: urlData.publicUrl,
-      stl_file_name: file.name,
-      stl_file_size: file.size,
+      stl_file_url: stlFileUrl,
+      stl_file_name: stlFileName,
+      stl_file_size: stlFileSize,
+      makerworld_link: hasLink ? makerLink?.trim() : null,
     })
     .select('*')
     .single();
