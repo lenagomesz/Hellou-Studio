@@ -45,8 +45,9 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Check order status - STL must be approved or delivered
-    if (order.status !== 'approved' && order.status !== 'delivered') {
+    // Allow download for approved (digital-only), processing (hybrid), or delivered orders
+    const allowedStatuses = ['approved', 'processing', 'delivered'];
+    if (!allowedStatuses.includes(order.status)) {
       return NextResponse.json(
         { error: 'O pedido ainda não foi aprovado. Aguarde a confirmação do pagamento.' },
         { status: 403 }
