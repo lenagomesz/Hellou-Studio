@@ -162,6 +162,17 @@ export async function calculateShipping(rawCep: string): Promise<ShippingResult>
   const uf = data.uf;
   if (!UF_REGION[uf]) throw new Error(`Estado ${uf} não suportado.`);
 
+  // Santa Catarina: frete fixo de R$ 9,90
+  if (uf === 'SC') {
+    return {
+      options: [
+        { id: 'pac', name: 'PAC', price: 9.90, days_min: 3, days_max: 5 },
+        { id: 'sedex', name: 'SEDEX', price: 9.90, days_min: 1, days_max: 2 },
+      ],
+      address: { city: data.localidade, state: data.uf, street: data.logradouro, neighborhood: data.bairro },
+    };
+  }
+
   const correiosOptions = await fetchCorreiosRates(cep);
   const options = correiosOptions || getFallbackOptions(uf);
 
