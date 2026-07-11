@@ -49,14 +49,17 @@ export async function POST(req: NextRequest) {
         order_id: orderId,
         user_id: auth.user.id,
         rating,
-        updated_at: new Date().toISOString(),
       },
       { onConflict: 'order_id' }
     );
 
   if (upsertError) {
-    console.error('[ratings] upsert error:', upsertError);
-    return serverError('Erro ao salvar avaliação');
+    console.error('[ratings] upsert error:', {
+      message: upsertError.message,
+      code: upsertError.code,
+      details: upsertError.details,
+    });
+    return serverError(`Erro ao salvar avaliação: ${upsertError.message}`);
   }
 
   return NextResponse.json({ success: true });
