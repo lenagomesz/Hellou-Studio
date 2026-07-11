@@ -7,7 +7,6 @@ import { useSession } from 'next-auth/react';
 import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
-import { ProductViewTracker } from '@/components/shop/ProductViewTracker';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -168,9 +167,6 @@ export function ProductDetail({
           {finalPrice >= 99 && (
             <span className="text-xs text-green-600 font-medium">+ frete grátis</span>
           )}
-        </div>
-        <div className="mt-2">
-          <ProductViewTracker productId={product.id} />
         </div>
 
         {product.description ? (
