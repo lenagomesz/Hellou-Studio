@@ -711,7 +711,7 @@ export function PaymentForm({
 
               <button
                 onClick={handleCardPayment}
-                disabled={cardLoading || !sdkReady}
+                disabled={cardLoading}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-200/40 dark:shadow-none transition hover:shadow-xl hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
               >
                 {cardLoading ? (
@@ -792,7 +792,7 @@ export function PaymentForm({
 
               <button
                 onClick={handleDebitPayment}
-                disabled={cardLoading || !sdkReady}
+                disabled={cardLoading}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-200/40 dark:shadow-none transition hover:shadow-xl hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
               >
                 {cardLoading ? (
