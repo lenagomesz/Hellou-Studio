@@ -214,19 +214,21 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Qtd: {item.quantity} &middot; {formatPrice(item.unit_price)} cada
                 </p>
-                {item.product?.type === 'digital' && item.product?.id && (
-                  <DownloadButton
-                    order={order}
-                    isDigitalOnly={isDigitalOnly}
-                    productId={item.product.id}
-                  />
-                )}
-                {order.status === 'delivered' && item.product?.id && (
-                  <ProductReviewSuggestion
-                    productId={item.product.id}
-                    productName={item.product.name ?? 'este produto'}
-                  />
-                )}
+                <div className="mt-2 flex flex-col gap-2">
+                  {item.product?.type === 'digital' && item.product?.id && (
+                    <DownloadButton
+                      order={order}
+                      isDigitalOnly={isDigitalOnly}
+                      productId={item.product.id}
+                    />
+                  )}
+                  {order.status === 'delivered' && item.product?.id && (
+                    <ProductReviewSuggestion
+                      productId={item.product.id}
+                      productName={item.product.name ?? 'este produto'}
+                    />
+                  )}
+                </div>
               </div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">
                 {formatPrice(item.unit_price * item.quantity)}

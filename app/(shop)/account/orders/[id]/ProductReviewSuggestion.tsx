@@ -8,8 +8,8 @@ interface ProductReviewSuggestionProps {
 export default function ProductReviewSuggestion({ productId, productName }: ProductReviewSuggestionProps) {
   return (
     <Link
-      href={`/shop/products/${productId}`}
-      className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition"
+      href={`/products/${productId}`}
+      className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

@@ -8,11 +8,11 @@ interface RatingModalProps {
 }
 
 const EMOJIS = [
-  { value: 1, emoji: '\u{1F61E}', label: 'Muito insatisfeito' },
-  { value: 2, emoji: '\u{1F615}', label: 'Insatisfeito' },
-  { value: 3, emoji: '\u{1F610}', label: 'Neutro' },
-  { value: 4, emoji: '\u{1F60A}', label: 'Satisfeito' },
-  { value: 5, emoji: '\u{1F60D}', label: 'Muito satisfeito' },
+  { value: 1, emoji: '😞', label: 'Muito insatisfeito' },
+  { value: 2, emoji: '😕', label: 'Insatisfeito' },
+  { value: 3, emoji: '😐', label: 'Neutro' },
+  { value: 4, emoji: '😊', label: 'Satisfeito' },
+  { value: 5, emoji: '😍', label: 'Muito satisfeito' },
 ];
 
 export default function RatingModal({ orderId, onClose }: RatingModalProps) {
@@ -36,9 +36,12 @@ export default function RatingModal({ orderId, onClose }: RatingModalProps) {
         setTimeout(() => {
           onClose();
         }, 1500);
+      } else {
+        const error = await res.json();
+        console.error('[RatingModal] API error:', res.status, error);
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('[RatingModal] fetch error:', err);
     } finally {
       setIsSubmitting(false);
     }
