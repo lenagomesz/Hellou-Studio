@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
 
   // --- Customer flow: only allow digital-only order self-delivery ---
   if (auth.user.role !== 'admin') {
-    // Fetch order to verify ownership and current state
+    // Verify order ownership
     const { data: order, error: fetchError } = await admin
       .from('orders')
       .select('id, user_id, status, items:order_items(*, product:products(type))')
@@ -62,13 +62,21 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Check if this is a digital-only order
+    // Check if digital-only
     const items = order.items as Array<{ product?: { type?: string } }>;
     const isDigitalOnly = items?.length > 0 && items.every((i) => i.product?.type === 'digital');
 
-    // If already delivered, just acknowledge
-    if (isDigitalOnly && order.status === 'delivered') {
-      return NextResponse.json({ received: true, status: order.status });
+    // Only allow 'delivered' status for digital-only orders
+    if (!isDigitalOnly || status !== 'delivered') {
+      return NextResponse.json(
+        { error: 'Invalid request: only digital orders can be marked as delivered' },
+        { status: 400 }
+      );
+    }
+
+    // If already delivered, return success (idempotent)
+    if (order.status === 'delivered') {
+      return NextResponse.json({ success: true, status: order.status, message: 'Status atualizado' });
     }
 
     // Update status
@@ -81,7 +89,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
       return serverError('Erro ao atualizar pedido');
     }
 
-    // Send email to customer if status changed to delivered for digital-only
+    // Send STL delivery email
     try {
       const { data: userData } = await admin
         .from('users')
@@ -89,8 +97,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
         .eq('id', order.user_id)
         .single();
 
-      if (userData?.email && status === 'delivered' && isDigitalOnly) {
-        // Get file name for email
+      if (userData?.email) {
         const fileName = (order.items?.[0] as any)?.product_snapshot?.name || 'Arquivo STL';
         await sendSTLDeliveryEmail({
           email: userData.email,
@@ -101,7 +108,6 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
       }
     } catch (err) {
       console.error('[order-patch] email error:', err);
-      // Don't fail the request if email fails
     }
 
     return NextResponse.json({ success: true, status, message: 'Status atualizado' });
