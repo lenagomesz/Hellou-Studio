@@ -128,8 +128,10 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    console.error('[print-requests] insert error:', error);
-    return serverError('Erro ao criar solicitação');
+    console.error('[print-requests] insert error:', JSON.stringify(error, null, 2));
+    console.error('[print-requests] error message:', error.message);
+    console.error('[print-requests] error code:', error.code);
+    return serverError(`Erro ao criar solicitação: ${error.message || error.code || 'desconhecido'}`);
   }
 
   // Notify admin
