@@ -39,8 +39,14 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
+    console.error('[coupons-post] error:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     if (error.code === '23505') return badRequest('Já existe um cupom com este código');
-    return serverError('Erro ao criar cupom');
+    return NextResponse.json({ error: `Erro ao criar cupom: ${error.message}` }, { status: 400 });
   }
 
   return NextResponse.json(data, { status: 201 });
