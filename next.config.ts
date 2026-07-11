@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "script-src 'self' 'unsafe-inline' 'unsafe-eval' sdk.mercadopago.com",
+            value: "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://sdk.mercadopago.com; connect-src 'self' https:; default-src 'self'",
           },
         ],
       },
