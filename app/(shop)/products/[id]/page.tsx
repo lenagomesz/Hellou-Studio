@@ -19,6 +19,7 @@ function getProductWithOptions(id: string) {
               .from('products')
               .select('*')
               .eq('id', id)
+              .eq('type', 'physical')
               .eq('active', true)
               .maybeSingle(),
             admin
