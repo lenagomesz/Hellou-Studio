@@ -323,6 +323,7 @@ function QuickStatusSelect({
     delivered: [],
     canceled: [],
     refunded: [],
+    rejected: [],
   };
 
   const options = nextStatuses[currentStatus];
