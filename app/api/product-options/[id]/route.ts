@@ -25,6 +25,7 @@ export async function PATCH(
     stock?: number;
     dimensions?: string | null;
     color?: string | null;
+    image_url?: string | null;
   };
 
   const update: Record<string, unknown> = {};
@@ -54,6 +55,9 @@ export async function PATCH(
   }
   if (input.color !== undefined) {
     update.color = input.color?.trim() || null;
+  }
+  if (input.image_url !== undefined) {
+    update.image_url = input.image_url?.trim() || null;
   }
 
   if (Object.keys(update).length === 0) {

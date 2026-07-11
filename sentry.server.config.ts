@@ -15,17 +15,9 @@ Sentry.init({
   },
 
   // Capture only important errors
-  beforeSend(event, hint) {
-    // Ignore 404s and client-side navigation errors
-    if (event.status === 404) {
-      return null;
-    }
-
+  beforeSend(event) {
     // Ignore network timeouts (user's connection issue)
-    if (
-      hint.originalException instanceof Error &&
-      hint.originalException.message.includes('timeout')
-    ) {
+    if (event.exception?.values?.[0]?.value?.includes?.('timeout')) {
       return null;
     }
 

@@ -39,6 +39,7 @@ export interface ProductOption {
   stock: number;
   dimensions: string | null;
   color: string | null;
+  image_url: string | null;
   created_at: string;
 }
 

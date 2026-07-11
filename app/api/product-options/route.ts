@@ -14,13 +14,14 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { product_id, name, price_modifier, stock, dimensions, color } = (body ?? {}) as {
+  const { product_id, name, price_modifier, stock, dimensions, color, image_url } = (body ?? {}) as {
     product_id?: string;
     name?: string;
     price_modifier?: number;
     stock?: number;
     dimensions?: string;
     color?: string;
+    image_url?: string;
   };
 
   if (!product_id) return badRequest('product_id é obrigatório');
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
       stock: stockValue,
       dimensions: dimensions?.trim() || null,
       color: color?.trim() || null,
+      image_url: image_url?.trim() || null,
     })
     .select('*')
     .single();

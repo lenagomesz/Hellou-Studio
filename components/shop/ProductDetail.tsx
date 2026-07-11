@@ -47,12 +47,15 @@ export function ProductDetail({
     (preselectedOptionId && options.some(o => o.id === preselectedOptionId)) ? preselectedOptionId : inStockOptions[0]?.id ?? null,
   );
   const [quantity, setQuantity] = useState(1);
+  const [displayImageUrl, setDisplayImageUrl] = useState<string | null>(null);
 
   const selectedOption =
     options.find((o) => o.id === selectedOptionId) ?? null;
 
   const finalPrice =
     product.base_price + (selectedOption?.price_modifier ?? 0);
+
+  const currentDisplayImage = displayImageUrl || selectedOption?.image_url || product.image_url;
 
   const maxQuantity = Math.min(selectedOption?.stock ?? 50, 50);
   const canAddToCart = options.length === 0 || selectedOption !== null;
@@ -105,8 +108,8 @@ export function ProductDetail({
     <div className="grid gap-8 lg:grid-cols-2">
       <div className="space-y-6">
         <div className="group relative">
-          {product.image_url ? (
-            <ImageGallery image1={product.image_url} image2={product.image_url_2 || undefined} />
+          {currentDisplayImage ? (
+            <ImageGallery image1={currentDisplayImage} image2={product.image_url_2 || undefined} />
           ) : (
             <div className="aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 shadow-sm flex h-full w-full items-center justify-center text-7xl text-pink-200">
               ◇
@@ -195,6 +198,7 @@ export function ProductDetail({
                             const firstInStock = colorOptions.find((o) => o.stock > 0);
                             if (firstInStock) {
                               setSelectedOptionId(firstInStock.id);
+                              setDisplayImageUrl(firstInStock.image_url || null);
                               setQuantity(1);
                             }
                           }}
