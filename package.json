@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",
+    "@sentry/nextjs": "^10.65.0",
     "@stripe/stripe-js": "^9.7.0",
     "@supabase/supabase-js": "^2.106.2",
     "bcryptjs": "^3.0.3",
@@ -24,11 +25,13 @@
     "next": "16.2.7",
     "next-auth": "^4.24.14",
     "next-themes": "^0.4.6",
+    "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-toastify": "^11.1.0",
     "recharts": "^3.8.1",
     "resend": "^6.12.4",
+    "speakeasy": "^2.0.0",
     "stripe": "^22.2.0",
     "tailwind-merge": "^3.6.0",
     "zustand": "^5.0.14"

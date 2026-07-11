@@ -14,9 +14,11 @@ function LoginForm() {
   const { theme, setTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [twoFACode, setTwoFACode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [requires2FA, setRequires2FA] = useState(false);
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -26,21 +28,36 @@ function LoginForm() {
     const result = await signIn('credentials', {
       email,
       password,
+      twoFACode: requires2FA ? twoFACode : undefined,
       redirect: false,
     });
 
-    if (!result || result.error) {
+    if (!result) {
       setLoading(false);
-      setError('Email ou senha inválidos. Verifique suas credenciais e tente novamente.');
+      setError('Erro ao fazer login. Tente novamente.');
       return;
     }
 
-    // Wait a bit for session to be established before polling
-    await new Promise((r) => setTimeout(r, 1000));
+    if (result.error === '2FA_REQUIRED') {
+      setLoading(false);
+      setRequires2FA(true);
+      setError(null);
+      return;
+    }
 
+    if (result.error) {
+      setLoading(false);
+      if (requires2FA) {
+        setError('Código 2FA inválido. Tente novamente.');
+      } else {
+        setError('Email ou senha inválidos. Verifique suas credenciais e tente novamente.');
+      }
+      return;
+    }
+
+    await new Promise((r) => setTimeout(r, 1000));
     setLoading(false);
 
-    // Redirect immediately - session will be established
     const dest = callbackUrl;
     globalThis.location.href = dest;
   }
@@ -144,70 +161,125 @@ function LoginForm() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-gray-400" />
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-11 pr-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
-                  />
-                </div>
-              </div>
+              {!requires2FA ? (
+                <>
+                  {/* Email */}
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Email
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-gray-400" />
+                      <input
+                        id="email"
+                        type="email"
+                        required
+                        autoComplete="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-11 pr-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+                      />
+                    </div>
+                  </div>
 
-              {/* Senha */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Senha
-                  </label>
-                  <Link href="/forgot-password" className="text-xs font-medium text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition">
-                    Esqueceu?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-gray-400" />
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    autoComplete="current-password"
-                    placeholder="Sua senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-11 pr-11 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
-                  />
+                  {/* Senha */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Senha
+                      </label>
+                      <Link href="/forgot-password" className="text-xs font-medium text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition">
+                        Esqueceu?
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-gray-400" />
+                      <input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        autoComplete="current-password"
+                        placeholder="Sua senha"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-11 pr-11 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-0.5"
+                        aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+                      >
+                        {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lembrar de mim */}
+                  <div className="flex items-center gap-2.5">
+                    <input
+                      id="remember"
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                    />
+                    <label htmlFor="remember" className="text-sm text-gray-500 dark:text-gray-400">
+                      Lembrar de mim
+                    </label>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* 2FA Header */}
+                  <div className="rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-4 flex gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
+                        Autenticação de dois fatores
+                      </p>
+                      <p className="text-xs text-blue-800 dark:text-blue-300">
+                        Insira o código de 6 dígitos do seu autenticador ou um backup code.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 2FA Code */}
+                  <div>
+                    <label htmlFor="2fa-code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Código 2FA
+                    </label>
+                    <input
+                      id="2fa-code"
+                      type="text"
+                      required
+                      maxLength={12}
+                      placeholder="000000 ou XXXXXX"
+                      value={twoFACode}
+                      onChange={(e) => setTwoFACode(e.target.value.toUpperCase())}
+                      autoComplete="off"
+                      className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-4 py-3 text-center text-lg font-mono tracking-widest text-gray-900 dark:text-gray-100 placeholder:text-gray-400 transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
+                    />
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      Código TOTP de 6 dígitos ou Backup Code de 12 caracteres
+                    </p>
+                  </div>
+
+                  {/* Voltar */}
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-0.5"
-                    aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+                    onClick={() => {
+                      setRequires2FA(false);
+                      setTwoFACode('');
+                      setError(null);
+                    }}
+                    className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition"
                   >
-                    {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                    ← Voltar
                   </button>
-                </div>
-              </div>
-
-              {/* Lembrar de mim */}
-              <div className="flex items-center gap-2.5">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
-                />
-                <label htmlFor="remember" className="text-sm text-gray-500 dark:text-gray-400">
-                  Lembrar de mim
-                </label>
-              </div>
+                </>
+              )}
 
               {/* Erro */}
               {error && (
