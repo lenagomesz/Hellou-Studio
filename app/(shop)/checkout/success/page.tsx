@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { ClearCartOnMount } from '@/components/shop/ClearCartOnMount';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { isDigitalOnly, hasDigitalItems, hasPhysicalItems, type OrderItemWithProduct } from '@/lib/order-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +12,57 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
   const sessionId = typeof params.session_id === 'string' ? params.session_id : null;
   const orderId = typeof params.order_id === 'string' ? params.order_id : null;
   const isPending = params.pending === '1';
+
+  // Fetch order to detect type
+  let orderType: 'digital' | 'physical' | 'hybrid' = 'physical';
+  if (orderId) {
+    const admin = getSupabaseAdmin();
+    const { data: order } = await admin
+      .from('orders')
+      .select('*, items:order_items(*, product:products(type))')
+      .eq('id', orderId)
+      .single();
+
+    if (order?.items) {
+      const items = order.items as OrderItemWithProduct[];
+      if (isDigitalOnly(items)) {
+        orderType = 'digital';
+      } else if (hasDigitalItems(items) && hasPhysicalItems(items)) {
+        orderType = 'hybrid';
+      } else {
+        orderType = 'physical';
+      }
+    }
+  }
+
+  const titlesByType = {
+    digital: 'Seu arquivo está pronto!',
+    physical: 'Pedido confirmado!',
+    hybrid: 'Arquivo pronto + Pedido em produção!',
+  };
+
+  const descriptionByType = {
+    digital: 'Acesse sua conta para fazer download do seu arquivo STL.',
+    physical: 'Já estamos preparando sua peça com muito carinho.',
+    hybrid: 'Seu arquivo STL está disponível. A peça será impressa em até 3 dias úteis.',
+  };
+
+  const cardsByType = {
+    digital: [
+      { step: '✓', title: 'Pagamento recebido', desc: 'Seu pagamento foi processado com sucesso.', done: true },
+      { step: '📥', title: 'Arquivo disponível', desc: 'Faça o download quantas vezes precisar.', done: true },
+    ],
+    physical: [
+      { step: '✓', title: 'Pagamento recebido', desc: 'Seu pagamento foi processado com sucesso.', done: true },
+      { step: '🖨️', title: 'Produção iniciada', desc: 'Sua peça será impressa em até 3 dias úteis.', done: false },
+      { step: '📦', title: 'Envio', desc: 'Você receberá o código de rastreamento por email.', done: false },
+    ],
+    hybrid: [
+      { step: '✓', title: 'Pagamento recebido', desc: 'Seu pagamento foi processado com sucesso.', done: true },
+      { step: '🖨️', title: 'Produção iniciada', desc: 'Sua peça será impressa em até 3 dias úteis.', done: false },
+      { step: '📦', title: 'Envio', desc: 'Você receberá o código de rastreamento por email.', done: false },
+    ],
+  };
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
@@ -32,12 +85,10 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
       </div>
 
       <h1 className="mt-8 text-3xl font-bold text-gray-900 dark:text-white animate-fade-in-up">
-        {isPending ? 'Pedido recebido!' : 'Pedido confirmado!'}
+        {titlesByType[orderType]}
       </h1>
       <p className="mt-3 text-gray-600 dark:text-gray-300 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-        {isPending
-          ? 'Estamos aguardando a confirmação do pagamento. Você receberá um email assim que for aprovado.'
-          : 'Seu pagamento foi processado com sucesso. Já estamos preparando seu pedido com muito carinho.'}
+        {descriptionByType[orderType]}
       </p>
 
       {(sessionId || orderId) && (
@@ -47,12 +98,8 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
       )}
 
       {/* Progress steps */}
-      <div className="mt-10 grid gap-4 sm:grid-cols-3 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-        {[
-          { step: '✓', title: 'Pagamento recebido', desc: 'Seu pagamento foi processado com sucesso.', done: true },
-          { step: '🖨️', title: 'Produção iniciada', desc: 'Sua peça será impressa em até 3 dias úteis.', done: false },
-          { step: '📦', title: 'Envio', desc: 'Você receberá o código de rastreamento por email.', done: false },
-        ].map(({ step, title, desc, done }) => (
+      <div className={`mt-10 grid gap-4 ${orderType === 'digital' ? 'grid-cols-2 sm:grid-cols-2' : 'grid-cols-3 sm:grid-cols-3'} animate-fade-in-up`} style={{ animationDelay: '300ms' }}>
+        {cardsByType[orderType].map(({ step, title, desc, done }) => (
           <div
             key={title}
             className={`rounded-2xl border p-5 shadow-sm transition ${done ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/50' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900'}`}
