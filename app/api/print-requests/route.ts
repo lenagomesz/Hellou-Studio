@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireUser, serverError, badRequest } from '@/lib/api';
-import { sendAdminNewPrintRequestEmail } from '@/lib/email';
+import { sendAdminNewPrintRequestEmail, sendPrintRequestStatusEmail } from '@/lib/email';
 import type { PrintRequest } from '@/types/database';
 
 // Configure larger payload size for STL file uploads
@@ -134,20 +134,31 @@ export async function POST(request: Request) {
     return serverError(`Erro ao criar solicitação: ${error.message || error.code || 'desconhecido'}`);
   }
 
-  // Notify admin
+  // Notify admin and user
   const { data: admins } = await admin
     .from('users')
     .select('email')
     .eq('role', 'admin')
     .limit(5);
 
-  if (admins?.length) {
-    const { data: currentUser } = await admin
-      .from('users')
-      .select('email, name')
-      .eq('id', auth.user.id)
-      .single();
+  const { data: currentUser } = await admin
+    .from('users')
+    .select('email, name')
+    .eq('id', auth.user.id)
+    .single();
 
+  // Send confirmation email to user
+  if (currentUser?.email) {
+    sendPrintRequestStatusEmail({
+      email: currentUser.email,
+      nome: currentUser.name,
+      title: data.title,
+      newStatus: 'pending',
+    }).catch(err => console.error('[email] user confirmation failed:', err));
+  }
+
+  // Notify admins
+  if (admins?.length) {
     for (const adm of admins) {
       sendAdminNewPrintRequestEmail({
         adminEmail: adm.email,
@@ -155,7 +166,7 @@ export async function POST(request: Request) {
         title: data.title,
         customerName: currentUser?.name ?? null,
         customerEmail: currentUser?.email ?? auth.user.email ?? '',
-      }).catch(() => {});
+      }).catch(err => console.error('[email] admin notification failed:', err));
     }
   }
 
