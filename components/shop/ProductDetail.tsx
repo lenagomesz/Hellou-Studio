@@ -36,10 +36,11 @@ export function ProductDetail({
   const [feedback, setFeedback] = useState<'idle' | 'added' | 'error'>('idle');
   const [shared, setShared] = useState(false);
   const isAuthenticated = sessionStatus === 'authenticated';
+  const requiresReadyStock = product.fulfillment_mode === 'ready_stock';
 
   const inStockOptions = useMemo(
-    () => options.filter((o) => o.stock > 0),
-    [options],
+    () => options.filter((option) => !requiresReadyStock || option.stock > 0),
+    [options, requiresReadyStock],
   );
 
   const preselectedOptionId = searchParams.get('option');
@@ -57,7 +58,7 @@ export function ProductDetail({
 
   const currentDisplayImage = displayImageUrl || selectedOption?.image_url || product.image_url;
 
-  const maxQuantity = Math.min(selectedOption?.stock ?? 50, 50);
+  const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, 50) : 50;
   const canAddToCart = options.length === 0 || selectedOption !== null;
   const isSyncing = status === 'syncing';
 
@@ -128,7 +129,7 @@ export function ProductDetail({
         </div>
 
         {product.type !== 'digital' && (
-          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gradient-to-br from-gray-50 to-pink-50/30 dark:from-gray-900 dark:to-gray-900 p-5">
+          <div className="hidden rounded-2xl border border-gray-100 dark:border-gray-800 bg-gradient-to-br from-gray-50 to-pink-50/30 dark:from-gray-900 dark:to-gray-900 p-5 lg:block">
             <p className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Sobre este produto</p>
             <div className="space-y-2.5 text-xs text-gray-600 dark:text-gray-300">
               <div className="flex items-center gap-2">
@@ -188,14 +189,14 @@ export function ProductDetail({
                     {colors.map((color) => {
                       const isActive = selectedColor === color;
                       const colorOptions = options.filter((o) => o.color === color);
-                      const allOutOfStock = colorOptions.every((o) => o.stock === 0);
+                      const allOutOfStock = requiresReadyStock && colorOptions.every((o) => o.stock === 0);
                       return (
                         <button
                           key={color}
                           type="button"
                           disabled={allOutOfStock}
                           onClick={() => {
-                            const firstInStock = colorOptions.find((o) => o.stock > 0);
+                            const firstInStock = colorOptions.find((o) => !requiresReadyStock || o.stock > 0);
                             if (firstInStock) {
                               setSelectedOptionId(firstInStock.id);
                               setDisplayImageUrl(firstInStock.image_url || null);
@@ -242,7 +243,7 @@ export function ProductDetail({
                     : options;
                   return visibleOptions.map((option) => {
                     const isSelected = selectedOptionId === option.id;
-                    const outOfStock = option.stock === 0;
+                    const outOfStock = requiresReadyStock && option.stock === 0;
                     return (
                       <button
                         key={option.id}
@@ -275,7 +276,11 @@ export function ProductDetail({
               </div>
               {selectedOption ? (
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  {selectedOption.stock} em estoque
+                  {requiresReadyStock
+                    ? `${selectedOption.stock} em pronta-entrega`
+                    : product.fulfillment_mode === 'hybrid' && selectedOption.stock > 0
+                      ? `${selectedOption.stock} em pronta-entrega; demais unidades sob demanda`
+                      : 'Produzido sob demanda após o pagamento'}
                 </p>
               ) : null}
             </div>
@@ -378,6 +383,18 @@ export function ProductDetail({
             </svg>
             {shared ? 'Link copiado!' : 'Compartilhar'}
           </button>
+
+          {product.type !== 'digital' && (
+            <div className="mt-4 rounded-2xl border border-gray-100 bg-gradient-to-br from-gray-50 to-pink-50/30 p-5 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900 lg:hidden">
+              <p className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Sobre este produto</p>
+              <div className="space-y-2.5 text-xs text-gray-600 dark:text-gray-300">
+                <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-pink-100 text-[10px] dark:bg-pink-950/50">🖨️</span><span>Impresso em 3D sob demanda após a confirmação do pedido</span></div>
+                <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-[10px] dark:bg-orange-950/50">⏱️</span><span>Prazo de produção: 3 a 5 dias úteis + frete</span></div>
+                <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-[10px] dark:bg-green-950/50">♻️</span><span>Material PLA biodegradável de alta qualidade</span></div>
+                <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[10px] dark:bg-blue-950/50">🚚</span><span>Frete grátis acima de R$ 99</span></div>
+              </div>
+            </div>
+          )}
 
           {feedback === 'added' ? (
             <p className="mt-3 rounded-lg bg-green-50 dark:bg-green-950/50 px-3 py-2 text-xs text-green-700 dark:text-green-400">

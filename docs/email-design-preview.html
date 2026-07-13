@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hellou Studio — Prévia do novo padrão de e-mails</title>
+  <style>
+    :root { --pink:#ff2f92; --coral:#ff5f68; --orange:#ff9d28; --ink:#17151d; --muted:#736f7b; --canvas:#eeeef1; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--canvas); color:var(--ink); font-family:Inter,Arial,sans-serif; }
+    .preview-bar { position:sticky; top:0; z-index:10; display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:14px 20px; background:rgba(23,21,29,.95); color:white; box-shadow:0 12px 35px rgba(20,18,27,.22); }
+    .preview-title { margin-right:auto; }
+    .preview-title strong { display:block; font-size:14px; }
+    .preview-title span { color:#aaa5b2; font-size:11px; }
+    .tab { border:1px solid rgba(255,255,255,.14); border-radius:10px; background:transparent; color:#c9c5ce; padding:9px 12px; cursor:pointer; font-weight:700; font-size:12px; }
+    .tab.active { border-color:transparent; color:white; background:linear-gradient(135deg,var(--pink),var(--orange)); }
+    .stage { padding:34px 14px 70px; }
+    .note { max-width:660px; margin:0 auto 16px; padding:12px 15px; border-radius:14px; background:#fff8e7; border:1px solid #f5dfad; color:#795e22; font-size:12px; line-height:1.55; }
+    .example { display:none; }
+    .example.active { display:block; }
+    .mail { width:100%; max-width:660px; margin:auto; overflow:hidden; border-radius:24px; background:#fff; box-shadow:0 25px 70px rgba(31,27,39,.16); }
+    .brand-line { height:7px; background:linear-gradient(90deg,var(--pink),var(--coral),var(--orange)); }
+    .mail-head { display:flex; align-items:center; justify-content:space-between; padding:25px 34px 21px; border-bottom:1px solid #f0edf2; }
+    .wordmark { font-size:22px; font-weight:900; letter-spacing:-1.2px; background:linear-gradient(100deg,var(--pink),var(--orange)); -webkit-background-clip:text; color:transparent; }
+    .mail-head small { color:#99949f; font-size:10px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; }
+    .hero { padding:37px 34px 31px; background:linear-gradient(145deg,#fff7fb 0%,#fff 55%,#fff7eb 100%); }
+    .eyebrow { display:inline-block; padding:7px 10px; border-radius:999px; background:#fff; color:var(--pink); border:1px solid #ffd2e6; font-size:10px; font-weight:900; letter-spacing:1.2px; text-transform:uppercase; }
+    h1 { margin:16px 0 9px; max-width:520px; font-size:35px; line-height:1.08; letter-spacing:-1.4px; }
+    .hero p { max-width:520px; margin:0; color:var(--muted); font-size:15px; line-height:1.7; }
+    .body { padding:30px 34px 36px; }
+    .status { display:flex; gap:12px; align-items:center; margin-bottom:25px; padding:15px; border:1px solid #eeeaf0; border-radius:16px; }
+    .status-icon { display:grid; place-items:center; width:42px; height:42px; flex:none; border-radius:13px; background:linear-gradient(135deg,var(--pink),var(--orange)); color:white; font-size:19px; }
+    .status strong { display:block; font-size:14px; }
+    .status span { display:block; margin-top:3px; color:var(--muted); font-size:12px; line-height:1.4; }
+    .section-title { margin:0 0 12px; color:#99949f; font-size:10px; font-weight:900; letter-spacing:1.45px; text-transform:uppercase; }
+    .items { overflow:hidden; border:1px solid #eeeaf0; border-radius:16px; }
+    .item { display:flex; align-items:center; gap:12px; padding:14px 15px; border-bottom:1px solid #eeeaf0; }
+    .item:last-child { border:0; }
+    .thumb { display:grid; place-items:center; width:44px; height:44px; flex:none; border-radius:12px; background:#fff1f7; font-size:20px; }
+    .item-copy { min-width:0; flex:1; }
+    .item-copy strong { display:block; font-size:13px; }
+    .item-copy span { display:block; margin-top:3px; color:var(--muted); font-size:11px; }
+    .price { font-size:13px; font-weight:900; }
+    .total { display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding:16px; border:1px solid #f1dfe8; border-radius:15px; background:linear-gradient(135deg,#fff7fb,#fffaf3); color:#211d25; }
+    .total span { color:#837c88; font-size:12px; }
+    .total strong { font-size:21px; }
+    .button { display:block; margin-top:24px; padding:15px 20px; border-radius:13px; background:linear-gradient(100deg,var(--pink),var(--orange)); color:#fff; text-align:center; text-decoration:none; font-size:13px; font-weight:900; box-shadow:0 10px 25px rgba(255,47,146,.2); }
+    .help { margin:20px 0 0; color:#918c97; text-align:center; font-size:11px; line-height:1.6; }
+    .mail-foot { padding:22px 34px 26px; background:#faf8fa; border-top:1px solid #eeeaf0; color:#8e8995; text-align:center; font-size:10px; line-height:1.7; }
+    .mail-foot strong { color:#2a2730; }
+    .download { margin:25px 0; padding:23px; border:1px solid #d6f4e1; border-radius:18px; background:#f1fcf5; text-align:center; }
+    .download-icon { display:grid; place-items:center; width:55px; height:55px; margin:auto; border-radius:17px; background:#22a85a; color:white; font-size:26px; }
+    .download h2 { margin:13px 0 5px; font-size:18px; }
+    .download p { margin:0; color:#51705c; font-size:12px; line-height:1.55; }
+    .campaign-visual { min-height:230px; padding:35px; display:flex; align-items:end; background:radial-gradient(circle at 13% 18%,rgba(255,97,166,.38) 0,transparent 37%),radial-gradient(circle at 82% 25%,rgba(255,181,73,.48) 0,transparent 39%),linear-gradient(145deg,#fff8fc,#fffaf2); color:#211d25; border-bottom:1px solid #f3e8ee; }
+    .campaign-visual h1 { margin:0; max-width:440px; font-size:40px; }
+    .coupon { display:flex; justify-content:space-between; gap:15px; align-items:center; margin-top:20px; padding:16px; border:1px dashed #ff91bf; border-radius:15px; background:#fff7fb; }
+    .coupon code { color:#c91768; font-size:17px; font-weight:900; letter-spacing:2px; }
+    @media(max-width:560px){ .mail-head,.hero,.body{padding-left:21px;padding-right:21px} h1{font-size:29px}.preview-title{width:100%}.tab{flex:1}.item{align-items:flex-start}.campaign-visual h1{font-size:31px} }
+  </style>
+</head>
+<body>
+  <nav class="preview-bar">
+    <div class="preview-title"><strong>Novo sistema visual de e-mails</strong><span>Prévia para aprovação — nada aplicado em produção</span></div>
+    <button class="tab active" data-target="physical">Pedido físico</button>
+    <button class="tab" data-target="stl">Pedido STL</button>
+    <button class="tab" data-target="campaign">Campanha</button>
+  </nav>
+  <main class="stage">
+    <p class="note">Esta página demonstra o padrão visual, hierarquia, tom dos textos e módulos reutilizáveis. Depois da aprovação, cada e-mail do sistema receberá textos e ações específicos mantendo a mesma identidade.</p>
+
+    <section class="example active" id="physical">
+      <article class="mail">
+        <div class="brand-line"></div><header class="mail-head"><div class="wordmark">helloustudio</div><small>pedido confirmado</small></header>
+        <div class="hero"><span class="eyebrow">Pagamento aprovado</span><h1>Oba, Helena! Seu pedido entrou na nossa fila de produção.</h1><p>Recebemos tudo certinho. Como cada peça é feita especialmente para você, agora iniciamos a preparação com cuidado em cada detalhe.</p></div>
+        <div class="body">
+          <div class="status"><div class="status-icon">✓</div><div><strong>Pedido #A7F31C20 confirmado</strong><span>Próxima etapa: separar materiais e iniciar a impressão 3D.</span></div></div>
+          <p class="section-title">Resumo do pedido</p>
+          <div class="items"><div class="item"><div class="thumb">🦕</div><div class="item-copy"><strong>Dragão articulado</strong><span>1 unidade · PLA Rosa Cereja · Tamanho M</span></div><div class="price">R$ 89,90</div></div><div class="item"><div class="thumb">✨</div><div class="item-copy"><strong>Chaveiro personalizado</strong><span>2 unidades · PLA Laranja Solar</span></div><div class="price">R$ 39,80</div></div></div>
+          <div class="total"><span>Total pago</span><strong>R$ 129,70</strong></div>
+          <a class="button" href="#">Acompanhar meu pedido</a>
+          <p class="help">Você receberá uma nova mensagem quando a produção começar e assim que o pedido for enviado.</p>
+        </div>
+        <footer class="mail-foot"><strong>helloustudio</strong><br />Objetos cheios de personalidade, feitos camada por camada.<br />Este é um e-mail automático sobre o seu pedido.</footer>
+      </article>
+    </section>
+
+    <section class="example" id="stl">
+      <article class="mail">
+        <div class="brand-line"></div><header class="mail-head"><div class="wordmark">helloustudio</div><small>arquivo digital</small></header>
+        <div class="hero"><span class="eyebrow">Download liberado</span><h1>Seu arquivo STL já está prontinho para baixar.</h1><p>O pagamento foi confirmado e o acesso ao arquivo foi liberado na sua conta. Você pode baixar agora ou voltar quando precisar.</p></div>
+        <div class="body">
+          <div class="download"><div class="download-icon">↓</div><h2>Kit Miniaturas Floresta.stl</h2><p>Pedido #D91A407C · Arquivo digital<br />Disponível na área “Meus pedidos”.</p></div>
+          <a class="button" href="#">Baixar meu arquivo STL</a>
+          <p class="help">Dica: guarde o arquivo original em um local seguro. Se precisar de ajuda com a impressão, é só falar com a Hellou.</p>
+        </div>
+        <footer class="mail-foot"><strong>helloustudio</strong><br />Seu arquivo é para uso conforme a licença informada na página do produto.</footer>
+      </article>
+    </section>
+
+    <section class="example" id="campaign">
+      <article class="mail">
+        <div class="brand-line"></div><header class="mail-head"><div class="wordmark">helloustudio</div><small>novidades</small></header>
+        <div class="campaign-visual"><div><span class="eyebrow">Clube Hellou</span><h1>Uma coleção colorida acabou de chegar.</h1></div></div>
+        <div class="body"><p style="margin:0;color:#736f7b;font-size:15px;line-height:1.75">Oi, Helena! Selecionamos novidades feitas para deixar sua mesa mais divertida. Até domingo, seu bônus exclusivo garante uma condição especial.</p><div class="coupon"><div><strong style="display:block;font-size:13px">15% de desconto</strong><span style="display:block;margin-top:3px;color:#736f7b;font-size:11px">em produtos físicos selecionados</span></div><code>HELLOU15</code></div><a class="button" href="#">Conhecer a nova coleção</a><p class="help">Campanhas usarão este mesmo cabeçalho, tipografia, botão, rodapé e tratamento de cupons. O conteúdo central continuará editável pelo admin.</p></div>
+        <footer class="mail-foot"><strong>helloustudio</strong><br />Você recebeu esta novidade porque aceitou comunicações da loja.<br /><u>Cancelar inscrição</u> · <u>Ver no navegador</u></footer>
+      </article>
+    </section>
+  </main>
+  <script>
+    document.querySelectorAll('.tab').forEach((button) => button.addEventListener('click', () => {
+      document.querySelectorAll('.tab,.example').forEach((element) => element.classList.remove('active'));
+      button.classList.add('active'); document.getElementById(button.dataset.target).classList.add('active');
+    }));
+  </script>
+</body>
+</html>

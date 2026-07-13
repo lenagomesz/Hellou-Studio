@@ -4,10 +4,12 @@ import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { isValidCpf } from '@/lib/cpf';
 import { validateCartProductTypes } from '@/lib/cart';
-import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestEmail, sendSTLDeliveryEmail } from '@/lib/email';
+import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestEmail, sendPixPaymentEmail, sendSTLDeliveryEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import { validateShippingCost } from '@/lib/security';
+
+const PIX_EXPIRATION_MINUTES = 30;
 
 export async function POST(request: Request) {
   const auth = await requireUser();
@@ -189,6 +191,7 @@ export async function POST(request: Request) {
 
     if (payment_method === 'pix') {
       paymentBody.payment_method_id = 'pix';
+      paymentBody.date_of_expiration = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000).toISOString();
     } else if (payment_method === 'credit_card' || payment_method === 'debit_card') {
       if (!token) {
         return badRequest('Token do cartão é obrigatório');
@@ -457,6 +460,19 @@ export async function POST(request: Request) {
           `Pague o PIX do pedido #${order.id.slice(0, 8).toUpperCase()} em até 30 minutos para confirmar.`,
           { order_id: order.id, event: 'pix_pending' },
         );
+
+        const txData = (result.point_of_interaction as Record<string, unknown> | undefined)?.transaction_data as Record<string, unknown> | undefined;
+        const pixCode = typeof txData?.qr_code === 'string' ? txData.qr_code : '';
+        if (pixCode) {
+          sendPixPaymentEmail({
+            email: userData?.email || user.email,
+            nome: userData?.name || null,
+            orderId: order.id,
+            total: totalAmount,
+            pixCode,
+            expiration: result.date_of_expiration || null,
+          }).catch((e) => console.error('[mp-create] pix email error:', e));
+        }
       }
 
       if (mpStatus === 'rejected') {

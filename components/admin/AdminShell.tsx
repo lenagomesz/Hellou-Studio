@@ -354,7 +354,7 @@ export function AdminShell({ children, userEmail }: { children: ReactNode; userE
               </button>
             </div>
           )}
-          {children}
+          <div className="admin-content">{children}</div>
         </main>
       </div>
 

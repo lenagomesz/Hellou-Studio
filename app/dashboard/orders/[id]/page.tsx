@@ -253,7 +253,7 @@ export default function OrderDetailPage() {
                         i + 1
                       )}
                     </div>
-                    <span className={`mt-1.5 text-[11px] font-medium whitespace-nowrap ${isDone ? 'text-gray-900' : 'text-gray-400'}`}>
+                    <span className={`mt-1.5 text-[11px] font-medium whitespace-nowrap ${isDone ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
                       {STATUS_LABELS[s]}
                     </span>
                   </div>
@@ -267,12 +267,12 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
           {/* Items */}
           <div className="rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="border-b border-gray-100 px-5 py-4">
-              <h2 className="text-sm font-semibold text-gray-900">Itens do pedido</h2>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Itens do pedido</h2>
               <p className="text-xs text-gray-500">{order.items.length} {order.items.length === 1 ? 'item' : 'itens'}</p>
             </div>
             <ul className="divide-y divide-gray-50">
@@ -291,7 +291,7 @@ export default function OrderDetailPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{item.product?.name ?? 'Produto removido'}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate dark:text-white">{item.product?.name ?? 'Produto removido'}</p>
                     <p className="text-xs text-gray-500">
                       {item.quantity}x &middot; {formatPrice(item.unit_price)} cada
                     </p>
@@ -338,15 +338,15 @@ export default function OrderDetailPage() {
                       </button>
                     )}
                   </div>
-                  <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <p className="text-sm font-semibold text-gray-900 whitespace-nowrap dark:text-white">
                     {formatPrice(item.quantity * item.unit_price)}
                   </p>
                 </li>
               ))}
             </ul>
             <div className="flex items-center justify-between border-t border-gray-100 px-5 py-4">
-              <span className="text-sm font-semibold text-gray-900">Total</span>
-              <span className="text-lg font-bold text-gray-900">{formatPrice(order.total)}</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">Total</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">{formatPrice(order.total)}</span>
             </div>
           </div>
 
@@ -400,7 +400,7 @@ export default function OrderDetailPage() {
 
             {/* Código de rastreamento - Hidden for digital-only orders */}
             {!isDigitalOnly && (
-            <div className="mb-5 rounded-xl border border-gray-100 bg-gray-50 p-4">
+            <div className="mb-5 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
               <div className="flex items-center gap-2 mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-purple-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
@@ -482,7 +482,7 @@ export default function OrderDetailPage() {
                       className={`rounded-lg border px-3 py-1.5 text-[11px] font-medium transition ${
                         order.status === 'awaiting_payment'
                           ? 'border-pink-200 bg-pink-50 text-pink-700 cursor-default'
-                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
                       } disabled:opacity-40`}
                     >
                       Aguardando Pagamento
@@ -494,7 +494,7 @@ export default function OrderDetailPage() {
                       className={`rounded-lg border px-3 py-1.5 text-[11px] font-medium transition ${
                         order.status === 'delivered'
                           ? 'border-green-200 bg-green-50 text-green-700 cursor-default'
-                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
                       } disabled:opacity-40`}
                     >
                       Entregue
@@ -513,7 +513,7 @@ export default function OrderDetailPage() {
                         className={`rounded-lg border px-3 py-1.5 text-[11px] font-medium transition ${
                           isCurrent
                             ? 'border-pink-200 bg-pink-50 text-pink-700 cursor-default'
-                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
                         } disabled:opacity-40`}
                       >
                         {STATUS_LABELS[s]}
@@ -542,7 +542,7 @@ export default function OrderDetailPage() {
         {/* Sidebar */}
         <aside className="space-y-5">
           {/* Customer */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-[22px] border border-gray-100 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <div className="flex items-center gap-2 mb-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100">
                 <span className="text-sm font-bold text-pink-600">
@@ -551,13 +551,13 @@ export default function OrderDetailPage() {
               </div>
               <h2 className="text-sm font-semibold text-gray-700">Cliente</h2>
             </div>
-            <p className="text-sm font-medium text-gray-900">{order.user?.name ?? '—'}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{order.user?.name ?? '—'}</p>
             <p className="text-xs text-gray-500 mt-0.5">{order.user?.email ?? '—'}</p>
           </div>
 
           {/* Shipping - Hidden for digital-only orders */}
           {!isDigitalOnly && (
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-[22px] border border-gray-100 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <h2 className="text-sm font-semibold text-gray-700 mb-3">Entrega</h2>
             {shipping ? (
               <div className="space-y-2">
@@ -596,7 +596,7 @@ export default function OrderDetailPage() {
 
           {/* Etiqueta de envio - Hidden for digital-only orders */}
           {!isDigitalOnly && (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-5 shadow-sm">
+          <div className="rounded-[22px] border border-dashed border-gray-300 bg-white p-5 shadow-sm dark:border-white/15 dark:bg-white/[0.04]">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-gray-700">Etiqueta de envio</h2>
               <button
@@ -614,7 +614,7 @@ export default function OrderDetailPage() {
               </button>
             </div>
             <div className="space-y-3 text-xs">
-              <div className="rounded-lg bg-gray-50 p-3 border border-gray-100">
+            <div className="rounded-lg bg-gray-50 p-3 border border-gray-100 dark:border-white/10 dark:bg-white/5">
                 <p className="font-semibold text-gray-700 mb-1">REMETENTE:</p>
                 <p className="text-gray-600">helloustudio</p>
                 <p className="text-gray-600">Rua São Paulo, 250</p>
@@ -644,12 +644,12 @@ export default function OrderDetailPage() {
           )}
 
           {/* Payment */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-[22px] border border-gray-100 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <h2 className="text-sm font-semibold text-gray-700 mb-3">Pagamento</h2>
             <dl className="space-y-2.5">
               <div className="flex justify-between items-center">
                 <dt className="text-xs text-gray-500">Total</dt>
-                <dd className="text-base font-bold text-gray-900">{formatPrice(order.total)}</dd>
+              <dd className="text-base font-bold text-gray-900 dark:text-white">{formatPrice(order.total)}</dd>
               </div>
               {order.stripe_payment_intent_id && (
                 <div className="flex justify-between items-center">
@@ -677,7 +677,7 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Timeline */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-[22px] border border-gray-100 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <h2 className="text-sm font-semibold text-gray-700 mb-4">Timeline</h2>
             {timeline.length === 0 ? (
               <div className="space-y-2">
@@ -709,7 +709,7 @@ export default function OrderDetailPage() {
                           <span className="text-[8px]">{icon}</span>
                         </div>
                         <div className="flex-1 min-w-0 -mt-0.5">
-                          <p className={`text-xs font-medium ${isLatest ? 'text-gray-900' : 'text-gray-700'}`}>
+                      <p className={`text-xs font-medium ${isLatest ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
                             {label}
                           </p>
                           {event.message && (

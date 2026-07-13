@@ -35,9 +35,9 @@ function wrapInLayout(content: string): string {
       <!-- Footer -->
       <div style="padding:24px 32px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
         <p style="margin:0 0 8px;font-size:12px;color:#9ca3af;">
-          Voce recebeu este email porque esta cadastrado na helloustudio.
+          Você recebeu este e-mail porque está cadastrado na Hellou Studio.
         </p>
-        <a href="{{unsubscribe_url}}" style="font-size:12px;color:#6b7280;text-decoration:underline;">Cancelar inscricao</a>
+        <a href="{{unsubscribe_url}}" style="font-size:12px;color:#6b7280;text-decoration:underline;">Cancelar inscrição</a>
       </div>
     </div>
   </div>
@@ -53,35 +53,35 @@ export const preBuiltTemplates: PreBuiltTemplate[] = [
   {
     name: 'Boas-vindas',
     slug: 'welcome',
-    subject: 'Bem-vindo(a) a helloustudio, {customer_name}!',
+    subject: 'Bem-vindo(a) à Hellou Studio, {customer_name}!',
     category: 'welcome',
     variables: ['customer_name', 'unsubscribe_url'],
-    preview_text: 'Estamos felizes em ter voce por aqui!',
+    preview_text: 'Estamos felizes em ter você por aqui!',
     body_html: wrapInLayout(`
-      <h2 style="margin:0 0 16px;color:#111;font-size:20px;">Ola, {customer_name}!</h2>
+      <h2 style="margin:0 0 16px;color:#111;font-size:20px;">Olá, {customer_name}!</h2>
       <p style="color:#555;line-height:1.7;margin:0 0 16px;">
-        Seja muito bem-vindo(a) a <strong>helloustudio</strong>! Estamos super felizes em ter voce por aqui.
+        Seja muito bem-vindo(a) à <strong>Hellou Studio</strong>! Estamos muito felizes em ter você por aqui.
       </p>
       <p style="color:#555;line-height:1.7;margin:0 0 16px;">
-        Aqui voce encontra pecas unicas impressas em 3D, feitas com muito carinho e atencao aos detalhes.
+        Aqui você encontra peças únicas impressas em 3D, feitas com muito carinho e atenção aos detalhes.
       </p>
       ${ctaButton('Explorar produtos', '{{base_url}}/products')}
       <p style="color:#888;font-size:13px;margin:16px 0 0;">
-        Tem alguma duvida? Responda este email que teremos prazer em ajudar!
+        Tem alguma dúvida? Responda este e-mail; teremos prazer em ajudar!
       </p>
     `),
   },
   {
     name: 'Carrinho abandonado',
     slug: 'abandoned-cart',
-    subject: '{customer_name}, voce esqueceu algo no carrinho!',
+    subject: '{customer_name}, você esqueceu algo no carrinho!',
     category: 'abandoned_cart',
     variables: ['customer_name', 'cart_items', 'cart_total', 'unsubscribe_url'],
-    preview_text: 'Seus itens estao esperando por voce',
+    preview_text: 'Seus itens estão esperando por você',
     body_html: wrapInLayout(`
-      <h2 style="margin:0 0 16px;color:#111;font-size:20px;">Ola, {customer_name}!</h2>
+      <h2 style="margin:0 0 16px;color:#111;font-size:20px;">Olá, {customer_name}!</h2>
       <p style="color:#555;line-height:1.7;margin:0 0 16px;">
-        Notamos que voce deixou alguns itens no carrinho. Eles ainda estao la, esperando por voce!
+        Notamos que você deixou alguns itens no carrinho. Eles ainda estão lá, esperando por você!
       </p>
       <div style="margin:20px 0;padding:16px;background:#fef3f2;border-radius:12px;border:1px solid #fecaca;">
         <p style="margin:0;font-weight:600;color:#991b1b;">Itens no carrinho:</p>
@@ -90,12 +90,12 @@ export const preBuiltTemplates: PreBuiltTemplate[] = [
       </div>
       ${ctaButton('Finalizar compra', '{{base_url}}/cart')}
       <p style="color:#888;font-size:13px;margin:16px 0 0;">
-        Precisa de ajuda? Estamos aqui para voce!
+        Precisa de ajuda? Estamos aqui para você!
       </p>
     `),
   },
   {
-    name: 'Confirmacao de pedido',
+    name: 'Confirmação de pedido',
     slug: 'order-confirmation',
     subject: 'Pedido confirmado! #{order_id}',
     category: 'order_confirmation',
@@ -104,7 +104,7 @@ export const preBuiltTemplates: PreBuiltTemplate[] = [
     body_html: wrapInLayout(`
       <h2 style="margin:0 0 16px;color:#111;font-size:20px;">Pedido confirmado!</h2>
       <p style="color:#555;line-height:1.7;margin:0 0 16px;">
-        Ola, {customer_name}! Seu pedido <strong>#{order_id}</strong> foi confirmado com sucesso.
+        Olá, {customer_name}! Seu pedido <strong>#{order_id}</strong> foi confirmado com sucesso.
       </p>
       <div style="margin:20px 0;padding:16px;background:#f0fdf4;border-radius:12px;border:1px solid #bbf7d0;">
         <p style="margin:0;font-weight:600;color:#166534;">Resumo do pedido</p>
@@ -120,30 +120,30 @@ export const preBuiltTemplates: PreBuiltTemplate[] = [
     subject: '{customer_name}, seu pedido foi enviado!',
     category: 'shipping',
     variables: ['customer_name', 'order_id', 'tracking_code', 'unsubscribe_url'],
-    preview_text: 'Seu pedido esta a caminho',
+    preview_text: 'Seu pedido está a caminho',
     body_html: wrapInLayout(`
       <h2 style="margin:0 0 16px;color:#111;font-size:20px;">Pedido enviado!</h2>
       <p style="color:#555;line-height:1.7;margin:0 0 16px;">
-        Ola, {customer_name}! Seu pedido <strong>#{order_id}</strong> foi enviado e esta a caminho.
+        Olá, {customer_name}! Seu pedido <strong>#{order_id}</strong> foi enviado e está a caminho.
       </p>
       <div style="margin:20px 0;padding:16px;background:#eff6ff;border-radius:12px;border:1px solid #bfdbfe;">
-        <p style="margin:0;font-weight:600;color:#1e40af;">Codigo de rastreamento:</p>
+        <p style="margin:0;font-weight:600;color:#1e40af;">Código de rastreamento:</p>
         <p style="margin:8px 0 0;font-size:18px;color:#1d4ed8;font-family:monospace;letter-spacing:1px;">{tracking_code}</p>
       </div>
       ${ctaButton('Rastrear encomenda', 'https://www.linkcorreios.com.br/?id={tracking_code}')}
     `),
   },
   {
-    name: 'Reativacao',
+    name: 'Reativação',
     slug: 'reactivation',
     subject: '{customer_name}, sentimos sua falta!',
     category: 'reactivation',
     variables: ['customer_name', 'discount_code', 'discount_percent', 'unsubscribe_url'],
-    preview_text: 'Temos uma surpresa para voce voltar',
+    preview_text: 'Temos uma surpresa para você voltar',
     body_html: wrapInLayout(`
       <h2 style="margin:0 0 16px;color:#111;font-size:20px;">Sentimos sua falta, {customer_name}!</h2>
       <p style="color:#555;line-height:1.7;margin:0 0 16px;">
-        Faz um tempo que voce nao nos visita, e preparamos algo especial para voce voltar:
+        Faz um tempo que você não nos visita, e preparamos algo especial para você voltar:
       </p>
       <div style="margin:20px 0;padding:24px;background:linear-gradient(135deg,#fdf2f8,#fff7ed);border-radius:12px;text-align:center;">
         <p style="margin:0;font-size:14px;color:#555;">Use o cupom:</p>
@@ -152,21 +152,21 @@ export const preBuiltTemplates: PreBuiltTemplate[] = [
       </div>
       ${ctaButton('Aproveitar desconto', '{{base_url}}/products')}
       <p style="color:#888;font-size:13px;margin:16px 0 0;">
-        Valido por 7 dias. Nao perca!
+        Válido por 7 dias. Não perca!
       </p>
     `),
   },
   {
-    name: 'Promocao',
+    name: 'Promoção',
     slug: 'promotion',
     subject: '{promo_title}',
     category: 'promotion',
     variables: ['customer_name', 'promo_title', 'promo_description', 'promo_code', 'unsubscribe_url'],
-    preview_text: 'Confira nossa nova promocao exclusiva',
+    preview_text: 'Confira nossa nova promoção exclusiva',
     body_html: wrapInLayout(`
       <h2 style="margin:0 0 16px;color:#111;font-size:20px;">{promo_title}</h2>
       <p style="color:#555;line-height:1.7;margin:0 0 16px;">
-        Ola, {customer_name}! {promo_description}
+        Olá, {customer_name}! {promo_description}
       </p>
       <div style="margin:20px 0;padding:24px;background:linear-gradient(135deg,#fdf2f8,#fff7ed);border-radius:12px;text-align:center;">
         <p style="margin:0;font-size:14px;color:#555;">Cupom exclusivo:</p>
@@ -181,9 +181,9 @@ export const preBuiltTemplates: PreBuiltTemplate[] = [
     subject: 'Novidades da helloustudio',
     category: 'newsletter',
     variables: ['customer_name', 'content', 'unsubscribe_url'],
-    preview_text: 'Confira as ultimas novidades',
+    preview_text: 'Confira as últimas novidades',
     body_html: wrapInLayout(`
-      <h2 style="margin:0 0 16px;color:#111;font-size:20px;">Ola, {customer_name}!</h2>
+      <h2 style="margin:0 0 16px;color:#111;font-size:20px;">Olá, {customer_name}!</h2>
       <div style="color:#555;line-height:1.7;margin:0 0 16px;">
         {content}
       </div>
@@ -191,9 +191,9 @@ export const preBuiltTemplates: PreBuiltTemplate[] = [
     `),
   },
   {
-    name: 'Aniversario',
+    name: 'Aniversário',
     slug: 'birthday',
-    subject: 'Feliz aniversario, {customer_name}! Presente especial pra voce',
+    subject: 'Feliz aniversário, {customer_name}! Um presente especial para você',
     category: 'birthday',
     variables: ['customer_name', 'discount_code', 'unsubscribe_url'],
     preview_text: 'Um presente especial para o seu dia',
@@ -201,12 +201,12 @@ export const preBuiltTemplates: PreBuiltTemplate[] = [
       <div style="text-align:center;margin-bottom:24px;">
         <span style="font-size:48px;">🎂</span>
       </div>
-      <h2 style="margin:0 0 16px;color:#111;font-size:20px;text-align:center;">Feliz Aniversario, {customer_name}!</h2>
+      <h2 style="margin:0 0 16px;color:#111;font-size:20px;text-align:center;">Feliz aniversário, {customer_name}!</h2>
       <p style="color:#555;line-height:1.7;margin:0 0 16px;text-align:center;">
-        Neste dia especial, preparamos um presente exclusivo para voce:
+        Neste dia especial, preparamos um presente exclusivo para você:
       </p>
       <div style="margin:20px 0;padding:24px;background:linear-gradient(135deg,#fdf2f8,#fff7ed);border-radius:12px;text-align:center;">
-        <p style="margin:0;font-size:14px;color:#555;">Desconto exclusivo de aniversario:</p>
+        <p style="margin:0;font-size:14px;color:#555;">Desconto exclusivo de aniversário:</p>
         <p style="margin:8px 0;font-size:28px;font-weight:800;color:#ec4899;letter-spacing:2px;">{discount_code}</p>
         <p style="margin:0;font-size:14px;color:#f97316;">15% OFF em qualquer pedido!</p>
       </div>

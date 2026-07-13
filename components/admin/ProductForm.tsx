@@ -16,6 +16,19 @@ type ProductFormProps =
   | { mode: 'create'; product?: undefined }
   | { mode: 'edit'; product: Product };
 
+type DraftOption = {
+  id: string;
+  name: string;
+  dimensions: string;
+  color: string;
+  priceModifier: string;
+  stock: string;
+};
+
+function createDraftOption(): DraftOption {
+  return { id: crypto.randomUUID(), name: '', dimensions: '', color: '#ec4899', priceModifier: '0', stock: '0' };
+}
+
 export function ProductForm(props: ProductFormProps) {
   const router = useRouter();
   const initial = props.mode === 'edit' ? props.product : null;
@@ -38,6 +51,7 @@ export function ProductForm(props: ProductFormProps) {
   const [newImageUrl, setNewImageUrl] = useState('');
   const [active, setActive] = useState<boolean>(initial?.active ?? true);
   const [fulfillmentMode, setFulfillmentMode] = useState<'made_to_order' | 'ready_stock' | 'hybrid'>(initial?.fulfillment_mode ?? 'made_to_order');
+  const [options, setOptions] = useState<DraftOption[]>(() => props.mode === 'create' ? [createDraftOption()] : []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,6 +75,20 @@ export function ProductForm(props: ProductFormProps) {
       return;
     }
 
+    const normalizedOptions = options
+      .filter((option) => option.name.trim())
+      .map((option) => ({
+        name: option.name.trim(),
+        dimensions: option.dimensions.trim() || null,
+        color: option.color || null,
+        price_modifier: Number(option.priceModifier || 0),
+        stock: Number(option.stock || 0),
+      }));
+    if (normalizedOptions.some((option) => Number.isNaN(option.price_modifier) || Number.isNaN(option.stock) || option.stock < 0 || !Number.isInteger(option.stock))) {
+      setError('Revise o preço adicional e o estoque das variações');
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
@@ -73,6 +101,7 @@ export function ProductForm(props: ProductFormProps) {
       images: images.length > 0 ? images : null,
       active,
       fulfillment_mode: fulfillmentMode,
+      options: props.mode === 'create' ? normalizedOptions : undefined,
     };
 
     const url =
@@ -218,6 +247,40 @@ export function ProductForm(props: ProductFormProps) {
           </div>
           <div />
         </div>
+
+        {props.mode === 'create' && (
+          <section className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50/80 to-orange-50/60 p-4 dark:border-pink-900/40 dark:from-pink-950/20 dark:to-orange-950/10 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">02 · Variações</p>
+                <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">Tamanhos, cores e estoque inicial</h2>
+                <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Cada linha pode representar uma combinação, como “M · Rosa”. Para produtos sob demanda, use estoque zero.</p>
+              </div>
+              <button type="button" onClick={() => setOptions((current) => [...current, createDraftOption()])} className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-pink-600 shadow-sm ring-1 ring-pink-200 transition hover:bg-pink-50 dark:bg-gray-900 dark:ring-pink-900">
+                + Adicionar variação
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {options.map((option, index) => (
+                <div key={option.id} className="rounded-2xl border border-white bg-white/90 p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900/90">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-500">Variação {index + 1}</span>
+                    <button type="button" onClick={() => setOptions((current) => current.filter((item) => item.id !== option.id))} className="text-xs font-semibold text-red-500 hover:text-red-700">Remover</button>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+                    <label className="lg:col-span-2"><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Nome ou tamanho</span><input value={option.name} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, name: event.target.value } : item))} placeholder="Ex.: P, M, G ou Único" className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
+                    <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Dimensões</span><input value={option.dimensions} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, dimensions: event.target.value } : item))} placeholder="Ex.: 12 × 8 cm" className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
+                    <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Cor</span><div className="mt-1 flex rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800"><input type="color" value={option.color} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, color: event.target.value } : item))} className="h-8 w-10 cursor-pointer border-0 bg-transparent" /><input value={option.color} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, color: event.target.value } : item))} className="min-w-0 flex-1 bg-transparent px-1 text-xs uppercase outline-none" /></div></label>
+                    <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Adicional (R$)</span><input type="number" step="0.01" value={option.priceModifier} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, priceModifier: event.target.value } : item))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
+                    <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Pronta-entrega</span><input type="number" min="0" step="1" value={option.stock} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, stock: event.target.value } : item))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
+                  </div>
+                </div>
+              ))}
+              {options.length === 0 && <button type="button" onClick={() => setOptions([createDraftOption()])} className="w-full rounded-xl border border-dashed border-pink-300 p-4 text-sm font-semibold text-pink-600">Adicionar a primeira variação</button>}
+            </div>
+          </section>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

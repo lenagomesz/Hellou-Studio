@@ -168,7 +168,7 @@ export async function sendPasswordResetEmail(email: string, nome: string | null,
           </a>
           
           <p style="color: #888; font-size: 13px; line-height: 1.5; text-align: center; margin: 24px 0 16px;">
-            Se você não solicitou isso, ignore este email. Sua conta permanece segura.
+            Se você não solicitou isso, ignore este e-mail. Sua conta permanece segura.
           </p>
           
           <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; text-align: center;">
@@ -436,7 +436,7 @@ export async function sendOrderConfirmationEmail(params: {
                 <div style="margin-bottom: 24px; position: relative;">
                   <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">📦</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Envio</p>
-                  <p style="margin: 0; font-size: 13px; color: #888;">Você receberá o código de rastreamento por email.</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Você receberá o código de rastreamento por e-mail.</p>
                 </div>
                 <div style="position: relative;">
                   <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">✅</div>
@@ -471,6 +471,60 @@ export async function sendOrderConfirmationEmail(params: {
     }
   } catch (err) {
     console.error('[email] pedido-confirmado EXCEPTION:', err);
+  }
+}
+
+export async function sendPixPaymentEmail(params: {
+  email: string;
+  nome: string | null;
+  orderId: string;
+  total: number;
+  pixCode: string;
+  expiration: string | null;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+
+  const baseUrl = getBaseUrl();
+  const shortId = params.orderId.slice(0, 8).toUpperCase();
+  const total = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.total);
+  const expiration = params.expiration
+    ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo' }).format(new Date(params.expiration))
+    : '30 minutos após a geração';
+  const safeName = params.nome?.replace(/[<>&"']/g, '') || '';
+  const safePixCode = params.pixCode.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  try {
+    const res = await resend.emails.send({
+      from: getFrom(),
+      to: params.email,
+      subject: `PIX gerado para o pedido #${shortId}`,
+      html: `
+        <div style="margin:0;background:#f2f0f3;padding:28px 12px;font-family:Arial,sans-serif;color:#211d25;">
+          <div style="max-width:620px;margin:0 auto;overflow:hidden;border-radius:22px;background:#ffffff;box-shadow:0 18px 55px rgba(31,27,39,.12);">
+            <div style="height:7px;background:linear-gradient(90deg,#ff2f92,#ff5f68,#ff9d28);"></div>
+            <div style="padding:24px 30px 20px;border-bottom:1px solid #f0edf2;"><strong style="font-size:22px;letter-spacing:-1px;color:#e72f80;">helloustudio</strong><span style="float:right;color:#99949f;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;">Pagamento PIX</span></div>
+            <div style="padding:34px 30px 28px;background:linear-gradient(145deg,#fff7fb,#ffffff 56%,#fff7eb);">
+              <span style="display:inline-block;padding:7px 10px;border:1px solid #ffd2e6;border-radius:999px;background:#fff;color:#e72f80;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">Aguardando pagamento</span>
+              <h1 style="margin:16px 0 10px;font-size:30px;line-height:1.12;color:#211d25;">Seu PIX está pronto${safeName ? `, ${safeName}` : ''}.</h1>
+              <p style="margin:0;color:#736f7b;font-size:15px;line-height:1.65;">Use o código abaixo no aplicativo do seu banco. Assim que o pagamento for identificado, seu pedido será confirmado automaticamente.</p>
+            </div>
+            <div style="padding:28px 30px 34px;">
+              <div style="padding:16px;border:1px solid #f1dfe8;border-radius:15px;background:linear-gradient(135deg,#fff7fb,#fffaf3);"><span style="color:#837c88;font-size:12px;">Total a pagar</span><strong style="float:right;font-size:20px;color:#211d25;">${total}</strong></div>
+              <p style="margin:24px 0 8px;color:#99949f;font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;">PIX copia e cola</p>
+              <div style="padding:15px;border:1px solid #eeeaf0;border-radius:14px;background:#faf8fa;color:#39333d;font-family:monospace;font-size:11px;line-height:1.55;word-break:break-all;">${safePixCode}</div>
+              <p style="margin:10px 0 0;color:#8e8995;font-size:11px;line-height:1.55;">Válido até ${expiration}. Se o prazo terminar sem pagamento, o pedido será cancelado automaticamente.</p>
+              <a href="${baseUrl}/account/orders/${params.orderId}" style="display:block;margin-top:24px;padding:15px 20px;border-radius:13px;background:linear-gradient(100deg,#ff2f92,#ff9d28);color:#fff;text-align:center;text-decoration:none;font-size:13px;font-weight:800;">Abrir pedido e pagar</a>
+            </div>
+            <div style="padding:22px 30px 26px;border-top:1px solid #eeeaf0;background:#faf8fa;color:#8e8995;text-align:center;font-size:10px;line-height:1.7;"><strong style="color:#2a2730;">helloustudio</strong><br />Objetos cheios de personalidade, feitos camada por camada.<br />Este é um e-mail automático sobre o seu pedido.</div>
+          </div>
+        </div>
+      `,
+    });
+    if (res.error) console.error('[email] pix-pending ERRO:', JSON.stringify(res.error, null, 2));
+    else console.log('[email] pix-pending ENVIADO para:', params.email, '| id:', res.data?.id);
+  } catch (err) {
+    console.error('[email] pix-pending EXCEPTION:', err);
   }
 }
 

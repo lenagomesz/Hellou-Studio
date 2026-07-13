@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.inventory_materials (
   current_weight_grams integer NOT NULL DEFAULT 0 CHECK (current_weight_grams >= 0),
   reserved_weight_grams integer NOT NULL DEFAULT 0 CHECK (reserved_weight_grams >= 0),
   reorder_point_grams integer NOT NULL DEFAULT 250 CHECK (reorder_point_grams >= 0),
+  target_weight_grams integer NOT NULL DEFAULT 1000 CHECK (target_weight_grams >= 0),
   cost_per_kg numeric(10,2) NOT NULL DEFAULT 0 CHECK (cost_per_kg >= 0),
   priority text NOT NULL DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
   supplier_id uuid REFERENCES public.suppliers(id) ON DELETE SET NULL,

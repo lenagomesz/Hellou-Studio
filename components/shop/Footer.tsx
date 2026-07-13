@@ -4,8 +4,23 @@ import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-pink-100 bg-pink-50/60 dark:border-gray-800 dark:bg-gray-900">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+    <footer className="relative mt-auto overflow-hidden border-t border-pink-100 bg-white dark:border-gray-800 dark:bg-gray-950">
+      <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-pink-100/60 blur-3xl dark:bg-pink-950/20" />
+      <div className="pointer-events-none absolute -right-24 bottom-10 h-72 w-72 rounded-full bg-orange-100/60 blur-3xl dark:bg-orange-950/20" />
+      <div className="relative mx-auto max-w-6xl px-4 pt-10 sm:px-6">
+        <div className="overflow-hidden rounded-[28px] bg-[#17151d] px-6 py-7 text-white shadow-2xl shadow-pink-950/10 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:px-9 sm:py-8">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-pink-300">Sua ideia pode virar realidade</p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Não encontrou o que imaginou?</h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">Envie seu arquivo ou conte sua ideia. Analisamos a impressão 3D e respondemos com um orçamento personalizado.</p>
+          </div>
+          <Link href="/request-print" className="mt-5 inline-flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 to-orange-400 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-950/30 transition hover:scale-[1.02] sm:mt-0">
+            Pedir impressão personalizada
+          </Link>
+        </div>
+      </div>
+
+      <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
         <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1">
@@ -125,7 +140,7 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-pink-100/60 dark:border-gray-800">
+      <div className="relative border-t border-pink-100/60 bg-pink-50/40 dark:border-gray-800 dark:bg-gray-900/60">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row sm:px-6">
           <span className="text-xs text-gray-400 dark:text-gray-500">
             © {new Date().getFullYear()} helloustudio. Todos os direitos reservados.

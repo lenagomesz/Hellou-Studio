@@ -46,6 +46,7 @@ export async function POST(request: Request) {
     current_weight_grams: nonNegativeNumber(body.current_weight_grams),
     reserved_weight_grams: nonNegativeNumber(body.reserved_weight_grams),
     reorder_point_grams: nonNegativeNumber(body.reorder_point_grams, 250),
+    target_weight_grams: nonNegativeNumber(body.target_weight_grams, 1000),
     cost_per_kg: nonNegativeNumber(body.cost_per_kg),
     priority,
     notes: typeof body.notes === 'string' ? body.notes.trim() || null : null,
@@ -64,7 +65,7 @@ export async function PATCH(request: Request) {
   if (!id) return badRequest('ID é obrigatório');
 
   const updates: Record<string, unknown> = {};
-  for (const field of ['current_weight_grams', 'reserved_weight_grams', 'reorder_point_grams', 'cost_per_kg']) {
+  for (const field of ['current_weight_grams', 'reserved_weight_grams', 'reorder_point_grams', 'target_weight_grams', 'cost_per_kg']) {
     if (body[field] !== undefined) updates[field] = nonNegativeNumber(body[field]);
   }
   if (typeof body.priority === 'string' && priorities.has(body.priority)) updates.priority = body.priority;

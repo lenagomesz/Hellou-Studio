@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { name, description, category, base_price, sale_price, image_url, images, active, fulfillment_mode } = (body ??
+  const { name, description, category, base_price, sale_price, image_url, images, active, fulfillment_mode, options } = (body ??
     {}) as {
     name?: string;
     description?: string | null;
@@ -71,6 +71,7 @@ export async function POST(request: Request) {
     images?: string[] | null;
     active?: boolean;
     fulfillment_mode?: string;
+    options?: Array<{ name: string; dimensions?: string | null; color?: string | null; price_modifier?: number; stock?: number }>;
   };
 
   if (!name || !name.trim()) return badRequest('Nome é obrigatório');
@@ -98,6 +99,23 @@ export async function POST(request: Request) {
     .single();
 
   if (error || !data) return serverError('Erro ao criar produto');
+
+  const validOptions = (options ?? []).filter((option) => option.name?.trim());
+  if (validOptions.length > 0) {
+    const { error: optionsError } = await admin.from('product_options').insert(validOptions.map((option) => ({
+      product_id: data.id,
+      name: option.name.trim(),
+      dimensions: option.dimensions?.trim() || null,
+      color: option.color?.trim() || null,
+      price_modifier: Number(option.price_modifier ?? 0),
+      stock: Math.max(0, Math.trunc(Number(option.stock ?? 0))),
+    })));
+    if (optionsError) {
+      await admin.from('products').delete().eq('id', data.id);
+      console.error('[products] option insert error:', optionsError);
+      return serverError('Erro ao criar as variações do produto');
+    }
+  }
 
   return NextResponse.json({ product: data as Product }, { status: 201 });
 }
