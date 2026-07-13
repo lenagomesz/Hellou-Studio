@@ -1,6 +1,4 @@
 import { Resend } from 'resend';
-import { BoasVindasEmail } from '@/emails/boas-vindas';
-import { PedidoConfirmadoEmail } from '@/emails/pedido-confirmado';
 
 let cached: Resend | null = null;
 let warned = false;
@@ -31,12 +29,91 @@ export async function sendWelcomeEmail(email: string, nome: string | null) {
   const resend = getResend();
   if (!resend) return;
 
+  const baseUrl = getBaseUrl();
+  const greeting = nome ? `Olá, ${nome}!` : 'Olá!';
+
   try {
     const res = await resend.emails.send({
       from: getFrom(),
       to: email,
       subject: `🎉 Bem-vindo(a) à HellouStudio!${nome ? `, ${nome}` : ''}`,
-      react: BoasVindasEmail({ nome, baseUrl: getBaseUrl() }),
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff;">
+          <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
+            <h1 style="color: #111; margin: 0 0 8px 0; font-size: 24px; font-weight: 700;">
+              Bem-vindo(a)! 🎉
+            </h1>
+            <p style="color: #666; margin: 0; font-size: 14px;">
+              Sua conta foi criada com sucesso
+            </p>
+          </div>
+
+          <p style="color: #555; line-height: 1.6; margin: 0 0 24px 0;">
+            ${greeting} Agora você faz parte da comunidade HellouStudio! Estamos muito felizes em ter você conosco. ✨
+          </p>
+
+          <div style="margin: 24px 0; padding: 20px; background-color: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
+            <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #166534;">
+              O que você encontrará aqui:
+            </p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #15803D; line-height: 1.8;">
+              <li>Chaveiros personalizados impressos em 3D</li>
+              <li>Itens de escritório exclusivos</li>
+              <li>Criaturas e figuras únicas</li>
+              <li>Arquivos STL para impressão própria</li>
+            </ul>
+          </div>
+
+          <div style="margin: 24px 0;">
+            <p style="margin: 0 0 16px 0; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">
+              Por que nos escolher?
+            </p>
+            <div style="position: relative; padding-left: 32px;">
+              <div style="margin-bottom: 20px; position: relative;">
+                <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #F3E8FF; color: #9333EA; font-weight: 600; font-size: 12px;">
+                  🖨️
+                </div>
+                <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Impressão sob demanda</p>
+                <p style="margin: 0; font-size: 13px; color: #888;">Cada peça é produzida especialmente para você</p>
+              </div>
+              <div style="margin-bottom: 20px; position: relative;">
+                <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #F3E8FF; color: #9333EA; font-weight: 600; font-size: 12px;">
+                  💎
+                </div>
+                <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Qualidade premium</p>
+                <p style="margin: 0; font-size: 13px; color: #888;">Materiais de alta qualidade e acabamento impecável</p>
+              </div>
+              <div style="margin-bottom: 20px; position: relative;">
+                <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #F3E8FF; color: #9333EA; font-weight: 600; font-size: 12px;">
+                  🚀
+                </div>
+                <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Entrega rápida</p>
+                <p style="margin: 0; font-size: 13px; color: #888;">Produção em até 3 dias úteis</p>
+              </div>
+              <div style="position: relative;">
+                <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #F3E8FF; color: #9333EA; font-weight: 600; font-size: 12px;">
+                  💬
+                </div>
+                <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Suporte dedicado</p>
+                <p style="margin: 0; font-size: 13px; color: #888;">Estamos sempre prontos para ajudar</p>
+              </div>
+            </div>
+          </div>
+
+          <a href="${baseUrl}/products" style="display: inline-block; margin: 32px 0 24px 0; padding: 14px 28px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+            Explorar Catálogo
+          </a>
+
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 12px 0; color: #555; font-size: 13px;">
+              Dúvidas? Entre em contato pelo WhatsApp, estamos à disposição!
+            </p>
+            <p style="margin: 0; color: #999; font-size: 12px;">
+              © helloustudio • Feito com ❤️ em 3D
+            </p>
+          </div>
+        </div>
+      `,
     });
     if (res.error) {
       console.error('[email] boas-vindas ERRO:', JSON.stringify(res.error, null, 2));
@@ -266,18 +343,126 @@ export async function sendOrderConfirmationEmail(params: {
     pedidoId: params.pedidoId,
   });
 
+  const baseUrl = getBaseUrl();
+  const formattedTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.total);
+  const formattedDate = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const isSTLOrder = params.itens.some(item => item.nome.toLowerCase().includes('stl') || item.nome.toLowerCase().includes('arquivo'));
+
   try {
     const res = await resend.emails.send({
       from: getFrom(),
       to: params.email,
-      subject: `Pedido confirmado! #${params.pedidoId.slice(0, 8).toUpperCase()}`,
-      react: PedidoConfirmadoEmail({
-        nome: params.nome,
-        pedidoId: params.pedidoId,
-        total: params.total,
-        itens: params.itens,
-        baseUrl: getBaseUrl(),
-      }),
+      subject: `${isSTLOrder ? '📁 Arquivo Disponível!' : '🎉 Pedido Confirmado!'} #${params.pedidoId.slice(0, 8).toUpperCase()}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff;">
+          <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
+            <h1 style="color: #111; margin: 0 0 8px 0; font-size: 24px; font-weight: 700;">
+              ${isSTLOrder ? 'Arquivo Disponível! 🎉' : 'Pedido Confirmado! 🎉'}
+            </h1>
+            <p style="color: #666; margin: 0; font-size: 14px;">
+              Pedido #${params.pedidoId.slice(0, 8).toUpperCase()} • ${formattedDate}
+            </p>
+          </div>
+
+          <p style="color: #555; line-height: 1.6; margin: 0 0 24px 0;">
+            Olá${params.nome ? `, ${params.nome}` : ''}! ${isSTLOrder 
+              ? 'Seu arquivo STL está pronto para download! 🚀' 
+              : 'Seu pedido foi confirmado e está sendo preparado com muito carinho. ✨'}
+          </p>
+
+          <div style="margin: 24px 0; padding: 16px; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 16px 0; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">
+              ${isSTLOrder ? 'Arquivos adquiridos' : 'Itens do pedido'}
+            </p>
+            ${params.itens.map((item, idx) => `
+              <div style="margin-bottom: ${idx < params.itens.length - 1 ? '16px' : '0'}; padding-bottom: ${idx < params.itens.length - 1 ? '16px' : '0'}; border-bottom: ${idx < params.itens.length - 1 ? '1px solid #e5e7eb' : 'none'};">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                  <p style="color: #1f2937; font-weight: 600; margin: 0; flex: 1;">${item.nome}</p>
+                  <p style="color: #1f2937; font-weight: 600; margin: 0 0 0 12px; white-space: nowrap;">
+                    ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.precoUnitario * item.quantidade)}
+                  </p>
+                </div>
+                <p style="color: #888; margin: 0; font-size: 13px;">
+                  Quantidade: ${item.quantidade} × ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.precoUnitario)}
+                </p>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="margin: 24px 0; padding: 16px; background-color: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+            <p style="margin: 0; font-size: 12px; color: #666; margin-bottom: 8px;">TOTAL DO PEDIDO</p>
+            <p style="margin: 0; font-size: 20px; font-weight: 700; color: #15803d;">
+              ${formattedTotal}
+            </p>
+          </div>
+
+          <div style="margin: 24px 0;">
+            <p style="margin: 0 0 16px 0; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">
+              ${isSTLOrder ? 'O que acontece agora?' : 'Próximas etapas'}
+            </p>
+            <div style="position: relative; padding-left: 32px;">
+              ${isSTLOrder ? `
+                <div style="margin-bottom: 24px; position: relative;">
+                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #15803d; color: #fff; font-weight: 600; font-size: 12px;">✓</div>
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Pagamento confirmado</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Seu pagamento foi processado com sucesso.</p>
+                </div>
+                <div style="margin-bottom: 24px; position: relative;">
+                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">📥</div>
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Download disponível</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Acesse sua conta para baixar o arquivo STL.</p>
+                </div>
+                <div style="margin-bottom: 24px; position: relative;">
+                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">🖨️</div>
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Impressão</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Imprima em casa ou em um serviço de impressão 3D.</p>
+                </div>
+                <div style="position: relative;">
+                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">✅</div>
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Apoio</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Precisa de ajuda? Estamos à disposição!</p>
+                </div>
+              ` : `
+                <div style="margin-bottom: 24px; position: relative;">
+                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #15803d; color: #fff; font-weight: 600; font-size: 12px;">✓</div>
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Pagamento confirmado</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Seu pagamento foi processado com sucesso.</p>
+                </div>
+                <div style="margin-bottom: 24px; position: relative;">
+                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">🖨️</div>
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Produção</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Sua peça será impressa em até 3 dias úteis.</p>
+                </div>
+                <div style="margin-bottom: 24px; position: relative;">
+                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">📦</div>
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Envio</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Você receberá o código de rastreamento por email.</p>
+                </div>
+                <div style="position: relative;">
+                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">✅</div>
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Entrega</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Sua peça chegará com segurança.</p>
+                </div>
+              `}
+            </div>
+          </div>
+
+          <a href="${baseUrl}/account/orders/${params.pedidoId}" style="display: inline-block; margin: 32px 0 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+            ${isSTLOrder ? 'Baixar meu arquivo' : 'Acompanhe seu pedido'}
+          </a>
+
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 12px 0; color: #555; font-size: 13px;">
+              ${isSTLOrder 
+                ? 'Precisa de ajuda com o arquivo? Entre em contato pelo WhatsApp.' 
+                : 'Dúvidas? Acesse sua conta em helloustudio para mais detalhes.'}
+            </p>
+            <p style="margin: 0; color: #999; font-size: 12px;">
+              © helloustudio • Feito com ❤️ em 3D
+            </p>
+          </div>
+        </div>
+      `,
     });
     if (res.error) {
       console.error('[email] pedido-confirmado ERRO:', JSON.stringify(res.error, null, 2));

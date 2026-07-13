@@ -7,7 +7,7 @@ import type { CartItem, Order, OrderItem, Product, ProductOption } from '@/types
 type CartRowForFulfillment = CartItem & {
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'active'
+    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'active' | 'type'
   > | null;
   option:
     | Pick<ProductOption, 'id' | 'product_id' | 'name' | 'price_modifier' | 'stock'>
