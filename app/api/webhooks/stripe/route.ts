@@ -2,6 +2,7 @@ import type Stripe from 'stripe';
 import { getStripe, getStripeWebhookSecret } from '@/lib/stripe';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from '@/lib/email';
+import { createAdminAlert } from '@/lib/admin-alerts';
 import type { CartItem, Order, OrderItem, Product, ProductOption } from '@/types/database';
 
 type CartRowForFulfillment = CartItem & {
@@ -276,6 +277,14 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
       }).catch(() => {});
     }
   }
+
+  await createAdminAlert({
+    type: 'new_order',
+    title: 'Novo pedido pago',
+    body: `Cliente: ${user?.name || user?.email || 'Cliente'} | Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total)}`,
+    priority: 'high',
+    related_order_id: orderId,
+  });
 }
 
 async function markOrderAsCanceled(sessionId: string) {

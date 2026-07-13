@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   const auth = await requireUser();
   if (auth.response) return auth.response;
 
-  let body: { orderId?: string; rating?: number };
+  let body: { orderId?: string; rating?: number; comment?: string };
   try {
     body = await req.json();
   } catch {
@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { orderId, rating } = body;
+  const comment = typeof body.comment === 'string' ? body.comment.trim().slice(0, 1200) : '';
 
   if (!orderId || typeof orderId !== 'string') {
     return badRequest('orderId é obrigatório');
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
         order_id: orderId,
         user_id: auth.user.id,
         rating,
+        comment: comment || null,
       },
       { onConflict: 'order_id' }
     );

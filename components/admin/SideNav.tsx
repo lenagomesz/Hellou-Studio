@@ -1,25 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
+  AlertCircle,
+  BarChart3,
+  Box,
+  Calculator,
+  ChevronRight,
+  CircleDollarSign,
   LayoutDashboard,
+  LogOut,
+  Mail,
+  Menu,
   Package,
   Printer,
-  Box,
-  Users,
-  Tag,
-  BarChart3,
-  LogOut,
-  Menu,
-  X,
-  Star,
+  Settings2,
   Shield,
-  AlertCircle,
+  Star,
+  Store,
+  Tag,
+  Users,
   Warehouse,
-  Mail,
+  X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -28,7 +33,7 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   exact?: boolean;
-  badgeKey?: string;
+  badgeKey?: 'alerts';
 }
 
 interface NavSection {
@@ -38,35 +43,38 @@ interface NavSection {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    label: 'Principal',
+    label: 'Hoje',
     items: [
-      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-      { href: '/dashboard/admin-alerts', label: 'Alertas', icon: AlertCircle, badgeKey: 'alerts' },
+      { href: '/dashboard', label: 'Visão geral', icon: LayoutDashboard, exact: true },
+      { href: '/dashboard/admin-alerts', label: 'Central de alertas', icon: AlertCircle, badgeKey: 'alerts' },
     ],
   },
   {
-    label: 'Gerenciamento',
+    label: 'Operação',
     items: [
       { href: '/dashboard/orders', label: 'Pedidos', icon: Package },
-      { href: '/dashboard/requests', label: 'Solicitações de Impressão', icon: Printer },
+      { href: '/dashboard/requests', label: 'Solicitações 3D', icon: Printer },
       { href: '/dashboard/products', label: 'Produtos', icon: Box },
+      { href: '/dashboard/inventory', label: 'Estoque', icon: Warehouse },
       { href: '/dashboard/users', label: 'Clientes', icon: Users },
-      { href: '/dashboard/coupons', label: 'Cupons', icon: Tag },
       { href: '/dashboard/order-ratings', label: 'Avaliações', icon: Star },
     ],
   },
   {
-    label: 'Negócio',
+    label: 'Crescimento',
     items: [
-      { href: '/dashboard/campaigns', label: 'Email Marketing', icon: Mail },
-      { href: '/dashboard/inventory', label: 'Estoque', icon: Warehouse },
-      { href: '/dashboard/analytics', label: 'Relatórios', icon: BarChart3, exact: true },
+      { href: '/dashboard/financeiro', label: 'Financeiro', icon: CircleDollarSign },
+      { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+      { href: '/dashboard/campaigns', label: 'Campanhas', icon: Mail },
+      { href: '/dashboard/coupons', label: 'Cupons', icon: Tag },
+      { href: '/dashboard/calculadora', label: 'Calculadora', icon: Calculator },
     ],
   },
   {
     label: 'Configuração',
     items: [
       { href: '/admin/security', label: 'Segurança (2FA)', icon: Shield },
+      { href: '/dashboard/settings/features', label: 'Recursos da loja', icon: Settings2 },
     ],
   },
 ];
@@ -85,38 +93,37 @@ export function SideNav({ userEmail, alertCount = 0 }: { userEmail: string | nul
   }
 
   return (
-    <aside className="w-full md:w-64 md:min-h-screen bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col dark:bg-gray-950 dark:border-gray-800">
-      <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-800">
-        <div>
-          <Link href="/" className="text-lg font-bold text-gray-900 dark:text-white">
-            helloustudio
-          </Link>
-          <p className="mt-0.5 text-xs uppercase tracking-wider text-pink-600 font-medium">
-            Admin
-          </p>
-        </div>
+    <aside className="w-full border-b border-white/10 bg-[#101218] text-white md:sticky md:top-0 md:h-screen md:w-[278px] md:shrink-0 md:border-b-0 md:border-r">
+      <div className="flex items-center justify-between border-b border-white/10 p-4 md:px-5 md:py-5">
+        <Link href="/dashboard" className="group flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-orange-400 text-sm font-black text-white shadow-lg shadow-pink-950/30">
+            H
+          </span>
+          <span>
+            <span className="block text-[15px] font-bold tracking-tight">hellou studio</span>
+            <span className="mt-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-pink-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+              Central admin
+            </span>
+          </span>
+        </Link>
         <button
           type="button"
-          onClick={() => setMobileOpen((v) => !v)}
-          className="md:hidden rounded-lg p-2 text-gray-600 hover:bg-gray-100 transition dark:text-gray-400 dark:hover:bg-gray-800"
-          aria-label="Menu"
+          onClick={() => setMobileOpen((value) => !value)}
+          className="rounded-xl border border-white/10 p-2 text-slate-300 transition hover:bg-white/10 md:hidden"
+          aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
+          aria-expanded={mobileOpen}
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      <div
-        className={`md:flex md:flex-col md:flex-1 overflow-hidden transition-all duration-200 ease-in-out ${
-          mobileOpen ? 'max-h-[600px]' : 'max-h-0 md:max-h-none'
-        }`}
-      >
-        <nav className="flex-1 p-3 space-y-5">
+      <div className={`overflow-hidden transition-all duration-300 ease-in-out md:flex md:h-[calc(100vh-81px)] md:flex-col ${mobileOpen ? 'max-h-[78vh]' : 'max-h-0 md:max-h-none'}`}>
+        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5 [scrollbar-color:#333_transparent] [scrollbar-width:thin]">
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
-              <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                {section.label}
-              </p>
-              <div className="space-y-0.5">
+              <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">{section.label}</p>
+              <div className="space-y-1">
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href, item.exact);
@@ -125,18 +132,14 @@ export function SideNav({ userEmail, alertCount = 0 }: { userEmail: string | nul
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                        active
-                          ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
-                          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                      }`}
+                      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${active ? 'bg-white text-slate-950 shadow-lg shadow-black/20' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'}`}
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      {item.label}
-                      {item.badgeKey && badgeCount > 0 && (
-                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                          {badgeCount > 99 ? '99+' : badgeCount}
-                        </span>
+                      <Icon className={`h-[17px] w-[17px] shrink-0 ${active ? 'text-pink-600' : 'text-slate-500 transition group-hover:text-pink-400'}`} />
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      {item.badgeKey && badgeCount > 0 ? (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-600 px-1.5 text-[10px] font-bold text-white">{badgeCount > 99 ? '99+' : badgeCount}</span>
+                      ) : (
+                        <ChevronRight className={`h-3.5 w-3.5 transition ${active ? 'text-slate-400' : 'translate-x-1 text-transparent group-hover:translate-x-0 group-hover:text-slate-600'}`} />
                       )}
                     </Link>
                   );
@@ -146,26 +149,22 @@ export function SideNav({ userEmail, alertCount = 0 }: { userEmail: string | nul
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+        <div className="border-t border-white/10 p-4">
           {userEmail && (
-            <p className="text-xs text-gray-500 mb-2 truncate dark:text-gray-400" title={userEmail}>
-              {userEmail}
-            </p>
+            <div className="mb-3 flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-pink-500/15 text-xs font-bold text-pink-300">{userEmail.charAt(0).toUpperCase()}</span>
+              <span className="min-w-0">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-600">Administradora</span>
+                <span className="block truncate text-xs text-slate-300" title={userEmail}>{userEmail}</span>
+              </span>
+            </div>
           )}
           <div className="flex gap-2">
-            <Link
-              href="/"
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              ← Voltar
+            <Link href="/" className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white">
+              <Store className="h-3.5 w-3.5" /> Loja
             </Link>
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
+            <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300">
+              <LogOut className="h-3.5 w-3.5" /> Sair
             </button>
           </div>
         </div>

@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { MessageSquareQuote, Star, UserRound } from 'lucide-react';
 
 type RatingRow = {
   id: string;
   orderId: string;
   userId: string;
   rating: number;
+  comment: string | null;
   createdAt: string;
   userName: string | null;
   userEmail: string | null;
@@ -103,13 +106,11 @@ export default function OrderRatingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <header>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Avaliações de Pedidos
-        </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Visualize as avaliações dos clientes sobre seus pedidos
-        </p>
+      <header className="overflow-hidden rounded-[26px] bg-[#101218] p-6 text-white sm:p-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-300">Voz do cliente</p><h1 className="mt-2 text-3xl font-bold">Avaliações de pedidos</h1><p className="mt-1 max-w-xl text-sm leading-6 text-slate-400">Leia cada comentário com o contexto do cliente e do pedido para responder e melhorar a experiência.</p></div>
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] p-4"><Star className="h-8 w-8 fill-yellow-300 text-yellow-300" /><div><p className="text-2xl font-bold">{totalCount}</p><p className="text-xs text-slate-400">avaliações encontradas</p></div></div>
+        </div>
       </header>
 
       {/* Filters */}
@@ -162,6 +163,7 @@ export default function OrderRatingsPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
                     Cliente
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Comentário</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
                     Pedido
                   </th>
@@ -188,17 +190,16 @@ export default function OrderRatingsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3.5">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {row.userName ?? '—'}
-                      </p>
+                      <Link href={`/dashboard/users/${row.userId}`} className="inline-flex items-center gap-1 text-sm font-semibold text-gray-900 hover:text-pink-600 dark:text-white"><UserRound className="h-3.5 w-3.5" /> {row.userName ?? 'Cliente'}</Link>
                       <p className="text-xs text-gray-500">
                         {row.userEmail ?? '—'}
                       </p>
                     </td>
+                    <td className="max-w-sm px-4 py-3.5"><div className={`rounded-xl px-3 py-2 text-sm leading-5 ${row.comment ? 'bg-pink-50 text-slate-700 dark:bg-pink-500/10 dark:text-slate-200' : 'text-slate-400'}`}><MessageSquareQuote className="mr-1 inline h-4 w-4 text-pink-500" />{row.comment || 'Sem comentário'}</div></td>
                     <td className="px-4 py-3.5">
-                      <span className="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                      <Link href={`/dashboard/orders/${row.orderId}`} className="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 hover:bg-pink-100 hover:text-pink-700 dark:bg-gray-800 dark:text-gray-300">
                         #{row.orderId.slice(0, 8)}
-                      </span>
+                      </Link>
                     </td>
                     <td className="px-4 py-3.5 text-xs text-gray-500">
                       {formatDate(row.createdAt)}
@@ -240,6 +241,7 @@ export default function OrderRatingsPage() {
                     {row.userEmail ?? '—'}
                   </p>
                 </div>
+                {row.comment && <p className="mt-3 rounded-xl bg-pink-50 p-3 text-sm leading-5 text-slate-700 dark:bg-pink-500/10 dark:text-slate-200">“{row.comment}”</p>}
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-xs text-gray-500">
                     {formatDate(row.createdAt)}

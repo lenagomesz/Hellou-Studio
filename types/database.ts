@@ -30,6 +30,7 @@ export interface Product {
   file_path: string | null;
   created_at: string;
   updated_at: string;
+  fulfillment_mode?: 'made_to_order' | 'ready_stock' | 'hybrid';
 }
 
 export interface ProductOption {
@@ -95,6 +96,10 @@ export interface Coupon {
   active: boolean;
   expires_at: string | null;
   created_at: string;
+  exclusive_user_id?: string | null;
+  bonus_title?: string | null;
+  bonus_description?: string | null;
+  show_in_bonus_area?: boolean;
 }
 
 export type PrintRequestStatus =
@@ -142,13 +147,15 @@ export interface Notification {
 }
 
 export type AdminNotificationType =
+  | 'new_order'
   | 'production_reminder'
   | 'shipping_reminder'
   | 'order_overdue'
   | 'low_stock'
-  | 'new_print_request';
+  | 'new_print_request'
+  | 'custom';
 
-export type AdminNotificationPriority = 'normal' | 'high' | 'urgent';
+export type AdminNotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
 export interface AdminNotification {
   id: string;
@@ -161,6 +168,7 @@ export interface AdminNotification {
   related_order_id: string | null;
   related_product_id: string | null;
   related_product_option_id: string | null;
+  related_print_request_id?: string | null;
   due_date: string | null;
   created_at: string;
 }

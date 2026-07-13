@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   // Fetch ratings with joins to users and orders
   const { data, error } = await admin
     .from('order_ratings')
-    .select('id, order_id, user_id, rating, created_at, user:users(name, email), order:orders(total)')
+    .select('id, order_id, user_id, rating, comment, created_at, user:users(name, email), order:orders(total)')
     .gte('rating', minRating)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
       orderId: row.order_id,
       userId: row.user_id,
       rating: row.rating,
+      comment: row.comment ?? null,
       createdAt: row.created_at,
       userName: user?.name ?? null,
       userEmail: user?.email ?? null,

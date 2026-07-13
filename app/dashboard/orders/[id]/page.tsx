@@ -208,18 +208,19 @@ export default function OrderDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="relative flex flex-wrap items-start justify-between gap-4 overflow-hidden rounded-[26px] bg-[#101218] p-6 text-white sm:p-8">
         <div>
-          <Link href="/dashboard/orders" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition">
+          <Link href="/dashboard/orders" className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
             Pedidos
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">
-            Pedido <span className="font-mono text-gray-600">#{order.id.slice(0, 8)}</span>
+          <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-300">Ordem de produção</p>
+          <h1 className="mt-1 text-3xl font-bold">
+            Pedido <span className="font-mono text-slate-400">#{order.id.slice(0, 8)}</span>
           </h1>
-          <p className="mt-0.5 text-sm text-gray-500">{formatDate(order.created_at)}</p>
+          <p className="mt-1 text-sm text-slate-400">{formatDate(order.created_at)}</p>
         </div>
         <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold ${STATUS_STYLES[order.status]}`}>
           <span>{STATUS_ICONS[order.status]}</span>
@@ -229,7 +230,7 @@ export default function OrderDetailPage() {
 
       {/* Progress bar */}
       {order.status !== 'canceled' && order.status !== 'refunded' && (
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center">
             {STATUS_FLOW.map((s, i) => {
               const isDone = i <= currentStepIndex;
@@ -269,7 +270,7 @@ export default function OrderDetailPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           {/* Items */}
-          <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="border-b border-gray-100 px-5 py-4">
               <h2 className="text-sm font-semibold text-gray-900">Itens do pedido</h2>
               <p className="text-xs text-gray-500">{order.items.length} {order.items.length === 1 ? 'item' : 'itens'}</p>
@@ -350,10 +351,11 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Gerenciar pedido */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-[24px] border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
             <div className="mb-5">
-              <h2 className="text-sm font-semibold text-gray-900">Gerenciar pedido</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Avance o status ou atualize informações de envio</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-pink-600">Ação operacional</p>
+              <h2 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">Atualizar pedido</h2>
+              <p className="text-xs text-gray-500 mt-0.5">O próximo passo fica em destaque; as demais etapas continuam disponíveis abaixo.</p>
             </div>
 
             {/* STL Delivery Button */}
@@ -446,8 +448,8 @@ export default function OrderDetailPage() {
                     </button>
                   )}
                   {order.status === 'paid' && (
-                    <button type="button" disabled={updating} onClick={() => updateStatus('processing')} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50">
-                      ⚙️ Iniciar preparo
+                    <button type="button" disabled={updating} onClick={() => updateStatus('processing')} className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 disabled:opacity-50">
+                      ⚙️ Iniciar produção
                     </button>
                   )}
                   {order.status === 'processing' && (

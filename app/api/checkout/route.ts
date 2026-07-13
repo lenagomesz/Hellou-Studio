@@ -149,7 +149,8 @@ export async function POST(request: Request) {
       const notExpired = !c.expires_at || new Date(c.expires_at) >= now;
       const hasUses = c.max_uses === null || c.used_count < c.max_uses;
       const meetsMin = subtotal >= c.min_purchase;
-      if (notExpired && hasUses && meetsMin) {
+      const belongsToUser = !c.exclusive_user_id || c.exclusive_user_id === auth.user.id;
+      if (notExpired && hasUses && meetsMin && belongsToUser) {
         validCoupon = c;
       }
     }

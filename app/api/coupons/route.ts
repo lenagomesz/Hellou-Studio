@@ -31,13 +31,23 @@ export async function POST(request: Request) {
     const max_uses = typeof body.max_uses === 'number' ? body.max_uses : null;
     const free_shipping = body.free_shipping === true;
     const expires_at = typeof body.expires_at === 'string' && body.expires_at ? body.expires_at : null;
+    const exclusiveUserEmail = typeof body.exclusive_user_email === 'string' ? body.exclusive_user_email.trim().toLowerCase() : '';
+    const bonusTitle = typeof body.bonus_title === 'string' ? body.bonus_title.trim() : '';
+    const bonusDescription = typeof body.bonus_description === 'string' ? body.bonus_description.trim() : '';
+    const showInBonusArea = body.show_in_bonus_area === true;
 
     console.log('[coupons-post] creating coupon:', { code, discount_type, discount_value, min_purchase, max_uses, free_shipping, expires_at });
 
     const admin = getSupabaseAdmin();
+    let exclusiveUserId: string | null = null;
+    if (exclusiveUserEmail) {
+      const { data: exclusiveUser } = await admin.from('users').select('id').eq('email', exclusiveUserEmail).maybeSingle();
+      if (!exclusiveUser) return badRequest('Cliente não encontrado para o e-mail informado');
+      exclusiveUserId = exclusiveUser.id;
+    }
     const { data, error } = await admin
       .from('coupons')
-      .insert({ code, discount_type, discount_value, min_purchase, max_uses, free_shipping, expires_at })
+      .insert({ code, discount_type, discount_value, min_purchase, max_uses, free_shipping, expires_at, exclusive_user_id: exclusiveUserId, bonus_title: bonusTitle || null, bonus_description: bonusDescription || null, show_in_bonus_area: showInBonusArea })
       .select()
       .single();
 

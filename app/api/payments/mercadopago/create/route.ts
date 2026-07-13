@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       .eq('active', true)
       .maybeSingle();
 
-    if (coupon) {
+    if (coupon && (!coupon.exclusive_user_id || coupon.exclusive_user_id === user.id)) {
       if (coupon.discount_type === 'percent') {
         discountAmount = subtotal * (coupon.discount_value / 100);
       } else {

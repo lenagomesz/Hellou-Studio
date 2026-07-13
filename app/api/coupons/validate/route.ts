@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getCurrentUser } from '@/lib/api';
 import type { Coupon } from '@/types/database';
 
 export async function POST(request: Request) {
@@ -25,6 +26,12 @@ export async function POST(request: Request) {
     }
 
     const coupon = data as Coupon;
+    if (coupon.exclusive_user_id) {
+      const user = await getCurrentUser();
+      if (!user || user.id !== coupon.exclusive_user_id) {
+        return NextResponse.json({ error: 'Este bônus é exclusivo para outro cliente.' }, { status: 403 });
+      }
+    }
 
     if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
       return NextResponse.json({ error: 'Este cupom expirou.' }, { status: 400 });

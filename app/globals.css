@@ -284,3 +284,49 @@ html {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Admin workspace */
+.admin-shell {
+  --admin-accent: #db2777;
+  background-image:
+    radial-gradient(circle at 88% 0%, rgba(236, 72, 153, 0.07), transparent 28rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 16rem);
+}
+
+.dark .admin-shell {
+  background-image:
+    radial-gradient(circle at 88% 0%, rgba(236, 72, 153, 0.08), transparent 30rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 18rem);
+}
+
+.admin-shell main > * {
+  animation: admin-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.admin-shell main h1,
+.admin-shell main h2 {
+  letter-spacing: -0.025em;
+}
+
+.admin-shell main :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+
+.admin-shell main :where(input, select, textarea) {
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.admin-shell main :where(input, select, textarea):focus {
+  border-color: rgba(219, 39, 119, 0.5);
+  box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.08);
+}
+
+@keyframes admin-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-shell main > * { animation: none; }
+}

@@ -122,33 +122,34 @@ export default function OrdersListPage() {
         </div>
       )}
 
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="relative flex flex-wrap items-end justify-between gap-4 overflow-hidden rounded-[26px] bg-[#101218] p-6 text-white sm:p-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Pedidos</h1>
-          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-            Gerencie e atualize status rapidamente
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-300">Fila de produção</p>
+          <h1 className="mt-1 text-3xl font-bold">Pedidos</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            Mude etapas sem abrir o pedido e mantenha a produção sob demanda organizada.
           </p>
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-emerald-300">
           {pagination.total} total
         </span>
       </header>
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-xs font-medium text-gray-500">Aguardando</p>
           <p className="mt-1 text-2xl font-bold text-yellow-600">{pendingCount}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-xs font-medium text-gray-500">Em preparo</p>
           <p className="mt-1 text-2xl font-bold text-indigo-600">{processingCount}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-xs font-medium text-gray-500">Enviados</p>
           <p className="mt-1 text-2xl font-bold text-purple-600">{shippedCount}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-xs font-medium text-gray-500">Receita</p>
           <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">{formatPrice(revenue)}</p>
         </div>

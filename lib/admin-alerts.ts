@@ -9,6 +9,7 @@ export async function createAdminAlert(params: {
   related_order_id?: string;
   related_product_id?: string;
   related_product_option_id?: string;
+  related_print_request_id?: string;
 }): Promise<AdminNotification | null> {
   const admin = getSupabaseAdmin();
 
@@ -22,6 +23,7 @@ export async function createAdminAlert(params: {
       related_order_id: params.related_order_id || null,
       related_product_id: params.related_product_id || null,
       related_product_option_id: params.related_product_option_id || null,
+      related_print_request_id: params.related_print_request_id || null,
       read: false,
       archived: false,
     })

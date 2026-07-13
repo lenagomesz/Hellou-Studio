@@ -29,6 +29,10 @@ export default function CouponsPage() {
     max_uses: '',
     expires_at: '',
     free_shipping: false,
+    show_in_bonus_area: false,
+    exclusive_user_email: '',
+    bonus_title: '',
+    bonus_description: '',
   });
 
   async function fetchCoupons() {
@@ -53,13 +57,17 @@ export default function CouponsPage() {
         max_uses: form.max_uses ? Number(form.max_uses) : null,
         expires_at: form.expires_at || null,
         free_shipping: form.free_shipping,
+        show_in_bonus_area: form.show_in_bonus_area,
+        exclusive_user_email: form.exclusive_user_email,
+        bonus_title: form.bonus_title,
+        bonus_description: form.bonus_description,
       }),
     });
     if (res.ok) {
       setToast('Cupom criado!');
       setTimeout(() => setToast(''), 3000);
       setShowForm(false);
-      setForm({ code: '', discount_type: 'percent', discount_value: '', min_purchase: '0', max_uses: '', expires_at: '', free_shipping: false });
+      setForm({ code: '', discount_type: 'percent', discount_value: '', min_purchase: '0', max_uses: '', expires_at: '', free_shipping: false, show_in_bonus_area: false, exclusive_user_email: '', bonus_title: '', bonus_description: '' });
       fetchCoupons();
     } else {
       try {
@@ -234,6 +242,11 @@ export default function CouponsPage() {
               />
               <span>Cupom oferece apenas frete grátis</span>
             </label>
+
+            <div className="rounded-2xl border border-pink-200 bg-pink-50/50 p-4 dark:border-pink-500/20 dark:bg-pink-500/5">
+              <label className="flex items-center gap-2 text-sm font-semibold text-pink-800 dark:text-pink-300"><input type="checkbox" checked={form.show_in_bonus_area} onChange={e => setForm({...form, show_in_bonus_area: e.target.checked})} className="rounded" /> Exibir na área “Meus Bônus” do cliente</label>
+              {form.show_in_bonus_area && <div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-xs font-medium text-gray-600 dark:text-gray-300">Título do bônus<input value={form.bonus_title} onChange={e => setForm({...form, bonus_title: e.target.value})} placeholder="Um presente para você" className="mt-1.5 w-full rounded-lg border border-pink-200 bg-white px-3 py-2.5 text-sm dark:border-pink-500/20 dark:bg-gray-800" /></label><label className="text-xs font-medium text-gray-600 dark:text-gray-300">Cliente exclusivo (e-mail)<input type="email" value={form.exclusive_user_email} onChange={e => setForm({...form, exclusive_user_email: e.target.value})} placeholder="Deixe vazio para todos" className="mt-1.5 w-full rounded-lg border border-pink-200 bg-white px-3 py-2.5 text-sm dark:border-pink-500/20 dark:bg-gray-800" /></label><label className="text-xs font-medium text-gray-600 dark:text-gray-300 sm:col-span-2">Mensagem<textarea value={form.bonus_description} onChange={e => setForm({...form, bonus_description: e.target.value})} placeholder="Explique por que este bônus foi liberado" rows={2} className="mt-1.5 w-full resize-none rounded-lg border border-pink-200 bg-white px-3 py-2.5 text-sm dark:border-pink-500/20 dark:bg-gray-800" /></label></div>}
+            </div>
           </div>
 
           <div className="flex gap-2">

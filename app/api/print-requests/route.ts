@@ -139,7 +139,8 @@ export async function POST(request: Request) {
     type: 'new_print_request',
     title: `Nova solicitação de impressão: ${data.title}`,
     body: `Solicitado por: ${currentUser?.name || auth.user.email}`,
-    priority: 'normal',
+    priority: 'urgent',
+    related_print_request_id: data.id,
   }).catch(err => console.error('[admin-alerts] create failed:', err));
 
   // Notify admin and user

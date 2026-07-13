@@ -37,6 +37,7 @@ export function ProductForm(props: ProductFormProps) {
   });
   const [newImageUrl, setNewImageUrl] = useState('');
   const [active, setActive] = useState<boolean>(initial?.active ?? true);
+  const [fulfillmentMode, setFulfillmentMode] = useState<'made_to_order' | 'ready_stock' | 'hybrid'>(initial?.fulfillment_mode ?? 'made_to_order');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,6 +72,7 @@ export function ProductForm(props: ProductFormProps) {
       image_url: images[0] || null,
       images: images.length > 0 ? images : null,
       active,
+      fulfillment_mode: fulfillmentMode,
     };
 
     const url =
@@ -117,7 +119,8 @@ export function ProductForm(props: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 space-y-4">
+      <div className="rounded-[26px] bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 space-y-5 sm:p-8">
+        <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">01 · Identidade</p><h2 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Informações principais</h2></div>
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Nome
@@ -178,6 +181,17 @@ export function ProductForm(props: ProductFormProps) {
               required
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Como este produto é atendido?</p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            {([
+              ['made_to_order', 'Sob demanda', 'Produzir após o pagamento'],
+              ['ready_stock', 'Pronta-entrega', 'Usar apenas peças prontas'],
+              ['hybrid', 'Híbrido', 'Pronto quando houver, produzir se faltar'],
+            ] as const).map(([value, label, detail]) => <button key={value} type="button" onClick={() => setFulfillmentMode(value)} className={`rounded-xl border p-3 text-left transition ${fulfillmentMode === value ? 'border-pink-500 bg-pink-50 ring-2 ring-pink-500/10 dark:bg-pink-500/10' : 'border-gray-200 hover:border-pink-200 dark:border-gray-700'}`}><span className="block text-sm font-bold text-gray-900 dark:text-white">{label}</span><span className="mt-0.5 block text-xs leading-5 text-gray-500">{detail}</span></button>)}
           </div>
         </div>
 
@@ -314,7 +328,7 @@ export function ProductForm(props: ProductFormProps) {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition"
+            className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-pink-600 disabled:opacity-50 transition dark:bg-white dark:text-slate-950"
           >
             {submitting ? 'Salvando...' : props.mode === 'edit' ? 'Salvar alterações' : 'Criar produto'}
           </button>

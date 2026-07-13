@@ -98,9 +98,10 @@ export default async function InventoryDashboard() {
       {/* Header */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gerenciamento de Estoque</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Produção sob demanda</p>
+          <h1 className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">Estoque e capacidade produtiva</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Controle completo de estoque, previsoes e fornecedores.
+            Separe filamentos e insumos da pequena quantidade de peças disponíveis para pronta-entrega.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -119,18 +120,24 @@ export default async function InventoryDashboard() {
         </div>
       </header>
 
+      <Link href="/dashboard/inventory/materials" className="group relative flex flex-col gap-5 overflow-hidden rounded-[26px] bg-[#101218] p-6 text-white shadow-xl shadow-slate-950/10 transition hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between">
+        <span className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-pink-500/25 blur-3xl" />
+        <span className="relative"><span className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-300">Novo controle produtivo</span><span className="mt-2 block text-xl font-bold">Filamentos, cores e reservas por pedido</span><span className="mt-1 block max-w-2xl text-sm leading-6 text-slate-400">Veja o peso realmente disponível, o que já está comprometido com pedidos pagos e quais cores comprar primeiro.</span></span>
+        <span className="relative shrink-0 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-950 transition group-hover:bg-pink-100">Gerenciar materiais →</span>
+      </Link>
+
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Total em Estoque</p>
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Pronta-entrega</p>
           <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{summary.total_stock_units}</p>
-          <p className="mt-1 text-xs text-gray-400">{summary.total_products} variacoes ativas</p>
+          <p className="mt-1 text-xs text-gray-400">{summary.total_products} variações cadastradas</p>
         </div>
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Valor em Estoque</p>
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Valor em peças prontas</p>
           <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(summary.total_stock_value)}</p>
-          <p className="mt-1 text-xs text-gray-400">Baseado em preco de venda</p>
+          <p className="mt-1 text-xs text-gray-400">Não inclui produção sob demanda</p>
         </div>
 
         <Link href="/dashboard/inventory?filter=alerts" className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-red-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
