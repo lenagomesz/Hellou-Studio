@@ -182,8 +182,8 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     }).catch(() => {});
   }
 
-  // Send email to user when status changes
-  if (status) {
+  // Send email to user when status changes (skip for 'refunded' as it's handled by processRefund)
+  if (status && status !== 'refunded') {
     const { data: order } = await admin
       .from('orders')
       .select('user_id, shipping_address')

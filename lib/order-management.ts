@@ -438,6 +438,16 @@ export async function processRefund(params: {
         subject: 'Reembolso processado',
         status: 'sent',
       });
+
+      // Create in-app notification for refund
+      const { createNotification } = await import('@/lib/notifications');
+      await createNotification(
+        order.user_id,
+        'order_status',
+        `Pedido #${params.orderId.slice(0, 8).toUpperCase()} — Reembolsado`,
+        `Seu reembolso de R$ ${params.amount.toFixed(2)} foi processado. Motivo: ${params.reason}`,
+        { order_id: params.orderId, status: 'refunded' },
+      );
     }
   } catch (err) {
     console.error('[refund] email error:', err);

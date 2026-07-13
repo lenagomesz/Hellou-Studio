@@ -102,6 +102,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
+    // Skip notifications if order is already refunded (manual refund already processed)
+    if (order.status === 'refunded') {
+      console.log('[mp-webhook] Order already refunded, skipping notifications:', order.id);
+      // Still update mp_status but don't change order status
+      await admin
+        .from('orders')
+        .update({ mp_status: mpStatus })
+        .eq('id', order.id);
+      return NextResponse.json({ received: true });
+    }
+
     const updateData: Record<string, unknown> = { status: newStatus, mp_status: mpStatus };
     if (newStatus === 'completed') {
       updateData.shipped_at = new Date().toISOString();
