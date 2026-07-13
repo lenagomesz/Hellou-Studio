@@ -122,11 +122,11 @@ export default function OrdersListPage() {
         </div>
       )}
 
-      <header className="relative flex flex-wrap items-end justify-between gap-4 overflow-hidden rounded-[26px] bg-[#101218] p-6 text-white sm:p-8">
+      <header className="relative flex flex-wrap items-end justify-between gap-4 overflow-hidden rounded-[26px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/60 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-300">Fila de produção</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Fila de produção</p>
           <h1 className="mt-1 text-3xl font-bold">Pedidos</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-slate-600">
             Mude etapas sem abrir o pedido e mantenha a produção sob demanda organizada.
           </p>
         </div>

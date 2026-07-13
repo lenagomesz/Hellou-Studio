@@ -19,7 +19,6 @@ import {
   X,
 } from 'lucide-react';
 import { SideNav } from '@/components/admin/SideNav';
-import { ThemeToggle } from '@/components/admin/ThemeToggle';
 
 type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -232,7 +231,7 @@ export function AdminShell({ children, userEmail }: { children: ReactNode; userE
   );
 
   return (
-    <div className="admin-shell min-h-screen bg-[#f5f3ef] text-slate-950 dark:bg-[#090b10] dark:text-white md:flex">
+    <div className="admin-shell force-light min-h-screen bg-[#f5f3ef] text-slate-950 md:flex">
       <SideNav userEmail={userEmail} alertCount={unreadCount} />
 
       <div className="min-w-0 flex-1">
@@ -335,7 +334,6 @@ export function AdminShell({ children, userEmail }: { children: ReactNode; userE
                 </div>
               )}
             </div>
-            <ThemeToggle />
           </div>
         </header>
 

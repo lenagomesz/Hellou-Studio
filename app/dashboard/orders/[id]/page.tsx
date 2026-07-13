@@ -208,17 +208,17 @@ export default function OrderDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="relative flex flex-wrap items-start justify-between gap-4 overflow-hidden rounded-[26px] bg-[#101218] p-6 text-white sm:p-8">
+      <div className="relative flex flex-wrap items-start justify-between gap-4 overflow-hidden rounded-[26px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/60 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
         <div>
-          <Link href="/dashboard/orders" className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition">
+          <Link href="/dashboard/orders" className="inline-flex items-center gap-1 text-sm text-slate-500 transition hover:text-pink-600">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
             Pedidos
           </Link>
-          <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-300">Ordem de produção</p>
+          <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Ordem de produção</p>
           <h1 className="mt-1 text-3xl font-bold">
-            Pedido <span className="font-mono text-slate-400">#{order.id.slice(0, 8)}</span>
+            Pedido <span className="font-mono text-slate-500">#{order.id.slice(0, 8)}</span>
           </h1>
           <p className="mt-1 text-sm text-slate-400">{formatDate(order.created_at)}</p>
         </div>

@@ -120,10 +120,10 @@ export default async function InventoryDashboard() {
         </div>
       </header>
 
-      <Link href="/dashboard/inventory/materials" className="group relative flex flex-col gap-5 overflow-hidden rounded-[26px] bg-[#101218] p-6 text-white shadow-xl shadow-slate-950/10 transition hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between">
+      <Link href="/dashboard/inventory/materials" className="group relative flex flex-col gap-5 overflow-hidden rounded-[26px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/60 to-orange-50 p-6 text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
         <span className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-pink-500/25 blur-3xl" />
-        <span className="relative"><span className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-300">Novo controle produtivo</span><span className="mt-2 block text-xl font-bold">Filamentos, cores e reservas por pedido</span><span className="mt-1 block max-w-2xl text-sm leading-6 text-slate-400">Veja o peso realmente disponível, o que já está comprometido com pedidos pagos e quais cores comprar primeiro.</span></span>
-        <span className="relative shrink-0 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-950 transition group-hover:bg-pink-100">Gerenciar materiais →</span>
+        <span className="relative"><span className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Novo controle produtivo</span><span className="mt-2 block text-xl font-bold">Filamentos, cores e reservas por pedido</span><span className="mt-1 block max-w-2xl text-sm leading-6 text-slate-600">Veja o peso realmente disponível, o que já está comprometido com pedidos pagos e quais cores comprar primeiro.</span></span>
+        <span className="relative shrink-0 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition group-hover:bg-pink-600">Gerenciar materiais →</span>
       </Link>
 
       {/* KPI Cards */}

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *):not(.force-light, .force-light *));
 
 @theme inline {
   --color-background: #fffaf7;
@@ -294,32 +294,10 @@ html {
 }
 
 .dark .admin-shell {
-  color-scheme: dark;
+  color-scheme: light;
   background-image:
-    radial-gradient(circle at 88% 0%, rgba(236, 72, 153, 0.08), transparent 30rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 18rem);
-}
-
-/* Compatibilidade de tema para páginas administrativas antigas. A barra lateral
-   permanece grafite nos dois temas; apenas o conteúdo acompanha claro/escuro. */
-.dark .admin-content .bg-white:not([class~="dark:bg-white"]) {
-  background-color: #12151d;
-}
-
-.dark .admin-content .bg-gray-50:not([class*="dark:bg-"]) {
-  background-color: rgba(255, 255, 255, 0.045);
-}
-
-.dark .admin-content .text-gray-900:not([class~="dark:text-white"]) {
-  color: #f8fafc;
-}
-
-.dark .admin-content .text-gray-800:not([class*="dark:text-"]) {
-  color: #e2e8f0;
-}
-
-.dark .admin-content .border-gray-100:not([class*="dark:border-"]) {
-  border-color: rgba(255, 255, 255, 0.09);
+    radial-gradient(circle at 88% 0%, rgba(236, 72, 153, 0.07), transparent 28rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 16rem);
 }
 
 .admin-shell main > * {

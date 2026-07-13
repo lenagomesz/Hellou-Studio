@@ -94,10 +94,12 @@ export default function RequestsPage() {
         <div className="fixed top-4 right-4 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">{toast}</div>
       )}
 
-      <header className="flex flex-wrap items-center justify-between gap-4">
+      <header className="relative flex flex-wrap items-end justify-between gap-4 overflow-hidden rounded-[26px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/60 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-pink-300/25 blur-3xl" />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Solicitações de Impressão</h1>
-          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Encomendas personalizadas</p>
+          <h1 className="mt-1 text-3xl font-bold text-slate-950">Solicitações de impressão</h1>
+          <p className="mt-1 text-sm text-slate-600">
             {requests.length} solicitações · {pendingCount} pendentes · {inProductionCount} em produção
           </p>
         </div>

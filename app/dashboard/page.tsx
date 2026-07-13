@@ -203,19 +203,19 @@ export default async function DashboardHome() {
   return (
     <div className="space-y-8">
       {/* Operation hero */}
-      <header className="relative overflow-hidden rounded-[28px] bg-[#101218] p-6 text-white shadow-xl shadow-slate-950/10 sm:p-8">
+      <header className="relative overflow-hidden rounded-[28px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/70 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
         <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-pink-500/20 blur-3xl" />
         <div className="absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-orange-400/10 blur-3xl" />
         <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-300">
+            <span className="inline-flex items-center gap-2 rounded-full border border-pink-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" /> Operação ao vivo
             </span>
             <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">Seu estúdio, em uma visão clara.</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">Priorize o que precisa sair hoje, acompanhe a saúde da loja e chegue a qualquer área sem perder tempo.</p>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Priorize o que precisa sair hoje, acompanhe a saúde da loja e chegue a qualquer área sem perder tempo.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/dashboard/analytics" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold transition hover:bg-white/10">
+            <Link href="/dashboard/analytics" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-pink-200 hover:bg-pink-50">
               <BarChart3 className="h-4 w-4" /> Ver desempenho
             </Link>
             <Link href="/dashboard/orders" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-pink-100">
@@ -225,21 +225,21 @@ export default async function DashboardHome() {
         </div>
 
         <div className="relative mt-7 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          <Link href="/dashboard/orders?status=paid" className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5 transition hover:border-yellow-400/40 hover:bg-white/[0.08]">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-400/10 text-yellow-300"><ClipboardCheck className="h-5 w-5" /></span>
-            <span><span className="block text-xl font-bold">{todoCount}</span><span className="text-xs text-slate-400">para preparar</span></span>
+          <Link href="/dashboard/orders?status=paid" className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/80 p-3.5 shadow-sm transition hover:border-yellow-200 hover:bg-yellow-50/50">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-100 text-yellow-700"><ClipboardCheck className="h-5 w-5" /></span>
+            <span><span className="block text-xl font-bold">{todoCount}</span><span className="text-xs text-slate-500">para preparar</span></span>
           </Link>
-          <Link href="/dashboard/orders?status=processing" className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5 transition hover:border-indigo-400/40 hover:bg-white/[0.08]">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-400/10 text-indigo-300"><PackageCheck className="h-5 w-5" /></span>
-            <span><span className="block text-xl font-bold">{toShipCount}</span><span className="text-xs text-slate-400">para enviar</span></span>
+          <Link href="/dashboard/orders?status=processing" className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/80 p-3.5 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/50">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700"><PackageCheck className="h-5 w-5" /></span>
+            <span><span className="block text-xl font-bold">{toShipCount}</span><span className="text-xs text-slate-500">para enviar</span></span>
           </Link>
-          <Link href="/dashboard/orders?status=shipped" className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5 transition hover:border-purple-400/40 hover:bg-white/[0.08]">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-400/10 text-purple-300"><Truck className="h-5 w-5" /></span>
-            <span><span className="block text-xl font-bold">{data.shippedOrders.length}</span><span className="text-xs text-slate-400">em trânsito</span></span>
+          <Link href="/dashboard/orders?status=shipped" className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/80 p-3.5 shadow-sm transition hover:border-purple-200 hover:bg-purple-50/50">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-700"><Truck className="h-5 w-5" /></span>
+            <span><span className="block text-xl font-bold">{data.shippedOrders.length}</span><span className="text-xs text-slate-500">em trânsito</span></span>
           </Link>
-          <Link href="/dashboard/products" className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5 transition hover:border-pink-400/40 hover:bg-white/[0.08]">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-400/10 text-pink-300"><Box className="h-5 w-5" /></span>
-            <span><span className="block text-xl font-bold">{data.activeProducts}</span><span className="text-xs text-slate-400">produtos ativos</span></span>
+          <Link href="/dashboard/products" className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/80 p-3.5 shadow-sm transition hover:border-pink-200 hover:bg-pink-50/50">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-100 text-pink-700"><Box className="h-5 w-5" /></span>
+            <span><span className="block text-xl font-bold">{data.activeProducts}</span><span className="text-xs text-slate-500">produtos ativos</span></span>
           </Link>
         </div>
       </header>
