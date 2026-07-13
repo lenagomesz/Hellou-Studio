@@ -1,128 +1,86 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Preview,
-  Section,
-  Text,
-} from '@react-email/components';
-
-interface BoasVindasEmailProps {
-  nome: string | null;
-  baseUrl: string;
-}
-
-export function BoasVindasEmail({ nome, baseUrl }: BoasVindasEmailProps) {
+export const BoasVindasEmail = ({ nome, baseUrl }: { nome: string | null; baseUrl: string }) => {
   const greeting = nome ? `Olá, ${nome}!` : 'Olá!';
 
   return (
-    <Html>
-      <Head />
-      <Preview>Bem-vindo(a) à helloustudio — produtos 3D únicos feitos sob demanda</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <Section style={headerSection}>
-            <Text style={brand}>helloustudio</Text>
-          </Section>
+    <div style={{ fontFamily: 'sans-serif', maxWidth: '480px', margin: '0 auto', padding: '32px 24px', backgroundColor: '#ffffff' }}>
+      {/* Header */}
+      <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
+        <h1 style={{ color: '#111', margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' }}>
+          Bem-vindo(a)! 🎉
+        </h1>
+        <p style={{ color: '#666', margin: '0', fontSize: '14px' }}>
+          Sua conta foi criada com sucesso
+        </p>
+      </div>
 
-          <Section style={content}>
-            <Heading style={heading}>{greeting}</Heading>
-            <Text style={paragraph}>
-              Sua conta foi criada com sucesso. Agora você faz parte da nossa comunidade de produtos impressos em 3D, feitos sob demanda com carinho e qualidade premium.
-            </Text>
-            <Text style={paragraph}>
-              Explore nosso catálogo de chaveiros, itens de escritório e criaturas únicas — cada peça é produzida especialmente para você.
-            </Text>
-            <Section style={buttonSection}>
-              <Button style={button} href={`${baseUrl}/products`}>
-                Explorar Catálogo
-              </Button>
-            </Section>
-          </Section>
+      {/* Personal greeting */}
+      <p style={{ color: '#555', lineHeight: '1.6', margin: '0 0 24px 0' }}>
+        {greeting} Agora você faz parte da comunidade HellouStudio! Estamos muito felizes em ter você conosco. ✨
+      </p>
 
-          <Hr style={hr} />
-          <Text style={footer}>
-            helloustudio — Produtos 3D únicos, feitos sob demanda.
-          </Text>
-        </Container>
-      </Body>
-    </Html>
+      {/* Welcome message */}
+      <div style={{ margin: '24px 0', padding: '20px', backgroundColor: '#F0FDF4', borderRadius: '8px', border: '1px solid #BBF7D0' }}>
+        <p style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: '#166534' }}>
+          O que você encontrará aqui:
+        </p>
+        <ul style={{ margin: '0', paddingLeft: '20px', fontSize: '14px', color: '#15803D', lineHeight: '1.8' }}>
+          <li>Chaveiros personalizados impressos em 3D</li>
+          <li>Itens de escritório exclusivos</li>
+          <li>Criaturas e figuras únicas</li>
+          <li>Arquivos STL para impressão própria</li>
+        </ul>
+      </div>
+
+      {/* Features */}
+      <div style={{ margin: '24px 0' }}>
+        <p style={{ margin: '0 0 16px 0', fontSize: '12px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Por que nos escolher?
+        </p>
+        <div style={{ position: 'relative', paddingLeft: '32px' }}>
+          {[
+            { icon: '🖨️', title: 'Impressão sob demanda', desc: 'Cada peça é produzida especialmente para você' },
+            { icon: '💎', title: 'Qualidade premium', desc: 'Materiais de alta qualidade e acabamento impecável' },
+            { icon: '🚀', title: 'Entrega rápida', desc: 'Produção em até 3 dias úteis' },
+            { icon: '💬', title: 'Suporte dedicado', desc: 'Estamos sempre prontos para ajudar' },
+          ].map((feature, idx) => (
+            <div key={idx} style={{ marginBottom: idx < 3 ? '20px' : '0', position: 'relative' }}>
+              <div style={{ position: 'absolute', left: '-32px', top: '0px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#F3E8FF', color: '#9333EA', fontWeight: '600', fontSize: '12px' }}>
+                {feature.icon}
+              </div>
+              <p style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>{feature.title}</p>
+              <p style={{ margin: '0', fontSize: '13px', color: '#888' }}>{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <a
+        href={`${baseUrl}/products`}
+        style={{
+          display: 'inline-block',
+          margin: '32px 0 24px 0',
+          padding: '14px 28px',
+          background: 'linear-gradient(to right, #ec4899, #f97316)',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '8px',
+          fontWeight: '600',
+          fontSize: '14px',
+        }}
+      >
+        Explorar Catálogo
+      </a>
+
+      {/* Support links */}
+      <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
+        <p style={{ margin: '0 0 12px 0', color: '#555', fontSize: '13px' }}>
+          Dúvidas? Entre em contato pelo WhatsApp, estamos à disposição!
+        </p>
+        <p style={{ margin: '0', color: '#999', fontSize: '12px' }}>
+          © helloustudio • Feito com ❤️ em 3D
+        </p>
+      </div>
+    </div>
   );
-}
-
-const main = {
-  backgroundColor: '#f9fafb',
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-};
-
-const container = {
-  margin: '0 auto',
-  padding: '40px 20px',
-  maxWidth: '560px',
-};
-
-const headerSection = {
-  textAlign: 'center' as const,
-  padding: '32px 0 24px',
-};
-
-const brand = {
-  fontSize: '28px',
-  fontWeight: '700',
-  background: 'linear-gradient(to right, #ec4899, #f97316)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  margin: '0',
-};
-
-const content = {
-  backgroundColor: '#ffffff',
-  borderRadius: '12px',
-  padding: '32px',
-  border: '1px solid #e5e7eb',
-};
-
-const heading = {
-  fontSize: '22px',
-  fontWeight: '600',
-  color: '#111827',
-  margin: '0 0 16px',
-};
-
-const paragraph = {
-  fontSize: '15px',
-  lineHeight: '1.6',
-  color: '#4b5563',
-  margin: '0 0 16px',
-};
-
-const buttonSection = {
-  textAlign: 'center' as const,
-  margin: '24px 0 8px',
-};
-
-const button = {
-  backgroundColor: '#ec4899',
-  borderRadius: '9999px',
-  color: '#ffffff',
-  fontSize: '14px',
-  fontWeight: '600',
-  textDecoration: 'none',
-  padding: '12px 28px',
-  display: 'inline-block',
-};
-
-const hr = {
-  borderColor: '#e5e7eb',
-  margin: '32px 0 16px',
-};
-
-const footer = {
-  fontSize: '12px',
-  color: '#9ca3af',
-  textAlign: 'center' as const,
 };

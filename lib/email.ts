@@ -35,7 +35,7 @@ export async function sendWelcomeEmail(email: string, nome: string | null) {
     const res = await resend.emails.send({
       from: getFrom(),
       to: email,
-      subject: 'Bem-vindo(a) à helloustudio!',
+      subject: `🎉 Bem-vindo(a) à HellouStudio!${nome ? `, ${nome}` : ''}`,
       react: BoasVindasEmail({ nome, baseUrl: getBaseUrl() }),
     });
     if (res.error) {
@@ -59,19 +59,49 @@ export async function sendPasswordResetEmail(email: string, nome: string | null,
     const res = await resend.emails.send({
       from: getFrom(),
       to: email,
-      subject: 'Redefinir sua senha — helloustudio',
+      subject: '🔐 Redefinir sua senha — HellouStudio',
       html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-          <h2 style="color: #111;">Olá${nome ? `, ${nome}` : ''}!</h2>
-          <p style="color: #555; line-height: 1.6;">
-            Recebemos uma solicitação para redefinir a senha da sua conta na helloustudio.
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff;">
+          <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
+            <h1 style="color: #111; margin: 0 0 8px 0; font-size: 24px; font-weight: 700;">
+              🔐 Redefinir sua senha
+            </h1>
+            <p style="color: #666; margin: 0; font-size: 14px;">
+              HellouStudio
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-bottom: 24px;">
+            <span style="font-size: 48px;">🔑</span>
+          </div>
+          
+          <h2 style="color: #111; text-align: center; margin: 0 0 8px 0;">Olá${nome ? `, ${nome}` : ''}!</h2>
+          <p style="color: #555; line-height: 1.6; text-align: center; margin: 0 0 24px 0;">
+            Recebemos uma solicitação para redefinir a senha da sua conta.
           </p>
-          <a href="${resetUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+          
+          <div style="margin: 24px 0; padding: 16px; background: #FFFBEB; border-radius: 8px; border: 1px solid #FDE68A;">
+            <p style="margin: 0; font-size: 13px; color: #92400E; text-align: center;">
+              ⚠️ Este link expira em 1 hora por segurança
+            </p>
+          </div>
+          
+          <a href="${resetUrl}" style="display: inline-block; margin: 24px 0 16px; padding: 14px 28px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; width: 100%; text-align: center;">
             Redefinir minha senha
           </a>
-          <p style="color: #888; font-size: 13px; line-height: 1.5;">
-            Este link expira em 1 hora. Se você não solicitou isso, ignore este email.
+          
+          <p style="color: #888; font-size: 13px; line-height: 1.5; text-align: center; margin: 24px 0 16px;">
+            Se você não solicitou isso, ignore este email. Sua conta permanece segura.
           </p>
+          
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+            <p style="margin: 0 0 12px 0; color: #555; font-size: 13px;">
+              Precisa de ajuda? Entre em contato pelo WhatsApp
+            </p>
+            <p style="margin: 0; color: #999; font-size: 12px;">
+              © helloustudio • Feito com ❤️ em 3D
+            </p>
+          </div>
         </div>
       `,
     });
@@ -157,20 +187,56 @@ export async function sendPrintRequestStatusEmail(params: {
     const res = await resend.emails.send({
       from: getFrom(),
       to: params.email,
-      subject: `Solicitação "${params.title}" — ${statusLabel}`,
+      subject: `🖨️ Atualização: "${params.title}" — ${statusLabel}`,
       html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-          <h2 style="color: #111;">Olá${params.nome ? `, ${params.nome}` : ''}!</h2>
-          <p style="color: #555; line-height: 1.6;">
-            Sua solicitação de impressão <strong>"${params.title}"</strong> teve o status atualizado para:
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff;">
+          <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
+            <h1 style="color: #111; margin: 0 0 8px 0; font-size: 24px; font-weight: 700;">
+              🖨️ Atualização da Solicitação
+            </h1>
+            <p style="color: #666; margin: 0; font-size: 14px;">
+              "${params.title}"
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-bottom: 24px;">
+            <span style="font-size: 48px;">📋</span>
+          </div>
+          
+          <h2 style="color: #111; text-align: center; margin: 0 0 8px 0;">Olá${params.nome ? `, ${params.nome}` : ''}!</h2>
+          <p style="color: #555; line-height: 1.6; text-align: center; margin: 0 0 24px 0;">
+            Sua solicitação de impressão teve o status atualizado:
           </p>
-          <p style="display: inline-block; padding: 6px 14px; background: linear-gradient(to right, #ec4899, #f97316); color: white; border-radius: 20px; font-weight: 600; font-size: 14px;">
-            ${statusLabel}
-          </p>
+          
+          <div style="text-align: center; margin: 24px 0;">
+            <p style="display: inline-block; padding: 10px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; border-radius: 24px; font-weight: 600; font-size: 16px;">
+              ${statusLabel}
+            </p>
+          </div>
+          
           ${extraContent}
-          <p style="color: #888; font-size: 13px; margin-top: 24px;">
-            Acesse sua conta em <a href="${baseUrl}/account/requests" style="color: #ec4899;">helloustudio</a> para mais detalhes.
+          
+          <div style="margin: 24px 0; padding: 16px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB;">
+            <p style="margin: 0; font-size: 13px; color: #6B7280; text-align: center;">
+              Solicitação: "${params.title}"
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="${baseUrl}/account/requests" style="display: inline-block; padding: 14px 28px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+              Ver detalhes da solicitação
+            </a>
+          </div>
+          
+          <p style="color: #888; font-size: 13px; margin-top: 24px; text-align: center;">
+            Dúvidas? Entre em contato pelo WhatsApp
           </p>
+          
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+            <p style="margin: 0; color: #999; font-size: 12px;">
+              © helloustudio • Feito com ❤️ em 3D
+            </p>
+          </div>
         </div>
       `,
     });
