@@ -165,7 +165,7 @@ export async function POST(request: Request) {
     if ((newStatus === 'approved' || newStatus === 'processing') && order.status === 'awaiting_payment') {
       const { data: items } = await admin
         .from('order_items')
-        .select('*, option:product_options(*)')
+        .select('*, option:product_options(*), product:products(*)')
         .eq('order_id', order.id);
 
       if (items) {
@@ -182,12 +182,7 @@ export async function POST(request: Request) {
       await admin.from('cart_items').delete().eq('user_id', order.user_id);
 
       try {
-        const items = (await admin
-          .from('order_items')
-          .select('*, product:products(type)')
-          .eq('order_id', order.id)) as { data: OrderItemWithProduct[] | null };
-
-        const itemsData = items.data ?? [];
+        const itemsData = items ?? [];
         const hasDigital = hasDigitalItems(itemsData);
         const hasPhysical = hasPhysicalItems(itemsData);
 
@@ -228,13 +223,21 @@ export async function POST(request: Request) {
         .single();
 
       if (userData?.email) {
+        console.log('[mp-webhook] Enviando emails de confirmação:', {
+          orderId: order.id,
+          email: userData.email,
+          itemCount: items?.length || 0,
+        });
+
         sendOrderConfirmationEmail({
           email: userData.email,
           nome: userData.name || null,
           pedidoId: order.id,
           total: Number(result.transaction_amount) || 0,
           itens: (items || []).map((item) => ({
-            nome: (item.product_snapshot as Record<string, unknown>)?.name as string || 'Produto',
+            nome: (item.product as Record<string, unknown>)?.name as string || 
+                  (item.product_snapshot as Record<string, unknown>)?.name as string || 
+                  'Produto',
             quantidade: item.quantity,
             precoUnitario: item.unit_price,
           })),
@@ -250,7 +253,8 @@ export async function POST(request: Request) {
 
         // Create admin alert for real-time notification
         const isDigitalWebhook = (items || []).some(
-          (item) => (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
+          (item) => (item.product as Record<string, unknown>)?.type === 'digital' ||
+                   (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
         );
         createAdminAlert({
           type: 'new_order',
@@ -279,15 +283,19 @@ export async function POST(request: Request) {
 
         // Send STL-specific emails for digital-only orders
         const hasDigitalItems = (items || []).some(
-          (item) => (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
+          (item) => (item.product as Record<string, unknown>)?.type === 'digital' ||
+                   (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
         );
 
         if (hasDigitalItems && newStatus === 'approved') {
           const digitalItem = (items || []).find(
-            (item) => (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
+            (item) => (item.product as Record<string, unknown>)?.type === 'digital' ||
+                     (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
           );
           const fileName = digitalItem
-            ? ((digitalItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo STL')
+            ? ((digitalItem.product as Record<string, unknown>)?.name as string || 
+               (digitalItem.product_snapshot as Record<string, unknown>)?.name as string || 
+               'Arquivo STL')
             : 'Arquivo STL';
 
           await sendSTLOrderConfirmationEmail({
