@@ -251,6 +251,8 @@ export async function sendOrderStatusEmail(params: {
   orderId: string;
   newStatus: string;
   trackingCode?: string | null;
+  refundAmount?: number;
+  refundReason?: string;
 }) {
   const resend = getResend();
   if (!resend) return;
@@ -259,16 +261,55 @@ export async function sendOrderStatusEmail(params: {
   const statusLabel = ORDER_STATUS_LABELS[params.newStatus] ?? params.newStatus;
 
   let extraContent = '';
-  if (params.newStatus === 'shipped' && params.trackingCode) {
-    extraContent = `
-      <div style="margin: 20px 0; padding: 16px; background: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
-        <p style="margin: 0; font-weight: 600; color: #166534;">Código de rastreamento:</p>
-        <p style="margin: 8px 0 0; font-size: 16px; color: #15803D; font-family: monospace; letter-spacing: 0.5px;">${params.trackingCode}</p>
-      </div>
-      <a href="https://www.linkcorreios.com.br/?id=${params.trackingCode}" style="display: inline-block; margin: 8px 0 16px; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
-        Rastrear encomenda
-      </a>
-    `;
+  let statusIcon = '';
+  let statusDescription = '';
+
+  // Custom content for each status
+  switch (params.newStatus) {
+    case 'processing':
+      statusIcon = '⚙️';
+      statusDescription = 'Sua peça está sendo impressa com cuidado!';
+      break;
+    case 'shipped':
+      statusIcon = '📦';
+      statusDescription = 'Sua peça está a caminho!';
+      if (params.trackingCode) {
+        extraContent = `
+          <div style="margin: 20px 0; padding: 16px; background: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
+            <p style="margin: 0; font-weight: 600; color: #166534;">Código de rastreamento:</p>
+            <p style="margin: 8px 0 0; font-size: 16px; color: #15803D; font-family: monospace; letter-spacing: 0.5px;">${params.trackingCode}</p>
+          </div>
+          <a href="https://www.linkcorreios.com.br/?id=${params.trackingCode}" style="display: inline-block; margin: 8px 0 16px; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Rastrear encomenda
+          </a>
+        `;
+      }
+      break;
+    case 'delivered':
+      statusIcon = '✅';
+      statusDescription = 'Sua peça foi entregue com sucesso!';
+      break;
+    case 'canceled':
+      statusIcon = '❌';
+      statusDescription = 'Este pedido foi cancelado.';
+      break;
+    case 'refunded':
+      statusIcon = '↩️';
+      statusDescription = 'Seu reembolso foi processado.';
+      if (params.refundAmount) {
+        const refundPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.refundAmount);
+        extraContent = `
+          <div style="margin: 20px 0; padding: 16px; background: #FEF2F2; border-radius: 8px; border: 1px solid #FECACA;">
+            <p style="margin: 0; font-weight: 600; color: #991B1B;">Valor reembolsado:</p>
+            <p style="margin: 8px 0 0; font-size: 18px; color: #DC2626; font-weight: 700;">${refundPrice}</p>
+            ${params.refundReason ? `<p style="margin: 8px 0 0; font-size: 13px; color: #DC2626;">Motivo: ${params.refundReason}</p>` : ''}
+          </div>
+        `;
+      }
+      break;
+    default:
+      statusIcon = '📋';
+      statusDescription = 'Atualização do seu pedido.';
   }
 
   try {
@@ -285,16 +326,36 @@ export async function sendOrderStatusEmail(params: {
       subject,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-          <h2 style="color: #111;">Olá${params.nome ? `, ${params.nome}` : ''}!</h2>
-          <p style="color: #555; line-height: 1.6;">
-            Seu pedido <strong>#${params.orderId.slice(0, 8).toUpperCase()}</strong> teve o status atualizado para:
+          <div style="text-align: center; margin-bottom: 24px;">
+            <span style="font-size: 48px;">${statusIcon}</span>
+          </div>
+          <h2 style="color: #111; text-align: center; margin: 0 0 8px 0;">Olá${params.nome ? `, ${params.nome}` : ''}!</h2>
+          <p style="color: #555; line-height: 1.6; text-align: center; margin: 0 0 24px 0;">
+            ${statusDescription}
           </p>
-          <p style="display: inline-block; padding: 6px 14px; background: linear-gradient(to right, #ec4899, #f97316); color: white; border-radius: 20px; font-weight: 600; font-size: 14px;">
-            ${statusLabel}
-          </p>
+          
+          <div style="text-align: center; margin: 24px 0;">
+            <p style="display: inline-block; padding: 8px 20px; background: linear-gradient(to right, #ec4899, #f97316); color: white; border-radius: 24px; font-weight: 600; font-size: 16px;">
+              ${statusLabel}
+            </p>
+          </div>
+          
           ${extraContent}
-          <p style="color: #888; font-size: 13px; margin-top: 24px;">
-            Acesse sua conta em <a href="${baseUrl}/account/orders" style="color: #ec4899;">helloustudio</a> para mais detalhes.
+          
+          <div style="margin: 24px 0; padding: 16px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB;">
+            <p style="margin: 0; font-size: 13px; color: #6B7280; text-align: center;">
+              Pedido #${params.orderId.slice(0, 8).toUpperCase()}
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="${baseUrl}/account/orders/${params.orderId}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+              Ver detalhes do pedido
+            </a>
+          </div>
+          
+          <p style="color: #888; font-size: 13px; margin-top: 24px; text-align: center;">
+            Dúvidas? Entre em contato pelo WhatsApp
           </p>
         </div>
       `,
@@ -315,32 +376,65 @@ export async function sendAdminNewOrderEmail(params: {
   customerName: string | null;
   customerEmail: string;
   total: number;
+  orderType?: 'stl' | 'physical' | 'mixed';
 }) {
   const resend = getResend();
   if (!resend) return;
 
   const baseUrl = getBaseUrl();
   const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.total);
+  const formattedDate = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const orderType = params.orderType || 'physical';
+  
+  const typeBadge = orderType === 'stl' 
+    ? '<span style="display: inline-block; padding: 4px 12px; background: #DBEAFE; color: #1E40AF; border-radius: 12px; font-size: 12px; font-weight: 600;">📁 Arquivo STL</span>'
+    : orderType === 'mixed'
+    ? '<span style="display: inline-block; padding: 4px 12px; background: #FEF3C7; color: #92400E; border-radius: 12px; font-size: 12px; font-weight: 600;">📦 Misto</span>'
+    : '<span style="display: inline-block; padding: 4px 12px; background: #F0FDF4; color: #166534; border-radius: 12px; font-size: 12px; font-weight: 600;">🖨️ Produto Físico</span>';
 
   try {
     const res = await resend.emails.send({
       from: getFrom(),
       to: params.adminEmail,
-      subject: `Novo pedido! #${params.orderId.slice(0, 8).toUpperCase()} — ${price}`,
+      subject: `🔔 Novo pedido! #${params.orderId.slice(0, 8).toUpperCase()} — ${price}`,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-          <h2 style="color: #111;">Novo pedido recebido!</h2>
-          <div style="margin: 16px 0; padding: 16px; background: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
-            <p style="margin: 0; font-weight: 600; color: #166534;">Pedido #${params.orderId.slice(0, 8).toUpperCase()}</p>
-            <p style="margin: 8px 0 0; font-size: 14px; color: #15803D;">Total: ${price}</p>
+          <div style="margin-bottom: 24px;">
+            <h2 style="color: #111; margin: 0 0 8px 0; font-size: 20px; font-weight: 700;">Novo pedido recebido!</h2>
+            <p style="color: #666; margin: 0; font-size: 13px;">${formattedDate}</p>
           </div>
-          <p style="color: #555; font-size: 14px;">
-            <strong>Cliente:</strong> ${params.customerName ?? 'N/A'}<br/>
-            <strong>Email:</strong> ${params.customerEmail}
-          </p>
-          <a href="${baseUrl}/dashboard/orders/${params.orderId}" style="display: inline-block; margin: 16px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+          
+          <div style="margin: 16px 0; padding: 20px; background: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <p style="margin: 0; font-weight: 600; color: #166534; font-size: 16px;">Pedido #${params.orderId.slice(0, 8).toUpperCase()}</p>
+              ${typeBadge}
+            </div>
+            <p style="margin: 8px 0 0; font-size: 18px; color: #15803D; font-weight: 700;">Total: ${price}</p>
+          </div>
+          
+          <div style="margin: 20px 0; padding: 16px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB;">
+            <p style="margin: 0 0 8px; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Dados do cliente</p>
+            <p style="color: #374151; font-size: 14px; margin: 4px 0;">
+              <strong>Nome:</strong> ${params.customerName ?? 'N/A'}
+            </p>
+            <p style="color: #374151; font-size: 14px; margin: 4px 0;">
+              <strong>Email:</strong> ${params.customerEmail}
+            </p>
+          </div>
+          
+          <div style="margin: 20px 0; padding: 12px; background: #FFFBEB; border-radius: 8px; border: 1px solid #FDE68A;">
+            <p style="margin: 0; font-size: 13px; color: #92400E;">
+              ${orderType === 'stl' ? '⚡ Este é um pedido de arquivo STL - entrega imediata!' : '⚙️ Este é um pedido físico - verifique o prazo de produção.'}
+            </p>
+          </div>
+          
+          <a href="${baseUrl}/dashboard/orders/${params.orderId}" style="display: inline-block; margin: 24px 0 16px; padding: 14px 28px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
             Ver pedido no painel
           </a>
+          
+          <p style="color: #9CA3AF; font-size: 12px; margin: 16px 0 0;">
+            Sistema de pedidos HellouStudio
+          </p>
         </div>
       `,
     });

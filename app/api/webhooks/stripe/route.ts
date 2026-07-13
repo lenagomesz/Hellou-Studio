@@ -258,6 +258,13 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
   if (admins?.length) {
     const customerEmail = user?.email ?? session.customer_details?.email ?? '';
     const customerName = user?.name ?? null;
+    
+    // Determine order type for admin email
+    const isDigitalOrder = items.some(row => row.product?.type === 'digital');
+    const isPhysicalOrder = items.some(row => row.product?.type === 'physical');
+    const orderType = isDigitalOrder && !isPhysicalOrder ? 'stl' : 
+                     isDigitalOrder && isPhysicalOrder ? 'mixed' : 'physical';
+    
     for (const adm of admins) {
       await sendAdminNewOrderEmail({
         adminEmail: adm.email,
@@ -265,6 +272,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
         customerName,
         customerEmail,
         total,
+        orderType,
       }).catch(() => {});
     }
   }

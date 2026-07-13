@@ -427,6 +427,8 @@ export async function processRefund(params: {
         nome: user.name ?? null,
         orderId: params.orderId,
         newStatus: 'refunded',
+        refundAmount: params.amount,
+        refundReason: params.reason,
       });
 
       await logNotification({

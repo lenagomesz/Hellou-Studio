@@ -254,19 +254,28 @@ export async function POST(request: Request) {
           })),
         }).catch((e) => console.error('[mp-webhook] email error:', e));
 
+        // Determine order type for admin email
+        const isDigitalWebhook = (items || []).some(
+          (item) => (item.product as Record<string, unknown>)?.type === 'digital' ||
+                   (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
+        );
+        const isPhysicalWebhook = (items || []).some(
+          (item) => (item.product as Record<string, unknown>)?.type === 'physical' ||
+                   (item.product_snapshot as Record<string, unknown>)?.type === 'physical'
+        );
+        const orderType = isDigitalWebhook && !isPhysicalWebhook ? 'stl' : 
+                         isDigitalWebhook && isPhysicalWebhook ? 'mixed' : 'physical';
+
         sendAdminNewOrderEmail({
           adminEmail: process.env.ADMIN_EMAIL || 'studiohellou@gmail.com',
           orderId: order.id,
           customerName: userData.name || null,
           customerEmail: userData.email,
           total: Number(result.transaction_amount) || 0,
+          orderType,
         }).catch((e) => console.error('[mp-webhook] admin email error:', e));
 
         // Create admin alert for real-time notification
-        const isDigitalWebhook = (items || []).some(
-          (item) => (item.product as Record<string, unknown>)?.type === 'digital' ||
-                   (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
-        );
         createAdminAlert({
           type: 'new_order',
           title: `Novo pedido: ${isDigitalWebhook ? 'STL' : 'Produto físico'}`,

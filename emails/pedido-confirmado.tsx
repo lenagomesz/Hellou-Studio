@@ -13,13 +13,14 @@ export const PedidoConfirmadoEmail = ({
 }) => {
   const formattedTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
   const formattedDate = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const isSTLOrder = itens.some(item => item.nome.toLowerCase().includes('stl') || item.nome.toLowerCase().includes('arquivo'));
 
   return (
     <div style={{ fontFamily: 'sans-serif', maxWidth: '480px', margin: '0 auto', padding: '32px 24px', backgroundColor: '#ffffff' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
         <h1 style={{ color: '#111', margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' }}>
-          Pedido Confirmado! 🎉
+          {isSTLOrder ? 'Arquivo Disponível! 🎉' : 'Pedido Confirmado! 🎉'}
         </h1>
         <p style={{ color: '#666', margin: '0', fontSize: '14px' }}>
           Pedido #{pedidoId.slice(0, 8).toUpperCase()} • {formattedDate}
@@ -28,13 +29,15 @@ export const PedidoConfirmadoEmail = ({
 
       {/* Personal greeting */}
       <p style={{ color: '#555', lineHeight: '1.6', margin: '0 0 24px 0' }}>
-        Olá{nome ? `, ${nome}` : ''}! Seu pedido foi confirmado e está sendo preparado com muito carinho. ✨
+        Olá{nome ? `, ${nome}` : ''}! {isSTLOrder 
+          ? 'Seu arquivo STL está pronto para download! 🚀' 
+          : 'Seu pedido foi confirmado e está sendo preparado com muito carinho. ✨'}
       </p>
 
       {/* Items */}
       <div style={{ margin: '24px 0', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
         <p style={{ margin: '0 0 16px 0', fontSize: '12px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Itens do pedido
+          {isSTLOrder ? 'Arquivos adquiridos' : 'Itens do pedido'}
         </p>
         {itens.map((item, idx) => (
           <div key={idx} style={{ marginBottom: idx < itens.length - 1 ? '16px' : '0', paddingBottom: idx < itens.length - 1 ? '16px' : '0', borderBottom: idx < itens.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
@@ -59,13 +62,18 @@ export const PedidoConfirmadoEmail = ({
         </p>
       </div>
 
-      {/* Timeline */}
+      {/* Timeline - Different for STL vs Physical */}
       <div style={{ margin: '24px 0' }}>
         <p style={{ margin: '0 0 16px 0', fontSize: '12px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Próximas etapas
+          {isSTLOrder ? 'O que acontece agora?' : 'Próximas etapas'}
         </p>
         <div style={{ position: 'relative', paddingLeft: '32px' }}>
-          {[
+          {isSTLOrder ? [
+            { icon: '✓', title: 'Pagamento confirmado', desc: 'Seu pagamento foi processado com sucesso.' },
+            { icon: '📥', title: 'Download disponível', desc: 'Acesse sua conta para baixar o arquivo STL.' },
+            { icon: '🖨️', title: 'Impressão', desc: 'Imprima em casa ou em um serviço de impressão 3D.' },
+            { icon: '✅', title: 'Apoio', desc: 'Precisa de ajuda? Estamos à disposição!' },
+          ] : [
             { icon: '✓', title: 'Pagamento confirmado', desc: 'Seu pagamento foi processado com sucesso.' },
             { icon: '🖨️', title: 'Produção', desc: 'Sua peça será impressa em até 3 dias úteis.' },
             { icon: '📦', title: 'Envio', desc: 'Você receberá o código de rastreamento por email.' },
@@ -97,13 +105,15 @@ export const PedidoConfirmadoEmail = ({
           fontSize: '14px',
         }}
       >
-        Acompanhe seu pedido
+        {isSTLOrder ? 'Baixar meu arquivo' : 'Acompanhe seu pedido'}
       </a>
 
       {/* Support links */}
       <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
         <p style={{ margin: '0 0 12px 0', color: '#555', fontSize: '13px' }}>
-          Dúvidas? Acesse sua conta em <a href={`${baseUrl}/account/orders`} style={{ color: '#ec4899', textDecoration: 'none' }}>helloustudio</a> para mais detalhes.
+          {isSTLOrder 
+            ? 'Precisa de ajuda com o arquivo? Entre em contato pelo WhatsApp.' 
+            : 'Dúvidas? Acesse sua conta em helloustudio para mais detalhes.'}
         </p>
         <p style={{ margin: '0', color: '#999', fontSize: '12px' }}>
           © helloustudio • Feito com ❤️ em 3D
