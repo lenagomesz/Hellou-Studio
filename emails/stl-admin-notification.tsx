@@ -30,7 +30,7 @@ export const STLAdminNotificationEmail = ({
 
       {/* Order info */}
       <div style={{ margin: '16px 0', padding: '20px', background: '#F0FDF4', borderRadius: '8px', border: '1px solid #BBF7D0' }}>
-        <div style={{ display: 'flex', justify_content: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <p style={{ margin: '0', fontWeight: '600', color: '#166534', fontSize: '16px' }}>
             Pedido #{orderId.slice(0, 8).toUpperCase()}
           </p>
@@ -60,7 +60,7 @@ export const STLAdminNotificationEmail = ({
       </div>
 
       {/* Auto-processed notice */}
-      <div style={{ margin: '20px 0', padding: '12px', background: '#ECFDF5', borderRadius: '8px', border: '1px solid '#A7F3D0' }}>
+      <div style={{ margin: '20px 0', padding: '12px', background: '#ECFDF5', borderRadius: '8px', border: '1px solid #A7F3D0' }}>
         <p style={{ margin: '0', fontSize: '13px', color: '#065F46', fontWeight: '600' }}>
           ⚡ Este pedido foi processado automaticamente
         </p>
