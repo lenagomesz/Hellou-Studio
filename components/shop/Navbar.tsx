@@ -83,6 +83,16 @@ export function Navbar() {
     .map((part) => part[0])
     .join('')
     .toUpperCase();
+  const accountLinks = session?.user?.role === 'admin'
+    ? [
+        { href: '/dashboard', label: 'Painel Admin', emoji: '🛠️' },
+        { href: '/account', label: 'Minha conta', emoji: '👤' },
+      ]
+    : [
+        { href: '/account', label: 'Minha conta', emoji: '👤' },
+        { href: '/account/orders', label: 'Meus pedidos', emoji: '📦' },
+        { href: '/account/bonus', label: 'Meus bônus', emoji: '🎁' },
+      ];
 
   useEffect(() => setMounted(true), []);
 
@@ -275,11 +285,7 @@ export function Navbar() {
                           {session.user.email && <span className="block truncate text-[11px] text-gray-500 dark:text-gray-400">{session.user.email}</span>}
                         </span>
                       </div>
-                      {[
-                        { href: '/account', label: 'Minha conta' },
-                        { href: '/account/orders', label: 'Meus pedidos' },
-                        { href: '/account/bonus', label: 'Meus bônus' },
-                      ].map((item) => (
+                      {accountLinks.map((item) => (
                         <Link key={item.href} href={item.href} className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-orange-50 dark:text-gray-300 dark:hover:bg-gray-800">
                           {item.label}<span aria-hidden="true">→</span>
                         </Link>
@@ -399,11 +405,7 @@ export function Navbar() {
               <div className="h-11 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
             ) : session?.user ? (
               <>
-                {[
-                  { href: '/account', label: 'Minha conta', emoji: '👤' },
-                  { href: '/account/orders', label: 'Meus pedidos', emoji: '📦' },
-                  { href: '/account/bonus', label: 'Meus bônus', emoji: '🎁' },
-                ].map((item) => (
+                {accountLinks.map((item) => (
                   <Link key={item.href} href={item.href} scroll onClick={handleMobileNavigation} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-gray-700 transition hover:bg-orange-50/60 dark:text-gray-300 dark:hover:bg-gray-800">
                     <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gray-50 text-base dark:bg-gray-800">{item.emoji}</span>
                     {item.label}<span aria-hidden="true" className="ml-auto">→</span>
