@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireUser, notFound, serverError } from '@/lib/api';
+import { requireUser, badRequest, notFound, serverError } from '@/lib/api';
 import { sendAdminNewPrintRequestEmail } from '@/lib/email';
 import type { PrintRequest } from '@/types/database';
 
@@ -23,6 +23,9 @@ export async function POST(
 
   if (fetchErr) return serverError('Erro ao buscar solicitação');
   if (!original) return notFound('Solicitação não encontrada');
+  if (!['paid', 'in_production', 'shipped', 'delivered'].includes(original.status)) {
+    return badRequest('A solicitação só pode ser refeita depois da confirmação da compra');
+  }
 
   const { data, error } = await admin
     .from('print_requests')

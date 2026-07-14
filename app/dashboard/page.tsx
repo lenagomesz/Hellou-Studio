@@ -53,7 +53,7 @@ const getDashboardData = unstable_cache(
           urgentAlertsRes,
           stockOptionsRes,
         ] = await Promise.all([
-          admin.from('products').select('*', { count: 'exact', head: true }).eq('active', true),
+          admin.from('products').select('*', { count: 'exact', head: true }).eq('active', true).neq('category', 'encomenda'),
           admin.from('orders').select('*', { count: 'exact', head: true }),
           admin.from('orders').select('*, user:users(id, email, name)').eq('status', 'paid').order('created_at', { ascending: true }).limit(10),
           admin.from('orders').select('*, user:users(id, email, name)').eq('status', 'processing').order('created_at', { ascending: true }).limit(10),

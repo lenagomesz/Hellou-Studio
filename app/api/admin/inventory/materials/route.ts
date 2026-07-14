@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin, badRequest, serverError } from '@/lib/api';
+import { requirePermission, badRequest, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 const priorities = new Set(['low', 'normal', 'high', 'urgent']);
@@ -10,7 +10,7 @@ function nonNegativeNumber(value: unknown, fallback = 0) {
 }
 
 export async function GET() {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('inventory.manage');
   if (auth.response) return auth.response;
 
   const admin = getSupabaseAdmin();
@@ -26,7 +26,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('inventory.manage');
   if (auth.response) return auth.response;
 
   const body = await request.json() as Record<string, unknown>;
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('inventory.manage');
   if (auth.response) return auth.response;
 
   const body = await request.json() as Record<string, unknown>;
@@ -65,9 +65,14 @@ export async function PATCH(request: Request) {
   if (!id) return badRequest('ID é obrigatório');
 
   const updates: Record<string, unknown> = {};
-  for (const field of ['current_weight_grams', 'reserved_weight_grams', 'reorder_point_grams', 'target_weight_grams', 'cost_per_kg']) {
+  for (const field of ['spool_weight_grams', 'current_weight_grams', 'reserved_weight_grams', 'reorder_point_grams', 'target_weight_grams', 'cost_per_kg']) {
     if (body[field] !== undefined) updates[field] = nonNegativeNumber(body[field]);
   }
+  if (typeof body.name === 'string' && body.name.trim()) updates.name = body.name.trim();
+  if (typeof body.material_type === 'string' && body.material_type.trim()) updates.material_type = body.material_type.trim().toUpperCase();
+  if (typeof body.brand === 'string') updates.brand = body.brand.trim() || null;
+  if (typeof body.color_name === 'string' && body.color_name.trim()) updates.color_name = body.color_name.trim();
+  if (typeof body.color_hex === 'string' && /^#[0-9a-f]{6}$/i.test(body.color_hex)) updates.color_hex = body.color_hex;
   if (typeof body.priority === 'string' && priorities.has(body.priority)) updates.priority = body.priority;
   if (typeof body.notes === 'string') updates.notes = body.notes.trim() || null;
   if (typeof body.active === 'boolean') updates.active = body.active;
@@ -80,7 +85,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('inventory.manage');
   if (auth.response) return auth.response;
   const body = await request.json() as { id?: string };
   if (!body.id) return badRequest('ID é obrigatório');

@@ -11,6 +11,7 @@ export async function GET() {
   const { data: products, error } = await admin
     .from('products')
     .select('id, name, base_price, category, active, created_at')
+    .neq('category', 'encomenda')
     .order('created_at', { ascending: false });
 
   if (error) return serverError('Erro ao buscar produtos para export');

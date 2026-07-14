@@ -162,6 +162,18 @@ export async function POST(request: Request) {
         .eq('order_id', order.id);
 
       if (items) {
+        const exclusiveProductIds = items
+          .filter((item) => item.product?.category === 'encomenda')
+          .map((item) => item.product_id);
+
+        if (exclusiveProductIds.length > 0) {
+          await admin
+            .from('print_requests')
+            .update({ status: 'paid' })
+            .in('product_id', exclusiveProductIds)
+            .eq('user_id', order.user_id);
+        }
+
         for (const item of items) {
           if (item.product_option_id) {
             await admin

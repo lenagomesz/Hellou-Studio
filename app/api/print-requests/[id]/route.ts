@@ -10,6 +10,8 @@ const VALID_STATUSES: PrintRequestStatus[] = [
   'shipped', 'delivered', 'rejected', 'canceled',
 ];
 
+const LOCKED_STATUSES: PrintRequestStatus[] = ['paid', 'in_production', 'shipped', 'delivered'];
+
 export async function GET(
   _request: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -98,6 +100,17 @@ export async function PATCH(
   }
 
   // Admin flow
+  const { data: currentRequest } = await admin
+    .from('print_requests')
+    .select('status')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (!currentRequest) return notFound('Solicitação não encontrada');
+  if (LOCKED_STATUSES.includes(currentRequest.status as PrintRequestStatus)) {
+    return badRequest('Esta solicitação já foi paga e está protegida contra novas alterações');
+  }
+
   const update: Record<string, unknown> = {};
 
   if (input.status !== undefined) {

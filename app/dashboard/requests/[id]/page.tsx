@@ -163,6 +163,7 @@ export default function AdminRequestDetailPage() {
   }
 
   const statusLabel = STATUS_LABELS[request.status] ?? request.status;
+  const isLocked = (['paid', 'in_production', 'shipped', 'delivered'] as PrintRequestStatus[]).includes(request.status);
 
   return (
     <div className="space-y-6">
@@ -237,7 +238,7 @@ export default function AdminRequestDetailPage() {
             </div>
           </div>
 
-          {request.quoted_price !== null && request.status === 'approved' && (
+          {request.quoted_price !== null && (
             <div className="rounded-lg border border-green-200 bg-green-50 p-3">
               <p className="text-sm font-medium text-green-900">
                 Valor aprovado: {formatPrice(request.quoted_price)}
@@ -247,6 +248,29 @@ export default function AdminRequestDetailPage() {
         </div>
 
         {/* Admin Form Card */}
+        {isLocked ? (
+          <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-xl text-white">✓</span>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Registro protegido</p>
+                <h2 className="mt-1 text-lg font-bold text-slate-950">Solicitação já confirmada</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-600">Como esta encomenda já foi paga, as informações do orçamento não podem mais ser alteradas. Abaixo está o registro do que ocorreu.</p>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <div className="flex gap-3 rounded-xl border border-emerald-100 bg-white p-3"><span className="mt-1 h-2.5 w-2.5 rounded-full bg-pink-500" /><div><p className="text-sm font-bold text-slate-900">Solicitação recebida</p><p className="text-xs text-slate-500">{formatDate(request.created_at)}</p></div></div>
+              <div className="flex gap-3 rounded-xl border border-emerald-100 bg-white p-3"><span className="mt-1 h-2.5 w-2.5 rounded-full bg-indigo-500" /><div><p className="text-sm font-bold text-slate-900">Orçamento aprovado</p><p className="text-xs text-slate-500">{request.quoted_price !== null ? formatPrice(request.quoted_price) : 'Valor não registrado'}{request.admin_notes ? ` · ${request.admin_notes}` : ''}</p></div></div>
+              <div className="flex gap-3 rounded-xl border border-emerald-100 bg-white p-3"><span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" /><div><p className="text-sm font-bold text-slate-900">Situação atual: {statusLabel}</p><p className="text-xs text-slate-500">Última atualização em {formatDate(request.updated_at)}</p></div></div>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Produto interno da encomenda</p>
+              <p className="mt-1 text-sm text-slate-600">Este item é exclusivo do cliente, fica oculto da página Produtos e não será colocado à venda. O cliente pode usar “Solicitar novamente” para criar uma nova análise.</p>
+            </div>
+          </div>
+        ) : (
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 space-y-4">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">Gerenciar</h2>
 
@@ -338,6 +362,7 @@ export default function AdminRequestDetailPage() {
             {saving ? 'Salvando...' : 'Salvar alterações'}
           </button>
         </div>
+        )}
       </div>
     </div>
   );

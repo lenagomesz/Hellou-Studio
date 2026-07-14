@@ -102,7 +102,7 @@ export function SideNav({ userEmail, alertCount = 0, accessLevel }: { userEmail:
             H
           </span>
           <span>
-            <span className="block text-[15px] font-bold tracking-tight">hellou studio</span>
+            <span className="block text-lg font-black tracking-[0.04em] text-white">Hellou Studio</span>
             <span className="mt-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-pink-300">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
               Central admin

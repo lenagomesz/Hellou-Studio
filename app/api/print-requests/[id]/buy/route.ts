@@ -113,11 +113,6 @@ export async function POST(
     }
   }
 
-  // Mark print request as paid since user committed to buying
-  await admin
-    .from('print_requests')
-    .update({ status: 'paid' })
-    .eq('id', id);
-
+  // O status só muda para "paid" no webhook, depois da confirmação real do pagamento.
   return NextResponse.json({ success: true, product_id: productId });
 }

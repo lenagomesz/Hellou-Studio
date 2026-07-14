@@ -209,6 +209,18 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     }
   }
 
+  const exclusiveProductIds = items
+    .filter((row) => row.product?.category === 'encomenda')
+    .map((row) => row.product_id);
+
+  if (exclusiveProductIds.length > 0) {
+    await admin
+      .from('print_requests')
+      .update({ status: 'paid' })
+      .in('product_id', exclusiveProductIds)
+      .eq('user_id', userId);
+  }
+
   for (const row of items) {
     if (!row.option) continue;
     const newStock = Math.max(0, row.option.stock - row.quantity);
