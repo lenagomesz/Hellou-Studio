@@ -39,6 +39,7 @@ export function sanitizeOperationalData(value: unknown, depth = 0): unknown {
 }
 
 export function structuredLog(level: LogLevel, event: string, data: SafeRecord = {}) {
+  if (process.env.NODE_ENV === 'test' && level !== 'error' && process.env.TEST_VERBOSE_LOGS !== 'true') return;
   const entry = JSON.stringify({
     timestamp: new Date().toISOString(),
     level,

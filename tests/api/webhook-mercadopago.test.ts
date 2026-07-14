@@ -1,9 +1,10 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 
 // --- Mocks ---
 
 const mockPaymentGet = vi.fn();
+const originalWebhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
 
 vi.mock('@/lib/mercadopago', () => ({
   getPaymentClient: () => ({ get: mockPaymentGet }),
@@ -85,6 +86,7 @@ function makeRequest(body: Record<string, unknown>) {
 
 describe('POST /api/webhooks/mercadopago', () => {
   beforeEach(() => {
+    delete process.env.MERCADO_PAGO_WEBHOOK_SECRET;
     vi.clearAllMocks();
     mockOrder = { id: 'order-1', status: 'awaiting_payment', user_id: 'user-1' };
     mockOrderItems = [
@@ -97,6 +99,11 @@ describe('POST /api/webhooks/mercadopago', () => {
       },
     ];
     mockUserData = { email: 'client@test.com', name: 'Cliente Teste' };
+  });
+
+  afterAll(() => {
+    if (originalWebhookSecret) process.env.MERCADO_PAGO_WEBHOOK_SECRET = originalWebhookSecret;
+    else delete process.env.MERCADO_PAGO_WEBHOOK_SECRET;
   });
 
   describe('Event filtering', () => {

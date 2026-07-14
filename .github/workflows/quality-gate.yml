@@ -15,6 +15,7 @@ jobs:
     timeout-minutes: 30
     env:
       CI: true
+      E2E_ENABLED: ${{ vars.E2E_ENABLED }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
@@ -45,13 +46,21 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - name: Validate Playwright scenarios
+        run: npm run test:e2e:list
+      - name: Install Chromium
+        if: ${{ env.E2E_ENABLED == 'true' }}
+        run: npx playwright install --with-deps chromium
       - name: Lint, unit tests, schema, types and build
         run: npm run quality:deploy
       - name: Complete purchase journeys
+        if: ${{ env.E2E_ENABLED == 'true' }}
         run: npm run test:e2e
+      - name: E2E environment notice
+        if: ${{ env.E2E_ENABLED != 'true' }}
+        run: echo "Playwright real desativado. Configure os Secrets E2E e defina E2E_ENABLED=true para habilitar as compras de teste."
       - name: Store Playwright diagnostics
-        if: always()
+        if: ${{ always() && env.E2E_ENABLED == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
