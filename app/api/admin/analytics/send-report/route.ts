@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin, badRequest, serverError } from '@/lib/api';
+import { requirePermission, badRequest, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { startOfMonth, subMonths, format } from 'date-fns';
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('analytics.view');
   if (auth.response) return auth.response;
 
   let body: { email?: string };

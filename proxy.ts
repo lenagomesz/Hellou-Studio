@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { rateLimit } from '@/lib/rate-limit';
+import { isRestrictedAdminPath, normalizeAdminAccessLevel } from '@/lib/admin-permissions';
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -40,12 +41,17 @@ export async function proxy(request: NextRequest) {
 
   const isAdminRoute = pathname.startsWith('/dashboard');
   const isAccountRoute = pathname.startsWith('/account');
+  const isMarketingApi = pathname.startsWith('/api/email-marketing')
+    && !pathname.startsWith('/api/email-marketing/unsubscribe');
 
-  if (!isAdminRoute && !isAccountRoute) {
+  if (!isAdminRoute && !isAccountRoute && !isMarketingApi) {
     return NextResponse.next();
   }
 
   if (!token) {
+    if (isMarketingApi) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname + search);
     return NextResponse.redirect(loginUrl);
@@ -55,9 +61,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
+  if (isMarketingApi && (token.role !== 'admin' || normalizeAdminAccessLevel(token.accessLevel) !== 'owner')) {
+    return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
+  }
+
+  if (isAdminRoute && isRestrictedAdminPath(pathname, normalizeAdminAccessLevel(token.accessLevel))) {
+    return NextResponse.redirect(new URL('/dashboard?access=restricted', request.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/account/:path*', '/api/debug/:path*', '/api/auth/:path*'],
+  matcher: ['/dashboard/:path*', '/account/:path*', '/api/debug/:path*', '/api/auth/:path*', '/api/email-marketing/:path*'],
 };

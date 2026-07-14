@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin, serverError } from '@/lib/api';
+import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import {
   subDays,
@@ -63,7 +63,7 @@ function linearRegression(values: number[]): { slope: number; intercept: number 
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 export async function GET() {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('analytics.view');
   if (auth.response) return auth.response;
 
   try {

@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import type { AdminPermission, AdminAccessLevel } from '@/lib/admin-permissions';
+import { hasAdminPermission, normalizeAdminAccessLevel } from '@/lib/admin-permissions';
 
 export type SessionUser = {
   id: string;
   email: string;
   name?: string | null;
   role: 'user' | 'admin';
+  accessLevel?: AdminAccessLevel | null;
 };
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
@@ -38,6 +41,24 @@ export async function requireAdmin(): Promise<
     };
   }
   return { user: result.user };
+}
+
+export async function requirePermission(permission: AdminPermission): Promise<
+  { user: SessionUser & { accessLevel: AdminAccessLevel }; response?: undefined }
+  | { user?: undefined; response: NextResponse }
+> {
+  const result = await requireAdmin();
+  if (result.response) return result;
+  const accessLevel = normalizeAdminAccessLevel(result.user.accessLevel);
+  if (!hasAdminPermission(accessLevel, permission)) {
+    return {
+      response: NextResponse.json(
+        { error: 'Seu perfil administrativo não possui permissão para esta ação.' },
+        { status: 403 },
+      ),
+    };
+  }
+  return { user: { ...result.user, accessLevel } };
 }
 
 export function badRequest(message: string) {

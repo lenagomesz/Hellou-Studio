@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin, serverError } from '@/lib/api';
+import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { subDays, startOfMonth, subMonths } from 'date-fns';
 
 export async function GET() {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('analytics.view');
   if (auth.response) return auth.response;
 
   const admin = getSupabaseAdmin();

@@ -41,9 +41,9 @@ export default function ForecastPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Previsao de Demanda</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Previsão de Demanda</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Forecast baseado no historico de vendas dos ultimos 6 meses.
+            Forecast baseado no histórico de vendas dos últimos 6 meses.
           </p>
         </div>
         <Link
@@ -55,9 +55,9 @@ export default function ForecastPage() {
       </header>
 
       {loading ? (
-        <div className="py-20 text-center text-gray-400">Carregando previsoes...</div>
+        <div className="py-20 text-center text-gray-400">Carregando previsões...</div>
       ) : sortedForecasts.length === 0 ? (
-        <div className="py-20 text-center text-gray-400">Nenhuma previsao disponivel. Precisa de historico de vendas.</div>
+        <div className="py-20 text-center text-gray-400">Nenhuma previsão disponível. Precisa de histórico de vendas.</div>
       ) : (
         <div className="space-y-4">
           {sortedForecasts.map(f => (
@@ -85,7 +85,7 @@ export default function ForecastPage() {
 
               {/* Monthly sales chart (simple bar representation) */}
               <div className="mt-4">
-                <p className="text-xs font-medium text-gray-400 uppercase mb-2">Vendas Mensais (ultimos 6 meses)</p>
+                <p className="text-xs font-medium text-gray-400 uppercase mb-2">Vendas Mensais (últimos 6 meses)</p>
                 <div className="flex items-end gap-1 h-16">
                   {f.monthly_sales.map(m => {
                     const maxQty = Math.max(...f.monthly_sales.map(s => s.quantity), 1);
@@ -119,10 +119,10 @@ export default function ForecastPage() {
                 </div>
                 <div className="mt-2 flex items-center gap-4 text-[10px] text-gray-400">
                   <span className="flex items-center gap-1">
-                    <span className="inline-block w-3 h-2 rounded bg-pink-400/70" /> Historico
+                    <span className="inline-block w-3 h-2 rounded bg-pink-400/70" /> Histórico
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="inline-block w-3 h-2 rounded bg-orange-300/70 border border-dashed border-orange-400" /> Previsao
+                    <span className="inline-block w-3 h-2 rounded bg-orange-300/70 border border-dashed border-orange-400" /> Previsão
                   </span>
                 </div>
               </div>

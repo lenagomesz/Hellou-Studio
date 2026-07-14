@@ -3,6 +3,7 @@ import { Inter, Sora } from 'next/font/google';
 import { SessionProvider } from '@/components/auth/SessionProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
+import { UserActivityTracker } from '@/components/analytics/UserActivityTracker';
 import './globals.css';
 
 const inter = Inter({
@@ -51,6 +52,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans antialiased bg-[var(--color-background)] text-[var(--color-foreground)]">
         <ThemeProvider>
           <SessionProvider>
+            <UserActivityTracker />
             {children}
             <ToastProvider />
           </SessionProvider>

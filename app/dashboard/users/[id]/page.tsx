@@ -160,7 +160,7 @@ export default function UserDetailPage() {
   if (!user) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Usuario nao encontrado.</p>
+        <p className="text-gray-500">Usuário não encontrado.</p>
         <Link href="/dashboard/users" className="mt-4 inline-block text-sm text-pink-600 hover:underline">
           Voltar
         </Link>
@@ -198,7 +198,7 @@ export default function UserDetailPage() {
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                  <User className="h-3 w-3" /> Usuario
+                  <User className="h-3 w-3" /> Usuário
                 </span>
               )}
               {user.is_vip && (
@@ -283,7 +283,7 @@ export default function UserDetailPage() {
           {/* Detailed Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
-              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Historico</p>
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Histórico</p>
               <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
                 <p>{analytics.totalOrders} compras realizadas</p>
                 <p>{formatPrice(analytics.totalSpent)} total gasto</p>

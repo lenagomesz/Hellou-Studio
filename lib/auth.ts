@@ -2,6 +2,7 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { normalizeAdminAccessLevel } from '@/lib/admin-permissions';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -19,7 +20,7 @@ export const authOptions: NextAuthOptions = {
         const { data, error } = await admin
           .from('users')
           .select(
-            'id, email, name, role, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
+            'id, email, name, role, admin_access_level, admin_active, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
           )
           .eq('email', credentials.email.toLowerCase().trim())
           .maybeSingle();
@@ -30,6 +31,8 @@ export const authOptions: NextAuthOptions = {
               email: string;
               name: string | null;
               role: 'user' | 'admin';
+              admin_access_level?: 'owner' | 'partner' | null;
+              admin_active?: boolean;
               password_hash: string;
               two_fa_enabled: boolean;
               two_fa_secret?: string;
@@ -37,7 +40,7 @@ export const authOptions: NextAuthOptions = {
             }
           | null;
 
-        if (error || !user) return null;
+        if (error || !user || (user.role === 'admin' && user.admin_active === false)) return null;
 
         const ok = await bcrypt.compare(credentials.password, user.password_hash);
         if (!ok) return null;
@@ -80,11 +83,28 @@ export const authOptions: NextAuthOptions = {
           if (!isValid) return null;
         }
 
+        const accessLevel = user.role === 'admin'
+          ? normalizeAdminAccessLevel(user.admin_access_level)
+          : null;
+
+        const loginAt = new Date().toISOString();
+        await Promise.all([
+          admin.from('users').update({ last_login_at: loginAt, last_seen_at: loginAt }).eq('id', user.id),
+          admin.from('user_activity_events').insert({
+            user_id: user.id,
+            event_type: 'login',
+            path: '/login',
+            metadata: {},
+            created_at: loginAt,
+          }),
+        ]);
+
         return {
           id: user.id,
           email: user.email,
           name: user.name ?? null,
           role: user.role,
+          accessLevel,
         };
       },
     }),
@@ -101,6 +121,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id as string;
         token.role = user.role as 'user' | 'admin';
+        token.accessLevel = user.accessLevel ?? null;
       }
       return token;
     },
@@ -108,6 +129,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as 'user' | 'admin';
+        session.user.accessLevel = token.accessLevel ?? null;
       }
       return session;
     },

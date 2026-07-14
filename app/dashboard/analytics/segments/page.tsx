@@ -77,7 +77,7 @@ export default function SegmentsDashboardPage() {
           Segmentacao de Clientes
         </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Visualizacao de segmentos baseada em comportamento de compra
+          Visualização de segmentos baseada em comportamento de compra
         </p>
       </header>
 

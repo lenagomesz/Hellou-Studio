@@ -219,7 +219,7 @@ export default function FeaturesPage() {
           color="gray"
         />
         <StatCard
-          label="Setup Necessario"
+          label="Setup Necessário"
           value={data.stats.setupRequired}
           icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
           color="orange"
@@ -295,7 +295,7 @@ export default function FeaturesPage() {
             <option value="all">Todas categorias</option>
             <option value="Products">Produtos</option>
             <option value="Orders">Pedidos</option>
-            <option value="Users">Usuarios</option>
+            <option value="Users">Usuários</option>
             <option value="Analytics">Analiticos</option>
             <option value="Automation">Automacao</option>
             <option value="Inventory">Estoque</option>
@@ -583,7 +583,7 @@ function FeatureDetailModal({
                 href={flag.route}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-pink-500 rounded-lg hover:bg-pink-600 transition"
               >
-                <ExternalLink className="h-4 w-4" /> Ver Pagina
+                <ExternalLink className="h-4 w-4" /> Ver Página
               </Link>
             )}
             {flag.documentation_url && (

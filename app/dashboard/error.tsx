@@ -18,7 +18,7 @@ export default function DashboardError({
       <div className="rounded-2xl border border-red-100 bg-red-50 p-8 text-center dark:border-red-900 dark:bg-red-950">
         <h2 className="text-lg font-semibold text-red-800 dark:text-red-200">Erro no painel</h2>
         <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-          Algo deu errado ao carregar esta pagina.
+          Algo deu errado ao carregar esta página.
         </p>
         <button
           onClick={reset}

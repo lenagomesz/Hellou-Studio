@@ -33,7 +33,7 @@ type MetricKey = 'revenue' | 'orders' | 'newUsers' | 'avgTicket';
 const metrics: { key: MetricKey; label: string; isCurrency: boolean }[] = [
   { key: 'revenue', label: 'Receita', isCurrency: true },
   { key: 'orders', label: 'Pedidos', isCurrency: false },
-  { key: 'newUsers', label: 'Novos Usuarios', isCurrency: false },
+  { key: 'newUsers', label: 'Novos Usuários', isCurrency: false },
   { key: 'avgTicket', label: 'Ticket Medio', isCurrency: true },
 ];
 

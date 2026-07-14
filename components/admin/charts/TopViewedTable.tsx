@@ -37,7 +37,7 @@ export function TopViewedTable({ data }: Props) {
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">
-        Sem dados de visualizacao no periodo
+        Sem dados de visualização no período
       </div>
     );
   }

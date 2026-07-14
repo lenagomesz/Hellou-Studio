@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, serverError } from '@/lib/api';
+import { requirePermission, serverError } from '@/lib/api';
 import {
   calculateRFMScore,
   calculateLTV,
@@ -9,7 +9,7 @@ import {
 } from '@/lib/customer-analytics';
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('analytics.view');
   if (auth.response) return auth.response;
 
   const searchParams = req.nextUrl.searchParams;

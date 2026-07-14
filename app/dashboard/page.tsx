@@ -9,6 +9,7 @@ import { AdvancedAnalyticsDashboard } from '@/components/admin/analytics/Advance
 import { getAlertLevel } from '@/lib/inventory';
 import type { StockAlertLevel } from '@/types/inventory';
 import { ArrowUpRight, BarChart3, Box, ClipboardCheck, PackageCheck, Truck } from 'lucide-react';
+import { getCurrentUser } from '@/lib/api';
 
 type OrderRow = Order & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
 type RequestRow = PrintRequest & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
@@ -196,6 +197,8 @@ function OrderMiniRow({ order }: { order: OrderRow }) {
 
 export default async function DashboardHome() {
   const data = await getDashboardData();
+  const currentUser = await getCurrentUser();
+  const isOwner = currentUser?.accessLevel !== 'partner';
 
   const todoCount = data.paidOrders.length + data.pendingRequests.length;
   const toShipCount = data.processingOrders.length;
@@ -215,9 +218,9 @@ export default async function DashboardHome() {
             <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Priorize o que precisa sair hoje, acompanhe a saúde da loja e chegue a qualquer área sem perder tempo.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/dashboard/analytics" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-pink-200 hover:bg-pink-50">
+            {isOwner && <Link href="/dashboard/analytics" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-pink-200 hover:bg-pink-50">
               <BarChart3 className="h-4 w-4" /> Ver desempenho
-            </Link>
+            </Link>}
             <Link href="/dashboard/orders" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-pink-100">
               Abrir pedidos <ArrowUpRight className="h-4 w-4" />
             </Link>
@@ -249,14 +252,14 @@ export default async function DashboardHome() {
 
       {/* KPI Cards with growth */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/dashboard/orders" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+        {isOwner ? <Link href="/dashboard/financeiro" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Receita do mês</p>
             <GrowthBadge value={data.growth.revenue} />
           </div>
           <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(data.thisMonthRevenue)}</p>
           <p className="mt-1 text-xs text-gray-400">Total: {formatPrice(data.totalRevenue)}</p>
-        </Link>
+        </Link> : <Link href="/dashboard/orders?status=paid" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md"><p className="text-xs font-medium uppercase tracking-wide text-gray-400">Prioridade de produção</p><p className="mt-2 text-2xl font-bold text-gray-900">{todoCount}</p><p className="mt-1 text-xs text-gray-400">pedidos e encomendas para preparar</p></Link>}
 
         <Link href="/dashboard/orders" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center justify-between">
@@ -267,11 +270,11 @@ export default async function DashboardHome() {
           <p className="mt-1 text-xs text-gray-400">{data.deliveredOrders} entregues</p>
         </Link>
 
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        {isOwner ? <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Ticket médio</p>
           <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(data.avgTicket)}</p>
           <p className="mt-1 text-xs text-gray-400">{data.activeProducts} produtos ativos</p>
-        </div>
+        </div> : <Link href="/dashboard/inventory" className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md"><p className="text-xs font-medium uppercase tracking-wide text-gray-400">Alertas de estoque</p><p className="mt-2 text-2xl font-bold text-gray-900">{data.stockAlerts.length}</p><p className="mt-1 text-xs text-gray-400">itens que exigem atenção</p></Link>}
 
         <Link href="/dashboard/users" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center justify-between">
@@ -419,10 +422,10 @@ export default async function DashboardHome() {
       </div>
 
       {/* Charts section */}
-      <DashboardCharts data={data.chartData} />
+      {isOwner && <DashboardCharts data={data.chartData} />}
 
       {/* Advanced Analytics Dashboard */}
-      <AdvancedAnalyticsDashboard />
+      {isOwner && <AdvancedAnalyticsDashboard />}
 
       {/* Stock Alerts Widget */}
       {data.stockAlerts.length > 0 && (

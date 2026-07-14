@@ -95,7 +95,7 @@ export default function AnomalyDetection({ anomalies }: AnomalyDetectionProps) {
                           : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
                       }`}
                     >
-                      {isCritical ? 'CRITICO' : 'ALERTA'}
+                      {isCritical ? 'CRÍTICO' : 'ALERTA'}
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       {format(parseISO(anomaly.date), 'dd/MM/yyyy')}

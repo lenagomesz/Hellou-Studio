@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Command,
   ExternalLink,
-  PackagePlus,
   Search,
   ShieldCheck,
   ShoppingBag,
@@ -19,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { SideNav } from '@/components/admin/SideNav';
+import type { AdminAccessLevel } from '@/lib/admin-permissions';
 
 type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -85,7 +85,7 @@ function relativeTime(value: string) {
   return `${Math.floor(hours / 24)} d`;
 }
 
-export function AdminShell({ children, userEmail }: { children: ReactNode; userEmail: string | null }) {
+export function AdminShell({ children, userEmail, accessLevel }: { children: ReactNode; userEmail: string | null; accessLevel: AdminAccessLevel }) {
   const pathname = usePathname();
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -232,7 +232,7 @@ export function AdminShell({ children, userEmail }: { children: ReactNode; userE
 
   return (
     <div className="admin-shell force-light min-h-screen bg-[#f5f3ef] text-slate-950 md:flex">
-      <SideNav userEmail={userEmail} alertCount={unreadCount} />
+      <SideNav userEmail={userEmail} alertCount={unreadCount} accessLevel={accessLevel} />
 
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f5f3ef]/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#090b10]/88 sm:px-6 lg:px-8">
@@ -257,14 +257,6 @@ export function AdminShell({ children, userEmail }: { children: ReactNode; userE
                 Ctrl K
               </kbd>
             </button>
-
-            <Link
-              href="/dashboard/products/new"
-              className="hidden items-center gap-2 rounded-xl bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-pink-600 dark:bg-white dark:text-slate-950 dark:hover:bg-pink-400 sm:inline-flex"
-            >
-              <PackagePlus className="h-4 w-4" />
-              Novo produto
-            </Link>
 
             <div className="relative">
               <button

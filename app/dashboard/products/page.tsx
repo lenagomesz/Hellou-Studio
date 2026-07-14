@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search, Download, Edit3 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -34,6 +35,8 @@ type ProductRow = {
 };
 
 export default function ProductsPage() {
+  const { data: session } = useSession();
+  const canDeleteProducts = session?.user?.accessLevel !== 'partner';
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -150,7 +153,7 @@ export default function ProductsPage() {
           min="0"
           value={minPrice}
           onChange={(e) => setMinPrice(e.target.value)}
-          placeholder="Preco min"
+          placeholder="Preço min"
           className="w-28 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         />
         <input
@@ -159,7 +162,7 @@ export default function ProductsPage() {
           min="0"
           value={maxPrice}
           onChange={(e) => setMaxPrice(e.target.value)}
-          placeholder="Preco max"
+          placeholder="Preço max"
           className="w-28 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         />
         <button type="submit" className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800">Buscar</button>
@@ -239,9 +242,9 @@ export default function ProductsPage() {
                     {product.active ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                     {product.active ? 'Desativar' : 'Ativar'}
                   </button>
-                  <button onClick={() => deleteProduct(product.id, product.name)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition ml-auto">
+                  {canDeleteProducts && <button onClick={() => deleteProduct(product.id, product.name)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition ml-auto">
                     <Trash2 className="h-3 w-3" />
-                  </button>
+                  </button>}
                 </div>
               </div>
             </div>

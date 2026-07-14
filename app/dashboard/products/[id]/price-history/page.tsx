@@ -102,7 +102,7 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Historico de Precos</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Histórico de Preços</h1>
           {product && <p className="text-sm text-gray-500">{product.name}</p>}
         </div>
       </header>
@@ -111,13 +111,13 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
       {product && (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-            <p className="text-xs font-medium text-gray-500 uppercase">Preco Base Atual</p>
+            <p className="text-xs font-medium text-gray-500 uppercase">Preço Base Atual</p>
             <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
               {formatPrice(product.base_price)}
             </p>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-            <p className="text-xs font-medium text-gray-500 uppercase">Preco Promocional Atual</p>
+            <p className="text-xs font-medium text-gray-500 uppercase">Preço Promocional Atual</p>
             <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
               {product.sale_price ? formatPrice(product.sale_price) : 'Sem promocao'}
             </p>
@@ -128,7 +128,7 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
       {/* Price Chart */}
       {history.length > 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Evolucao de Preco</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Evolução de Preço</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -136,7 +136,7 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `R$${v}`} />
                 <Tooltip
-                  formatter={(value) => [formatPrice(Number(value)), 'Preco']}
+                  formatter={(value) => [formatPrice(Number(value)), 'Preço']}
                   labelStyle={{ color: '#374151' }}
                 />
                 <Legend />
@@ -145,7 +145,7 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
                     data={basePriceHistory}
                     type="stepAfter"
                     dataKey="preco"
-                    name="Preco Base"
+                    name="Preço Base"
                     stroke="#EC4899"
                     strokeWidth={2}
                     dot={{ fill: '#EC4899', r: 4 }}
@@ -156,7 +156,7 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
                     data={salePriceHistory}
                     type="stepAfter"
                     dataKey="preco"
-                    name="Preco Promocional"
+                    name="Preço Promocional"
                     stroke="#F97316"
                     strokeWidth={2}
                     dot={{ fill: '#F97316', r: 4 }}
@@ -169,7 +169,7 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
       ) : (
         <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center dark:border-gray-700 dark:bg-gray-900">
           <TrendingUp className="mx-auto h-12 w-12 text-gray-300" />
-          <p className="mt-3 text-sm text-gray-500">Nenhuma alteracao de preco registrada</p>
+          <p className="mt-3 text-sm text-gray-500">Nenhuma alteração de preço registrada</p>
         </div>
       )}
 
@@ -178,7 +178,7 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
         <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
           <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-800">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-              Historico Completo ({history.length} alteracoes)
+              Histórico Completo ({history.length} alterações)
             </h3>
           </div>
           <div className="divide-y divide-gray-50 dark:divide-gray-800">

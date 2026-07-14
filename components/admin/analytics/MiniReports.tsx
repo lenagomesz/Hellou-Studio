@@ -71,7 +71,7 @@ export default function MiniReports({ data }: MiniReportsProps) {
       href: '/dashboard/orders',
     },
     {
-      title: 'Usuarios',
+      title: 'Usuários',
       current: data.users.current.toLocaleString('pt-BR'),
       history: data.users.history,
       color: '#22c55e',

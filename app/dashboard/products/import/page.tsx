@@ -189,7 +189,7 @@ export default function ImportPage() {
   }
 
   function downloadTemplate() {
-    const template = 'id,name,category,type,base_price,sale_price,description,active,image_url\n,Produto Exemplo,chaveiros,physical,29.90,24.90,Descricao do produto,true,\n';
+    const template = 'id,name,category,type,base_price,sale_price,description,active,image_url\n,Produto Exemplo,chaveiros,physical,29.90,24.90,Descrição do produto,true,\n';
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -238,7 +238,7 @@ export default function ImportPage() {
         <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Modo de Importacao</h2>
         <div className="flex gap-3">
           {[
-            { value: 'upsert' as const, label: 'Criar ou Atualizar', desc: 'Atualiza se tem ID, cria se nao tem' },
+            { value: 'upsert' as const, label: 'Criar ou Atualizar', desc: 'Atualiza se tem ID, cria se não tem' },
             { value: 'create' as const, label: 'Apenas Criar', desc: 'Cria novos produtos (ignora ID)' },
             { value: 'update' as const, label: 'Apenas Atualizar', desc: 'Atualiza produtos existentes por ID' },
           ].map((opt) => (

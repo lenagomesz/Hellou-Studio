@@ -75,7 +75,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   }
 
   if (!campaign) {
-    return <p className="text-center text-gray-400">Campanha nao encontrada.</p>;
+    return <p className="text-center text-gray-400">Campanha não encontrada.</p>;
   }
 
   return (

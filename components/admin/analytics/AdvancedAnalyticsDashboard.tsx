@@ -71,7 +71,7 @@ export function AdvancedAnalyticsDashboard() {
     return (
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center dark:border-amber-800 dark:bg-amber-950/30">
         <p className="text-sm text-amber-700 dark:text-amber-300">
-          Nao foi possivel carregar os dados avancados de analytics. Tente novamente mais tarde.
+          Não foi possível carregar os dados avancados de analytics. Tente novamente mais tarde.
         </p>
       </div>
     );

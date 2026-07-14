@@ -119,6 +119,15 @@ export default function RequestPrintPage() {
 
   return (
     <div>
+      <section className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
+        <div className="pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full bg-white/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 rounded-full bg-orange-200/25 blur-3xl" />
+        <div className="relative mx-auto max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/75">Encomendas personalizadas</p>
+          <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Sua ideia pode virar realidade</h1>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">Envie seu arquivo STL ou compartilhe um modelo. Analisamos material, acabamento, prazo e valor antes de iniciar a produção.</p>
+        </div>
+      </section>
       <div className="mx-auto max-w-4xl px-4 pb-10 pt-6 sm:px-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title - Common to both options */}

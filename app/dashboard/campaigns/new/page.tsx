@@ -177,7 +177,7 @@ export default function NewCampaignPage() {
                 onChange={e => update('segment_type', e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               >
-                <option value="all">Todos os usuarios</option>
+                <option value="all">Todos os usuários</option>
                 <option value="rfm">Segmento RFM</option>
                 <option value="category">Por categoria</option>
                 <option value="recency">Por recencia</option>

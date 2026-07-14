@@ -9,7 +9,7 @@ function formatPrice(value: number) {
 
 function AlertBadge({ level }: { level: StockAlertLevel }) {
   const config = {
-    critical: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-300', label: 'Critico' },
+    critical: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-300', label: 'Crítico' },
     low: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-300', label: 'Baixo' },
     ok: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', label: 'OK' },
   };
@@ -146,11 +146,11 @@ export default async function InventoryDashboard() {
             <span className="text-2xl font-bold text-red-600">{summary.critical_alerts}</span>
             <span className="text-sm text-yellow-600">{summary.low_alerts} baixos</span>
           </div>
-          <p className="mt-1 text-xs text-gray-400">Produtos precisando reposicao</p>
+          <p className="mt-1 text-xs text-gray-400">Produtos precisando reposição</p>
         </Link>
 
         <Link href="/dashboard/inventory/reorder-tasks" className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Reposicoes Pendentes</p>
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Reposições Pendentes</p>
           <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{summary.pending_reorders}</p>
           <p className="mt-1 text-xs text-gray-400">Tarefas em andamento</p>
         </Link>
@@ -159,15 +159,15 @@ export default async function InventoryDashboard() {
       {/* Quick Navigation */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link href="/dashboard/inventory/movements" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
-          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Movimentacoes</h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Historico completo de entradas e saidas</p>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Movimentações</h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Histórico completo de entradas e saídas</p>
           <p className="mt-2 text-xs text-pink-500">{summary.total_movements} registros →</p>
         </Link>
 
         <Link href="/dashboard/inventory/forecast" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
-          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Previsao de Demanda</h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Forecast baseado em historico de vendas</p>
-          <p className="mt-2 text-xs text-pink-500">Ver previsoes →</p>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Previsão de Demanda</h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Forecast baseado em histórico de vendas</p>
+          <p className="mt-2 text-xs text-pink-500">Ver previsões →</p>
         </Link>
 
         <Link href="/dashboard/inventory/dead-stock" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
@@ -183,7 +183,7 @@ export default async function InventoryDashboard() {
         </Link>
 
         <Link href="/dashboard/inventory/reorder-tasks" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
-          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Tarefas de Reposicao</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Tarefas de Reposição</h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Acompanhar pedidos a fornecedores</p>
           <p className="mt-2 text-xs text-pink-500">Ver tarefas →</p>
         </Link>
@@ -193,12 +193,18 @@ export default async function InventoryDashboard() {
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Registrar entrada/saida de estoque</p>
           <p className="mt-2 text-xs text-pink-500">Fazer ajuste →</p>
         </Link>
+
+        <Link href="/dashboard/inventory/costs" className="group rounded-2xl border border-pink-100 bg-gradient-to-br from-white to-pink-50 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <h3 className="font-semibold text-slate-900">Gastos do estoque</h3>
+          <p className="mt-1 text-sm text-slate-500">Filamentos, embalagens, manutenção e ferramentas</p>
+          <p className="mt-2 text-xs font-semibold text-pink-600">Controlar custos →</p>
+        </Link>
       </div>
 
       {/* Stock Table */}
       <div className="rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-          <h2 className="font-semibold text-gray-800 dark:text-gray-200">Estoque por Variacao</h2>
+          <h2 className="font-semibold text-gray-800 dark:text-gray-200">Estoque por Variação</h2>
           <span className="text-xs text-gray-400">{options.length} itens</span>
         </div>
         <div className="overflow-x-auto">
@@ -206,9 +212,9 @@ export default async function InventoryDashboard() {
             <thead>
               <tr className="border-b border-gray-100 dark:border-gray-800">
                 <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Produto</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Variacao</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Variação</th>
                 <th className="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Estoque</th>
-                <th className="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Reposicao em</th>
+                <th className="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Reposição em</th>
                 <th className="px-5 py-3 text-center text-xs font-medium text-gray-400 uppercase">Status</th>
               </tr>
             </thead>
@@ -238,7 +244,7 @@ export default async function InventoryDashboard() {
             </tbody>
           </table>
           {options.length === 0 && (
-            <p className="px-5 py-10 text-center text-sm text-gray-400">Nenhuma variacao de produto encontrada.</p>
+            <p className="px-5 py-10 text-center text-sm text-gray-400">Nenhuma variação de produto encontrada.</p>
           )}
         </div>
       </div>

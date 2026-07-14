@@ -8,7 +8,7 @@ const REASON_LABELS: Record<StockMovementReason, string> = {
   venda: 'Venda',
   devolucao: 'Devolucao',
   ajuste_manual: 'Ajuste Manual',
-  reposicao: 'Reposicao',
+  reposicao: 'Reposição',
   quebra: 'Quebra',
   perda: 'Perda',
   transferencia: 'Transferencia',
@@ -56,9 +56,9 @@ export default function MovementsPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Movimentacoes de Estoque</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Movimentações de Estoque</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Historico completo de todas as entradas e saidas.
+            Histórico completo de todas as entradas e saídas.
           </p>
         </div>
         <Link
@@ -90,12 +90,12 @@ export default function MovementsPage() {
             <tr className="border-b border-gray-100 dark:border-gray-800">
               <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Data</th>
               <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Produto</th>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Variacao</th>
+              <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Variação</th>
               <th className="px-5 py-3 text-center text-xs font-medium text-gray-400 uppercase">Motivo</th>
               <th className="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Quantidade</th>
               <th className="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Antes → Depois</th>
               <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Notas</th>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Usuario</th>
+              <th className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Usuário</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
@@ -154,7 +154,7 @@ export default function MovementsPage() {
             Anterior
           </button>
           <span className="text-sm text-gray-500">
-            Pagina {page} de {totalPages}
+            Página {page} de {totalPages}
           </span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}

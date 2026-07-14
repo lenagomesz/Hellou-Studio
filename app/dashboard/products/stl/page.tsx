@@ -105,7 +105,7 @@ export default function STLUploadPage() {
       return;
     }
     if (!price || Number(price) <= 0) {
-      setError('Preco deve ser maior que zero');
+      setError('Preço deve ser maior que zero');
       return;
     }
 
@@ -251,13 +251,13 @@ export default function STLUploadPage() {
           {/* Description */}
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Descricao (opcional)
+              Descrição (opcional)
             </label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descricao do produto..."
+              placeholder="Descrição do produto..."
               rows={3}
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition resize-none"
             />
@@ -268,7 +268,7 @@ export default function STLUploadPage() {
             {/* Price */}
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Preco Base (R$) *
+                Preço Base (R$) *
               </label>
               <input
                 id="price"

@@ -40,7 +40,7 @@ interface Pagination {
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
   feature_enabled: { label: 'Feature Ativada', color: 'green' },
   feature_disabled: { label: 'Feature Desativada', color: 'red' },
-  feature_auto_enabled: { label: 'Auto-Ativada (Dependencia)', color: 'blue' },
+  feature_auto_enabled: { label: 'Auto-Ativada (Dependência)', color: 'blue' },
   config_updated: { label: 'Config Atualizada', color: 'orange' },
   email_sent: { label: 'Email Enviado', color: 'purple' },
 };
@@ -94,7 +94,7 @@ export default function AuditLogPage() {
   const handleExportCSV = () => {
     if (logs.length === 0) return;
 
-    const headers = ['Data', 'Usuario', 'Acao', 'Tipo', 'Entidade', 'Detalhes'];
+    const headers = ['Data', 'Usuário', 'Ação', 'Tipo', 'Entidade', 'Detalhes'];
     const rows = logs.map((log) => [
       new Date(log.created_at).toLocaleString('pt-BR'),
       log.user_email,
@@ -131,7 +131,7 @@ export default function AuditLogPage() {
               Audit Log
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Historico completo de acoes no sistema
+              Histórico completo de ações no sistema
             </p>
           </div>
         </div>
@@ -159,12 +159,12 @@ export default function AuditLogPage() {
           >
             <option value="">Todos tipos</option>
             <option value="feature_flag">Feature Flag</option>
-            <option value="config">Configuracao</option>
+            <option value="config">Configuração</option>
             <option value="email">Email</option>
           </select>
           <input
             type="text"
-            placeholder="Email do usuario"
+            placeholder="Email do usuário"
             value={filters.user_email}
             onChange={(e) => setFilters((f) => ({ ...f, user_email: e.target.value }))}
             className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
@@ -174,7 +174,7 @@ export default function AuditLogPage() {
             onChange={(e) => setFilters((f) => ({ ...f, action: e.target.value }))}
             className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
           >
-            <option value="">Todas acoes</option>
+            <option value="">Todas ações</option>
             <option value="feature_enabled">Feature Ativada</option>
             <option value="feature_disabled">Feature Desativada</option>
             <option value="feature_auto_enabled">Auto-Ativada</option>
@@ -208,7 +208,7 @@ export default function AuditLogPage() {
             <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
             <p className="text-gray-500 dark:text-gray-400">Nenhum registro encontrado</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              Os logs aparecerao conforme acoes forem executadas
+              Os logs aparecerao conforme ações forem executadas
             </p>
           </div>
         ) : (
@@ -219,8 +219,8 @@ export default function AuditLogPage() {
                 <thead className="bg-gray-50 dark:bg-gray-900/50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Data</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Usuario</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Acao</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Usuário</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Ação</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Entidade</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Detalhes</th>
                   </tr>

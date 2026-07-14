@@ -101,7 +101,7 @@ export default function TrendForecast({
     return (
       <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-md dark:border-gray-700 dark:bg-gray-800">
         <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
-          {formatXAxis(label)} {isForecast ? '(Previsao)' : '(Historico)'}
+          {formatXAxis(label)} {isForecast ? '(Previsão)' : '(Histórico)'}
         </p>
         <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
           {formatCurrency(dataPoint?.revenue ?? 0)}
@@ -119,7 +119,7 @@ export default function TrendForecast({
     <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-          Previsao de Tendencia
+          Previsão de Tendencia
         </h3>
         {getTrendBadge()}
       </div>
@@ -197,7 +197,7 @@ export default function TrendForecast({
       </div>
 
       <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-        A previsao e baseada nos dados historicos dos ultimos {historical.length} dias. A area
+        A previsão e baseada nos dados historicos dos últimos {historical.length} dias. A área
         sombreada representa o intervalo de confianca da projecao.
       </p>
     </div>

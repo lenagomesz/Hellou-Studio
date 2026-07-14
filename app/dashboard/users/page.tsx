@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Users, Search, Shield, Ban, Trash2, Mail, Star } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { UserManagementTabs } from '@/components/admin/UserManagementTabs';
 
 interface UserRow {
   id: string;
@@ -24,6 +26,8 @@ function timeAgo(value: string) {
 }
 
 export default function UsersPage() {
+  const { data: session } = useSession();
+  const canDeleteCustomers = session?.user?.accessLevel !== 'partner';
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -49,7 +53,7 @@ export default function UsersPage() {
   }
 
   async function banUser(user: UserRow) {
-    if (!confirm(`Banir ${user.email}? O usuario sera removido e nao podera se cadastrar novamente.`)) return;
+    if (!confirm(`Banir ${user.email}? O usuário sera removido e não podera se cadastrar novamente.`)) return;
     const res = await fetch(`/api/admin/users/${user.id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -63,7 +67,7 @@ export default function UsersPage() {
   }
 
   async function deleteUser(user: UserRow) {
-    if (!confirm(`Excluir ${user.email}? Esta acao nao pode ser desfeita.`)) return;
+    if (!confirm(`Excluir ${user.email}? Esta ação não pode ser desfeita.`)) return;
     const res = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
     if (res.ok) {
       setUsers(prev => prev.filter(u => u.id !== user.id));
@@ -92,6 +96,7 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
+      <UserManagementTabs />
       {toast && (
         <div className="fixed top-4 right-4 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">
           {toast}
@@ -100,9 +105,9 @@ export default function UsersPage() {
 
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Usuarios</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Usuários</h1>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-            {users.length} usuarios · {admins.length} admins · {vipCount} VIPs
+            {users.length} usuários · {admins.length} admins · {vipCount} VIPs
           </p>
         </div>
       </header>
@@ -135,10 +140,10 @@ export default function UsersPage() {
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-gray-100 dark:border-gray-800">
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Usuario</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Usuário</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Role</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cadastro</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Acoes</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
@@ -166,7 +171,7 @@ export default function UsersPage() {
                         <Shield className="h-3 w-3" /> Admin
                       </span>
                     ) : (
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Usuario</span>
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Usuário</span>
                     )}
                   </td>
                   <td className="px-4 py-3.5 text-xs text-gray-500">{timeAgo(user.created_at)}</td>
@@ -184,12 +189,12 @@ export default function UsersPage() {
                         >
                           <Star className={`h-3.5 w-3.5 ${user.is_vip ? 'fill-amber-500' : ''}`} />
                         </button>
-                        <button onClick={() => banUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-orange-600 hover:bg-orange-50 transition" title="Banir">
+                        {canDeleteCustomers && <button onClick={() => banUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-orange-600 hover:bg-orange-50 transition" title="Banir">
                           <Ban className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={() => deleteUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition" title="Excluir">
+                        </button>}
+                        {canDeleteCustomers && <button onClick={() => deleteUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition" title="Excluir">
                           <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        </button>}
                       </div>
                     )}
                   </td>

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin, serverError } from '@/lib/api';
+import { requirePermission, serverError } from '@/lib/api';
 import {
   getAllFeatureFlags,
   getFeatureHealth,
@@ -9,7 +9,7 @@ import {
 } from '@/lib/feature-flags';
 
 export async function GET() {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('settings.manage');
   if (auth.response) return auth.response;
 
   try {

@@ -32,7 +32,7 @@ type KPIKey = keyof KPIData;
 const KPI_DEFINITIONS: Record<KPIKey, { label: string; icon: typeof DollarSign; format: string }> = {
   revenue: { label: 'Receita do Mes', icon: DollarSign, format: 'currency' },
   orders: { label: 'Pedidos', icon: ShoppingCart, format: 'number' },
-  newUsers: { label: 'Novos Usuarios', icon: Users, format: 'number' },
+  newUsers: { label: 'Novos Usuários', icon: Users, format: 'number' },
   avgTicket: { label: 'Ticket Medio', icon: BarChart3, format: 'currency' },
   activeProducts: { label: 'Produtos Ativos', icon: Package, format: 'number' },
   totalRevenue: { label: 'Receita Total', icon: DollarSign, format: 'currency' },

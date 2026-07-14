@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin, serverError } from '@/lib/api';
+import { requirePermission, serverError } from '@/lib/api';
 import { getAuditLogs } from '@/lib/feature-flags';
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('audit.view');
   if (auth.response) return auth.response;
 
   try {

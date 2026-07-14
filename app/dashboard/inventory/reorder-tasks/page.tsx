@@ -81,9 +81,9 @@ export default function ReorderTasksPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tarefas de Reposicao</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tarefas de Reposição</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Acompanhe pedidos de reposicao feitos a fornecedores.
+            Acompanhe pedidos de reposição feitos a fornecedores.
           </p>
         </div>
         <Link
@@ -113,7 +113,7 @@ export default function ReorderTasksPage() {
         {loading ? (
           <div className="py-20 text-center text-gray-400">Carregando...</div>
         ) : tasks.length === 0 ? (
-          <div className="py-20 text-center text-gray-400">Nenhuma tarefa de reposicao encontrada.</div>
+          <div className="py-20 text-center text-gray-400">Nenhuma tarefa de reposição encontrada.</div>
         ) : (
           tasks.map(task => {
             const statusConf = STATUS_CONFIG[task.status];
@@ -137,7 +137,7 @@ export default function ReorderTasksPage() {
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       Criado em {new Date(task.created_at).toLocaleDateString('pt-BR')}
-                      {task.estimated_arrival && ` · Previsao: ${new Date(task.estimated_arrival).toLocaleDateString('pt-BR')}`}
+                      {task.estimated_arrival && ` · Previsão: ${new Date(task.estimated_arrival).toLocaleDateString('pt-BR')}`}
                       {task.cost_total && ` · Custo: ${formatPrice(task.cost_total)}`}
                     </p>
                     {task.notes && <p className="text-xs text-gray-400 mt-1 italic">{task.notes}</p>}

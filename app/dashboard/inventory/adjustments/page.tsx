@@ -13,7 +13,7 @@ interface ProductOptionItem {
 }
 
 const ADJUSTMENT_REASONS: { value: StockMovementReason; label: string }[] = [
-  { value: 'reposicao', label: 'Reposicao (recebeu unidades)' },
+  { value: 'reposicao', label: 'Reposição (recebeu unidades)' },
   { value: 'ajuste_manual', label: 'Ajuste manual (contagem/correcao)' },
   { value: 'quebra', label: 'Quebra' },
   { value: 'perda', label: 'Perda' },
@@ -98,7 +98,7 @@ export default function AdjustmentsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ajuste de Estoque</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Registre entradas, saidas ou correcoes no estoque.
+            Registre entradas, saídas ou correcoes no estoque.
           </p>
         </div>
         <Link
@@ -123,7 +123,7 @@ export default function AdjustmentsPage() {
         {/* Product Option Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Produto / Variacao *
+            Produto / Variação *
           </label>
           <select
             value={selectedOption}
@@ -189,7 +189,7 @@ export default function AdjustmentsPage() {
         {/* Notes */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Observacoes
+            Observações
           </label>
           <textarea
             value={notes}

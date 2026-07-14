@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, serverError, badRequest } from '@/lib/api';
+import { requirePermission, serverError, badRequest } from '@/lib/api';
 
 export async function GET() {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('marketing.manage');
   if (auth.response) return auth.response;
 
   const admin = getSupabaseAdmin();
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const auth = await requireAdmin();
+    const auth = await requirePermission('marketing.manage');
     if (auth.response) return auth.response;
 
     const body = await request.json();
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('marketing.manage');
   if (auth.response) return auth.response;
 
   const body = await request.json();
@@ -110,7 +110,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('marketing.manage');
   if (auth.response) return auth.response;
 
   const body = await request.json();

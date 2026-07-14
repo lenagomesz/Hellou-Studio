@@ -6,7 +6,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const user = await getCurrentUser();
 
   return (
-    <AdminShell userEmail={user?.email ?? null}>
+    <AdminShell
+      userEmail={user?.email ?? null}
+      accessLevel={user?.role === 'admin' ? (user.accessLevel ?? 'owner') : 'owner'}
+    >
       {children}
     </AdminShell>
   );

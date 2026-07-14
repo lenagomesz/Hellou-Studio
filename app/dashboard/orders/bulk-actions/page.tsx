@@ -123,7 +123,7 @@ export default function BulkActionsPage() {
         await fetchOrders();
         setSelectedIds(new Set());
       } else {
-        setToast({ message: data.error ?? 'Erro ao executar acao', type: 'error' });
+        setToast({ message: data.error ?? 'Erro ao executar ação', type: 'error' });
       }
     } catch {
       setToast({ message: 'Erro de conexao', type: 'error' });

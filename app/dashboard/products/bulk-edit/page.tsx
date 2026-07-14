@@ -127,7 +127,7 @@ export default function BulkEditPage() {
         setShowPreview(false);
         resetForm();
       } else {
-        showToast('Erro ao aplicar alteracoes', 'error');
+        showToast('Erro ao aplicar alterações', 'error');
       }
     } catch {
       showToast('Erro de conexao', 'error');
@@ -195,7 +195,7 @@ export default function BulkEditPage() {
                 className="rounded"
               />
               <DollarSign className="h-4 w-4" />
-              Preco Base
+              Preço Base
             </label>
             {editPrice && (
               <input
@@ -204,7 +204,7 @@ export default function BulkEditPage() {
                 min="0"
                 value={newBasePrice}
                 onChange={(e) => setNewBasePrice(e.target.value)}
-                placeholder="Novo preco base"
+                placeholder="Novo preço base"
                 className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
               />
             )}
@@ -241,7 +241,7 @@ export default function BulkEditPage() {
             disabled={selected.size === 0}
             className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition"
           >
-            Preview das Alteracoes
+            Preview das Alterações
           </button>
         </div>
       </div>
@@ -252,17 +252,17 @@ export default function BulkEditPage() {
           <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900 max-h-[80vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-orange-500" />
-              Preview - Confirmar Alteracoes
+              Preview - Confirmar Alterações
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              As seguintes alteracoes serao aplicadas a {selected.size} produto(s):
+              As seguintes alterações serao aplicadas a {selected.size} produto(s):
             </p>
 
             <div className="mt-4 space-y-2 rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
               {changes.base_price !== undefined && (
                 <div className="flex items-center gap-2 text-sm">
                   <DollarSign className="h-4 w-4 text-green-600" />
-                  <span>Preco base: <strong>{formatPrice(changes.base_price)}</strong></span>
+                  <span>Preço base: <strong>{formatPrice(changes.base_price)}</strong></span>
                 </div>
               )}
               {changes.active !== undefined && (

@@ -273,7 +273,7 @@ export default function OrdersListPage() {
       {!loading && pagination.pages > 1 && (
         <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Pagina {pagination.page} de {pagination.pages}
+            Página {pagination.page} de {pagination.pages}
             <span className="ml-2 text-xs text-gray-400">({pagination.total} pedidos)</span>
           </p>
           <div className="flex items-center gap-2">

@@ -161,7 +161,7 @@ export default function RecipientsPage() {
                   <th className="px-4 py-3 text-center font-medium text-gray-500">Status</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-500">Bounces</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-500">GDPR</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Acoes</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
@@ -186,7 +186,7 @@ export default function RecipientsPage() {
                       {r.gdpr_consent ? (
                         <span className="text-xs text-green-600">Sim</span>
                       ) : (
-                        <span className="text-xs text-gray-400">Nao</span>
+                        <span className="text-xs text-gray-400">Não</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -221,7 +221,7 @@ export default function RecipientsPage() {
           <li>- Todos os emails incluem link obrigatorio de cancelamento de inscricao</li>
           <li>- Bounces automaticos: 3+ bounces = email bloqueado automaticamente</li>
           <li>- Consentimento GDPR rastreado por destinatario</li>
-          <li>- Exportacao de dados disponivel em CSV para auditoria</li>
+          <li>- Exportacao de dados disponível em CSV para auditoria</li>
         </ul>
       </div>
     </div>

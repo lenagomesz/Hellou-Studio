@@ -1,5 +1,5 @@
 import { type NextRequest } from 'next/server';
-import { requireAdmin, serverError } from '@/lib/api';
+import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { subDays, subMonths, format } from 'date-fns';
 
@@ -15,7 +15,7 @@ function getStart(period: string): Date {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('analytics.view');
   if (auth.response) return auth.response;
 
   const period = req.nextUrl.searchParams.get('period') ?? '30d';

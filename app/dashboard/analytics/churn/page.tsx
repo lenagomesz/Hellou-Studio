@@ -119,7 +119,7 @@ export default function ChurnDetectionPage() {
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <p className="text-sm font-medium text-red-800 dark:text-red-300">
-                {critical.length} cliente{critical.length > 1 ? 's' : ''} em risco critico de churn
+                {critical.length} cliente{critical.length > 1 ? 's' : ''} em risco crítico de churn
               </p>
             </div>
             <button
@@ -139,7 +139,7 @@ export default function ChurnDetectionPage() {
           <p className="text-2xl font-bold text-red-600">{atRisk.length}</p>
         </div>
         <div className="rounded-xl bg-white border border-gray-100 p-4 dark:bg-gray-900 dark:border-gray-800">
-          <p className="text-xs text-gray-500">Risco Critico (70+)</p>
+          <p className="text-xs text-gray-500">Risco Crítico (70+)</p>
           <p className="text-2xl font-bold text-red-600">{critical.length}</p>
         </div>
         <div className="rounded-xl bg-white border border-gray-100 p-4 dark:bg-gray-900 dark:border-gray-800">

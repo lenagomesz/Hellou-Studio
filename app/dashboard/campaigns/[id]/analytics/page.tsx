@@ -73,7 +73,7 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
   }
 
   if (!analytics) {
-    return <p className="text-center text-gray-400">Analytics nao disponivel.</p>;
+    return <p className="text-center text-gray-400">Analytics não disponível.</p>;
   }
 
   const formatPrice = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);

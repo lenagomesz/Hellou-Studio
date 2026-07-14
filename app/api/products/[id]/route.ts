@@ -6,6 +6,7 @@ import {
   isCategory,
   notFound,
   requireAdmin,
+  requirePermission,
   serverError,
 } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
@@ -154,7 +155,7 @@ export async function DELETE(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireAdmin();
+    const auth = await requirePermission('products.delete');
     if (auth.response) return auth.response;
 
     const { id } = await ctx.params;

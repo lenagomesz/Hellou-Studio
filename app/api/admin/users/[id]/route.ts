@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, badRequest, notFound, serverError } from '@/lib/api';
+import { requireAdmin, requirePermission, badRequest, notFound, serverError } from '@/lib/api';
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
@@ -36,7 +36,7 @@ export async function GET(_req: Request, ctx: RouteCtx) {
 }
 
 export async function DELETE(_req: Request, ctx: RouteCtx) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('customers.delete');
   if (auth.response) return auth.response;
 
   const { id } = await ctx.params;
@@ -63,7 +63,7 @@ export async function DELETE(_req: Request, ctx: RouteCtx) {
 }
 
 export async function POST(req: Request, ctx: RouteCtx) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('customers.delete');
   if (auth.response) return auth.response;
 
   const { id } = await ctx.params;

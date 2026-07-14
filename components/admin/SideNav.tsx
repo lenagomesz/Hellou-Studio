@@ -27,6 +27,7 @@ import {
   X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import type { AdminAccessLevel } from '@/lib/admin-permissions';
 
 interface NavItem {
   href: string;
@@ -34,6 +35,7 @@ interface NavItem {
   icon: LucideIcon;
   exact?: boolean;
   badgeKey?: 'alerts';
+  ownerOnly?: boolean;
 }
 
 interface NavSection {
@@ -63,23 +65,23 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Crescimento',
     items: [
-      { href: '/dashboard/financeiro', label: 'Financeiro', icon: CircleDollarSign },
-      { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-      { href: '/dashboard/campaigns', label: 'Campanhas', icon: Mail },
-      { href: '/dashboard/coupons', label: 'Cupons', icon: Tag },
-      { href: '/dashboard/calculadora', label: 'Calculadora', icon: Calculator },
+      { href: '/dashboard/financeiro', label: 'Financeiro', icon: CircleDollarSign, ownerOnly: true },
+      { href: '/dashboard/analytics', label: 'Análises', icon: BarChart3, ownerOnly: true },
+      { href: '/dashboard/campaigns', label: 'Campanhas', icon: Mail, ownerOnly: true },
+      { href: '/dashboard/coupons', label: 'Cupons', icon: Tag, ownerOnly: true },
+      { href: '/dashboard/calculadora', label: 'Calculadora', icon: Calculator, ownerOnly: true },
     ],
   },
   {
     label: 'Configuração',
     items: [
       { href: '/admin/security', label: 'Segurança (2FA)', icon: Shield },
-      { href: '/dashboard/settings/features', label: 'Recursos da loja', icon: Settings2 },
+      { href: '/dashboard/settings/features', label: 'Recursos da loja', icon: Settings2, ownerOnly: true },
     ],
   },
 ];
 
-export function SideNav({ userEmail, alertCount = 0 }: { userEmail: string | null; alertCount?: number }) {
+export function SideNav({ userEmail, alertCount = 0, accessLevel }: { userEmail: string | null; alertCount?: number; accessLevel: AdminAccessLevel }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -124,7 +126,7 @@ export function SideNav({ userEmail, alertCount = 0 }: { userEmail: string | nul
             <div key={section.label}>
               <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">{section.label}</p>
               <div className="space-y-1">
-                {section.items.map((item) => {
+                {section.items.filter((item) => !item.ownerOnly || accessLevel === 'owner').map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href, item.exact);
                   const badgeCount = item.badgeKey === 'alerts' ? alertCount : 0;
@@ -154,7 +156,7 @@ export function SideNav({ userEmail, alertCount = 0 }: { userEmail: string | nul
             <div className="mb-3 flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-pink-500/15 text-xs font-bold text-pink-300">{userEmail.charAt(0).toUpperCase()}</span>
               <span className="min-w-0">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-600">Administradora</span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-600">{accessLevel === 'owner' ? 'Administradora principal' : 'Sócia operacional'}</span>
                 <span className="block truncate text-xs text-slate-300" title={userEmail}>{userEmail}</span>
               </span>
             </div>

@@ -205,7 +205,7 @@ export default function DripCampaignsPage() {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Descricao</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição</label>
                 <input
                   type="text"
                   value={form.description}
@@ -220,7 +220,7 @@ export default function DripCampaignsPage() {
                   onChange={e => setForm(p => ({ ...p, break_on_purchase: e.target.checked }))}
                   className="rounded border-gray-300"
                 />
-                Remover usuario da sequencia se fizer uma compra
+                Remover usuário da sequencia se fizer uma compra
               </label>
 
               {/* Steps */}

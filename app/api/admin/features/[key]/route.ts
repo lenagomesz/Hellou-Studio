@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin, badRequest, notFound, serverError } from '@/lib/api';
+import { requirePermission, badRequest, notFound, serverError } from '@/lib/api';
 import { getFeatureFlag, toggleFeatureFlag, getFeatureUsageStats, getFeatureHealth } from '@/lib/feature-flags';
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ key: string }> },
 ) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('settings.manage');
   if (auth.response) return auth.response;
 
   const { key } = await params;
@@ -31,7 +31,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ key: string }> },
 ) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('settings.manage');
   if (auth.response) return auth.response;
 
   const { key } = await params;
