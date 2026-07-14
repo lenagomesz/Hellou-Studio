@@ -2,7 +2,10 @@
 
 import { useCart } from '@/components/shop/CartContext';
 
-export const WHATSAPP_URL = 'https://wa.me/5547988450461?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos.';
+const WHATSAPP_MESSAGE =
+  'Olá, Hellou Studio! 👋 Vim pelo site e gostaria de tirar uma dúvida sobre os produtos, arquivos STL ou uma impressão 3D personalizada. Podem me ajudar?';
+
+export const WHATSAPP_URL = `https://wa.me/5547988450461?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
 export function WhatsAppButton() {
   const { count } = useCart();

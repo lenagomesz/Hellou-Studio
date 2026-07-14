@@ -14,12 +14,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { email, password, name, phone, cpf } = (body ?? {}) as {
+  const { email, password, name, phone, cpf, marketingConsent } = (body ?? {}) as {
     email?: string;
     password?: string;
     name?: string;
     phone?: string;
     cpf?: string;
+    marketingConsent?: boolean;
   };
 
   if (!email || !password) {
@@ -101,6 +102,28 @@ export async function POST(request: Request) {
       { error: 'Não foi possível criar a conta' },
       { status: 500 },
     );
+  }
+
+  const consentGranted = marketingConsent === true;
+  const preferenceTimestamp = new Date().toISOString();
+  const { error: preferenceError } = await admin
+    .from('email_preferences')
+    .upsert(
+      {
+        user_id: created.id,
+        email: normalizedEmail,
+        subscribed: consentGranted,
+        unsubscribed_at: consentGranted ? null : preferenceTimestamp,
+        unsubscribe_reason: consentGranted ? null : 'Consentimento não concedido no cadastro',
+        gdpr_consent: consentGranted,
+        gdpr_consent_at: consentGranted ? preferenceTimestamp : null,
+        updated_at: preferenceTimestamp,
+      },
+      { onConflict: 'email' },
+    );
+
+  if (preferenceError) {
+    console.error('[register] não foi possível salvar a preferência de marketing:', preferenceError);
   }
 
   try {

@@ -98,19 +98,35 @@ export function Navbar() {
     setAccountMenuOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!menuOpen || !window.matchMedia('(max-width: 1023px)').matches) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousOverscrollBehavior = document.body.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.overscrollBehavior = previousOverscrollBehavior;
+    };
+  }, [menuOpen]);
+
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
   const iconButtonClass =
     'relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200/80 bg-white text-gray-600 shadow-sm transition hover:-translate-y-0.5 hover:border-pink-200 hover:bg-pink-50/60 hover:text-pink-600 dark:border-white/10 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-pink-800 dark:hover:bg-gray-700 dark:hover:text-pink-400';
 
   return (
     <>
-      <header className="sticky top-0 z-30 px-3 pt-3 sm:px-5">
+      <header
+        className={`sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-xl transition-shadow dark:bg-gray-950/95 lg:fixed lg:inset-x-0 lg:top-0 ${
+          scrolled
+            ? 'border-pink-100/80 shadow-md shadow-pink-100/20 dark:border-gray-800 dark:shadow-black/30'
+            : 'border-gray-100 dark:border-gray-900'
+        }`}
+      >
         <div
-          className={`mx-auto w-full max-w-[1400px] rounded-2xl border bg-white/90 px-3 py-2.5 backdrop-blur-xl transition-all duration-300 dark:bg-gray-900/90 sm:px-4 ${
-            scrolled
-              ? 'border-pink-100/80 shadow-[0_14px_42px_rgba(126,62,38,0.14)] dark:border-gray-700 dark:shadow-black/30'
-              : 'border-white/80 shadow-[0_10px_32px_rgba(126,62,38,0.09)] dark:border-gray-800'
-          }`}
+          className="w-full px-4 py-3 sm:px-6 lg:px-8"
         >
           <div className="flex min-h-11 items-center justify-between gap-3 lg:hidden">
             <Link href="/" className="shrink-0 text-xl font-bold tracking-tight" aria-label="Hellou Studio — página inicial">
@@ -276,8 +292,10 @@ export function Navbar() {
         </div>
 
         <div
-          className={`mx-auto mt-2 w-full max-w-[1400px] overflow-hidden rounded-2xl border bg-white/95 shadow-xl shadow-gray-900/10 backdrop-blur-xl transition-all duration-300 ease-in-out dark:bg-gray-900/95 lg:hidden ${
-            menuOpen ? 'max-h-[52rem] border-gray-200 opacity-100 dark:border-gray-700' : 'max-h-0 border-transparent opacity-0'
+          className={`w-full border-x-0 border-b border-t bg-white/98 shadow-xl shadow-gray-900/10 backdrop-blur-xl transition-[max-height,opacity] duration-300 ease-in-out dark:bg-gray-950/98 lg:hidden ${
+            menuOpen
+              ? 'max-h-[calc(100dvh-4.25rem)] overflow-y-auto overscroll-contain border-gray-200 opacity-100 dark:border-gray-800'
+              : 'max-h-0 overflow-hidden border-transparent opacity-0'
           }`}
         >
           <nav className="flex flex-col gap-1 p-3" aria-label="Menu do celular">
@@ -384,6 +402,8 @@ export function Navbar() {
           </nav>
         </div>
       </header>
+
+      <div aria-hidden="true" className="hidden h-16 lg:block" />
 
       {count > 0 && pathname !== '/cart' && (
         <Link

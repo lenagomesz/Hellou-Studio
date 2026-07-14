@@ -40,6 +40,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -86,7 +87,14 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email, phone, password, cpf: cleanCpf(cpf) || undefined }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email,
+          phone,
+          password,
+          cpf: cleanCpf(cpf) || undefined,
+          marketingConsent,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -380,6 +388,21 @@ export default function RegisterPage() {
                 <label htmlFor="terms" className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                   Aceito os{' '}
                   <Link href="/terms" className="text-pink-600 dark:text-pink-400 hover:underline font-medium">termos de uso e política de privacidade</Link>
+                </label>
+              </div>
+
+              {/* Consentimento para comunicações promocionais — opcional */}
+              <div className="flex items-start gap-2.5 rounded-xl border border-pink-100 bg-gradient-to-r from-pink-50/70 to-orange-50/70 p-3 dark:border-pink-900/50 dark:from-pink-950/20 dark:to-orange-950/20">
+                <input
+                  id="marketingConsent"
+                  type="checkbox"
+                  checked={marketingConsent}
+                  onChange={(e) => setMarketingConsent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                />
+                <label htmlFor="marketingConsent" className="cursor-pointer text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+                  <span className="font-semibold text-gray-800 dark:text-gray-100">Enviar promoções e novidades</span>
+                  <span className="block text-[11px] text-gray-500 dark:text-gray-400">Apenas com seu consentimento. Você poderá cancelar quando quiser.</span>
                 </label>
               </div>
 

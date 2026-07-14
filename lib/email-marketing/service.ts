@@ -101,12 +101,15 @@ export async function deleteCampaign(id: string) {
 async function getSegmentRecipients(segmentType: SegmentType, criteria: Record<string, unknown>) {
   const admin = getSupabaseAdmin();
 
-  // Get users who are subscribed
-  const { data: preferences } = await admin
+  // Campanhas promocionais exigem consentimento explícito e ativo.
+  const { data: preferences, error: preferencesError } = await admin
     .from('email_preferences')
     .select('email')
-    .eq('subscribed', false);
-  const unsubscribedEmails = new Set((preferences || []).map(p => p.email));
+    .eq('subscribed', true)
+    .eq('gdpr_consent', true)
+    .eq('blacklisted', false);
+  if (preferencesError) throw preferencesError;
+  const consentedEmails = new Set((preferences || []).map((preference) => preference.email.toLowerCase()));
 
   let query = admin.from('users').select('id, email, name').eq('role', 'user');
 
@@ -119,8 +122,8 @@ async function getSegmentRecipients(segmentType: SegmentType, criteria: Record<s
   const { data: users, error } = await query;
   if (error) throw error;
 
-  // Filter out unsubscribed
-  return (users || []).filter(u => !unsubscribedEmails.has(u.email));
+  // Sem registro de consentimento, o endereço não recebe campanhas.
+  return (users || []).filter((user) => consentedEmails.has(user.email.toLowerCase()));
 }
 
 // ====== Send Campaign ======
