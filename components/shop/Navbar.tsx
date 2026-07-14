@@ -112,6 +112,22 @@ export function Navbar() {
     };
   }, [menuOpen]);
 
+  function handleMobileNavigation() {
+    setMenuOpen(false);
+    setAccountMenuOpen(false);
+
+    const resetScroll = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    resetScroll();
+    window.requestAnimationFrame(resetScroll);
+    window.setTimeout(resetScroll, 120);
+    window.setTimeout(resetScroll, 350);
+  }
+
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
   const iconButtonClass =
     'relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200/80 bg-white text-gray-600 shadow-sm transition hover:-translate-y-0.5 hover:border-pink-200 hover:bg-pink-50/60 hover:text-pink-600 dark:border-white/10 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-pink-800 dark:hover:bg-gray-700 dark:hover:text-pink-400';
@@ -321,6 +337,8 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
+                  scroll
+                  onClick={handleMobileNavigation}
                   aria-current={active ? 'page' : undefined}
                   className={`flex min-h-11 items-center gap-3 rounded-xl border px-3 text-sm font-semibold transition ${
                     active
@@ -344,6 +362,8 @@ export function Navbar() {
 
             <Link
               href="/cart"
+              scroll
+              onClick={handleMobileNavigation}
               className={`flex min-h-11 items-center gap-3 rounded-xl border px-3 text-sm font-semibold transition ${
                 pathname === '/cart'
                   ? 'border-pink-100 bg-gradient-to-r from-pink-50 to-orange-50 text-pink-700 dark:border-pink-900 dark:from-pink-950/50 dark:to-orange-950/30 dark:text-pink-400'
@@ -384,18 +404,18 @@ export function Navbar() {
                   { href: '/account/orders', label: 'Meus pedidos', emoji: '📦' },
                   { href: '/account/bonus', label: 'Meus bônus', emoji: '🎁' },
                 ].map((item) => (
-                  <Link key={item.href} href={item.href} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-gray-700 transition hover:bg-orange-50/60 dark:text-gray-300 dark:hover:bg-gray-800">
+                  <Link key={item.href} href={item.href} scroll onClick={handleMobileNavigation} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-gray-700 transition hover:bg-orange-50/60 dark:text-gray-300 dark:hover:bg-gray-800">
                     <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gray-50 text-base dark:bg-gray-800">{item.emoji}</span>
                     {item.label}<span aria-hidden="true" className="ml-auto">→</span>
                   </Link>
                 ))}
-                <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
+                <button type="button" onClick={() => { handleMobileNavigation(); void signOut({ callbackUrl: '/' }); }} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
                   <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-base dark:bg-red-950/50">🚪</span>
                   Sair da conta
                 </button>
               </>
             ) : (
-              <Link href="/login" className="flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 text-sm font-bold text-white shadow-lg shadow-pink-500/20 transition hover:shadow-xl">
+              <Link href="/login" scroll onClick={handleMobileNavigation} className="flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 text-sm font-bold text-white shadow-lg shadow-pink-500/20 transition hover:shadow-xl">
                 Entrar na minha conta
               </Link>
             )}
