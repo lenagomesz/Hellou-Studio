@@ -24,20 +24,24 @@ export async function POST(request: Request) {
     const xRequestId = request.headers.get('x-request-id');
     const isValid = verifyWebhookSignature(dataId, xSignature, xRequestId, webhookSecret);
     if (!isValid) {
-      console.warn('[mp-webhook] Invalid signature — processing anyway (signature mismatch)', {
+      console.warn('[mp-webhook] Assinatura inválida rejeitada', {
         hasXSignature: !!xSignature,
         hasXRequestId: !!xRequestId,
         dataId,
       });
+      return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
     }
   } else {
-    console.warn('[mp-webhook] MERCADO_PAGO_WEBHOOK_SECRET not set — skipping signature verification');
+    console.error('[mp-webhook] MERCADO_PAGO_WEBHOOK_SECRET não configurado');
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Webhook não configurado' }, { status: 503 });
+    }
   }
 
   const type = body.type as string | undefined;
   const action = body.action as string | undefined;
 
-  console.log('[mp-webhook] received:', { type, action, dataId, body: JSON.stringify(body) });
+  console.log('[mp-webhook] recebido:', { type, action, dataId });
 
   if (type !== 'payment' || (action !== 'payment.updated' && action !== 'payment.created')) {
     return NextResponse.json({ received: true });

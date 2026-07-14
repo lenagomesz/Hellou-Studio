@@ -28,7 +28,8 @@ interface CardTokenData {
 
 interface PaymentFormProps {
   grandTotal: number;
-  shippingCost: number;
+  shippingMethod?: 'pac' | 'sedex';
+  shippingCep?: string;
   couponCode?: string;
   shippingAddress?: Record<string, unknown>;
   userCpf?: string;
@@ -37,7 +38,8 @@ interface PaymentFormProps {
 
 export function PaymentForm({
   grandTotal,
-  shippingCost,
+  shippingMethod,
+  shippingCep,
   couponCode,
   shippingAddress,
   userCpf,
@@ -160,7 +162,8 @@ export function PaymentForm({
         body: JSON.stringify({
           payment_method: 'pix',
           cpf: cleanCpf(cpf),
-          shipping_cost: shippingCost,
+          shipping_method: shippingMethod,
+          shipping_cep: shippingCep,
           coupon_code: couponCode,
           shipping_address: shippingAddress,
         }),
@@ -253,7 +256,8 @@ export function PaymentForm({
           installments,
           issuer_id: issuerId || undefined,
           cpf: cleanCpf(cpf),
-          shipping_cost: shippingCost,
+          shipping_method: shippingMethod,
+          shipping_cep: shippingCep,
           coupon_code: couponCode,
           shipping_address: shippingAddress,
         }),
@@ -339,7 +343,8 @@ export function PaymentForm({
           token: tokenResult.id,
           installments: 1,
           cpf: cleanCpf(cpf),
-          shipping_cost: shippingCost,
+          shipping_method: shippingMethod,
+          shipping_cep: shippingCep,
           coupon_code: couponCode,
           shipping_address: shippingAddress,
         }),

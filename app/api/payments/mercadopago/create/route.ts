@@ -7,7 +7,8 @@ import { validateCartProductTypes } from '@/lib/cart';
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestEmail, sendPixPaymentEmail, sendSTLDeliveryEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
-import { validateShippingCost } from '@/lib/security';
+import { calculateShipping, sanitizeCep } from '@/lib/shipping';
+import { SUCCESSFUL_ORDER_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
 
 const PIX_EXPIRATION_MINUTES = 30;
 
@@ -30,7 +31,8 @@ export async function POST(request: Request) {
     issuer_id,
     cpf,
     shipping_address,
-    shipping_cost = 0,
+    shipping_method,
+    shipping_cep,
     coupon_code,
     wants_invoice = false,
   } = body as {
@@ -40,7 +42,8 @@ export async function POST(request: Request) {
     issuer_id?: string;
     cpf?: string;
     shipping_address?: Record<string, unknown>;
-    shipping_cost?: number;
+    shipping_method?: 'pac' | 'sedex';
+    shipping_cep?: string;
     coupon_code?: string;
     wants_invoice?: boolean;
   };
@@ -113,11 +116,12 @@ export async function POST(request: Request) {
   }
 
   // Check if first purchase for 10% discount
-  // Count ALL orders regardless of status - any order record means not first purchase
+  // Apenas uma compra efetivamente aprovada remove o benefício de primeira compra.
   const { count: orderCount } = await admin
     .from('orders')
     .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .in('status', [...SUCCESSFUL_ORDER_STATUSES]);
 
   console.log('[mp-create] First purchase check:', {
     user_id: user.id,
@@ -126,30 +130,35 @@ export async function POST(request: Request) {
   });
 
   const isFirstPurchase = (orderCount ?? 0) === 0;
-  const firstPurchaseDiscount = isFirstPurchase ? subtotal * 0.1 : 0;
+  const couponValidation = await validateCheckoutCoupon(admin, coupon_code, subtotal, user.id);
+  if (couponValidation && !couponValidation.valid) return badRequest(couponValidation.error);
 
-  let discountAmount = 0;
-  let couponId: string | null = null;
+  const validCoupon = couponValidation?.valid ? couponValidation.value.coupon : null;
+  const couponId = validCoupon?.id ?? null;
+  const discountAmount = couponValidation?.valid ? couponValidation.value.discountAmount : 0;
+  // Cupons não acumulam com o desconto de primeira compra, igual ao checkout Stripe.
+  const firstPurchaseDiscount = isFirstPurchase && !validCoupon ? subtotal * 0.1 : 0;
 
-  if (coupon_code) {
-    const { data: coupon } = await admin
-      .from('coupons')
-      .select('*')
-      .eq('code', coupon_code.toUpperCase())
-      .eq('active', true)
-      .maybeSingle();
+  const isDigitalOrder = cartItems.every(item => item.product?.type === 'digital');
+  const hasFreeShipping = isDigitalOrder || subtotal >= 99 || validCoupon?.free_shipping === true;
+  let validatedShipping = 0;
 
-    if (coupon && (!coupon.exclusive_user_id || coupon.exclusive_user_id === user.id)) {
-      if (coupon.discount_type === 'percent') {
-        discountAmount = subtotal * (coupon.discount_value / 100);
-      } else {
-        discountAmount = coupon.discount_value;
-      }
-      couponId = coupon.id;
+  if (!hasFreeShipping) {
+    const cep = sanitizeCep(shipping_cep ?? String(shipping_address?.cep ?? ''));
+    if (!cep || !shipping_method || !['pac', 'sedex'].includes(shipping_method)) {
+      return badRequest('Selecione uma opção de frete válida');
+    }
+    try {
+      const shippingResult = await calculateShipping(cep);
+      const selectedShipping = shippingResult.options.find((option) => option.id === shipping_method);
+      if (!selectedShipping) return badRequest('Opção de frete indisponível para este CEP');
+      validatedShipping = selectedShipping.price;
+    } catch (error) {
+      console.error('[mp-create] shipping validation error:', error);
+      return badRequest('Não foi possível validar o frete. Calcule novamente e tente outra vez.');
     }
   }
 
-  const validatedShipping = validateShippingCost(shipping_cost);
   const totalAmount = Math.max(0, subtotal - firstPurchaseDiscount - discountAmount + validatedShipping);
 
   if (totalAmount < 0.01) {
@@ -229,9 +238,6 @@ export async function POST(request: Request) {
       itemCount: cartItems.length,
     });
 
-    // Check if order contains only digital products
-    const isDigitalOrder = cartItems.every(item => item.product?.type === 'digital');
-
     // Determine order status based on payment status
     // 'approved' = confirmed, 'authorized' = authorized (some card payments), 'in_process' = processing
     const isPaymentApproved = mpStatus && ['approved', 'authorized', 'in_process'].includes(mpStatus);
@@ -261,7 +267,12 @@ export async function POST(request: Request) {
         payment_provider: 'mercadopago',
         status: orderStatus,
         total: totalAmount,
-        shipping_address: { ...shipping_address, wants_invoice: !!wants_invoice },
+        shipping_address: {
+          ...shipping_address,
+          shipping_method: isDigitalOrder ? null : shipping_method ?? null,
+          shipping_cost: validatedShipping,
+          wants_invoice: !!wants_invoice,
+        },
       })
       .select('id')
       .single();

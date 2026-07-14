@@ -36,6 +36,12 @@ export async function POST(request: Request) {
     const bonusDescription = typeof body.bonus_description === 'string' ? body.bonus_description.trim() : '';
     const showInBonusArea = body.show_in_bonus_area === true;
 
+    if (!Number.isFinite(discount_value) || discount_value < 0) return badRequest('Valor do desconto inválido');
+    if (discount_type === 'percent' && discount_value > 100) return badRequest('O desconto percentual não pode ultrapassar 100%');
+    if (!Number.isFinite(min_purchase) || min_purchase < 0) return badRequest('Compra mínima inválida');
+    if (max_uses !== null && (!Number.isInteger(max_uses) || max_uses < 1)) return badRequest('Limite de usos inválido');
+    if (discount_value === 0 && !free_shipping) return badRequest('Informe um desconto ou ative o frete grátis');
+
     console.log('[coupons-post] creating coupon:', { code, discount_type, discount_value, min_purchase, max_uses, free_shipping, expires_at });
 
     const admin = getSupabaseAdmin();
@@ -94,6 +100,10 @@ export async function PATCH(request: Request) {
   if (typeof body.free_shipping === 'boolean') updates.free_shipping = body.free_shipping;
   if (typeof body.expires_at === 'string') updates.expires_at = body.expires_at || null;
   if (body.expires_at === null) updates.expires_at = null;
+
+  if (typeof body.discount_value === 'number' && (!Number.isFinite(body.discount_value) || body.discount_value < 0)) return badRequest('Valor do desconto inválido');
+  if (typeof body.min_purchase === 'number' && (!Number.isFinite(body.min_purchase) || body.min_purchase < 0)) return badRequest('Compra mínima inválida');
+  if (typeof body.max_uses === 'number' && (!Number.isInteger(body.max_uses) || body.max_uses < 1)) return badRequest('Limite de usos inválido');
 
   if (Object.keys(updates).length === 0) return badRequest('Nenhum campo para atualizar');
 

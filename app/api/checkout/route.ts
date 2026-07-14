@@ -5,7 +5,8 @@ import { getStripe, getAppBaseUrl } from '@/lib/stripe';
 import { badRequest, requireUser, serverError } from '@/lib/api';
 import { computeUnitPrice, type CartItemView } from '@/lib/cart';
 import { calculateShipping, sanitizeCep, type ShippingOption } from '@/lib/shipping';
-import type { CartItem, Coupon, Product, ProductOption } from '@/types/database';
+import { SUCCESSFUL_ORDER_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
+import type { CartItem, Product, ProductOption } from '@/types/database';
 
 type RawCartRow = CartItem & {
   product: Pick<
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
     .from('orders')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', auth.user.id)
-    .in('status', ['paid', 'processing', 'shipped', 'delivered']);
+    .in('status', [...SUCCESSFUL_ORDER_STATUSES]);
 
   const isFirstPurchase = (orderCount ?? 0) === 0;
 
@@ -136,32 +137,19 @@ export async function POST(request: Request) {
     },
   );
 
-  let validCoupon: Coupon | null = null;
-  if (couponCode) {
-    const { data: couponData } = await admin
-      .from('coupons')
-      .select('*')
-      .eq('code', couponCode)
-      .eq('active', true)
-      .maybeSingle();
-
-    if (couponData) {
-      const c = couponData as Coupon;
-      const subtotal = items.reduce((sum, item) => sum + computeUnitPrice(item) * item.quantity, 0);
-      const now = new Date();
-      const notExpired = !c.expires_at || new Date(c.expires_at) >= now;
-      const hasUses = c.max_uses === null || c.used_count < c.max_uses;
-      const meetsMin = subtotal >= c.min_purchase;
-      const belongsToUser = !c.exclusive_user_id || c.exclusive_user_id === auth.user.id;
-      if (notExpired && hasUses && meetsMin && belongsToUser) {
-        validCoupon = c;
-      }
-    }
-  }
+  const couponValidation = await validateCheckoutCoupon(admin, couponCode, subtotal, auth.user.id);
+  if (couponValidation && !couponValidation.valid) return badRequest(couponValidation.error);
+  const validCoupon = couponValidation?.valid ? couponValidation.value.coupon : null;
+  const validCouponDiscount = couponValidation?.valid ? couponValidation.value.discountAmount : 0;
+  const isDigitalOrder = items.every((item) => item.product.type === 'digital');
+  const hasFreeShipping = isDigitalOrder || validCoupon?.free_shipping === true || freeShippingBySubtotal;
 
   let shippingOptions: Stripe.Checkout.SessionCreateParams.ShippingOption[] | undefined;
 
-  if (shippingId && shippingCep && sanitizeCep(shippingCep)) {
+  if (!hasFreeShipping) {
+    if (!shippingId || !shippingCep || !sanitizeCep(shippingCep)) {
+      return badRequest('Selecione uma opção de frete válida');
+    }
     try {
       const shippingResult = await calculateShipping(shippingCep);
       const selected: ShippingOption | undefined = shippingResult.options.find(
@@ -181,9 +169,12 @@ export async function POST(request: Request) {
             },
           },
         ];
+      } else {
+        return badRequest('Opção de frete indisponível para este CEP');
       }
-    } catch {
-      // shipping calc failed — proceed without shipping option
+    } catch (error) {
+      console.error('[checkout] shipping validation error:', error);
+      return badRequest('Não foi possível validar o frete. Calcule novamente e tente outra vez.');
     }
   }
 
@@ -204,11 +195,11 @@ export async function POST(request: Request) {
       },
     };
 
-    if (!clientShippingAddress) {
+    if (!clientShippingAddress && !isDigitalOrder) {
       sessionParams.shipping_address_collection = { allowed_countries: ['BR'] };
     }
 
-    if (validCoupon?.free_shipping || freeShippingBySubtotal) {
+    if (!isDigitalOrder && hasFreeShipping) {
       const label = freeShippingBySubtotal ? 'Frete grátis (acima de R$99)' : 'Frete grátis (cupom)';
       sessionParams.shipping_options = [
         {
@@ -227,7 +218,7 @@ export async function POST(request: Request) {
       const stripeCoupon = await stripe.coupons.create(
         validCoupon.discount_type === 'percent'
           ? { percent_off: validCoupon.discount_value, currency: 'brl', duration: 'once' }
-          : { amount_off: Math.round(validCoupon.discount_value * 100), currency: 'brl', duration: 'once' },
+          : { amount_off: Math.round(validCouponDiscount * 100), currency: 'brl', duration: 'once' },
       );
       sessionParams.discounts = [{ coupon: stripeCoupon.id }];
       sessionParams.metadata!.coupon_id = validCoupon.id;

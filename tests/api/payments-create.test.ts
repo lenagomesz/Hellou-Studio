@@ -26,6 +26,14 @@ vi.mock('@/lib/cpf', () => ({
   isValidCpf: (cpf: string) => cpf === '12345678909',
 }));
 
+vi.mock('@/lib/shipping', () => ({
+  sanitizeCep: (value: string) => value.replace(/\D/g, '').length === 8 ? value.replace(/\D/g, '') : null,
+  calculateShipping: vi.fn().mockResolvedValue({
+    options: [{ id: 'pac', name: 'PAC', price: 10, days_min: 3, days_max: 5 }],
+    address: { city: 'Itajaí', state: 'SC', street: '', neighborhood: '' },
+  }),
+}));
+
 const mockRpc = vi.fn().mockResolvedValue({ error: null });
 const mockInsert = vi.fn();
 const mockSelect = vi.fn();
@@ -42,6 +50,7 @@ function createBuilder(resolvedData: unknown = null) {
   chain.update = vi.fn().mockReturnValue(chain);
   chain.delete = vi.fn().mockReturnValue(chain);
   chain.eq = vi.fn().mockReturnValue(chain);
+  chain.in = vi.fn().mockReturnValue(chain);
   chain.maybeSingle = vi.fn().mockResolvedValue({ data: resolvedData, error: null });
   chain.single = vi.fn().mockResolvedValue({ data: resolvedData, error: null });
   return chain;
@@ -105,7 +114,12 @@ function makeRequest(body: Record<string, unknown>) {
   return new Request('http://localhost/api/payments/mercadopago/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      shipping_method: 'pac',
+      shipping_cep: '88304000',
+      shipping_address: { cep: '88304000' },
+      ...body,
+    }),
   });
 }
 
@@ -189,7 +203,7 @@ describe('POST /api/payments/mercadopago/create', () => {
   });
 
   describe('Credit card payment flow', () => {
-    it('creates order with pending status when card is approved immediately', async () => {
+    it('creates order em processamento when card is approved immediately', async () => {
       mockPaymentCreate.mockResolvedValue({
         id: 'mp-pay-789',
         status: 'approved',
@@ -206,9 +220,9 @@ describe('POST /api/payments/mercadopago/create', () => {
       expect(json.status).toBe('approved');
       expect(json.order_id).toBe('order-abc');
 
-      // Order status should be 'pending' (approved card = ready for production)
+      // Pagamento aprovado de produto físico entra na fila de produção.
       expect(ordersBuilder.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'pending' }),
+        expect.objectContaining({ status: 'processing' }),
       );
     });
 
@@ -283,7 +297,7 @@ describe('POST /api/payments/mercadopago/create', () => {
     it('applies percentage coupon discount', async () => {
       // Setup coupon
       couponsBuilder.maybeSingle = vi.fn().mockResolvedValue({
-        data: { id: 'coupon-1', discount_type: 'percent', discount_value: 10 },
+        data: { id: 'coupon-1', code: 'SAVE10', discount_type: 'percent', discount_value: 10, min_purchase: 0, max_uses: null, used_count: 0, free_shipping: false, active: true },
         error: null,
       });
 
@@ -296,10 +310,10 @@ describe('POST /api/payments/mercadopago/create', () => {
         coupon_code: 'SAVE10',
       }));
 
-      // Total should reflect discount: (25+5)*2 = 60, 10% off = 54
+      // Cupom substitui a primeira compra: R$60 - 10% + R$10 de frete validado.
       expect(mockPaymentCreate).toHaveBeenCalledWith({
         body: expect.objectContaining({
-          transaction_amount: 54,
+          transaction_amount: 64,
         }),
       });
     });

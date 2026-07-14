@@ -187,7 +187,7 @@ export default function CartPage() {
   const discountAmount = couponDiscount?.free_shipping && couponDiscount.discount_value === 0
     ? 0
     : (couponDiscount?.discount_amount ?? 0);
-  const firstPurchaseDiscount = isFirstPurchase ? total * 0.1 : 0;
+  const firstPurchaseDiscount = isFirstPurchase && !couponDiscount ? total * 0.1 : 0;
   const grandTotal = total - firstPurchaseDiscount - discountAmount + shippingCost;
 
   const pageTitle = step === 1 ? 'Meu Carrinho' : step === 2 ? 'Entrega' : 'Finalizar Pedido';
@@ -803,7 +803,8 @@ export default function CartPage() {
               {session ? (
                 <PaymentForm
                   grandTotal={grandTotal}
-                  shippingCost={shippingCost}
+                  shippingMethod={selectedShipping?.id}
+                  shippingCep={shippingCep.replace(/\D/g, '')}
                   couponCode={couponDiscount?.code}
                   shippingAddress={paymentShippingAddress}
                   userCpf={userCpf}

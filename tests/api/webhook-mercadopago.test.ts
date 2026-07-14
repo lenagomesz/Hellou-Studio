@@ -10,6 +10,10 @@ vi.mock('@/lib/mercadopago', () => ({
 
 vi.mock('@/lib/email', () => ({
   sendOrderConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+  sendInvoiceRequestEmail: vi.fn().mockResolvedValue(undefined),
+  sendAdminNewOrderEmail: vi.fn().mockResolvedValue(undefined),
+  sendSTLOrderConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+  sendSTLAdminNotificationEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
 const mockRpc = vi.fn().mockResolvedValue({ error: null });
@@ -102,11 +106,12 @@ describe('POST /api/webhooks/mercadopago', () => {
       expect(mockPaymentGet).not.toHaveBeenCalled();
     });
 
-    it('ignores non-updated actions', async () => {
+    it('processes payment.created notifications', async () => {
+      mockPaymentGet.mockResolvedValue({ status: 'pending' });
       const res = await POST(makeRequest({ type: 'payment', action: 'payment.created', data: { id: '123' } }));
       const json = await res.json();
       expect(json.received).toBe(true);
-      expect(mockPaymentGet).not.toHaveBeenCalled();
+      expect(mockPaymentGet).toHaveBeenCalledWith({ id: '123' });
     });
 
     it('returns 400 for missing payment ID', async () => {
@@ -124,8 +129,8 @@ describe('POST /api/webhooks/mercadopago', () => {
     });
   });
 
-  describe('PIX approved → awaiting_payment to pending', () => {
-    it('updates order status to pending when PIX is approved', async () => {
+  describe('PIX approved → awaiting_payment to processing', () => {
+    it('updates a physical order to processing when PIX is approved', async () => {
       mockPaymentGet.mockResolvedValue({
         status: 'approved',
         transaction_amount: 60,
@@ -139,7 +144,7 @@ describe('POST /api/webhooks/mercadopago', () => {
       }));
       const json = await res.json();
 
-      expect(json.status).toBe('pending');
+      expect(json.status).toBe('processing');
       expect(mockUpdate).toHaveBeenCalled();
     });
 
@@ -235,7 +240,7 @@ describe('POST /api/webhooks/mercadopago', () => {
     });
 
     it('does nothing when status has not changed', async () => {
-      mockOrder = { id: 'order-1', status: 'pending', user_id: 'user-1' };
+      mockOrder = { id: 'order-1', status: 'processing', user_id: 'user-1' };
       mockPaymentGet.mockResolvedValue({ status: 'approved', metadata: {} });
 
       const res = await POST(makeRequest({
@@ -245,12 +250,12 @@ describe('POST /api/webhooks/mercadopago', () => {
       }));
       const json = await res.json();
 
-      // approved maps to 'pending', order is already 'pending' → no-op
+      // approved maps to processing, e o pedido já está nesse estado.
       expect(json.received).toBe(true);
       expect(mockUpdate).not.toHaveBeenCalled();
     });
 
-    it('does nothing for in_process status (keeps current order status)', async () => {
+    it('moves an in_process physical payment to processing', async () => {
       mockPaymentGet.mockResolvedValue({ status: 'in_process', metadata: {} });
 
       const res = await POST(makeRequest({
@@ -260,8 +265,28 @@ describe('POST /api/webhooks/mercadopago', () => {
       }));
       const json = await res.json();
 
-      expect(json.received).toBe(true);
-      expect(mockUpdate).not.toHaveBeenCalled();
+      expect(json.status).toBe('processing');
+      expect(mockUpdate).toHaveBeenCalled();
+    });
+
+    it('rejects an invalid webhook signature', async () => {
+      process.env.MERCADO_PAGO_WEBHOOK_SECRET = 'secret';
+      try {
+        const request = new Request('http://localhost/api/webhooks/mercadopago', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-signature': 'ts=1,v1=invalid',
+            'x-request-id': 'request-1',
+          },
+          body: JSON.stringify({ type: 'payment', action: 'payment.updated', data: { id: 'pay-1' } }),
+        });
+        const response = await POST(request);
+        expect(response.status).toBe(401);
+        expect(mockPaymentGet).not.toHaveBeenCalled();
+      } finally {
+        delete process.env.MERCADO_PAGO_WEBHOOK_SECRET;
+      }
     });
   });
 
