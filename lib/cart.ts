@@ -5,6 +5,7 @@ export interface CartItemView {
   product_id: string;
   product_option_id: string | null;
   quantity: number;
+  customization_text: string | null;
   created_at?: string;
   product: Pick<
     Product,
@@ -20,6 +21,7 @@ export interface AddItemInput {
   product: CartItemView['product'];
   option: CartItemView['option'];
   quantity: number;
+  customization_text?: string | null;
 }
 
 export function computeUnitPrice(item: CartItemView): number {
@@ -42,11 +44,13 @@ export function findExistingItem(
   items: CartItemView[],
   productId: string,
   productOptionId: string | null,
+  customizationText: string | null = null,
 ): CartItemView | undefined {
   return items.find(
     (item) =>
       item.product_id === productId &&
-      item.product_option_id === productOptionId,
+      item.product_option_id === productOptionId &&
+      (item.customization_text ?? null) === customizationText,
   );
 }
 

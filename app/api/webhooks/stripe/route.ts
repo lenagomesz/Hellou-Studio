@@ -8,7 +8,7 @@ import type { CartItem, Order, OrderItem, Product, ProductOption } from '@/types
 type CartRowForFulfillment = CartItem & {
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'active' | 'type'
+    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'active' | 'type' | 'is_customizable'
   > | null;
   option:
     | Pick<ProductOption, 'id' | 'product_id' | 'name' | 'price_modifier' | 'stock'>
@@ -94,7 +94,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
   const { data: cartRows, error: cartError } = await admin
     .from('cart_items')
     .select(
-      'id, user_id, product_id, product_option_id, quantity, created_at, product:products(id, name, base_price, image_url, category, active), option:product_options(id, product_id, name, price_modifier, stock)',
+      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, image_url, category, active, type, is_customizable), option:product_options(id, product_id, name, price_modifier, stock)',
     )
     .eq('user_id', userId)
     .order('created_at', { ascending: true });
@@ -103,6 +103,9 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
 
   const rows = (cartRows ?? []) as unknown as CartRowForFulfillment[];
   const items = rows.filter((row) => row.product);
+
+  const incompleteCustomization = items.find((row) => row.product?.is_customizable && !row.customization_text?.trim());
+  if (incompleteCustomization) throw new Error(`Personalização ausente para ${incompleteCustomization.product?.name ?? 'produto personalizado'}`);
 
   if (items.length === 0) {
     if (existingOrder) return;
@@ -188,9 +191,11 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
       product_option_id: row.product_option_id,
       quantity: row.quantity,
       unit_price: unit,
+      customization_text: row.customization_text ?? null,
       product_snapshot: {
         product: row.product,
         option: row.option,
+        customization_text: row.customization_text ?? null,
       },
     } satisfies Partial<OrderItem> & {
       order_id: string;
@@ -258,6 +263,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
         quantidade: row.quantity,
         precoUnitario:
           (row.product?.base_price ?? 0) + (row.option?.price_modifier ?? 0),
+        personalizacao: row.customization_text ?? null,
       })),
     });
   }

@@ -97,6 +97,7 @@ async function postServerItem(input: AddItemInput) {
       product_id: input.product.id,
       product_option_id: input.option?.id ?? null,
       quantity: input.quantity,
+      customization_text: input.customization_text?.trim() || null,
     }),
   });
   if (!res.ok) {
@@ -165,6 +166,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 product: item.product,
                 option: item.option,
                 quantity: item.quantity,
+                customization_text: item.customization_text,
               });
               syncedItems.push(item.id);
             } catch {
@@ -221,18 +223,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, isAuthed, sessionStatus]);
 
   const addItem = useCallback(
-    async ({ product, option, quantity }: AddItemInput) => {
+    async ({ product, option, quantity, customization_text }: AddItemInput) => {
       const safeQuantity = clampQuantity(quantity, option?.stock);
+      const normalizedCustomization = customization_text?.trim() || null;
 
       if (isAuthed) {
         setStatus('syncing');
         try {
-          await postServerItem({ product, option, quantity: safeQuantity });
+          await postServerItem({ product, option, quantity: safeQuantity, customization_text: normalizedCustomization });
           const server = await fetchServerCart();
           setItems(server);
           setStatus('idle');
-        } catch {
+        } catch (error) {
           setStatus('error');
+          throw error;
         }
         return;
       }
@@ -242,6 +246,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           prev,
           product.id,
           option?.id ?? null,
+          normalizedCustomization,
         );
         if (existing) {
           const newQty = clampQuantity(
@@ -257,6 +262,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           product_id: product.id,
           product_option_id: option?.id ?? null,
           quantity: safeQuantity,
+          customization_text: normalizedCustomization,
           product,
           option,
         };

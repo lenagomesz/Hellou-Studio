@@ -21,6 +21,7 @@ function toView(row: RawCartRow): CartItemView | null {
     product_id: row.product_id,
     product_option_id: row.product_option_id,
     quantity: row.quantity,
+    customization_text: row.customization_text ?? null,
     created_at: row.created_at,
     product: {
       id: row.product.id,
@@ -50,7 +51,7 @@ export async function GET() {
   const { data, error } = await admin
     .from('cart_items')
     .select(
-      'id, user_id, product_id, product_option_id, quantity, created_at, product:products(id, name, base_price, image_url, category, type, active), option:product_options(id, product_id, name, price_modifier, stock, color)',
+      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, image_url, category, type, active), option:product_options(id, product_id, name, price_modifier, stock, color)',
     )
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: true });
@@ -77,10 +78,11 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { product_id, product_option_id, quantity } = (body ?? {}) as {
+  const { product_id, product_option_id, quantity, customization_text } = (body ?? {}) as {
     product_id?: string;
     product_option_id?: string | null;
     quantity?: number;
+    customization_text?: string | null;
   };
 
   if (!product_id || typeof product_id !== 'string') {
@@ -88,6 +90,8 @@ export async function POST(request: Request) {
   }
 
   const optionId = product_option_id ?? null;
+  const normalizedCustomization = typeof customization_text === 'string' ? customization_text.trim() : '';
+  if (normalizedCustomization.length > 500) return badRequest('A personalização deve ter no máximo 500 caracteres');
   const requestedQty =
     typeof quantity === 'number' && Number.isFinite(quantity)
       ? Math.floor(quantity)
@@ -98,7 +102,7 @@ export async function POST(request: Request) {
 
   const { data: productRow, error: productError } = await admin
     .from('products')
-    .select('id, active')
+    .select('id, active, is_customizable')
     .eq('id', product_id)
     .maybeSingle();
 
@@ -111,6 +115,9 @@ export async function POST(request: Request) {
     return badRequest('Produto indisponível');
   }
   const product = productRow;
+  if (product.is_customizable && !normalizedCustomization) {
+    return badRequest('Preencha a personalização antes de adicionar ao carrinho');
+  }
 
   let optionStock: number | null = null;
   if (optionId) {
@@ -129,7 +136,7 @@ export async function POST(request: Request) {
 
   const { data: matches, error: matchError } = await admin
     .from('cart_items')
-    .select('id, quantity, product_option_id')
+    .select('id, quantity, product_option_id, customization_text')
     .eq('user_id', auth.user.id)
     .eq('product_id', product_id);
 
@@ -137,10 +144,10 @@ export async function POST(request: Request) {
 
   const matchRows = (matches ?? []) as Pick<
     CartItem,
-    'id' | 'quantity' | 'product_option_id'
+    'id' | 'quantity' | 'product_option_id' | 'customization_text'
   >[];
   const existing =
-    matchRows.find((r) => r.product_option_id === optionId) ?? null;
+    matchRows.find((r) => r.product_option_id === optionId && (r.customization_text ?? '') === normalizedCustomization) ?? null;
 
   const cap = Math.min(optionStock ?? 50, 50);
   const targetQty = (existing?.quantity ?? 0) + requestedQty;
@@ -163,6 +170,7 @@ export async function POST(request: Request) {
       product_id,
       product_option_id: optionId,
       quantity: finalQty,
+      customization_text: normalizedCustomization || null,
     })
     .select('id, quantity')
     .single();

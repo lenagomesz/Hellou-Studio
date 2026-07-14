@@ -108,7 +108,7 @@ export function Footer() {
         <div className="flex w-full flex-col gap-4 px-5 py-5 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-12 xl:px-16">
           <div className="flex flex-wrap items-center gap-2">
             <span className="mr-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Pagamento</span>
-            {['PIX', 'Visa', 'Mastercard', 'Elo', 'Boleto'].map((method) => (
+            {['PIX', 'Visa', 'Mastercard', 'Elo'].map((method) => (
               <span key={method} className="rounded-lg border border-gray-200/80 bg-white px-2.5 py-1 text-[10px] font-bold text-gray-500 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">{method}</span>
             ))}
           </div>

@@ -31,6 +31,7 @@ export interface Product {
   created_at: string;
   updated_at: string;
   fulfillment_mode?: 'made_to_order' | 'ready_stock' | 'hybrid';
+  is_customizable?: boolean;
 }
 
 export interface ProductOption {
@@ -53,6 +54,7 @@ export interface CartItem {
   product_id: string;
   product_option_id: string | null;
   quantity: number;
+  customization_text: string | null;
   created_at: string;
 }
 
@@ -80,6 +82,7 @@ export interface OrderItem {
   product_option_id: string | null;
   quantity: number;
   unit_price: number;
+  customization_text: string | null;
   product_snapshot: Record<string, unknown> | null;
   created_at: string;
 }
@@ -276,6 +279,7 @@ export interface Database {
           image_url?: string | null;
           image_url_2?: string | null;
           active?: boolean;
+          is_customizable?: boolean;
           file_path?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -290,6 +294,7 @@ export interface Database {
           image_url?: string | null;
           image_url_2?: string | null;
           active?: boolean;
+          is_customizable?: boolean;
           file_path?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -330,6 +335,7 @@ export interface Database {
           product_id: string;
           product_option_id?: string | null;
           quantity?: number;
+          customization_text?: string | null;
           created_at?: string;
         };
         Update: {
@@ -338,6 +344,7 @@ export interface Database {
           product_id?: string;
           product_option_id?: string | null;
           quantity?: number;
+          customization_text?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -387,6 +394,7 @@ export interface Database {
           product_option_id?: string | null;
           quantity: number;
           unit_price: number;
+          customization_text?: string | null;
           product_snapshot?: Record<string, unknown> | null;
           created_at?: string;
         };
@@ -397,6 +405,7 @@ export interface Database {
           product_option_id?: string | null;
           quantity?: number;
           unit_price?: number;
+          customization_text?: string | null;
           product_snapshot?: Record<string, unknown> | null;
           created_at?: string;
         };

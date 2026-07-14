@@ -147,8 +147,8 @@ export default function HomePage() {
   return (
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
       {/* Promo banner */}
-      <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-4 py-2.5 text-center">
-        <p className="text-xs font-medium text-white sm:text-sm">
+      <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-4 py-2.5 text-center sm:flex sm:min-h-14 sm:items-center sm:justify-center sm:py-3.5">
+        <p className="text-xs font-medium leading-5 text-white sm:text-sm">
           🚚 <span className="font-semibold">Frete grátis</span> acima de R$99 &nbsp;·&nbsp; 🎉 <span className="font-semibold">10% OFF</span> na sua primeira compra
         </p>
       </div>

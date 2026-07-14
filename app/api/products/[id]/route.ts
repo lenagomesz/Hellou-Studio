@@ -60,6 +60,7 @@ export async function PATCH(
       images?: string[] | null;
       active?: boolean;
       fulfillment_mode?: string;
+      is_customizable?: boolean;
     };
 
     const update: Record<string, unknown> = {};
@@ -78,6 +79,9 @@ export async function PATCH(
     if (input.fulfillment_mode !== undefined) {
       if (!['made_to_order', 'ready_stock', 'hybrid'].includes(input.fulfillment_mode)) return badRequest('Modo de produção inválido');
       update.fulfillment_mode = input.fulfillment_mode;
+    }
+    if (input.is_customizable !== undefined) {
+      update.is_customizable = !!input.is_customizable;
     }
     if (input.base_price !== undefined) {
       if (typeof input.base_price !== 'number' || input.base_price < 0) {

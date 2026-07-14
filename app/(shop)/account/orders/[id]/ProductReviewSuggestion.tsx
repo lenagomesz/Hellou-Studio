@@ -14,6 +14,8 @@ export default function ProductReviewSuggestion({ productId, productName, produc
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const basePath = productType === 'digital' ? '/stl' : '/products';
   const productLink = `${basePath}/${productId}`;
@@ -21,25 +23,27 @@ export default function ProductReviewSuggestion({ productId, productName, produc
   async function handleSubmitReview() {
     if (!rating) return;
     setSubmitting(true);
+    setError(null);
 
     try {
-      const res = await fetch('/api/products/reviews', {
+      const res = await fetch(`/api/products/${productId}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, rating, comment }),
       });
 
       if (res.ok) {
+        setSubmitted(true);
         setShowReview(false);
         setRating(0);
         setComment('');
-        alert('Avaliação enviada com sucesso!');
       } else {
-        alert('Erro ao enviar avaliação. Tente novamente.');
+        const payload = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(payload?.error ?? 'Não foi possível enviar a avaliação. Tente novamente.');
       }
     } catch (err) {
       console.error('[ProductReviewSuggestion] error:', err);
-      alert('Erro ao enviar avaliação.');
+      setError('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
     } finally {
       setSubmitting(false);
     }
@@ -69,6 +73,7 @@ export default function ProductReviewSuggestion({ productId, productName, produc
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
+                  type="button"
                   onClick={() => setRating(star)}
                   className={`text-2xl transition ${rating >= star ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
                 >
@@ -84,21 +89,26 @@ export default function ProductReviewSuggestion({ productId, productName, produc
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
+              maxLength={1200}
               placeholder="Compartilhe seus pensamentos..."
               className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
               rows={3}
             />
           </div>
 
+          {error && <p role="alert" className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{error}</p>}
+
           {/* Buttons */}
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => setShowReview(false)}
               className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
             >
               Cancelar
             </button>
             <button
+              type="button"
               onClick={handleSubmitReview}
               disabled={!rating || submitting}
               className="flex-1 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
@@ -114,7 +124,9 @@ export default function ProductReviewSuggestion({ productId, productName, produc
   return (
     <div className="flex gap-2">
       <button
+        type="button"
         onClick={() => setShowReview(true)}
+        disabled={submitted}
         className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition"
       >
         <svg
@@ -130,7 +142,7 @@ export default function ProductReviewSuggestion({ productId, productName, produc
             clipRule="evenodd"
           />
         </svg>
-        Avaliar
+        {submitted ? 'Avaliação enviada' : 'Avaliar'}
       </button>
       <Link
         href={productLink}

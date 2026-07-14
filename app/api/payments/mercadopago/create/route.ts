@@ -66,6 +66,11 @@ export async function POST(request: Request) {
     return badRequest('Carrinho vazio');
   }
 
+  const incompleteCustomization = cartItems.find((item) => item.product?.is_customizable && !item.customization_text?.trim());
+  if (incompleteCustomization) {
+    return badRequest(`Preencha a personalização de ${incompleteCustomization.product?.name ?? 'um produto'}`);
+  }
+
   // Validate no mixed product types (digital + physical)
   try {
     validateCartProductTypes(cartItems.filter(i => i.product) as Array<{ product: { type: string } }>);
@@ -279,11 +284,13 @@ export async function POST(request: Request) {
       product_option_id: item.product_option_id,
       quantity: item.quantity,
       unit_price: (item.product?.base_price ?? 0) + (item.option?.price_modifier ?? 0),
+      customization_text: item.customization_text ?? null,
       product_snapshot: {
         name: item.product?.name,
         image_url: item.product?.image_url,
         option_name: item.option?.name,
         option_color: item.option?.color,
+        customization_text: item.customization_text ?? null,
       },
     }));
 
@@ -365,6 +372,7 @@ export async function POST(request: Request) {
           nome: (item.product_snapshot as Record<string, unknown>)?.name as string || 'Produto',
           quantidade: item.quantity,
           precoUnitario: item.unit_price,
+          personalizacao: item.customization_text ?? null,
         })),
       }).catch((e) => console.error('[mp-create] email error:', e));
 

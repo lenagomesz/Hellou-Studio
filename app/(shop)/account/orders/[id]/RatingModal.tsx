@@ -20,10 +20,12 @@ export default function RatingModal({ orderId, onClose }: RatingModalProps) {
   const [showThanks, setShowThanks] = useState(false);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [comment, setComment] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   async function handleRate() {
     if (isSubmitting || !selectedRating) return;
     setIsSubmitting(true);
+    setError(null);
 
     try {
       const res = await fetch('/api/orders/ratings', {
@@ -39,11 +41,12 @@ export default function RatingModal({ orderId, onClose }: RatingModalProps) {
           onClose();
         }, 1500);
       } else {
-        const error = await res.json();
-        console.error('[RatingModal] API error:', res.status, error);
+        const payload = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(payload?.error ?? 'Não foi possível enviar sua avaliação. Tente novamente.');
       }
     } catch (err) {
       console.error('[RatingModal] fetch error:', err);
+      setError('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +99,8 @@ export default function RatingModal({ orderId, onClose }: RatingModalProps) {
               <div className="mt-5">
                 <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Quer contar um pouco mais? <span className="font-normal text-gray-400">(opcional)</span></label>
                 <textarea value={comment} onChange={(event) => setComment(event.target.value)} maxLength={1200} rows={3} placeholder="O que você mais gostou? Algo poderia melhorar?" className="mt-2 w-full resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100 dark:border-gray-700 dark:bg-gray-800 dark:focus:ring-pink-500/10" />
-                <button type="button" onClick={handleRate} disabled={isSubmitting} className="mt-3 w-full rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50">{isSubmitting ? 'Enviando...' : 'Enviar avaliação'}</button>
+                {error && <p role="alert" className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{error}</p>}
+                <button type="button" onClick={handleRate} disabled={!selectedRating || isSubmitting} className="mt-3 w-full rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50">{isSubmitting ? 'Enviando...' : 'Enviar avaliação'}</button>
               </div>
             )}
           </>

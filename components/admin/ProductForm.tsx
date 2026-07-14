@@ -51,6 +51,7 @@ export function ProductForm(props: ProductFormProps) {
   const [newImageUrl, setNewImageUrl] = useState('');
   const [active, setActive] = useState<boolean>(initial?.active ?? true);
   const [fulfillmentMode, setFulfillmentMode] = useState<'made_to_order' | 'ready_stock' | 'hybrid'>(initial?.fulfillment_mode ?? 'made_to_order');
+  const [isCustomizable, setIsCustomizable] = useState(initial?.is_customizable ?? false);
   const [options, setOptions] = useState<DraftOption[]>(() => props.mode === 'create' ? [createDraftOption()] : []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +102,7 @@ export function ProductForm(props: ProductFormProps) {
       images: images.length > 0 ? images : null,
       active,
       fulfillment_mode: fulfillmentMode,
+      is_customizable: isCustomizable,
       options: props.mode === 'create' ? normalizedOptions : undefined,
     };
 
@@ -223,6 +225,14 @@ export function ProductForm(props: ProductFormProps) {
             ] as const).map(([value, label, detail]) => <button key={value} type="button" onClick={() => setFulfillmentMode(value)} className={`rounded-xl border p-3 text-left transition ${fulfillmentMode === value ? 'border-pink-500 bg-pink-50 ring-2 ring-pink-500/10 dark:bg-pink-500/10' : 'border-gray-200 hover:border-pink-200 dark:border-gray-700'}`}><span className="block text-sm font-bold text-gray-900 dark:text-white">{label}</span><span className="mt-0.5 block text-xs leading-5 text-gray-500">{detail}</span></button>)}
           </div>
         </div>
+
+        <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${isCustomizable ? 'border-pink-300 bg-pink-50 dark:border-pink-800 dark:bg-pink-500/10' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50'}`}>
+          <input type="checkbox" checked={isCustomizable} onChange={(event) => setIsCustomizable(event.target.checked)} className="mt-1 h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
+          <span>
+            <span className="block text-sm font-bold text-gray-900 dark:text-white">Produto personalizado?</span>
+            <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Se marcado, o cliente deverá escrever a personalização desejada antes de adicionar o produto ao carrinho.</span>
+          </span>
+        </label>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

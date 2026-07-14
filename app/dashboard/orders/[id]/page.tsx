@@ -65,6 +65,7 @@ type OrderItem = {
   id: string;
   quantity: number;
   unit_price: number;
+  customization_text: string | null;
   product_snapshot: Record<string, unknown> | null;
   product: { id: string; name: string; image_url: string | null; type?: string; file_path?: string } | null;
 };
@@ -295,6 +296,11 @@ export default function OrderDetailPage() {
                     <p className="text-xs text-gray-500">
                       {item.quantity}x &middot; {formatPrice(item.unit_price)} cada
                     </p>
+                    {item.customization_text && (
+                      <div className="mt-2 rounded-xl border border-pink-100 bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:border-pink-900/50 dark:bg-pink-500/10 dark:text-pink-200">
+                        <span className="font-semibold">Personalização solicitada:</span> {item.customization_text}
+                      </div>
+                    )}
                     {item.product?.type === 'digital' && (
                       <button
                         onClick={async () => {

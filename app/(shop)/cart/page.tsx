@@ -889,11 +889,16 @@ function CartLine({
                   )}
                 </div>
               )}
+              {item.customization_text && (
+                <p className="mt-1 line-clamp-2 text-xs leading-5 text-pink-700 dark:text-pink-300">
+                  <span className="font-semibold">Personalização:</span> {item.customization_text}
+                </p>
+              )}
               <p className="mt-0.5 text-xs text-gray-400">{formatPrice(unit)} un.</p>
             </div>
             <div className="flex flex-shrink-0 items-center gap-1">
               <Link
-                href={`/products/${item.product.id}?replace=${item.id}${item.option ? `&option=${item.option.id}` : ''}` as Route}
+                href={`/products/${item.product.id}?replace=${item.id}${item.option ? `&option=${item.option.id}` : ''}${item.customization_text ? `&customization=${encodeURIComponent(item.customization_text)}` : ''}` as Route}
                 className="rounded-full p-1.5 text-gray-300 transition hover:bg-pink-50 dark:hover:bg-pink-950/30 hover:text-pink-500"
                 aria-label={`Editar ${item.product.name}`}
               >

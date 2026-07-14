@@ -105,10 +105,14 @@ export default function OrderRatingsPage() {
 
   return (
     <div className="space-y-6">
+      <nav className="flex w-fit gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm" aria-label="Tipos de avaliação">
+        <Link href="/dashboard/order-ratings/products" className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100">Produtos</Link>
+        <Link href="/dashboard/order-ratings" className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Experiência do pedido</Link>
+      </nav>
       {/* Header */}
       <header className="overflow-hidden rounded-[26px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/60 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Voz do cliente</p><h1 className="mt-2 text-3xl font-bold">Avaliações de pedidos</h1><p className="mt-1 max-w-xl text-sm leading-6 text-slate-600">Leia cada comentário com o contexto do cliente e do pedido para responder e melhorar a experiência.</p></div>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Voz do cliente</p><h1 className="mt-2 text-3xl font-bold">Experiência do pedido</h1><p className="mt-1 max-w-xl text-sm leading-6 text-slate-600">Acompanhe a percepção do cliente sobre atendimento, entrega e todo o fluxo do pedido.</p></div>
           <div className="flex items-center gap-3 rounded-2xl border border-yellow-100 bg-white p-4 shadow-sm"><Star className="h-8 w-8 fill-yellow-300 text-yellow-500" /><div><p className="text-2xl font-bold">{totalCount}</p><p className="text-xs text-slate-500">avaliações encontradas</p></div></div>
         </div>
       </header>

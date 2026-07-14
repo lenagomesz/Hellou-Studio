@@ -170,7 +170,7 @@ export default function AboutPage() {
 
       {/* Banner animado */}
       <div
-        className="relative px-6 py-10 text-center sm:px-10 sm:py-14 overflow-hidden"
+        className="relative flex h-40 flex-col items-center justify-center overflow-hidden px-6 py-4 text-center sm:h-44 sm:px-10"
         style={{
           background: `linear-gradient(135deg, hsl(${330 + bannerHue * 0.1}, 80%, 55%), hsl(${25 + bannerHue * 0.1}, 90%, 55%))`,
         }}
@@ -184,7 +184,7 @@ export default function AboutPage() {
         <h2 className="relative text-2xl font-bold text-white sm:text-3xl">
           Sobre a helloustudio
         </h2>
-        <p className="relative mt-2 text-sm text-white/90 sm:text-base">
+        <p className="relative mx-auto mt-2 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
           Onde criatividade vira peça 3D.
         </p>
       </div>

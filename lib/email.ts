@@ -332,7 +332,7 @@ export async function sendOrderConfirmationEmail(params: {
   nome: string | null;
   pedidoId: string;
   total: number;
-  itens: Array<{ nome: string; quantidade: number; precoUnitario: number }>;
+  itens: Array<{ nome: string; quantidade: number; precoUnitario: number; personalizacao?: string | null }>;
 }) {
   const resend = getResend();
   if (!resend) return;
@@ -385,6 +385,7 @@ export async function sendOrderConfirmationEmail(params: {
                 <p style="color: #888; margin: 0; font-size: 13px;">
                   Quantidade: ${item.quantidade} × ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.precoUnitario)}
                 </p>
+                ${item.personalizacao ? `<p style="color:#9d174d;margin:8px 0 0;font-size:13px;line-height:1.5;"><strong>Personalização:</strong> ${item.personalizacao.replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character] ?? character)}</p>` : ''}
               </div>
             `).join('')}
           </div>

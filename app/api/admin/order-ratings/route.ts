@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin, badRequest, serverError } from '@/lib/api';
+import { requirePermission, badRequest, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('reviews.manage');
   if (auth.response) return auth.response;
 
   const params = req.nextUrl.searchParams;

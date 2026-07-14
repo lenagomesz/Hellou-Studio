@@ -10,7 +10,7 @@ import type { CartItem, Coupon, Product, ProductOption } from '@/types/database'
 type RawCartRow = CartItem & {
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'type' | 'active'
+    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'type' | 'active' | 'is_customizable'
   > | null;
   option:
     | Pick<ProductOption, 'id' | 'product_id' | 'name' | 'price_modifier' | 'stock' | 'color'>
@@ -24,6 +24,7 @@ function toView(row: RawCartRow): CartItemView | null {
     product_id: row.product_id,
     product_option_id: row.product_option_id,
     quantity: row.quantity,
+    customization_text: row.customization_text ?? null,
     created_at: row.created_at,
     product: {
       id: row.product.id,
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
   const { data, error } = await admin
     .from('cart_items')
     .select(
-      'id, user_id, product_id, product_option_id, quantity, created_at, product:products(id, name, base_price, image_url, category, type, active), option:product_options(id, product_id, name, price_modifier, stock, color)',
+      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, image_url, category, type, active, is_customizable), option:product_options(id, product_id, name, price_modifier, stock, color)',
     )
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: true });
@@ -77,6 +78,8 @@ export async function POST(request: Request) {
   if (error) return serverError('Erro ao buscar carrinho');
 
   const rows = (data ?? []) as unknown as RawCartRow[];
+  const incompleteCustomization = rows.find((row) => row.product?.is_customizable && !row.customization_text?.trim());
+  if (incompleteCustomization) return badRequest(`Preencha a personalização de ${incompleteCustomization.product?.name ?? 'um produto'}`);
   const items = rows
     .filter((row) => row.product && row.product.active !== false)
     .map(toView)

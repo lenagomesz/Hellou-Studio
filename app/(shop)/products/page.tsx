@@ -97,11 +97,11 @@ export default async function ProductsCatalogPage(
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
       {/* Full-width Banner */}
-      <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-10 text-center sm:px-10 sm:py-14">
+      <div className="flex h-40 flex-col items-center justify-center bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-4 text-center sm:h-44 sm:px-10">
         <h2 className="text-2xl font-bold text-white sm:text-3xl">
           Peças exclusivas impressas em 3D
         </h2>
-        <p className="mt-2 text-sm text-white/90 sm:text-base">
+        <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
           Cada item é fabricado sob demanda com acabamento artesanal. Encontre o seu favorito!
         </p>
       </div>

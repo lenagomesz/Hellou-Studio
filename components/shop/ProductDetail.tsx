@@ -48,6 +48,7 @@ export function ProductDetail({
     (preselectedOptionId && options.some(o => o.id === preselectedOptionId)) ? preselectedOptionId : inStockOptions[0]?.id ?? null,
   );
   const [quantity, setQuantity] = useState(1);
+  const [customizationText, setCustomizationText] = useState(() => searchParams.get('customization') ?? '');
   const [displayImageUrl, setDisplayImageUrl] = useState<string | null>(null);
 
   const selectedOption =
@@ -71,7 +72,9 @@ export function ProductDetail({
   }, [currentDisplayImage, product.image_url_2, product.images]);
 
   const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, 50) : 50;
-  const canAddToCart = options.length === 0 || selectedOption !== null;
+  const hasRequiredCustomization = !product.is_customizable || customizationText.trim().length > 0;
+  const hasSelectedOption = options.length === 0 || selectedOption !== null;
+  const canAddToCart = hasSelectedOption && hasRequiredCustomization;
   const isSyncing = status === 'syncing';
 
   const handleAddToCart = async () => {
@@ -105,6 +108,7 @@ export function ProductDetail({
             }
           : null,
         quantity,
+        customization_text: product.is_customizable ? customizationText.trim() : null,
       });
       if (replaceCartItemId) {
         router.push('/cart');
@@ -118,7 +122,7 @@ export function ProductDetail({
   };
 
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
+    <div className="grid gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
       <div className="space-y-6">
         <div className="group relative">
           {galleryImages.length > 0 ? (
@@ -187,6 +191,29 @@ export function ProductDetail({
             {product.description}
           </p>
         ) : null}
+
+        {product.is_customizable && (
+          <div className="mt-6 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50/60 p-4 dark:border-pink-900/60 dark:from-pink-950/30 dark:to-orange-950/20 sm:p-5">
+            <label htmlFor="product-customization" className="block text-sm font-bold text-gray-900 dark:text-white">
+              Como você quer personalizar? <span className="text-pink-600">*</span>
+            </label>
+            <p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-400">Escreva o nome, frase ou orientação que devemos seguir na produção.</p>
+            <textarea
+              id="product-customization"
+              value={customizationText}
+              onChange={(event) => setCustomizationText(event.target.value)}
+              maxLength={500}
+              rows={3}
+              required
+              placeholder="Ex.: Nome Helena, com a primeira letra maiúscula"
+              className="mt-3 w-full resize-none rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 dark:border-pink-900 dark:bg-gray-900 dark:text-white dark:focus:ring-pink-500/10"
+            />
+            <div className="mt-1.5 flex items-center justify-between gap-3 text-[11px]">
+              <span className={hasRequiredCustomization ? 'text-green-600 dark:text-green-400' : 'text-pink-700 dark:text-pink-300'}>{hasRequiredCustomization ? 'Personalização preenchida' : 'Preenchimento obrigatório para adicionar ao carrinho'}</span>
+              <span className="text-gray-400">{customizationText.length}/500</span>
+            </div>
+          </div>
+        )}
 
         {options.length > 0 ? (
           <div className="mt-6 space-y-5">
@@ -370,8 +397,10 @@ export function ProductDetail({
             onClick={() => void handleAddToCart()}
             className="w-full rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {!canAddToCart
+            {!hasSelectedOption
               ? 'Selecione uma variação'
+              : !hasRequiredCustomization
+                ? 'Preencha a personalização'
               : isSyncing
                 ? 'Adicionando...'
                 : 'Adicionar ao carrinho'}

@@ -52,6 +52,10 @@ export async function POST(req: Request, ctx: RouteCtx) {
     return badRequest('Nota deve ser um número inteiro de 1 a 5');
   }
 
+  if (typeof comment === 'string' && comment.length > 1200) {
+    return badRequest('O comentário deve ter no máximo 1.200 caracteres');
+  }
+
   const admin = getSupabaseAdmin();
 
   // Check if user purchased this product

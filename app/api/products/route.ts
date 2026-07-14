@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { name, description, category, base_price, sale_price, image_url, images, active, fulfillment_mode, options } = (body ??
+  const { name, description, category, base_price, sale_price, image_url, images, active, fulfillment_mode, is_customizable, options } = (body ??
     {}) as {
     name?: string;
     description?: string | null;
@@ -72,6 +72,7 @@ export async function POST(request: Request) {
     images?: string[] | null;
     active?: boolean;
     fulfillment_mode?: string;
+    is_customizable?: boolean;
     options?: Array<{ name: string; dimensions?: string | null; color?: string | null; price_modifier?: number; stock?: number }>;
   };
 
@@ -95,6 +96,7 @@ export async function POST(request: Request) {
       images: images ?? null,
       active: active ?? true,
       fulfillment_mode: fulfillmentMode,
+      is_customizable: !!is_customizable,
     })
     .select('*')
     .single();

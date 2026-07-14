@@ -213,6 +213,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     Variação: {item.option.name}
                   </p>
                 )}
+                {item.customization_text && (
+                  <div className="mt-2 rounded-xl bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:bg-pink-500/10 dark:text-pink-200">
+                    <span className="font-semibold">Personalização:</span> {item.customization_text}
+                  </div>
+                )}
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Qtd: {item.quantity} &middot; {formatPrice(item.unit_price)} cada
                 </p>
@@ -228,6 +233,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     <ProductReviewSuggestion
                       productId={item.product.id}
                       productName={item.product.name ?? 'este produto'}
+                      productType={item.product.type}
                     />
                   )}
                 </div>
