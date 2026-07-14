@@ -32,7 +32,6 @@ export async function GET() {
     { service: 'resend', configured: Boolean(process.env.RESEND_API_KEY && process.env.RESEND_WEBHOOK_SECRET) },
     { service: 'sentry', configured: Boolean(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN) },
     { service: 'mercado_pago', configured: Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN) },
-    { service: 'stripe', configured: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET) },
   ];
   const latestCronRuns = Array.from(new Map((cronResult.data ?? []).map((run) => [run.cron_name, run])).values());
   const expectedHours: Record<string, number> = {

@@ -5,11 +5,10 @@ import { isDigitalOnly, hasDigitalItems, hasPhysicalItems, type OrderItemWithPro
 
 export const dynamic = 'force-dynamic';
 
-type PageProps = { searchParams: Promise<{ session_id?: string; order_id?: string; pending?: string }> };
+type PageProps = { searchParams: Promise<{ order_id?: string; pending?: string }> };
 
 export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const sessionId = typeof params.session_id === 'string' ? params.session_id : null;
   const orderId = typeof params.order_id === 'string' ? params.order_id : null;
 
   // Fetch order to detect type
@@ -90,9 +89,9 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
         {descriptionByType[orderType]}
       </p>
 
-      {(sessionId || orderId) && (
+      {orderId && (
         <p className="mt-2 font-mono text-xs text-gray-400 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          Ref: ...{(orderId || sessionId || '').slice(-12).toUpperCase()}
+          Ref: ...{orderId.slice(-12).toUpperCase()}
         </p>
       )}
 

@@ -24,7 +24,7 @@ type OperationalError = {
 };
 
 const SERVICE_LABELS: Record<string, string> = {
-  database: 'Banco de dados', resend: 'Resend e webhook', sentry: 'Sentry', mercado_pago: 'Mercado Pago', stripe: 'Stripe', crons: 'Rotinas automáticas',
+  database: 'Banco de dados', resend: 'Resend e webhook', sentry: 'Sentry', mercado_pago: 'Mercado Pago', crons: 'Rotinas automáticas',
 };
 const STATUS_LABELS: Record<string, string> = { healthy: 'Saudável', degraded: 'Atenção', down: 'Indisponível', unknown: 'Desconhecido' };
 

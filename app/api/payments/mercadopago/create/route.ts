@@ -137,7 +137,7 @@ export async function POST(request: Request) {
   const validCoupon = couponValidation?.valid ? couponValidation.value.coupon : null;
   const couponId = validCoupon?.id ?? null;
   const discountAmount = couponValidation?.valid ? couponValidation.value.discountAmount : 0;
-  // Cupons não acumulam com o desconto de primeira compra, igual ao checkout Stripe.
+  // Cupons não acumulam com o desconto de primeira compra.
   const firstPurchaseDiscount = isFirstPurchase && !validCoupon ? subtotal * 0.1 : 0;
 
   const isDigitalOrder = cartItems.every(item => item.product?.type === 'digital');

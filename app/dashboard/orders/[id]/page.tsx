@@ -76,8 +76,6 @@ type OrderDetail = {
   total: number;
   created_at: string;
   updated_at: string;
-  stripe_session_id: string | null;
-  stripe_payment_intent_id: string | null;
   shipping_address: Record<string, unknown> | null;
   user: { id: string; email: string; name: string | null } | null;
   items: OrderItem[];
@@ -693,14 +691,6 @@ export default function OrderDetailPage() {
                 <dt className="text-xs text-gray-500">Total</dt>
               <dd className="text-base font-bold text-gray-900 dark:text-white">{formatPrice(order.total)}</dd>
               </div>
-              {order.stripe_payment_intent_id && (
-                <div className="flex justify-between items-center">
-                  <dt className="text-xs text-gray-500">Stripe ID</dt>
-                  <dd className="inline-flex items-center rounded-md bg-gray-50 px-2 py-0.5 font-mono text-[11px] text-gray-600">
-                    ...{order.stripe_payment_intent_id.slice(-8)}
-                  </dd>
-                </div>
-              )}
               <div className="flex justify-between items-center">
                 <dt className="text-xs text-gray-500">Status</dt>
                 <dd className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${STATUS_STYLES[order.status]}`}>

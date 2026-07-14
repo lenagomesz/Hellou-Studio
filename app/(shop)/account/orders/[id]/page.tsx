@@ -322,16 +322,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 </p>
               )}
             </>
-          ) : (
-            <>
-              <p>Processado via Stripe</p>
-              {order.stripe_session_id && (
-                <p className="font-mono text-xs text-gray-400 dark:text-gray-500">
-                  Ref: ...{order.stripe_session_id.slice(-12).toUpperCase()}
-                </p>
-              )}
-            </>
-          )}
+          ) : <p>Pagamento registrado</p>}
           {!!(order.shipping_address as Record<string, unknown> | null)?.wants_invoice && (
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5">
