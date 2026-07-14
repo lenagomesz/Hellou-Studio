@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProductOption } from '@/types/database';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const COLOR_PALETTE = [
   { name: 'Branco', hex: '#FFFFFF' },

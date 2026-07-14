@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireUser, notFound, serverError } from '@/lib/api';
+import { requireUser, serverError } from '@/lib/api';
 
 export async function PATCH(
   _request: Request,

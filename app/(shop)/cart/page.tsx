@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -29,7 +30,7 @@ const STEPS = [
 ] as const;
 
 export default function CartPage() {
-  const { items, total, status, updateQuantity, removeItem, clearCart } = useCart();
+  const { items, total, status, updateQuantity, removeItem } = useCart();
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -301,7 +302,7 @@ export default function CartPage() {
               <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 pb-12 shadow-sm lg:sticky lg:top-24 space-y-4">
                 {/* Logo */}
                 <div className="flex justify-center">
-                  <img src="/logo.png" alt="Hello Studio" className="h-36 w-auto" />
+                  <Image src="/logo.png" alt="Hellou Studio" width={300} height={144} className="h-36 w-auto" />
                 </div>
 
                 {/* Valor total */}

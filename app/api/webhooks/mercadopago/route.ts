@@ -5,7 +5,7 @@ import { sendOrderConfirmationEmail, sendInvoiceRequestEmail, sendAdminNewOrderE
 import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import { verifyWebhookSignature } from '@/lib/security';
-import { hasDigitalItems, hasPhysicalItems, type OrderItemWithProduct } from '@/lib/order-helpers';
+import { hasDigitalItems, hasPhysicalItems } from '@/lib/order-helpers';
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>;

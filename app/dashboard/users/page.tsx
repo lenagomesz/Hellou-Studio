@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Users, Search, Shield, Ban, Trash2, Mail, Star } from 'lucide-react';
+import { Search, Shield, Ban, Trash2, Mail, Star } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { UserManagementTabs } from '@/components/admin/UserManagementTabs';
 

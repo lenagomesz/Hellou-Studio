@@ -11,7 +11,7 @@ interface DownloadButtonProps {
 
 export default function DownloadButton({ order, isDigitalOnly, productId }: DownloadButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   const handleDownload = async () => {
     try {

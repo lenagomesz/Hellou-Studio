@@ -5,7 +5,7 @@ const WINDOW_MINUTES = 15;
 
 export async function checkRateLimit(
   userId: string,
-  ipAddress?: string,
+  _ipAddress?: string,
 ): Promise<{
   allowed: boolean;
   attemptsRemaining: number;

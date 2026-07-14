@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Shield, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
@@ -23,23 +23,7 @@ export default function SecurityPage() {
   const [showDisableForm, setShowDisableForm] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-      return;
-    }
-
-    if (status === 'authenticated' && session?.user?.role !== 'admin') {
-      router.push('/');
-      return;
-    }
-
-    if (status === 'authenticated') {
-      fetchUser2FAStatus();
-    }
-  }, [status, session]);
-
-  const fetchUser2FAStatus = async () => {
+  const fetchUser2FAStatus = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/admin/profile', { method: 'GET' });
@@ -57,7 +41,23 @@ export default function SecurityPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+      return;
+    }
+
+    if (status === 'authenticated' && session?.user?.role !== 'admin') {
+      router.push('/');
+      return;
+    }
+
+    if (status === 'authenticated') {
+      fetchUser2FAStatus();
+    }
+  }, [fetchUser2FAStatus, router, session, status]);
 
   const handleDisable2FA = async () => {
     if (!disableCode) {
@@ -84,7 +84,7 @@ export default function SecurityPage() {
       setDisableCode('');
       setShowDisableForm(false);
       fetchUser2FAStatus();
-    } catch (err) {
+    } catch (_err) {
       setMessage({ type: 'error', text: 'Erro ao conectar com o servidor' });
     } finally {
       setDisableLoading(false);
@@ -117,7 +117,7 @@ export default function SecurityPage() {
       a.download = '2fa-backup-codes.txt';
       a.click();
       URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch (_err) {
       setMessage({ type: 'error', text: 'Erro ao regenerar códigos' });
     }
   };

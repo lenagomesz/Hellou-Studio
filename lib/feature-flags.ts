@@ -34,6 +34,12 @@ export interface FeatureUsageStat {
   recorded_at: string;
 }
 
+interface FeatureDependency {
+  key: string;
+  name: string;
+  enabled: boolean;
+}
+
 export interface AuditLog {
   id: string;
   user_id: string;
@@ -198,22 +204,22 @@ export async function toggleFeatureFlag(
         .select('key, name, enabled')
         .in('key', flag.dependencies);
 
-      const disabledDeps = (deps ?? []).filter((d: any) => !d.enabled);
+      const disabledDeps = ((deps ?? []) as FeatureDependency[]).filter((dependency) => !dependency.enabled);
       if (disabledDeps.length > 0) {
         // Auto-enable dependencies
         for (const dep of disabledDeps) {
           await supabase
             .from('feature_flags')
             .update({ enabled: true, updated_at: new Date().toISOString(), updated_by: userEmail })
-            .eq('key', (dep as any).key);
+            .eq('key', dep.key);
 
           await createAuditLog({
             user_id: userId,
             user_email: userEmail,
             action: 'feature_auto_enabled',
             entity_type: 'feature_flag',
-            entity_id: (dep as any).key,
-            entity_name: (dep as any).name,
+            entity_id: dep.key,
+            entity_name: dep.name,
             details: { reason: `Auto-enabled as dependency of ${key}` },
           });
         }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireUser, requireAdmin, badRequest, notFound, serverError } from '@/lib/api';
+import { requireUser, badRequest, notFound, serverError } from '@/lib/api';
 import { sendPrintRequestStatusEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import type { PrintRequest, PrintRequestStatus } from '@/types/database';

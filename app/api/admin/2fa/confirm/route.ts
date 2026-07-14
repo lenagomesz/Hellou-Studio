@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { verify2FA, hashBackupCode } from '@/lib/2fa';
-import { checkRateLimit, recordAttempt, clearAttempts } from '@/lib/2fa-rate-limit';
+import { recordAttempt, clearAttempts } from '@/lib/2fa-rate-limit';
 
 export async function POST(request: Request) {
   const auth = await requireUser();

@@ -66,15 +66,6 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  // Build chart data from history (chronological)
-  const chartData = [...history]
-    .reverse()
-    .map((entry) => ({
-      date: new Date(entry.changed_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-      preco: entry.new_price,
-      tipo: entry.price_type === 'base_price' ? 'Base' : 'Promocional',
-    }));
-
   // Separate base and sale price chart data
   const basePriceHistory = history
     .filter((h) => h.price_type === 'base_price')

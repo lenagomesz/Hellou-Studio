@@ -230,7 +230,7 @@ export async function bulkUpdateStatus(params: {
       }
 
       results.push({ orderId, success: true, emailSent });
-    } catch (err) {
+    } catch (_err) {
       results.push({ orderId, success: false, error: 'Erro interno' });
     }
   }

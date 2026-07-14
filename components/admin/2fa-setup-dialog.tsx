@@ -37,7 +37,7 @@ export function Setup2FADialog({ isOpen, onClose, onSuccess }: Setup2FADialogPro
       setSecret(data.secret);
       setQrCode(data.qrCode);
       setStep('verify');
-    } catch (err) {
+    } catch (_err) {
       setError('Erro ao conectar com o servidor');
     } finally {
       setLoading(false);
@@ -79,7 +79,7 @@ export function Setup2FADialog({ isOpen, onClose, onSuccess }: Setup2FADialogPro
 
       setBackupCodes(data.backupCodes);
       setStep('backup');
-    } catch (err) {
+    } catch (_err) {
       setError('Erro ao confirmar código');
     } finally {
       setLoading(false);
@@ -164,6 +164,7 @@ export function Setup2FADialog({ isOpen, onClose, onSuccess }: Setup2FADialogPro
           <div className="space-y-4">
             {qrCode && (
               <div className="flex justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element -- QR Code gerado como data URL. */}
                 <img
                   src={qrCode}
                   alt="QR Code 2FA"

@@ -7,7 +7,6 @@ import {
   ToggleLeft,
   ToggleRight,
   Search,
-  Filter,
   ChevronRight,
   Activity,
   Zap,
@@ -15,7 +14,6 @@ import {
   XCircle,
   AlertTriangle,
   ExternalLink,
-  BarChart3,
   Clock,
   FileText,
   RefreshCw,
@@ -368,7 +366,7 @@ export default function FeaturesPage() {
   );
 }
 
-function StatCard({ label, value, icon, color }: { label: string; value: number; icon: React.ReactNode; color: string }) {
+function StatCard({ label, value, icon, color: _color }: { label: string; value: number; icon: React.ReactNode; color: string }) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3">
       <div className="flex-shrink-0">{icon}</div>

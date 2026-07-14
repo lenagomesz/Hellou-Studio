@@ -86,7 +86,6 @@ async function computeAnalytics() {
   const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });
   const lastWeekStart = startOfWeek(subDays(thisWeekStart, 1), { weekStartsOn: 1 });
   const lastWeekEnd = subDays(thisWeekStart, 1);
-  const thirtyDaysAgo = subDays(now, 30);
   const fortyFourDaysAgo = subDays(now, 44); // 30 + 14 buffer for anomaly rolling mean
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);

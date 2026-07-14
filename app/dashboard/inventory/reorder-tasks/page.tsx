@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { ReorderTaskStatus } from '@/types/inventory';
 
@@ -40,11 +40,7 @@ export default function ReorderTasksPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchTasks();
-  }, [statusFilter]);
-
-  async function fetchTasks() {
+  const fetchTasks = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ limit: '50' });
@@ -57,7 +53,11 @@ export default function ReorderTasksPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   async function updateStatus(taskId: string, newStatus: ReorderTaskStatus) {
     setUpdating(taskId);

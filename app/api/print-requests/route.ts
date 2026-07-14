@@ -144,12 +144,6 @@ export async function POST(request: Request) {
   }).catch(err => console.error('[admin-alerts] create failed:', err));
 
   // Notify admin and user
-  const { data: admins } = await admin
-    .from('users')
-    .select('email')
-    .eq('role', 'admin')
-    .limit(5);
-
   // Send confirmation email to user
   if (currentUser?.email) {
     sendPrintRequestStatusEmail({

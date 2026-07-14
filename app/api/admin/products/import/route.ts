@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { badRequest, requireAdmin, serverError } from '@/lib/api';
+import { badRequest, requireAdmin } from '@/lib/api';
 
 interface CSVRow {
   id?: string;
@@ -220,7 +220,7 @@ export async function POST(request: Request) {
           results.created++;
         }
       }
-    } catch (err) {
+    } catch (_err) {
       results.errors++;
       results.error_details.push(`Linha ${i + 2}: Erro inesperado`);
     }

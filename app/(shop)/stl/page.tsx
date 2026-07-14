@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProductCard } from '@/components/shop/ProductCard';
 import type { Product } from '@/types/database';

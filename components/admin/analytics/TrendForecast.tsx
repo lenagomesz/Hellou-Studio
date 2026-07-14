@@ -29,6 +29,48 @@ interface DataPoint {
   type: 'historical' | 'forecast';
 }
 
+interface TrendTooltipProps {
+  active?: boolean;
+  payload?: unknown[];
+  label?: string | number;
+  data: DataPoint[];
+}
+
+function formatCurrency(value: number) {
+  return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`;
+}
+
+function formatXAxis(value: string | number) {
+  const dateString = String(value);
+  try {
+    return format(parseISO(dateString), 'dd/MM');
+  } catch {
+    return dateString;
+  }
+}
+
+function TrendTooltip({ active, payload, label, data }: TrendTooltipProps) {
+  if (!active || !payload?.length || label == null) return null;
+  const dataPoint = data.find((point) => point.date === String(label));
+  const isForecast = dataPoint?.type === 'forecast';
+
+  return (
+    <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-md dark:border-gray-700 dark:bg-gray-800">
+      <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+        {formatXAxis(label)} {isForecast ? '(Previsão)' : '(Histórico)'}
+      </p>
+      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        {formatCurrency(dataPoint?.revenue ?? 0)}
+      </p>
+      {isForecast && dataPoint?.lower != null && dataPoint?.upper != null && (
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Intervalo: {formatCurrency(dataPoint.lower)} - {formatCurrency(dataPoint.upper)}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function TrendForecast({
   historical,
   forecast,
@@ -56,17 +98,6 @@ export default function TrendForecast({
     })),
   ];
 
-  const formatCurrency = (value: number) =>
-    `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`;
-
-  const formatXAxis = (dateStr: string) => {
-    try {
-      return format(parseISO(dateStr), 'dd/MM');
-    } catch {
-      return dateStr;
-    }
-  };
-
   const getTrendBadge = () => {
     if (trend === 'up') {
       return (
@@ -89,29 +120,6 @@ export default function TrendForecast({
         <Minus className="h-3.5 w-3.5" />
         Tendencia: estavel
       </span>
-    );
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload || !payload.length) return null;
-
-    const dataPoint = combinedData.find((d) => d.date === label);
-    const isForecast = dataPoint?.type === 'forecast';
-
-    return (
-      <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-md dark:border-gray-700 dark:bg-gray-800">
-        <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
-          {formatXAxis(label)} {isForecast ? '(Previsão)' : '(Histórico)'}
-        </p>
-        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          {formatCurrency(dataPoint?.revenue ?? 0)}
-        </p>
-        {isForecast && dataPoint?.lower != null && dataPoint?.upper != null && (
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Intervalo: {formatCurrency(dataPoint.lower)} - {formatCurrency(dataPoint.upper)}
-          </p>
-        )}
-      </div>
     );
   };
 
@@ -143,7 +151,7 @@ export default function TrendForecast({
               width={60}
               className="text-gray-500"
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<TrendTooltip data={combinedData} />} />
 
             {/* Confidence interval upper bound */}
             <Area

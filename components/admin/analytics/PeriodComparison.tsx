@@ -19,6 +19,18 @@ interface PeriodComparisonProps {
   dailyComparison: { date: string; thisMonthRevenue: number; lastMonthRevenue: number }[];
 }
 
+interface TooltipEntry {
+  color?: string;
+  name?: string;
+  value?: number;
+}
+
+interface ComparisonTooltipProps {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  label?: string | number;
+}
+
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
@@ -67,14 +79,14 @@ function ComparisonCard({
   );
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: ComparisonTooltipProps) {
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-md dark:border-gray-700 dark:bg-gray-800">
       <p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">{label}</p>
-      {payload.map((entry: any, index: number) => (
+      {payload.map((entry, index) => (
         <p key={index} className="text-sm" style={{ color: entry.color }}>
-          {entry.name}: {formatPrice(entry.value)}
+          {entry.name}: {formatPrice(entry.value ?? 0)}
         </p>
       ))}
     </div>

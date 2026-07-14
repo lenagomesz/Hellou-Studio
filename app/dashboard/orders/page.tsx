@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import type { OrderStatus } from '@/types/database';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -54,7 +54,6 @@ type OrderRow = {
 
 export default function OrdersListPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
@@ -64,7 +63,7 @@ export default function OrdersListPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<{ page: number; limit: number; total: number; pages: number }>({ page: 1, limit: 20, total: 0, pages: 0 });
 
-  async function fetchOrders(currentPage = page) {
+  const fetchOrders = useCallback(async (currentPage: number) => {
     setLoading(true);
     const params = new URLSearchParams();
     params.set('page', String(currentPage));
@@ -79,11 +78,11 @@ export default function OrdersListPage() {
       setPagination(data.pagination);
     }
     setLoading(false);
-  }
+  }, [search, statusFilter]);
 
   useEffect(() => {
     fetchOrders(page);
-  }, [statusFilter, page]);
+  }, [fetchOrders, page]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();

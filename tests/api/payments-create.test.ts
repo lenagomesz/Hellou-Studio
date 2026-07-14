@@ -35,14 +35,6 @@ vi.mock('@/lib/shipping', () => ({
 }));
 
 const mockRpc = vi.fn().mockResolvedValue({ error: null });
-const mockInsert = vi.fn();
-const mockSelect = vi.fn();
-const mockEq = vi.fn();
-const mockSingle = vi.fn();
-const mockMaybeSingle = vi.fn();
-const mockDelete = vi.fn();
-const mockUpdate = vi.fn();
-
 function createBuilder(resolvedData: unknown = null) {
   const chain: Record<string, ReturnType<typeof vi.fn>> = {};
   chain.select = vi.fn().mockReturnValue(chain);

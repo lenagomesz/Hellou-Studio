@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 
 interface EmailPreference {
@@ -25,11 +25,7 @@ export default function RecipientsPage() {
   const [actionEmail, setActionEmail] = useState('');
   const [actionReason, setActionReason] = useState('');
 
-  useEffect(() => {
-    fetchRecipients();
-  }, [filter]);
-
-  async function fetchRecipients() {
+  const fetchRecipients = useCallback(async () => {
     setLoading(true);
     let url = '/api/email-marketing/recipients';
     if (filter === 'subscribed') url += '?subscribed=true';
@@ -44,7 +40,11 @@ export default function RecipientsPage() {
       setRecipients([]);
     }
     setLoading(false);
-  }
+  }, [filter]);
+
+  useEffect(() => {
+    fetchRecipients();
+  }, [fetchRecipients]);
 
   async function handleBlacklist(email: string) {
     const reason = prompt('Motivo (opcional):');

@@ -2,7 +2,6 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { requireAdmin, badRequest } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { generateInvoice, logNotification } from '@/lib/order-management';
-import { sendOrderStatusEmail } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin();

@@ -23,8 +23,10 @@ export default async function Icon() {
           background: '#fafafa',
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse exige elemento HTML nativo. */}
         <img
           src={logoBase64}
+          alt=""
           width={48}
           height={48}
           style={{ objectFit: 'cover' }}

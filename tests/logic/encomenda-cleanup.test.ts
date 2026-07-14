@@ -9,10 +9,6 @@ interface PrintRequest {
   product_id: string | null;
 }
 
-function getCleanupCutoffDate(): Date {
-  return new Date(Date.now() - DAYS_AFTER_DELIVERY * 24 * 60 * 60 * 1000);
-}
-
 function shouldCleanup(request: PrintRequest, cutoff: Date): boolean {
   if (request.status !== 'delivered') return false;
   if (!request.product_id) return false;

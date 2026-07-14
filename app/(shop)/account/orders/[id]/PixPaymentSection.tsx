@@ -8,7 +8,7 @@ interface PixPaymentSectionProps {
   orderId: string;
 }
 
-export default function PixPaymentSection({ mpPaymentId, orderId }: PixPaymentSectionProps) {
+export default function PixPaymentSection({ mpPaymentId, orderId: _orderId }: PixPaymentSectionProps) {
   const router = useRouter();
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -19,6 +19,7 @@ export default function PixPaymentSection({ mpPaymentId, orderId }: PixPaymentSe
   const [copied, setCopied] = useState(false);
   const [expired, setExpired] = useState(false);
   const [approved, setApproved] = useState(false);
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchPixData() {
@@ -70,13 +71,17 @@ export default function PixPaymentSection({ mpPaymentId, orderId }: PixPaymentSe
 
   useEffect(() => {
     if (!pixExpiration) return;
-    const checkExpiry = setInterval(() => {
-      if (new Date(pixExpiration) < new Date()) {
+    const expirationTime = new Date(pixExpiration).getTime();
+    const updateRemainingTime = () => {
+      const remaining = expirationTime - new Date().getTime();
+      setRemainingMs(remaining);
+      if (remaining <= 0) {
         setExpired(true);
-        clearInterval(checkExpiry);
         if (pollingRef.current) clearInterval(pollingRef.current);
       }
-    }, 10000);
+    };
+    updateRemainingTime();
+    const checkExpiry = setInterval(updateRemainingTime, 10000);
     return () => clearInterval(checkExpiry);
   }, [pixExpiration]);
 
@@ -87,10 +92,9 @@ export default function PixPaymentSection({ mpPaymentId, orderId }: PixPaymentSe
   }
 
   function getTimeRemaining(): string {
-    if (!pixExpiration) return '';
-    const diff = new Date(pixExpiration).getTime() - Date.now();
-    if (diff <= 0) return 'Expirado';
-    const mins = Math.floor(diff / 60000);
+    if (remainingMs === null) return '';
+    if (remainingMs <= 0) return 'Expirado';
+    const mins = Math.floor(remainingMs / 60000);
     if (mins < 60) return `${mins}min restantes`;
     const hours = Math.floor(mins / 60);
     return `${hours}h${mins % 60}min`;

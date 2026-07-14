@@ -11,7 +11,6 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const sessionId = typeof params.session_id === 'string' ? params.session_id : null;
   const orderId = typeof params.order_id === 'string' ? params.order_id : null;
-  const isPending = params.pending === '1';
 
   // Fetch order to detect type
   let orderType: 'digital' | 'physical' | 'hybrid' = 'physical';

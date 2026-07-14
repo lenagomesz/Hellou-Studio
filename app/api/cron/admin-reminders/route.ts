@@ -121,8 +121,10 @@ export async function POST() {
 
     if (options) {
       for (const option of options) {
-        const productName =
-          (option as any).products?.name ?? 'Produto';
+        const relatedProduct = option.products as { name: string } | { name: string }[] | null;
+        const productName = Array.isArray(relatedProduct)
+          ? relatedProduct[0]?.name ?? 'Produto'
+          : relatedProduct?.name ?? 'Produto';
         const duplicate = await isDuplicate('low_stock', undefined, option.id);
         if (!duplicate) {
           const { error } = await admin.from('admin_notifications').insert({

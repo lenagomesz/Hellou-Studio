@@ -390,7 +390,7 @@ export default function OrderDetailPage() {
                       const err = await res.json();
                       setSaveMsg(err.error || 'Erro ao enviar email');
                     }
-                  } catch (err) {
+                  } catch (_err) {
                     setSaveMsg('Erro ao enviar email');
                   } finally {
                     setUpdating(false);

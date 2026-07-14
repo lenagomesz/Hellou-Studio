@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { DeadStockItem } from '@/types/inventory';
 
@@ -20,11 +20,7 @@ export default function DeadStockPage() {
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(90);
 
-  useEffect(() => {
-    fetchDeadStock();
-  }, [days]);
-
-  async function fetchDeadStock() {
+  const fetchDeadStock = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/inventory/dead-stock?days=${days}`);
@@ -35,7 +31,11 @@ export default function DeadStockPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [days]);
+
+  useEffect(() => {
+    fetchDeadStock();
+  }, [fetchDeadStock]);
 
   const totalHoldingCost = items.reduce((s, i) => s + i.holding_cost_estimate, 0);
   const totalRevenuePotential = items.reduce((s, i) => s + i.revenue_potential, 0);

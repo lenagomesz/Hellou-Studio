@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, AlertTriangle, Star, Mail, Settings } from 'lucide-react';
 import type { CustomerMetrics } from '@/lib/customer-analytics';
-import { getChurnRiskColor } from '@/lib/customer-analytics';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -25,7 +24,7 @@ export default function ChurnDetectionPage() {
       .finally(() => setLoading(false));
   }
 
-  useEffect(() => { loadData(churnThreshold); }, []);
+  useEffect(() => { loadData(churnThreshold); }, [churnThreshold]);
 
   const atRisk = useMemo(
     () => customers.filter(c => c.churnRisk >= 40).sort((a, b) => b.churnRisk - a.churnRisk),

@@ -60,7 +60,7 @@ export function PaymentForm({
   const [pixQrCode, setPixQrCode] = useState('');
   const [pixQrBase64, setPixQrBase64] = useState('');
   const [pixCopied, setPixCopied] = useState(false);
-  const [pixOrderId, setPixOrderId] = useState('');
+  const [_pixOrderId, setPixOrderId] = useState('');
 
   // Card state
   const [cardNumber, setCardNumber] = useState('');
@@ -468,6 +468,7 @@ export function PaymentForm({
 
           {pixQrBase64 && (
             <div className="flex justify-center mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element -- QR Code PIX recebido como base64. */}
               <img
                 src={`data:image/png;base64,${pixQrBase64}`}
                 alt="QR Code PIX"

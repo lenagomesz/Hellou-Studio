@@ -145,7 +145,7 @@ export function calculateLTV(
   avgTicket: number,
   totalOrders: number,
   firstPurchaseDate: string | null,
-  lastPurchaseDate: string | null,
+  _lastPurchaseDate: string | null,
 ): { ltv: number; projected12m: number; level: 'high' | 'medium' | 'low' } {
   if (!firstPurchaseDate || totalOrders === 0) {
     return { ltv: 0, projected12m: 0, level: 'low' };

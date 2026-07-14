@@ -23,8 +23,10 @@ export default async function AppleIcon() {
           background: '#fafafa',
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse exige elemento HTML nativo. */}
         <img
           src={logoBase64}
+          alt=""
           width={180}
           height={180}
           style={{ objectFit: 'cover' }}

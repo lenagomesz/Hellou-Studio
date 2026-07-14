@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, notFound, serverError } from '@/lib/api';
+import { requireAdmin, notFound } from '@/lib/api';
 import { sendSTLDeliveryEmail, sendOrderStatusEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 
 type RouteCtx = { params: Promise<{ id: string }> };
+
+interface OrderItemWithProduct {
+  product?: {
+    id: string;
+    name: string;
+    type: string;
+  } | null;
+}
 
 export async function POST(req: NextRequest, ctx: RouteCtx) {
   const auth = await requireAdmin();
@@ -23,7 +31,9 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
   if (error || !order) return notFound('Pedido não encontrado');
 
   // Check if order has STL items
-  const stlItems = (order.items as any[]).filter(item => item.product?.type === 'digital');
+  const stlItems = (order.items as OrderItemWithProduct[]).filter(
+    (item) => item.product?.type === 'digital',
+  );
   if (!stlItems.length) {
     return NextResponse.json({ error: 'Este pedido não contém arquivos STL' }, { status: 400 });
   }

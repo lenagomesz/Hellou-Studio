@@ -1,22 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { StockForecastData } from '@/types/inventory';
-
-function formatPrice(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-}
 
 export default function ForecastPage() {
   const [forecasts, setForecasts] = useState<StockForecastData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchForecasts();
-  }, []);
-
-  async function fetchForecasts() {
+  const fetchForecasts = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/inventory/forecast');
@@ -27,7 +19,11 @@ export default function ForecastPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchForecasts();
+  }, [fetchForecasts]);
 
   // Sort by urgency: items running out soonest first
   const sortedForecasts = [...forecasts].sort((a, b) => {

@@ -11,7 +11,6 @@ export interface PreBuiltTemplate {
 }
 
 const brandGradient = 'linear-gradient(to right, #ec4899, #f97316)';
-const brandPink = '#ec4899';
 
 function wrapInLayout(content: string): string {
   return `

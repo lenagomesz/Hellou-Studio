@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/api';
 import { generate2FA, generateBackupCodes } from '@/lib/2fa';
 
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   const auth = await requireUser();
   if (auth.response) return auth.response;
 

@@ -99,7 +99,11 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
         .single();
 
       if (userData?.email) {
-        const fileName = (order.items?.[0] as any)?.product_snapshot?.name || 'Arquivo STL';
+        const firstItem = (order.items as Array<{
+          product_snapshot?: { name?: string };
+          product?: { name?: string };
+        }> | undefined)?.[0];
+        const fileName = firstItem?.product_snapshot?.name ?? firstItem?.product?.name ?? 'Arquivo STL';
         await sendSTLDeliveryEmail({
           email: userData.email,
           nome: userData.name || null,

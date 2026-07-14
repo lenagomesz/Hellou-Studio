@@ -3,7 +3,7 @@ import { requireUser } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { generateBackupCodes, hashBackupCode } from '@/lib/2fa';
 
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   const auth = await requireUser();
   if (auth.response) return auth.response;
 

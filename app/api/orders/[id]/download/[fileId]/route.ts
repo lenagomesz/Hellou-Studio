@@ -3,6 +3,16 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
+interface DigitalOrderItem {
+  product_id: string;
+  product: Array<{
+    id: string;
+    name: string;
+    file_path: string | null;
+    type: string;
+  }>;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; fileId: string }> }
@@ -55,28 +65,29 @@ export async function GET(
     }
 
     // Find digital item matching fileId
-    const items = order.order_items as any[];
+    const items = order.order_items as unknown as DigitalOrderItem[];
     const item = items.find(
-      it => it.product?.id === fileId && it.product?.type === 'digital'
+      (candidate) => candidate.product[0]?.id === fileId && candidate.product[0]?.type === 'digital',
     );
+    const product = item?.product[0];
 
-    if (!item || !item.product?.file_path) {
+    if (!product?.file_path) {
       console.error('[download] Item or file_path not found:', {
         itemFound: !!item,
-        filePath: item?.product?.file_path,
+        filePath: product?.file_path,
       });
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
     // Extract filename from file_path (handle both full URL and just filename)
-    const filePath = item.product.file_path;
+    const filePath = product.file_path;
     const fileName = filePath.includes('/') ? (filePath.split('/').pop() ?? filePath) : filePath;
 
     console.log('[download] Attempting to download:', {
-      originalPath: item.product.file_path,
+      originalPath: product.file_path,
       extractedFileName: fileName,
       bucket: 'stl-uploads',
-      productName: item.product.name,
+      productName: product.name,
     });
 
     // Download file from Supabase Storage
@@ -87,9 +98,8 @@ export async function GET(
     if (downloadError || !fileData) {
       console.error('[download] Storage error:', {
         error: downloadError,
-        filePath: item.product.file_path,
-        errorStatus: (downloadError as any)?.status,
-        errorMessage: (downloadError as any)?.message,
+        filePath: product.file_path,
+        errorMessage: downloadError?.message,
       });
       return NextResponse.json({ error: 'Failed to download file' }, { status: 500 });
     }
@@ -98,12 +108,12 @@ export async function GET(
     console.log('[download] Downloaded:', {
       orderId: id,
       fileId: fileId,
-      fileName: item.product.name,
+      fileName: product.name,
       userId,
     });
 
     // Stream file
-    const downloadFileName = `${item.product.name.replace(/\s+/g, '_')}.stl`;
+    const downloadFileName = `${product.name.replace(/\s+/g, '_')}.stl`;
     return new NextResponse(fileData, {
       headers: {
         'Content-Disposition': `attachment; filename="${downloadFileName}"`,

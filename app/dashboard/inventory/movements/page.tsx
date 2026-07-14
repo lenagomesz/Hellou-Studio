@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { StockMovementReason, StockMovementWithDetails } from '@/types/inventory';
 
@@ -31,11 +31,7 @@ export default function MovementsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [reasonFilter, setReasonFilter] = useState<string>('');
 
-  useEffect(() => {
-    fetchMovements();
-  }, [page, reasonFilter]);
-
-  async function fetchMovements() {
+  const fetchMovements = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: page.toString(), limit: '30' });
@@ -50,7 +46,11 @@ export default function MovementsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [page, reasonFilter]);
+
+  useEffect(() => {
+    fetchMovements();
+  }, [fetchMovements]);
 
   return (
     <div className="space-y-6">

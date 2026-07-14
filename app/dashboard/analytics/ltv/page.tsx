@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Star, TrendingUp, DollarSign } from 'lucide-react';
+import { ArrowLeft, Star, DollarSign } from 'lucide-react';
 import type { CustomerMetrics } from '@/lib/customer-analytics';
 import { getLtvLevelColor } from '@/lib/customer-analytics';
 

@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Calculate max values for RFM normalization
-  let maxRecency = 365;
+  const maxRecency = 365;
   let maxFrequency = 1;
   let maxMonetary = 1;
 

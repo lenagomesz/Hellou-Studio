@@ -46,22 +46,21 @@ export const authOptions: NextAuthOptions = {
         if (!ok) return null;
 
         if (user.two_fa_enabled && !credentials.twoFACode) {
-          const err = new Error('2FA_REQUIRED');
-          (err as any).code = '2FA_REQUIRED';
-          (err as any).userId = user.id;
+          const err = Object.assign(new Error('2FA_REQUIRED'), {
+            code: '2FA_REQUIRED',
+            userId: user.id,
+          });
           throw err;
         }
 
         if (user.two_fa_enabled && credentials.twoFACode) {
-          const { verify2FA, verifyBackupCode, hashBackupCode } = await import('@/lib/2fa');
+          const { verify2FA, verifyBackupCode } = await import('@/lib/2fa');
 
           const normalizedCode = credentials.twoFACode
             .toUpperCase()
             .replace(/\s/g, '');
 
           let isValid = verify2FA(user.two_fa_secret!, normalizedCode);
-          let usingBackupCode = false;
-
           if (!isValid && user.two_fa_backup_codes?.length) {
             const backupResult = verifyBackupCode(
               user.two_fa_backup_codes,
@@ -69,8 +68,6 @@ export const authOptions: NextAuthOptions = {
             );
             if (backupResult.valid) {
               isValid = true;
-              usingBackupCode = true;
-
               await admin
                 .from('users')
                 .update({

@@ -1,15 +1,18 @@
 import { describe, it, expect } from 'vitest';
-
-type OrderStatus = 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'refunded';
+import type { OrderStatus } from '@/types/database';
 
 const VALID_STATUSES: OrderStatus[] = [
-  'pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded',
+  'awaiting_payment', 'pending', 'approved', 'paid', 'processing', 'completed',
+  'shipped', 'delivered', 'canceled', 'refunded', 'rejected',
 ];
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
+  awaiting_payment: 'Aguardando pagamento',
   pending: 'Pendente',
+  approved: 'Aprovado',
   paid: 'Pagamento confirmado',
   processing: 'Em preparo',
+  completed: 'Concluído',
   shipped: 'Enviado',
   delivered: 'Entregue',
   canceled: 'Cancelado',

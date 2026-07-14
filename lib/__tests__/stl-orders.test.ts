@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock email templates (React components)
 vi.mock('@/emails/stl-order-confirmation', () => ({
-  STLOrderConfirmationEmail: (props: any) => `mock-stl-confirmation-${props.orderId}`,
+  STLOrderConfirmationEmail: (props: { orderId: string }) => `mock-stl-confirmation-${props.orderId}`,
 }));
 
 vi.mock('@/emails/stl-admin-notification', () => ({
-  STLAdminNotificationEmail: (props: any) => `mock-stl-admin-${props.orderId}`,
+  STLAdminNotificationEmail: (props: { orderId: string }) => `mock-stl-admin-${props.orderId}`,
 }));
 
 vi.mock('@/emails/boas-vindas', () => ({

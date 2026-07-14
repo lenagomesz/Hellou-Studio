@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 
 interface Campaign {
@@ -39,11 +39,7 @@ export default function CampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
-  useEffect(() => {
-    fetchCampaigns();
-  }, [filter]);
-
-  async function fetchCampaigns() {
+  const fetchCampaigns = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/email-marketing/campaigns?status=${filter}`);
@@ -53,7 +49,11 @@ export default function CampaignsPage() {
       setCampaigns([]);
     }
     setLoading(false);
-  }
+  }, [filter]);
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, [fetchCampaigns]);
 
   async function deleteCampaign(id: string) {
     if (!confirm('Tem certeza que deseja excluir esta campanha?')) return;

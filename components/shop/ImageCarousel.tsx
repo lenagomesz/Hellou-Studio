@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element -- URLs externas e transição sobreposta do carrossel. */
+
 import { useState, useEffect } from 'react';
 
 interface ImageCarouselProps {
