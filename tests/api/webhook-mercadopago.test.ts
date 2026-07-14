@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 
 // --- Mocks ---
 
@@ -85,6 +85,10 @@ function makeRequest(body: Record<string, unknown>) {
 // --- Tests ---
 
 describe('POST /api/webhooks/mercadopago', () => {
+  beforeAll(() => {
+    vi.stubEnv('NODE_ENV', 'test');
+  });
+
   beforeEach(() => {
     delete process.env.MERCADO_PAGO_WEBHOOK_SECRET;
     vi.clearAllMocks();
@@ -102,6 +106,7 @@ describe('POST /api/webhooks/mercadopago', () => {
   });
 
   afterAll(() => {
+    vi.unstubAllEnvs();
     if (originalWebhookSecret) process.env.MERCADO_PAGO_WEBHOOK_SECRET = originalWebhookSecret;
     else delete process.env.MERCADO_PAGO_WEBHOOK_SECRET;
   });

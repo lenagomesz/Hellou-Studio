@@ -85,6 +85,8 @@ describe('STL Order Emails', () => {
       });
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const originalVerboseLogs = process.env.TEST_VERBOSE_LOGS;
+      process.env.TEST_VERBOSE_LOGS = 'true';
 
       await emailModule.sendSTLOrderConfirmationEmail({
         email: 'customer@example.com',
@@ -96,6 +98,8 @@ describe('STL Order Emails', () => {
 
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"event":"email.send_failed"'));
 
+      if (originalVerboseLogs === undefined) delete process.env.TEST_VERBOSE_LOGS;
+      else process.env.TEST_VERBOSE_LOGS = originalVerboseLogs;
       consoleSpy.mockRestore();
     });
   });
