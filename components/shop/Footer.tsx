@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { WHATSAPP_URL } from '@/components/shop/WhatsAppButton';
+import { OPEN_PRIVACY_EVENT } from '@/lib/privacy';
 
 const NAVIGATION_LINKS = [
   { href: '/products', label: 'Catálogo' },
@@ -112,7 +113,11 @@ export function Footer() {
               <span key={method} className="rounded-lg border border-gray-200/80 bg-white px-2.5 py-1 text-[10px] font-bold text-gray-500 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">{method}</span>
             ))}
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-500">© {new Date().getFullYear()} helloustudio. Todos os direitos reservados.</p>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+            <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_PRIVACY_EVENT))} className="transition hover:text-pink-600 dark:hover:text-pink-400">Preferências de cookies</button>
+            <Link href="/terms#privacidade" className="transition hover:text-pink-600 dark:hover:text-pink-400">Privacidade</Link>
+            <span>© {new Date().getFullYear()} helloustudio. Todos os direitos reservados.</span>
+          </div>
         </div>
       </div>
     </footer>

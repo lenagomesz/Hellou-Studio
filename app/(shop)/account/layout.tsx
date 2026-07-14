@@ -1,6 +1,12 @@
 import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
 import { getCurrentUser } from '@/lib/api';
 import { AccountSidebar, AccountMobileNav } from '@/components/shop/AccountNav';
+
+export const metadata: Metadata = {
+  title: 'Minha conta',
+  robots: { index: false, follow: false, noarchive: true },
+};
 
 export default async function AccountLayout({
   children,

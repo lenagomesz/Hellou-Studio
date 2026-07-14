@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
@@ -9,6 +10,12 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { Marquee } from '@/components/ui/Marquee';
 import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import type { Product } from '@/types/database';
+
+export const metadata: Metadata = {
+  title: 'Impressão 3D personalizada e arquivos STL',
+  description: 'Descubra produtos impressos em 3D, peças personalizadas feitas sob demanda e arquivos STL prontos para seus projetos.',
+  alternates: { canonical: '/' },
+};
 
 const CATEGORIES = [
   {

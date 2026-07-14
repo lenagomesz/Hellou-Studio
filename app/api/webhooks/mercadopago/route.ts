@@ -6,6 +6,7 @@ import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import { verifyWebhookSignature } from '@/lib/security';
 import { hasDigitalItems, hasPhysicalItems } from '@/lib/order-helpers';
+import { isMercadoPagoApproved, mapMercadoPagoOrderStatus } from '@/lib/payment-status';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
 
 export async function POST(request: Request) {
@@ -74,10 +75,8 @@ export async function POST(request: Request) {
 
     structuredLog('info', 'mercadopago.order_found', { orderId: order.id, currentStatus: order.status, providerStatus: mpStatus });
 
-    // Determine new order status
-    let newStatus: string;
-    // 'approved' = confirmed, 'authorized' = authorized (card payments), 'in_process' = processing
-    const isPaymentApproved = ['approved', 'authorized', 'in_process'].includes(mpStatus);
+    const isPaymentApproved = isMercadoPagoApproved(mpStatus);
+    let newStatus = mapMercadoPagoOrderStatus(mpStatus, false, order.status as import('@/types/database').OrderStatus);
 
     if (isPaymentApproved) {
       // Check if order contains only digital products for auto-completion
@@ -90,13 +89,7 @@ export async function POST(request: Request) {
         (item) => (item.product as unknown as { type: string } | null)?.type === 'digital'
       ) ?? false;
 
-      newStatus = isDigitalOrder ? 'approved' : 'processing';
-    } else if (mpStatus === 'cancelled') {
-      newStatus = 'canceled';
-    } else if (['rejected', 'declined', 'refunded'].includes(mpStatus)) {
-      newStatus = 'rejected';
-    } else {
-      newStatus = order.status;
+      newStatus = mapMercadoPagoOrderStatus(mpStatus, isDigitalOrder, order.status as import('@/types/database').OrderStatus);
     }
 
     if (newStatus === order.status) {
@@ -204,6 +197,7 @@ export async function POST(request: Request) {
       }
 
       await admin.from('cart_items').delete().eq('user_id', order.user_id);
+      await admin.from('cart_recovery_events').update({ status: 'converted', converted_at: new Date().toISOString() }).eq('user_id', order.user_id).eq('status', 'sent');
 
       try {
         const itemsData = items ?? [];

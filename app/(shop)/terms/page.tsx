@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Termos de Uso e Política de Privacidade | Hellou Studio',
+  description: 'Termos de uso, política de privacidade, cookies e direitos previstos pela LGPD na Hellou Studio.',
+  alternates: { canonical: '/terms' },
 };
 
 export default function TermsPage() {
@@ -10,7 +12,7 @@ export default function TermsPage() {
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white font-display">
         Termos de Uso e Política de Privacidade
       </h1>
-      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Última atualização: 10 de junho de 2026</p>
+      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Última atualização: 14 de julho de 2026</p>
 
       <div className="mt-10 space-y-10 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
         {/* Termos de Uso */}
@@ -75,7 +77,7 @@ export default function TermsPage() {
         </section>
 
         {/* Política de Privacidade */}
-        <section>
+        <section id="privacidade" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white font-display">2. Política de Privacidade</h2>
 
           <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">2.1 Dados Coletados</h3>
@@ -86,6 +88,7 @@ export default function TermsPage() {
             <li>Número de telefone/WhatsApp</li>
             <li>Endereço de entrega</li>
             <li>Dados de pagamento (processados por terceiros)</li>
+            <li>Eventos de navegação, apenas quando você autoriza cookies de análise</li>
           </ul>
 
           <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">2.2 Finalidade do Uso dos Dados</h3>
@@ -128,9 +131,10 @@ export default function TermsPage() {
 
           <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">2.6 Cookies</h3>
           <p className="mt-2">
-            Utilizamos cookies para melhorar sua experiência de navegação, lembrar suas
-            preferências e manter sua sessão ativa. Você pode gerenciar cookies nas configurações
-            do seu navegador.
+            Cookies necessários mantêm o login, a segurança, o tema e o funcionamento do carrinho.
+            Cookies de análise e personalização permanecem desativados até que você autorize. Sua
+            escolha fica registrada por até 12 meses e pode ser alterada a qualquer momento em
+            “Preferências de cookies”, no rodapé do site.
           </p>
 
           <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">2.7 Alterações nesta Política</h3>

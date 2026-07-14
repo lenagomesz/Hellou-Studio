@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import { ProductDetail } from '@/components/shop/ProductDetail';
@@ -6,6 +7,7 @@ import { ProductCard } from '@/components/shop/ProductCard';
 import { ProductReviews } from '@/components/shop/ProductReviews';
 import { getCurrentUser } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
+import { absoluteUrl, plainText, productImages, safeJsonLd } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -71,6 +73,24 @@ async function getRelatedProducts(excludeId: string) {
   }
 }
 
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await props.params;
+  const result = await getProductWithOptions(id);
+  if (!result) return { title: 'Arquivo STL não encontrado', robots: { index: false, follow: false } };
+
+  const { product } = result;
+  const description = plainText(product.description, `${product.name}, arquivo STL digital para impressão 3D.`);
+  const images = productImages(product);
+  const canonical = `/stl/${product.id}`;
+  return {
+    title: `${product.name} — arquivo STL`,
+    description,
+    alternates: { canonical },
+    openGraph: { type: 'website', url: canonical, title: product.name, description, images },
+    twitter: { card: 'summary_large_image', title: product.name, description, images },
+  };
+}
+
 export default async function STLProductDetailPage(
   props: { params: Promise<{ id: string }> },
 ) {
@@ -85,8 +105,29 @@ export default async function STLProductDetailPage(
     getCurrentUser(),
   ]);
 
+  const price = product.sale_price ?? product.base_price;
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: plainText(product.description, `${product.name}, arquivo STL digital para impressão 3D.`, 500),
+    image: productImages(product),
+    sku: product.id,
+    category: 'Arquivo STL para impressão 3D',
+    brand: { '@type': 'Brand', name: 'Hellou Studio' },
+    offers: {
+      '@type': 'Offer',
+      url: absoluteUrl(`/stl/${product.id}`),
+      priceCurrency: 'BRL',
+      price: price.toFixed(2),
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+    },
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(productJsonLd) }} />
       <nav className="mb-6 text-sm text-gray-600 dark:text-gray-400">
         <Link href="/" className="hover:text-gray-900 dark:hover:text-gray-100">
           Início

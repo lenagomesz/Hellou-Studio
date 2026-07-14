@@ -15,6 +15,7 @@ import {
 import type { ShippingOption } from '@/lib/shipping';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import { PaymentForm } from '@/components/shop/PaymentForm';
+import { calculateCheckoutTotals } from '@/lib/checkout-rules';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -188,8 +189,15 @@ export default function CartPage() {
   const discountAmount = couponDiscount?.free_shipping && couponDiscount.discount_value === 0
     ? 0
     : (couponDiscount?.discount_amount ?? 0);
-  const firstPurchaseDiscount = isFirstPurchase && !couponDiscount ? total * 0.1 : 0;
-  const grandTotal = total - firstPurchaseDiscount - discountAmount + shippingCost;
+  const checkoutTotals = calculateCheckoutTotals({
+    subtotal: total,
+    shippingCost,
+    isFirstPurchase,
+    couponDiscountAmount: discountAmount,
+    hasCoupon: Boolean(couponDiscount),
+  });
+  const firstPurchaseDiscount = checkoutTotals.firstPurchaseDiscount;
+  const grandTotal = checkoutTotals.total;
 
   const pageTitle = step === 1 ? 'Meu Carrinho' : step === 2 ? 'Entrega' : 'Finalizar Pedido';
   const itemsLabel = items.length === 1 ? 'item selecionado' : 'itens selecionados';

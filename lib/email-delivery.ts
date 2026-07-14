@@ -17,6 +17,7 @@ export type TransactionalEmailType =
   | 'stl_admin_notification'
   | 'stl_delivery'
   | 'campaign'
+  | 'abandoned_cart'
   | 'analytics_report';
 
 export interface EmailDeliveryContext {

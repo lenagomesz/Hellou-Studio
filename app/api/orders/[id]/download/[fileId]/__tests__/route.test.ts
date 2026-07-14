@@ -36,29 +36,29 @@ describe('Download Endpoint Security', () => {
   });
 
   describe('Order Status Validation', () => {
-    it('allows download for completed orders', () => {
-      const allowedStatuses = ['completed', 'paid', 'shipped', 'delivered'];
-      const orderStatus = 'completed';
+    it('allows download for approved digital orders', () => {
+      const allowedStatuses = ['approved', 'processing', 'delivered'];
+      const orderStatus = 'approved';
 
       expect(allowedStatuses).toContain(orderStatus);
     });
 
     it('denies download for pending orders', () => {
-      const allowedStatuses = ['completed', 'paid', 'shipped', 'delivered'];
+      const allowedStatuses = ['approved', 'processing', 'delivered'];
       const orderStatus = 'pending';
 
       expect(allowedStatuses).not.toContain(orderStatus);
     });
 
-    it('denies download for processing orders', () => {
-      const allowedStatuses = ['completed', 'paid', 'shipped', 'delivered'];
+    it('allows download for processing hybrid orders', () => {
+      const allowedStatuses = ['approved', 'processing', 'delivered'];
       const orderStatus = 'processing';
 
-      expect(allowedStatuses).not.toContain(orderStatus);
+      expect(allowedStatuses).toContain(orderStatus);
     });
 
     it('denies download for canceled orders', () => {
-      const allowedStatuses = ['completed', 'paid', 'shipped', 'delivered'];
+      const allowedStatuses = ['approved', 'processing', 'delivered'];
       const orderStatus = 'canceled';
 
       expect(allowedStatuses).not.toContain(orderStatus);

@@ -195,6 +195,20 @@ describe('POST /api/payments/mercadopago/create', () => {
   });
 
   describe('Credit card payment flow', () => {
+    it('does not fulfill an in_process payment before confirmation', async () => {
+      mockPaymentCreate.mockResolvedValue({ id: 'mp-in-process', status: 'in_process' });
+
+      const response = await POST(makeRequest({
+        payment_method: 'credit_card',
+        token: 'tok_processing',
+        cpf: '12345678909',
+      }));
+
+      expect((await response.json()).status).toBe('in_process');
+      expect(ordersBuilder.insert).toHaveBeenCalledWith(expect.objectContaining({ status: 'awaiting_payment' }));
+      expect(mockRpc).not.toHaveBeenCalledWith('decrement_stock', expect.anything());
+    });
+
     it('creates order em processamento when card is approved immediately', async () => {
       mockPaymentCreate.mockResolvedValue({
         id: 'mp-pay-789',
@@ -242,7 +256,7 @@ describe('POST /api/payments/mercadopago/create', () => {
       expect(sendAdminNewOrderEmail).toHaveBeenCalled();
     });
 
-    it('creates order with awaiting_payment when card is rejected', async () => {
+    it('creates order with rejected status when card is rejected', async () => {
       mockPaymentCreate.mockResolvedValue({
         id: 'mp-pay-rej',
         status: 'rejected',
@@ -260,7 +274,7 @@ describe('POST /api/payments/mercadopago/create', () => {
       expect(json.status_detail).toBe('cc_rejected_insufficient_amount');
 
       expect(ordersBuilder.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'awaiting_payment' }),
+        expect.objectContaining({ status: 'rejected' }),
       );
     });
 

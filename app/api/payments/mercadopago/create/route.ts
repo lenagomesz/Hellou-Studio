@@ -8,7 +8,8 @@ import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestE
 import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import { calculateShipping, sanitizeCep } from '@/lib/shipping';
-import { SUCCESSFUL_ORDER_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
+import { calculateCheckoutTotals, SUCCESSFUL_ORDER_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
+import { isMercadoPagoApproved, mapMercadoPagoOrderStatus } from '@/lib/payment-status';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
 
 const PIX_EXPIRATION_MINUTES = 30;
@@ -137,8 +138,6 @@ export async function POST(request: Request) {
   const validCoupon = couponValidation?.valid ? couponValidation.value.coupon : null;
   const couponId = validCoupon?.id ?? null;
   const discountAmount = couponValidation?.valid ? couponValidation.value.discountAmount : 0;
-  // Cupons não acumulam com o desconto de primeira compra.
-  const firstPurchaseDiscount = isFirstPurchase && !validCoupon ? subtotal * 0.1 : 0;
 
   const isDigitalOrder = cartItems.every(item => item.product?.type === 'digital');
   const hasFreeShipping = isDigitalOrder || subtotal >= 99 || validCoupon?.free_shipping === true;
@@ -160,7 +159,14 @@ export async function POST(request: Request) {
     }
   }
 
-  const totalAmount = Math.max(0, subtotal - firstPurchaseDiscount - discountAmount + validatedShipping);
+  const totals = calculateCheckoutTotals({
+    subtotal,
+    shippingCost: validatedShipping,
+    isFirstPurchase,
+    couponDiscountAmount: discountAmount,
+    hasCoupon: Boolean(validCoupon),
+  });
+  const totalAmount = totals.total;
 
   if (totalAmount < 0.01) {
     return badRequest('O valor do pedido deve ser maior que R$ 0,01');
@@ -239,18 +245,8 @@ export async function POST(request: Request) {
       itemCount: cartItems.length,
     });
 
-    // Determine order status based on payment status
-    // 'approved' = confirmed, 'authorized' = authorized (some card payments), 'in_process' = processing
-    const isPaymentApproved = mpStatus && ['approved', 'authorized', 'in_process'].includes(mpStatus);
-
-    let orderStatus: string;
-    if (isPaymentApproved) {
-      // For digital orders: go to 'approved' (file will be available)
-      // For physical orders: go to 'processing'
-      orderStatus = isDigitalOrder ? 'approved' : 'processing';
-    } else {
-      orderStatus = 'awaiting_payment';
-    }
+    const isPaymentApproved = isMercadoPagoApproved(mpStatus);
+    const orderStatus = mapMercadoPagoOrderStatus(mpStatus, isDigitalOrder);
 
     structuredLog('info', 'mercadopago.order_status_selected', {
       mpStatus,
@@ -313,6 +309,7 @@ export async function POST(request: Request) {
       await admin.from('orders').delete().eq('id', order.id);
     } else {
       await admin.from('cart_items').delete().eq('user_id', user.id);
+      await admin.from('cart_recovery_events').update({ status: 'converted', converted_at: new Date().toISOString() }).eq('user_id', user.id).eq('status', 'sent');
     }
 
     if (orderStatus === 'processing' || orderStatus === 'completed') {

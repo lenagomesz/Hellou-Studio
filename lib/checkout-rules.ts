@@ -3,6 +3,22 @@ import type { Coupon } from '@/types/database';
 
 export const SUCCESSFUL_ORDER_STATUSES = ['approved', 'paid', 'processing', 'completed', 'shipped', 'delivered'] as const;
 
+export function calculateCheckoutTotals(params: {
+  subtotal: number;
+  shippingCost: number;
+  isFirstPurchase: boolean;
+  couponDiscountAmount?: number;
+  hasCoupon: boolean;
+}) {
+  const subtotal = Math.max(0, params.subtotal);
+  const couponDiscount = Math.min(Math.max(0, params.couponDiscountAmount ?? 0), subtotal);
+  const firstPurchaseDiscount = params.isFirstPurchase && !params.hasCoupon
+    ? Math.round(subtotal * 0.1 * 100) / 100
+    : 0;
+  const total = Math.round(Math.max(0, subtotal - couponDiscount - firstPurchaseDiscount + Math.max(0, params.shippingCost)) * 100) / 100;
+  return { subtotal, couponDiscount, firstPurchaseDiscount, total };
+}
+
 export type ValidatedCoupon = {
   coupon: Coupon;
   discountAmount: number;

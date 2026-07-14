@@ -1,0 +1,61 @@
+name: Quality gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
+      NEXTAUTH_SECRET: ${{ secrets.E2E_NEXTAUTH_SECRET }}
+      NEXTAUTH_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY: ${{ secrets.E2E_MP_PUBLIC_KEY }}
+      MERCADO_PAGO_ACCESS_TOKEN: ${{ secrets.E2E_MP_ACCESS_TOKEN }}
+      MERCADO_PAGO_WEBHOOK_SECRET: ${{ secrets.E2E_MP_WEBHOOK_SECRET }}
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+      E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+      E2E_EMAIL_DOMAIN: ${{ vars.E2E_EMAIL_DOMAIN }}
+      E2E_CPF: ${{ secrets.E2E_CPF }}
+      E2E_CEP: ${{ vars.E2E_CEP }}
+      E2E_PHYSICAL_PRODUCT_ID: ${{ vars.E2E_PHYSICAL_PRODUCT_ID }}
+      E2E_CUSTOM_PRODUCT_ID: ${{ vars.E2E_CUSTOM_PRODUCT_ID }}
+      E2E_STL_PRODUCT_ID: ${{ vars.E2E_STL_PRODUCT_ID }}
+      E2E_COUPON_CODE: ${{ vars.E2E_COUPON_CODE }}
+      E2E_CARD_NUMBER: ${{ secrets.E2E_CARD_NUMBER }}
+      E2E_CARD_NAME: ${{ vars.E2E_CARD_NAME }}
+      E2E_CARD_EXPIRY: ${{ secrets.E2E_CARD_EXPIRY }}
+      E2E_CARD_CVV: ${{ secrets.E2E_CARD_CVV }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Lint, unit tests, schema, types and build
+        run: npm run quality:deploy
+      - name: Complete purchase journeys
+        run: npm run test:e2e
+      - name: Store Playwright diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results/e2e-artifacts
+          retention-days: 14

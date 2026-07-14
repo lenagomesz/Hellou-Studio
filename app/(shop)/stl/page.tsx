@@ -1,6 +1,13 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
+import type { Metadata } from 'next';
 import { ProductCard } from '@/components/shop/ProductCard';
 import type { Product } from '@/types/database';
+
+export const metadata: Metadata = {
+  title: 'Arquivos STL para impressão 3D',
+  description: 'Compre arquivos STL digitais prontos para baixar e imprimir em sua impressora 3D.',
+  alternates: { canonical: '/stl' },
+};
 
 async function getSTLProducts(): Promise<Product[]> {
   try {

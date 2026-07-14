@@ -1,9 +1,16 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProductCard } from '@/components/shop/ProductCard';
 import type { Category, Product } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Catálogo de produtos impressos em 3D',
+  description: 'Chaveiros, organizadores, criaturas e peças personalizadas impressas em 3D e produzidas sob demanda.',
+  alternates: { canonical: '/products' },
+};
 
 const CATEGORIES: { slug: Category | 'all'; label: string }[] = [
   { slug: 'all', label: 'Todos' },

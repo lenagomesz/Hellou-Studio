@@ -3,6 +3,7 @@ import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderStatusEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { isMercadoPagoApproved } from '@/lib/payment-status';
 import { captureOperationalError, finishCronRun, startCronRun, structuredLog } from '@/lib/observability';
 
 const PIX_EXPIRATION_MINUTES = 30;
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     if (!order.mp_payment_id) continue;
     try {
       const payment = await paymentClient.get({ id: order.mp_payment_id });
-      if (['approved', 'authorized', 'in_process'].includes(payment.status ?? '')) continue;
+      if (isMercadoPagoApproved(payment.status)) continue;
 
       const expirationValue = (payment as unknown as { date_of_expiration?: string }).date_of_expiration;
       const expirationReached = expirationValue ? new Date(expirationValue).getTime() <= Date.now() : true;

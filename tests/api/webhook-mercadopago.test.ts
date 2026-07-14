@@ -255,7 +255,7 @@ describe('POST /api/webhooks/mercadopago', () => {
       expect(mockUpdate).not.toHaveBeenCalled();
     });
 
-    it('moves an in_process physical payment to processing', async () => {
+    it('keeps an in_process physical payment awaiting confirmation', async () => {
       mockPaymentGet.mockResolvedValue({ status: 'in_process', metadata: {} });
 
       const res = await POST(makeRequest({
@@ -265,8 +265,8 @@ describe('POST /api/webhooks/mercadopago', () => {
       }));
       const json = await res.json();
 
-      expect(json.status).toBe('processing');
-      expect(mockUpdate).toHaveBeenCalled();
+      expect(json.received).toBe(true);
+      expect(mockUpdate).not.toHaveBeenCalled();
     });
 
     it('rejects an invalid webhook signature', async () => {
