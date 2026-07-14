@@ -67,7 +67,7 @@ Single-page upload form with:
    - At least one image required
 
 4. **Upload flow**
-   - POST `/api/admin/products/stl` with FormData
+   - POST `/api/upload/stl` with FormData (rota administrativa atual)
    - Multipart upload to Supabase Storage under `stl-files/{productId}/{filename.stl}`
    - Save product with type='digital', file_path set
    - Redirect to `/dashboard/products` with success toast

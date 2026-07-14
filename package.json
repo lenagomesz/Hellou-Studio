@@ -9,7 +9,8 @@
     "lint": "eslint",
     "seed:admin": "node --env-file=.env.local scripts/seed-admin.mjs",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "db:check": "node scripts/check-migrations.mjs"
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",

@@ -21,7 +21,7 @@ qrcode     # QR code generation
 - `POST /api/admin/2fa/confirm` - Confirma 2FA (ativa no banco)
 
 **Banco de dados:**
-Executar migração em `supabase/migrations/add_2fa_to_users.sql`:
+Migração histórica em `supabase/legacy/add_2fa_to_users.sql` (não reaplique sem conferir o banco):
 ```sql
 ALTER TABLE users ADD COLUMN two_fa_enabled BOOLEAN;
 ALTER TABLE users ADD COLUMN two_fa_secret TEXT;

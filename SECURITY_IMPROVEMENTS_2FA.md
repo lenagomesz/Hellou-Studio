@@ -47,7 +47,7 @@ SECURITY_IMPROVEMENTS_2FA.md                    # Este arquivo
 ### Arquivos Modificados:
 ```
 package.json                                    # Revertido downgrades do Next.js e next-auth
-supabase/migrations/add_2fa_to_users.sql       # Adicionado tabela de rate limiting e campos de auditoria
+supabase/legacy/add_2fa_to_users.sql           # Histórico: já aplicado, não executar novamente
 app/api/admin/2fa/setup/route.ts                # Mantém segurança existente
 app/api/admin/2fa/confirm/route.ts              # Adicionado hash de backup codes e rate limiting
 ```
@@ -146,7 +146,7 @@ supabase migration up
 Ou manualmente:
 ```sql
 -- Executar o conteúdo de:
--- supabase/migrations/add_2fa_to_users.sql
+-- supabase/legacy/add_2fa_to_users.sql (histórico; não reaplicar)
 ```
 
 ### 3. Testar Localmente

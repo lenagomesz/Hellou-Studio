@@ -45,7 +45,7 @@ supabase migration up
 # 2. Select seu projeto
 # 3. SQL Editor
 # 4. New Query
-# 5. Cole o conteúdo de: supabase/migrations/add_2fa_to_users.sql
+# 5. Migração histórica: supabase/legacy/add_2fa_to_users.sql (não reaplicar sem conferir o banco)
 # 6. Clique em "Run"
 ```
 
@@ -146,7 +146,7 @@ FRONTEND:
 └── app/(auth)/login/page.tsx                    # MODIFICADO: Login com 2FA
 
 BANCO DE DADOS:
-├── supabase/migrations/add_2fa_to_users.sql     # MODIFICADO: Rate limiting + auditoria
+├── supabase/legacy/add_2fa_to_users.sql         # HISTÓRICO: rate limiting + auditoria
 
 TESTES:
 ├── lib/__tests__/2fa.test.ts            # ✨ NOVO: 16 testes

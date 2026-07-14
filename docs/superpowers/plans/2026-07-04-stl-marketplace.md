@@ -30,7 +30,7 @@ Create STL-specific email templates and send functions in lib/email.ts
 
 ## Task 3: Admin Upload API Endpoint
 
-Create POST /api/admin/products/stl endpoint for file upload to Supabase Storage
+Create POST /api/upload/stl endpoint for file upload to Supabase Storage
 
 ## Task 4: Admin Upload UI Form
 
