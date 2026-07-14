@@ -1,63 +1,82 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface ImageGalleryProps {
-  image1: string;
-  image2?: string;
+  images: string[];
+  alt: string;
 }
 
-export function ImageGallery({ image1, image2 }: ImageGalleryProps) {
+export function ImageGallery({ images, alt }: ImageGalleryProps) {
+  const normalizedImages = useMemo(
+    () => Array.from(new Set(images.map((image) => image.trim()).filter(Boolean))),
+    [images],
+  );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const images = image2 ? [image1, image2] : [image1];
-  const hasMultiple = images.length > 1;
+  const [failedImages, setFailedImages] = useState<string[]>([]);
+  const availableImages = normalizedImages.filter((image) => !failedImages.includes(image));
+  const hasMultiple = availableImages.length > 1;
+
+  useEffect(() => {
+    setCurrentImageIndex((current) => Math.min(current, Math.max(availableImages.length - 1, 0)));
+  }, [availableImages.length]);
 
   useEffect(() => {
     if (!hasMultiple) return;
+    const interval = globalThis.setInterval(() => {
+      setCurrentImageIndex((current) => (current + 1) % availableImages.length);
+    }, 6000);
+    return () => globalThis.clearInterval(interval);
+  }, [availableImages.length, hasMultiple]);
 
-    const intervals: NodeJS.Timeout[] = [];
+  const currentImage = availableImages[currentImageIndex];
 
-    if (hasMultiple) {
-      // Imagem 1 por 6 segundos
-      intervals.push(
-        setTimeout(() => setCurrentImageIndex(1), 6000)
-      );
-      // Imagem 2 por 3 segundos (volta pra 0)
-      intervals.push(
-        setTimeout(() => setCurrentImageIndex(0), 9000)
-      );
-    }
+  if (!currentImage) {
+    return (
+      <div className="flex aspect-square w-full items-center justify-center rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 text-center text-sm text-gray-500 dark:from-gray-800 dark:to-gray-700 dark:text-gray-400">
+        Imagem temporariamente indisponível
+      </div>
+    );
+  }
 
-    return () => intervals.forEach(interval => clearTimeout(interval));
-  }, [hasMultiple]);
+  const markAsFailed = (image: string) => {
+    setFailedImages((failed) => (failed.includes(image) ? failed : [...failed, image]));
+  };
 
   return (
     <div>
-      {/* Imagem principal */}
       <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={images[currentImageIndex]}
-          alt="Produto"
+          src={currentImage}
+          alt={`${alt} — imagem ${currentImageIndex + 1}`}
           className="h-full w-full object-cover"
+          onError={() => markAsFailed(currentImage)}
         />
       </div>
 
-      {/* Minigaleria - mostrar apenas se tiver 2 imagens */}
       {hasMultiple && (
-        <div className="mt-2 flex gap-2">
-          {images.map((img, i) => (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1" aria-label="Galeria de imagens">
+          {availableImages.map((image, index) => (
             <button
-              key={i}
-              onClick={() => setCurrentImageIndex(i)}
-              className={`h-12 w-12 overflow-hidden rounded transition flex-shrink-0 ${
-                currentImageIndex === i
-                  ? 'ring-2 ring-pink-500'
-                  : 'opacity-60 hover:opacity-100'
+              key={image}
+              type="button"
+              onClick={() => setCurrentImageIndex(index)}
+              className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition ${
+                currentImageIndex === index
+                  ? 'border-pink-500 ring-2 ring-pink-500/20'
+                  : 'border-transparent opacity-65 hover:opacity-100'
               }`}
+              aria-label={`Mostrar imagem ${index + 1}`}
+              aria-pressed={currentImageIndex === index}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img} alt={`Imagem ${i + 1}`} className="h-full w-full object-cover" />
+              <img
+                src={image}
+                alt=""
+                className="h-full w-full object-cover"
+                onError={() => markAsFailed(image)}
+              />
             </button>
           ))}
         </div>

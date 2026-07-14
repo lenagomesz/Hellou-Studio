@@ -58,6 +58,18 @@ export function ProductDetail({
 
   const currentDisplayImage = displayImageUrl || selectedOption?.image_url || product.image_url;
 
+  const galleryImages = useMemo(() => {
+    const registeredImages = Array.isArray(product.images) ? product.images : [];
+    return Array.from(
+      new Set(
+        [currentDisplayImage, ...registeredImages, product.image_url_2]
+          .filter((image): image is string => typeof image === 'string')
+          .map((image) => image.trim())
+          .filter(Boolean),
+      ),
+    );
+  }, [currentDisplayImage, product.image_url_2, product.images]);
+
   const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, 50) : 50;
   const canAddToCart = options.length === 0 || selectedOption !== null;
   const isSyncing = status === 'syncing';
@@ -109,8 +121,8 @@ export function ProductDetail({
     <div className="grid gap-8 lg:grid-cols-2">
       <div className="space-y-6">
         <div className="group relative">
-          {currentDisplayImage ? (
-            <ImageGallery image1={currentDisplayImage} image2={product.image_url_2 || undefined} />
+          {galleryImages.length > 0 ? (
+            <ImageGallery images={galleryImages} alt={product.name} />
           ) : (
             <div className="aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 shadow-sm flex h-full w-full items-center justify-center text-7xl text-pink-200">
               ◇

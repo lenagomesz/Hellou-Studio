@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import { ProductDetail } from '@/components/shop/ProductDetail';
 import { ProductCard } from '@/components/shop/ProductCard';
@@ -8,59 +7,68 @@ import { ProductReviews } from '@/components/shop/ProductReviews';
 import { getCurrentUser } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
 
-function getProductWithOptions(id: string) {
-  return unstable_cache(
-    () =>
-      withTimeout(
-        (async () => {
-          const admin = getSupabaseAdmin();
-          const [productRes, optionsRes] = await Promise.all([
-            admin
-              .from('products')
-              .select('*')
-              .eq('id', id)
-              .eq('type', 'digital')
-              .eq('active', true)
-              .maybeSingle(),
-            admin
-              .from('product_options')
-              .select('*')
-              .eq('product_id', id)
-              .order('created_at', { ascending: true }),
-          ]);
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-          if (!productRes.data) return null;
-          return {
-            product: productRes.data as Product,
-            options: (optionsRes.data ?? []) as ProductOption[],
-          };
-        })(),
-      ).catch(() => null),
-    [`stl-product-${id}`],
-    { revalidate: 60 },
-  )();
+async function loadProductWithOptions(id: string) {
+  const admin = getSupabaseAdmin();
+  const [productRes, optionsRes] = await withTimeout(
+    Promise.all([
+      admin
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .eq('type', 'digital')
+        .eq('active', true)
+        .maybeSingle(),
+      admin
+        .from('product_options')
+        .select('*')
+        .eq('product_id', id)
+        .order('created_at', { ascending: true }),
+    ]),
+    12000,
+  );
+
+  if (productRes.error) throw productRes.error;
+  if (optionsRes.error) throw optionsRes.error;
+  if (!productRes.data) return null;
+
+  return {
+    product: productRes.data as Product,
+    options: (optionsRes.data ?? []) as ProductOption[],
+  };
 }
 
-function getRelatedProducts(excludeId: string) {
-  return unstable_cache(
-    () =>
-      withTimeout(
-        (async () => {
-          const admin = getSupabaseAdmin();
-          const { data } = await admin
-            .from('products')
-            .select('*')
-            .eq('type', 'digital')
-            .eq('active', true)
-            .neq('id', excludeId)
-            .order('created_at', { ascending: false })
-            .limit(4);
-          return (data ?? []) as Product[];
-        })(),
-      ).catch(() => [] as Product[]),
-    [`stl-related-${excludeId}`],
-    { revalidate: 60 },
-  )();
+async function getProductWithOptions(id: string) {
+  try {
+    return await loadProductWithOptions(id);
+  } catch (firstError) {
+    console.error('[stl-detail] First product query failed; retrying:', firstError);
+    return loadProductWithOptions(id);
+  }
+}
+
+async function getRelatedProducts(excludeId: string) {
+  try {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await withTimeout(
+      admin
+        .from('products')
+        .select('*')
+        .eq('type', 'digital')
+        .eq('active', true)
+        .neq('id', excludeId)
+        .order('created_at', { ascending: false })
+        .limit(4),
+      12000,
+    );
+    if (error) throw error;
+    return (data ?? []) as Product[];
+  } catch (error) {
+    console.error('[stl-detail] Related products query failed:', error);
+    return [];
+  }
 }
 
 export default async function STLProductDetailPage(

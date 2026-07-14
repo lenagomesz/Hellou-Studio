@@ -2,31 +2,89 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { signOut, useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useCart } from '@/components/shop/CartContext';
 import { NotificationBell } from '@/components/shop/NotificationBell';
 import { WHATSAPP_URL } from '@/components/shop/WhatsAppButton';
 
 const NAV_LINKS = [
-  { href: '/', label: 'Home', icon: 'M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25' },
-  { href: '/products', label: 'Catálogo', icon: 'M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z' },
-  { href: '/stl', label: 'STL', icon: 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 0H4.5m19.5 0a3.375 3.375 0 0 1-3.375 3.375H3.375A3.375 3.375 0 0 1 0 14.25m19.5 0V5.25A3.375 3.375 0 0 0 16.125 1.875H3.375A3.375 3.375 0 0 0 0 5.25v9' },
-  { href: '/request-print', label: 'Encomendas', icon: 'M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25' },
-  { href: '/about', label: 'Sobre', icon: 'M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z' },
+  {
+    href: '/',
+    label: 'Home',
+    emoji: '🏠',
+    icon: 'M3 10.75 12 3l9 7.75M5.5 9.5v10.25h13V9.5M9.25 19.75v-6h5.5v6',
+  },
+  {
+    href: '/products',
+    label: 'Catálogo',
+    emoji: '🛍️',
+    icon: 'M4.75 3.75h4.5a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-4.5a1 1 0 0 1-1-1v-4.5a1 1 0 0 1 1-1Zm10 0h4.5a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-4.5a1 1 0 0 1-1-1v-4.5a1 1 0 0 1 1-1Zm-10 10h4.5a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-4.5a1 1 0 0 1-1-1v-4.5a1 1 0 0 1 1-1Zm10 0h4.5a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-4.5a1 1 0 0 1-1-1v-4.5a1 1 0 0 1 1-1Z',
+  },
+  {
+    href: '/stl',
+    label: 'STL',
+    emoji: '📁',
+    icon: 'M6.5 2.75h7l4 4v14.5h-11V2.75Zm7 0v4h4M9.25 12h5.5m-5.5 4h5.5',
+  },
+  {
+    href: '/request-print',
+    label: 'Encomendas',
+    emoji: '🧊',
+    icon: 'm12 2.75 8.5 4.75L12 12.25 3.5 7.5 12 2.75Zm-8.5 9L12 16.5l8.5-4.75m-17 5L12 21.5l8.5-4.75',
+  },
+  {
+    href: '/about',
+    label: 'Sobre',
+    emoji: '✨',
+    icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-10v6m0-10h.01',
+  },
 ];
+
+const EMOJI_FONT = "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif";
+
+function ThemeGlyph({ dark }: { dark: boolean }) {
+  return dark ? (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="h-5 w-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+    </svg>
+  ) : (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="h-5 w-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+    </svg>
+  );
+}
+
+function BagIcon({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" />
+    </svg>
+  );
+}
 
 export function Navbar() {
   const { data: session, status } = useSession();
   const { count } = useCart();
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const { theme, setTheme } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  const userName = session?.user?.name?.trim() || session?.user?.email?.split('@')[0] || 'Minha conta';
+  const firstName = userName.split(/\s+/)[0];
+  const initials = userName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -37,298 +95,304 @@ export function Navbar() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setAccountMenuOpen(false);
   }, [pathname]);
+
+  const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
+  const iconButtonClass =
+    'relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200/80 bg-white text-gray-600 shadow-sm transition hover:-translate-y-0.5 hover:border-pink-200 hover:bg-pink-50/60 hover:text-pink-600 dark:border-white/10 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-pink-800 dark:hover:bg-gray-700 dark:hover:text-pink-400';
 
   return (
     <>
-      <header
-      className={`sticky top-0 z-30 border-b bg-gradient-to-r from-white via-white to-orange-50/40 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 backdrop-blur-md transition-shadow duration-300 ${
-        scrolled ? 'border-pink-100/60 shadow-sm shadow-pink-100/30 dark:border-gray-800 dark:shadow-gray-900/50' : 'border-transparent'
-      }`}
-    >
-      <div className="mx-auto w-full px-4 py-3.5 sm:px-6">
-        {/* Mobile layout */}
-        <div className="flex items-center justify-between gap-2 md:hidden">
-          {/* Logo - Left */}
-          <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">
-              helloustudio
-            </span>
-          </Link>
-
-          {/* Right side icons - Mobile */}
-          <div className="flex items-center justify-end gap-2">
-            {/* Theme toggle */}
-            {mounted && (
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="rounded-full p-2 text-gray-600 transition hover:bg-pink-50/60 hover:text-pink-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-pink-400"
-                aria-label={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-              >
-                {theme === 'dark' ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
-                  </svg>
-                )}
-              </button>
-            )}
-
-            {/* Notifications - Mobile */}
-            <NotificationBell />
-
-            {/* Mobile menu toggle */}
-            <button
-              onClick={() => setMenuOpen((v) => !v)}
-              className="rounded-full p-2 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-              aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-5 w-5">
-                {menuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                )}
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Desktop layout */}
-        <div className="hidden grid-cols-3 items-center gap-8 md:grid">
-          {/* Logo - Left */}
-          <div>
-            <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
+      <header className="sticky top-0 z-30 px-3 pt-3 sm:px-5">
+        <div
+          className={`mx-auto w-full max-w-[1400px] rounded-2xl border bg-white/90 px-3 py-2.5 backdrop-blur-xl transition-all duration-300 dark:bg-gray-900/90 sm:px-4 ${
+            scrolled
+              ? 'border-pink-100/80 shadow-[0_14px_42px_rgba(126,62,38,0.14)] dark:border-gray-700 dark:shadow-black/30'
+              : 'border-white/80 shadow-[0_10px_32px_rgba(126,62,38,0.09)] dark:border-gray-800'
+          }`}
+        >
+          <div className="flex min-h-11 items-center justify-between gap-3 lg:hidden">
+            <Link href="/" className="shrink-0 text-xl font-bold tracking-tight" aria-label="Hellou Studio — página inicial">
               <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">
                 helloustudio
               </span>
             </Link>
+
+            <div className="flex items-center justify-end gap-1.5">
+              {mounted && (
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className={iconButtonClass}
+                  aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+                >
+                  <ThemeGlyph dark={theme === 'dark'} />
+                </button>
+              )}
+
+              <NotificationBell />
+
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                className={iconButtonClass}
+                aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+                aria-expanded={menuOpen}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+                  {menuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
 
-          {/* Desktop nav - centered */}
-          <nav className="flex items-center justify-center gap-8">
-            {NAV_LINKS.map((link) => {
-              const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`relative text-sm font-medium transition ${
-                    isActive
-                      ? 'text-pink-600 dark:text-pink-400'
-                      : 'text-gray-600 hover:text-pink-600 dark:text-gray-300 dark:hover:text-pink-400'
-                  }`}
-                >
-                  {link.label}
-                  {isActive && (
-                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-orange-400" />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Right side - icons */}
-          <div className="flex items-center justify-end gap-3">
-            {/* Theme toggle */}
-            {mounted && (
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="rounded-full p-2 text-gray-600 transition hover:bg-pink-50/60 hover:text-pink-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-pink-400"
-                aria-label={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-              >
-                {theme === 'dark' ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
-                  </svg>
-                )}
-              </button>
-            )}
-
-            {/* Cart — desktop only in top bar */}
-            <Link
-              href="/cart"
-              className={`relative hidden rounded-full p-2 transition md:inline-flex ${
-                pathname === '/cart'
-                  ? 'bg-pink-50 text-pink-600 dark:bg-pink-950/50 dark:text-pink-400'
-                  : 'text-gray-600 hover:bg-pink-50/60 hover:text-pink-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-pink-400'
-              }`}
-              aria-label={count > 0 ? `Carrinho com ${count} ${count === 1 ? 'item' : 'itens'}` : 'Carrinho'}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-5 w-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" />
-              </svg>
-              {count > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-1 text-[10px] font-bold leading-4 text-white">
-                  {count > 99 ? '99+' : count}
-                </span>
-              )}
+          <div className="hidden grid-cols-[minmax(160px,0.8fr)_auto_minmax(225px,0.8fr)] items-center gap-4 lg:grid">
+            <Link href="/" className="w-fit text-2xl font-bold tracking-tight" aria-label="Hellou Studio — página inicial">
+              <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">
+                helloustudio
+              </span>
             </Link>
 
-            {/* Notifications */}
-            <div className="hidden md:block">
-              <NotificationBell />
-            </div>
-
-            {/* Auth — desktop only */}
-            <div className="hidden md:flex items-center gap-2">
-              {status === 'loading' ? (
-                <div className="h-8 w-8 animate-pulse rounded-full bg-gray-100" />
-              ) : session?.user ? (
-                <>
+            <nav className="flex items-center justify-center gap-1 rounded-2xl bg-orange-50/40 p-1 dark:bg-white/[0.03]" aria-label="Navegação principal">
+              {NAV_LINKS.map((link) => {
+                const active = isActive(link.href);
+                return (
                   <Link
-                    href="/account"
-                    className="rounded-full p-2 text-gray-600 transition hover:bg-pink-50/60 hover:text-pink-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-pink-400"
-                    aria-label="Minha conta"
+                    key={link.href}
+                    href={link.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold transition xl:px-3 ${
+                      active
+                        ? 'border-pink-200/70 bg-gradient-to-r from-pink-50 to-orange-50 text-pink-600 shadow-sm shadow-pink-100/50 dark:border-pink-900 dark:from-pink-950/60 dark:to-orange-950/30 dark:text-pink-400 dark:shadow-none'
+                        : 'border-transparent text-gray-600 hover:-translate-y-0.5 hover:border-gray-200 hover:bg-white hover:text-gray-900 hover:shadow-sm dark:text-gray-300 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-white'
+                    }`}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-5 w-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="h-4 w-4 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d={link.icon} />
                     </svg>
+                    {link.label}
                   </Link>
+                );
+              })}
+            </nav>
+
+            <div className="flex items-center justify-end gap-1.5">
+              {mounted && (
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className={iconButtonClass}
+                  aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+                >
+                  <ThemeGlyph dark={theme === 'dark'} />
+                </button>
+              )}
+
+              <Link
+                href="/cart"
+                className={`${iconButtonClass} ${
+                  pathname === '/cart' ? 'border-pink-200 bg-pink-50 text-pink-600 dark:border-pink-900 dark:bg-pink-950/50 dark:text-pink-400' : ''
+                }`}
+                aria-label={count > 0 ? `Carrinho com ${count} ${count === 1 ? 'item' : 'itens'}` : 'Carrinho'}
+              >
+                <BagIcon />
+                {count > 0 && (
+                  <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full border-2 border-white bg-gradient-to-r from-pink-500 to-orange-400 px-1 text-[9px] font-black leading-4 text-white dark:border-gray-900">
+                    {count > 99 ? '99+' : count}
+                  </span>
+                )}
+              </Link>
+
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-gray-800">
+                <NotificationBell />
+              </div>
+
+              {status === 'loading' ? (
+                <div className="h-10 w-24 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+              ) : session?.user ? (
+                <div className="relative">
                   <button
-                    onClick={() => signOut({ callbackUrl: '/' })}
-                    className="rounded-full p-2 text-gray-400 transition hover:bg-red-50/60 hover:text-red-500 dark:text-gray-500 dark:hover:bg-red-950/50 dark:hover:text-red-400"
-                    aria-label="Sair"
+                    type="button"
+                    onClick={() => setAccountMenuOpen((open) => !open)}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-gray-200/80 bg-white py-1 pl-1 pr-2.5 text-xs font-bold text-gray-800 shadow-sm transition hover:-translate-y-0.5 hover:border-pink-200 dark:border-white/10 dark:bg-gray-800 dark:text-white dark:hover:border-pink-800"
+                    aria-label="Abrir menu da conta"
+                    aria-expanded={accountMenuOpen}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-5 w-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                    <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-gradient-to-br from-pink-500 to-orange-400 px-1 text-[10px] font-black text-white">
+                      {initials || 'US'}
+                    </span>
+                    <span className="max-w-24 truncate">{firstName}</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={`h-3.5 w-3.5 transition ${accountMenuOpen ? 'rotate-180' : ''}`}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
                     </svg>
                   </button>
-                </>
+
+                  {accountMenuOpen && (
+                    <div className="absolute right-0 top-[calc(100%+0.65rem)] w-64 overflow-hidden rounded-2xl border border-gray-200 bg-white p-2 shadow-2xl shadow-gray-900/15 dark:border-gray-700 dark:bg-gray-900">
+                      <div className="mb-2 flex items-center gap-3 rounded-xl bg-gradient-to-r from-pink-50 to-orange-50 p-3 dark:from-pink-950/40 dark:to-orange-950/20">
+                        <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-orange-400 px-1 text-xs font-black text-white">
+                          {initials || 'US'}
+                        </span>
+                        <span className="min-w-0">
+                          <strong className="block truncate text-sm text-gray-900 dark:text-white">Olá, {firstName}!</strong>
+                          {session.user.email && <span className="block truncate text-[11px] text-gray-500 dark:text-gray-400">{session.user.email}</span>}
+                        </span>
+                      </div>
+                      {[
+                        { href: '/account', label: 'Minha conta' },
+                        { href: '/account/orders', label: 'Meus pedidos' },
+                        { href: '/account/bonus', label: 'Meus bônus' },
+                      ].map((item) => (
+                        <Link key={item.href} href={item.href} className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-orange-50 dark:text-gray-300 dark:hover:bg-gray-800">
+                          {item.label}<span aria-hidden="true">→</span>
+                        </Link>
+                      ))}
+                      <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+                      <button
+                        type="button"
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        className="flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                      >
+                        Sair da conta
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
-                <Link
-                  href="/login"
-                  className="rounded-full border border-pink-200 bg-white px-4 py-1.5 text-sm font-medium text-pink-600 transition hover:border-pink-300 hover:bg-pink-50/50 dark:bg-gray-800 dark:border-pink-800 dark:text-pink-400 dark:hover:bg-gray-700 dark:hover:border-pink-600"
-                >
+                <Link href="/login" className="inline-flex h-10 items-center gap-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-orange-50 px-3 text-xs font-bold text-pink-600 shadow-sm transition hover:-translate-y-0.5 hover:border-pink-300 dark:border-pink-900 dark:from-gray-800 dark:to-gray-800 dark:text-pink-400">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 7a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20a7.5 7.5 0 0 1 15 0" />
+                  </svg>
                   Entrar
                 </Link>
               )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Mobile nav slide-down */}
-      <div
-        className={`overflow-hidden border-t border-gray-100 dark:border-gray-800 bg-gradient-to-b from-white to-orange-50/50 dark:from-gray-900 dark:to-gray-900 transition-all duration-300 ease-in-out md:hidden ${
-          menuOpen ? 'max-h-[28rem] opacity-100' : 'max-h-0 opacity-0 border-transparent'
-        }`}
-      >
-        <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3 sm:px-6">
-          {NAV_LINKS.map((link) => {
-            const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                  isActive
-                    ? 'bg-gradient-to-r from-pink-50 to-orange-50 text-pink-700 dark:from-pink-950/50 dark:to-orange-950/30 dark:text-pink-400'
-                    : 'text-gray-700 hover:bg-orange-50/50 dark:text-gray-300 dark:hover:bg-gray-800'
-                }`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-4 w-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d={link.icon} />
-                </svg>
-                {link.label}
-              </Link>
-            );
-          })}
-
-          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
-
-          {/* Cart link in mobile menu */}
-          <Link
-            href="/cart"
-            className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-              pathname === '/cart'
-                ? 'bg-gradient-to-r from-pink-50 to-orange-50 text-pink-700 dark:from-pink-950/50 dark:to-orange-950/30 dark:text-pink-400'
-                : 'text-gray-700 hover:bg-orange-50/50 dark:text-gray-300 dark:hover:bg-gray-800'
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-4 w-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" />
-            </svg>
-            Carrinho
-            {count > 0 && (
-              <span className="ml-auto inline-flex min-w-[1.2rem] items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-1.5 text-[10px] font-bold leading-4 text-white">
-                {count > 99 ? '99+' : count}
-              </span>
+        <div
+          className={`mx-auto mt-2 w-full max-w-[1400px] overflow-hidden rounded-2xl border bg-white/95 shadow-xl shadow-gray-900/10 backdrop-blur-xl transition-all duration-300 ease-in-out dark:bg-gray-900/95 lg:hidden ${
+            menuOpen ? 'max-h-[52rem] border-gray-200 opacity-100 dark:border-gray-700' : 'max-h-0 border-transparent opacity-0'
+          }`}
+        >
+          <nav className="flex flex-col gap-1 p-3" aria-label="Menu do celular">
+            {session?.user && (
+              <div className="mb-1 flex items-center gap-3 rounded-xl border border-pink-100 bg-gradient-to-r from-pink-50 to-orange-50 p-3 dark:border-pink-900/60 dark:from-pink-950/40 dark:to-orange-950/20">
+                <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-orange-400 px-1 text-xs font-black text-white">
+                  {initials || 'US'}
+                </span>
+                <span className="min-w-0">
+                  <strong className="block truncate text-sm text-gray-900 dark:text-white">Olá, {firstName}!</strong>
+                  {session.user.email && <span className="block truncate text-[11px] text-gray-500 dark:text-gray-400">{session.user.email}</span>}
+                </span>
+              </div>
             )}
-          </Link>
 
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-orange-50/50 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-            </svg>
-            Fale conosco
-          </a>
+            <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+              Explorar
+            </p>
 
-          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+            {NAV_LINKS.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`flex min-h-11 items-center gap-3 rounded-xl border px-3 text-sm font-semibold transition ${
+                    active
+                      ? 'border-pink-100 bg-gradient-to-r from-pink-50 to-orange-50 text-pink-700 dark:border-pink-900 dark:from-pink-950/50 dark:to-orange-950/30 dark:text-pink-400'
+                      : 'border-transparent text-gray-700 hover:border-gray-100 hover:bg-orange-50/60 dark:text-gray-300 dark:hover:border-gray-800 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-base shadow-sm dark:bg-gray-800">
+                    {link.emoji}
+                  </span>
+                  {link.label}
+                  <span aria-hidden="true" className="ml-auto text-gray-400">→</span>
+                </Link>
+              );
+            })}
 
-          {status !== 'loading' && session?.user ? (
-            <>
-              <Link
-                href="/account"
-                className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                  pathname.startsWith('/account')
-                    ? 'bg-gradient-to-r from-pink-50 to-orange-50 text-pink-700 dark:from-pink-950/50 dark:to-orange-950/30 dark:text-pink-400'
-                    : 'text-gray-700 hover:bg-orange-50/50 dark:text-gray-300 dark:hover:bg-gray-800'
-                }`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-4 w-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                </svg>
-                Minha conta
-              </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-red-600 transition hover:bg-red-50/50 dark:text-red-400 dark:hover:bg-red-950/50"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-4 w-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                </svg>
-                Sair
-              </button>
-            </>
-          ) : status !== 'loading' ? (
+            <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+            <p className="px-3 pb-1 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+              Compras
+            </p>
+
             <Link
-              href="/login"
-              className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-pink-600 transition hover:bg-pink-50/50 dark:text-pink-400 dark:hover:bg-pink-950/50"
+              href="/cart"
+              className={`flex min-h-11 items-center gap-3 rounded-xl border px-3 text-sm font-semibold transition ${
+                pathname === '/cart'
+                  ? 'border-pink-100 bg-gradient-to-r from-pink-50 to-orange-50 text-pink-700 dark:border-pink-900 dark:from-pink-950/50 dark:to-orange-950/30 dark:text-pink-400'
+                  : 'border-transparent text-gray-700 hover:border-gray-100 hover:bg-orange-50/60 dark:text-gray-300 dark:hover:border-gray-800 dark:hover:bg-gray-800'
+              }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="h-4 w-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
-              </svg>
-              Entrar
+              <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-base shadow-sm dark:bg-gray-800">🛒</span>
+              Carrinho
+              {count > 0 && <span className="ml-auto rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-2 py-0.5 text-[10px] font-black text-white">{count > 99 ? '99+' : count}</span>}
             </Link>
-          ) : null}
-        </nav>
-      </div>
-    </header>
 
-      {/* Floating cart button — mobile only, visible when items in cart, hidden on /cart page */}
+            <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+            <p className="px-3 pb-1 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+              Atendimento
+            </p>
+
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-200 hover:bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm shadow-emerald-500/25">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884" />
+              </svg>
+              </span>
+              <span><strong className="block">Entre em contato</strong><small className="block text-[10px] font-medium text-emerald-600 dark:text-emerald-400">Fale conosco pelo WhatsApp</small></span>
+              <span aria-hidden="true" className="ml-auto">→</span>
+            </a>
+
+            <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+            <p className="px-3 pb-1 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+              Sua conta
+            </p>
+
+            {status === 'loading' ? (
+              <div className="h-11 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+            ) : session?.user ? (
+              <>
+                {[
+                  { href: '/account', label: 'Minha conta', emoji: '👤' },
+                  { href: '/account/orders', label: 'Meus pedidos', emoji: '📦' },
+                  { href: '/account/bonus', label: 'Meus bônus', emoji: '🎁' },
+                ].map((item) => (
+                  <Link key={item.href} href={item.href} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-gray-700 transition hover:bg-orange-50/60 dark:text-gray-300 dark:hover:bg-gray-800">
+                    <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gray-50 text-base dark:bg-gray-800">{item.emoji}</span>
+                    {item.label}<span aria-hidden="true" className="ml-auto">→</span>
+                  </Link>
+                ))}
+                <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
+                  <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-base dark:bg-red-950/50">🚪</span>
+                  Sair da conta
+                </button>
+              </>
+            ) : (
+              <Link href="/login" className="flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 text-sm font-bold text-white shadow-lg shadow-pink-500/20 transition hover:shadow-xl">
+                Entrar na minha conta
+              </Link>
+            )}
+          </nav>
+        </div>
+      </header>
+
       {count > 0 && pathname !== '/cart' && (
         <Link
           href="/cart"
-          className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 transition-transform hover:scale-105 active:scale-95 md:hidden"
+          className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 transition-transform hover:scale-105 active:scale-95 lg:hidden"
           aria-label={`Carrinho com ${count} ${count === 1 ? 'item' : 'itens'}`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="h-6 w-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" />
-          </svg>
-          <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold leading-5 text-pink-600 shadow-sm">
+          <BagIcon className="h-6 w-6" />
+          <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold leading-5 text-pink-600 shadow-sm">
             {count > 99 ? '99+' : count}
           </span>
         </Link>
