@@ -39,6 +39,41 @@ function customerOf(event: EventItem) {
   return Array.isArray(event.user) ? event.user[0] : event.user;
 }
 
+function pageDetails(path: string) {
+  const pathname = path.split('?')[0].replace(/\/$/, '') || '/';
+  const exactPages: Record<string, { label: string; detail: string }> = {
+    '/': { label: 'Página inicial', detail: 'Entrada principal da loja' },
+    '/products': { label: 'Catálogo de produtos', detail: 'Lista de produtos físicos' },
+    '/stl': { label: 'Catálogo de arquivos STL', detail: 'Lista de produtos digitais' },
+    '/cart': { label: 'Carrinho', detail: 'Produtos escolhidos antes do pagamento' },
+    '/login': { label: 'Entrar na conta', detail: 'Página de acesso do cliente' },
+    '/register': { label: 'Criar uma conta', detail: 'Cadastro de um novo cliente' },
+    '/account': { label: 'Minha conta', detail: 'Resumo da conta do cliente' },
+    '/account/orders': { label: 'Meus pedidos', detail: 'Histórico de compras do cliente' },
+    '/account/requests': { label: 'Minhas encomendas', detail: 'Solicitações de impressão 3D' },
+    '/account/bonus': { label: 'Clube Hellou', detail: 'Bônus e cupons exclusivos' },
+    '/request-print': { label: 'Solicitar impressão 3D', detail: 'Formulário de encomenda personalizada' },
+    '/about': { label: 'Sobre a Hellou Studio', detail: 'Apresentação da loja' },
+    '/checkout/success': { label: 'Compra concluída', detail: 'Confirmação exibida após o pagamento' },
+  };
+
+  if (exactPages[pathname]) return exactPages[pathname];
+  if (/^\/products\/[^/]+$/.test(pathname)) return { label: 'Detalhes de um produto', detail: 'Cliente abriu a página de um produto físico' };
+  if (/^\/stl\/[^/]+$/.test(pathname)) return { label: 'Detalhes de um arquivo STL', detail: 'Cliente abriu a página de um produto digital' };
+  if (/^\/account\/orders\/[^/]+$/.test(pathname)) return { label: 'Detalhes de um pedido', detail: 'Cliente consultou uma compra específica' };
+  if (/^\/account\/requests\/[^/]+$/.test(pathname)) return { label: 'Detalhes de uma encomenda', detail: 'Cliente consultou uma solicitação específica' };
+  return { label: 'Outra página da loja', detail: pathname };
+}
+
+function eventDescription(event: EventItem) {
+  if (!event.path) return EVENT_LABELS[event.event_type] ?? 'Realizou uma atividade';
+  const page = pageDetails(event.path);
+  if (event.event_type === 'page_view') return `Visitou: ${page.label}`;
+  if (event.event_type === 'product_view') return `Visualizou: ${page.label}`;
+  if (event.event_type === 'login') return 'Entrou na conta';
+  return `${EVENT_LABELS[event.event_type] ?? 'Realizou uma atividade'} · ${page.label}`;
+}
+
 export default function UserActivityPage() {
   const [days, setDays] = useState(7);
   const [data, setData] = useState<ActivityData | null>(null);
@@ -89,11 +124,12 @@ export default function UserActivityPage() {
         <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
           <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
             <h2 className="font-bold text-slate-900">Páginas mais visitadas</h2>
-            <div className="mt-4 space-y-3">{data.summary.topPaths.map((item, index) => <div key={item.path} className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500">{index + 1}</span><span className="min-w-0 flex-1 truncate text-sm text-slate-700">{item.path}</span><span className="rounded-full bg-pink-50 px-2.5 py-1 text-xs font-bold text-pink-700">{item.count}</span></div>)}</div>
+            <p className="mt-1 text-xs text-slate-500">Veja quais áreas despertaram mais interesse no período.</p>
+            <div className="mt-4 space-y-3">{data.summary.topPaths.map((item, index) => { const page = pageDetails(item.path); return <div key={item.path} className="flex items-center gap-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500">{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-700">{page.label}</p><p className="truncate text-[11px] text-slate-400">{page.detail}</p></div><span className="whitespace-nowrap rounded-full bg-pink-50 px-2.5 py-1 text-xs font-bold text-pink-700">{item.count} {item.count === 1 ? 'visita' : 'visitas'}</span></div>; })}</div>
           </section>
           <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
             <div className="border-b border-slate-100 px-5 py-4"><h2 className="font-bold text-slate-900">Linha do tempo recente</h2></div>
-            <div className="max-h-[520px] divide-y divide-slate-100 overflow-y-auto">{data.events.map((event) => { const customer = customerOf(event); return <div key={event.id} className="flex gap-3 p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-pink-600"><Eye className="h-4 w-4" /></span><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-slate-900">{customer?.name || customer?.email || 'Cliente'}</p><p className="mt-0.5 truncate text-xs text-slate-500">{EVENT_LABELS[event.event_type] ?? event.event_type}{event.path ? ` · ${event.path}` : ''}</p></div><span className="flex shrink-0 items-center gap-1 text-[11px] text-slate-400"><Clock3 className="h-3 w-3" />{new Date(event.created_at).toLocaleString('pt-BR')}</span></div>; })}</div>
+            <div className="max-h-[520px] divide-y divide-slate-100 overflow-y-auto">{data.events.map((event) => { const customer = customerOf(event); return <div key={event.id} className="flex gap-3 p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-pink-600"><Eye className="h-4 w-4" /></span><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-slate-900">{customer?.name || customer?.email || 'Cliente'}</p><p className="mt-0.5 truncate text-xs text-slate-500">{eventDescription(event)}</p></div><span className="flex shrink-0 items-center gap-1 text-[11px] text-slate-400"><Clock3 className="h-3 w-3" />{new Date(event.created_at).toLocaleString('pt-BR')}</span></div>; })}</div>
           </section>
         </div>
       </>}

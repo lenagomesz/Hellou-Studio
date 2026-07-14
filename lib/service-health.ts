@@ -72,6 +72,13 @@ export function getCronHealth(params: {
     'recover-abandoned-carts': 26,
     'cleanup-encomendas': 8 * 24,
   };
+  const routineLabels: Record<string, string> = {
+    'cancel-expired-pix': 'cancelamento de PIX expirados',
+    'admin-reminders': 'lembretes administrativos',
+    'recover-abandoned-carts': 'recuperação de carrinhos abandonados',
+    'cleanup-encomendas': 'limpeza de produtos temporários de encomendas',
+  };
+  const readableNames = (names: string[]) => names.map((name) => routineLabels[name] ?? name).join(', ');
   const now = params.now ?? Date.now();
   const latestByName = new Map(params.runs.map((run) => [run.cron_name, run]));
   const missing = Object.keys(expectedHours).filter((name) => !latestByName.has(name));
@@ -89,11 +96,11 @@ export function getCronHealth(params: {
   const summary = !params.hasSecret
     ? 'A variável CRON_SECRET não está configurada.'
     : failed.length
-      ? `Falha recente: ${failed.join(', ')}.`
+      ? `Falha recente na rotina de ${readableNames(failed)}.`
       : stale.length
-        ? `Execução atrasada: ${stale.join(', ')}.`
+        ? `Execução atrasada: ${readableNames(stale)}.`
         : missing.length
-          ? `Aguardando primeira execução: ${missing.join(', ')}.`
+          ? `Aguardando primeira execução de: ${readableNames(missing)}.`
           : 'Todas as rotinas executaram dentro do prazo.';
 
   return {

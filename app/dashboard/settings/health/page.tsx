@@ -28,6 +28,33 @@ const SERVICE_LABELS: Record<string, string> = {
 };
 const STATUS_LABELS: Record<string, string> = { healthy: 'Saudável', degraded: 'Atenção', down: 'Indisponível', unknown: 'Desconhecido' };
 const SERVICE_ICONS = { database: Database, crons: Clock3, resend: Mail, sentry: Bug, mercado_pago: CreditCard } as const;
+const CRON_DETAILS: Record<string, { label: string; description: string; singular: string; plural: string }> = {
+  'recover-abandoned-carts': {
+    label: 'Recuperação de carrinhos abandonados',
+    description: 'Procura carrinhos deixados para trás e envia um lembrete quando o cliente autorizou comunicações.',
+    singular: 'carrinho processado',
+    plural: 'carrinhos processados',
+  },
+  'admin-reminders': {
+    label: 'Lembretes administrativos',
+    description: 'Avisa sobre pedidos atrasados, encomendas pendentes, envios e produtos com estoque baixo.',
+    singular: 'lembrete criado',
+    plural: 'lembretes criados',
+  },
+  'cancel-expired-pix': {
+    label: 'Cancelamento de PIX expirados',
+    description: 'Confere pagamentos PIX vencidos e cancela somente os pedidos que continuam sem pagamento.',
+    singular: 'pedido cancelado',
+    plural: 'pedidos cancelados',
+  },
+  'cleanup-encomendas': {
+    label: 'Limpeza de produtos temporários',
+    description: 'Exclui produtos exclusivos de encomendas entregues há mais de 60 dias, mantendo o histórico da solicitação.',
+    singular: 'produto temporário removido',
+    plural: 'produtos temporários removidos',
+  },
+};
+const CRON_STATUS_LABELS: Record<string, string> = { success: 'Concluída', failed: 'Falhou', running: 'Em execução' };
 
 export default function ServiceHealthPage() {
   const [health, setHealth] = useState<Health | null>(null);
@@ -138,10 +165,10 @@ export default function ServiceHealthPage() {
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 p-5"><h2 className="font-black">Rotinas automáticas</h2><p className="mt-1 text-xs text-slate-500">Última execução conhecida de cada cron.</p></div>
+            <div className="border-b border-slate-100 p-5"><h2 className="font-black">Rotinas automáticas</h2><p className="mt-1 text-xs text-slate-500">Tarefas que a loja executa sozinha para manter pedidos, alertas e carrinhos organizados.</p></div>
             <div className="divide-y divide-slate-100">
               {latestCronByName.length === 0 && <p className="p-8 text-center text-sm text-slate-500">Ainda não há execuções registradas.</p>}
-              {latestCronByName.map((run) => <div key={run.id} className="flex items-center justify-between gap-3 p-5"><div><p className="text-sm font-extrabold">{run.cron_name}</p><p className="mt-1 text-xs text-slate-500">{new Date(run.started_at).toLocaleString('pt-BR')} · {run.processed_count} item(ns)</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${run.status === 'success' ? 'bg-emerald-100 text-emerald-700' : run.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{run.status}</span></div>)}
+              {latestCronByName.map((run) => { const details = CRON_DETAILS[run.cron_name] ?? { label: 'Rotina do sistema', description: 'Executa uma tarefa automática de manutenção da loja.', singular: 'ação realizada', plural: 'ações realizadas' }; return <div key={run.id} className="p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-extrabold text-slate-900">{details.label}</p><p className="mt-1 text-xs leading-5 text-slate-500">{details.description}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${run.status === 'success' ? 'bg-emerald-100 text-emerald-700' : run.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{CRON_STATUS_LABELS[run.status] ?? run.status}</span></div><p className="mt-3 text-[11px] font-semibold text-slate-400">Última execução: {new Date(run.started_at).toLocaleString('pt-BR')} · {run.processed_count} {run.processed_count === 1 ? details.singular : details.plural}</p></div>; })}
             </div>
           </div>
         </section>
