@@ -1,13 +1,20 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 export default function ErrorPage({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
       <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30">

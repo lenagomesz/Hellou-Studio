@@ -6,6 +6,7 @@ Sentry.init({
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
   debug: process.env.NODE_ENV !== 'production',
   enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+  sendDefaultPii: false,
 
   // Ignore errors from extensions and scripts
   beforeSend(event, hint) {
@@ -23,6 +24,17 @@ Sentry.init({
       hint.originalException.message.includes('fetch')
     ) {
       return null;
+    }
+
+    if (event.user) {
+      delete event.user.email;
+      delete event.user.ip_address;
+    }
+    if (event.request) {
+      delete event.request.cookies;
+      delete event.request.data;
+      delete event.request.headers;
+      delete event.request.query_string;
     }
 
     return event;

@@ -93,6 +93,18 @@ type TimelineEvent = {
   created_at: string;
 };
 
+type EmailDelivery = {
+  id: string;
+  email_type: string;
+  recipient_masked: string;
+  subject: string;
+  status: string;
+  attempt_count: number;
+  provider_email_id: string | null;
+  last_error_message: string | null;
+  created_at: string;
+};
+
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -103,6 +115,8 @@ export default function OrderDetailPage() {
   const [shippingError, setShippingError] = useState('');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [emails, setEmails] = useState<EmailDelivery[]>([]);
+  const [resendingEmailId, setResendingEmailId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -119,7 +133,29 @@ export default function OrderDetailPage() {
       .then((r) => r.ok ? r.json() : [])
       .then((data) => setTimeline(data))
       .catch(() => setTimeline([]));
+
+    fetch(`/api/admin/orders/${id}/emails`)
+      .then((response) => response.ok ? response.json() : { emails: [] })
+      .then((data) => setEmails(data.emails ?? []))
+      .catch(() => setEmails([]));
   }, [id]);
+
+  async function resendEmail(emailId: string) {
+    setResendingEmailId(emailId);
+    setSaveMsg('');
+    try {
+      const response = await fetch(`/api/admin/email-deliveries/${emailId}/resend`, { method: 'POST' });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(data.error ?? 'Falha ao reenviar.');
+      setSaveMsg('E-mail reenviado com sucesso!');
+      const historyResponse = await fetch(`/api/admin/orders/${id}/emails`, { cache: 'no-store' });
+      if (historyResponse.ok) setEmails((await historyResponse.json()).emails ?? []);
+    } catch (error) {
+      setSaveMsg(`Erro: ${error instanceof Error ? error.message : 'Falha ao reenviar e-mail.'}`);
+    } finally {
+      setResendingEmailId(null);
+    }
+  }
 
   async function updateStatus(status: OrderStatus) {
     if (status === 'shipped' && !trackingCode.trim()) {
@@ -680,6 +716,27 @@ export default function OrderDetailPage() {
                 </div>
               )}
             </dl>
+          </div>
+
+          {/* Histórico de e-mails */}
+          <div className="rounded-[22px] border border-gray-100 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div><h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">E-mails do pedido</h2><p className="mt-0.5 text-[11px] text-gray-400">Envio e entrega confirmados pela Resend</p></div>
+              <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold text-gray-600">{emails.length}</span>
+            </div>
+            {emails.length === 0 ? <p className="text-xs text-gray-400">Nenhum envio registrado para este pedido.</p> : (
+              <ul className="space-y-3">
+                {emails.map((email) => {
+                  const failed = ['failed', 'bounced', 'complained', 'suppressed'].includes(email.status);
+                  const delivered = email.status === 'delivered';
+                  return <li key={email.id} className="rounded-xl border border-gray-100 bg-gray-50/70 p-3 dark:border-white/10 dark:bg-white/5">
+                    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-xs font-semibold text-gray-800 dark:text-gray-100" title={email.subject}>{email.subject}</p><p className="mt-1 text-[10px] text-gray-400">{email.recipient_masked} · {formatDate(email.created_at)} · {email.attempt_count} tentativa(s)</p></div><span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-black uppercase ${delivered ? 'bg-green-100 text-green-700' : failed ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{email.status}</span></div>
+                    {email.last_error_message && <p className="mt-2 text-[10px] leading-4 text-red-600">{email.last_error_message}</p>}
+                    {(failed || email.status === 'delayed') && <button type="button" disabled={!email.provider_email_id || resendingEmailId === email.id} onClick={() => void resendEmail(email.id)} className="mt-2 rounded-lg border border-pink-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-pink-600 hover:bg-pink-50 disabled:cursor-not-allowed disabled:opacity-50">{resendingEmailId === email.id ? 'Reenviando...' : 'Reenviar e-mail'}</button>}
+                  </li>;
+                })}
+              </ul>
+            )}
           </div>
 
           {/* Timeline */}

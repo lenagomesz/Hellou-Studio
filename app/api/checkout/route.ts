@@ -7,6 +7,7 @@ import { computeUnitPrice, type CartItemView } from '@/lib/cart';
 import { calculateShipping, sanitizeCep, type ShippingOption } from '@/lib/shipping';
 import { SUCCESSFUL_ORDER_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
 import type { CartItem, Product, ProductOption } from '@/types/database';
+import { captureOperationalError, structuredLog } from '@/lib/observability';
 
 type RawCartRow = CartItem & {
   product: Pick<
@@ -173,7 +174,7 @@ export async function POST(request: Request) {
         return badRequest('Opção de frete indisponível para este CEP');
       }
     } catch (error) {
-      console.error('[checkout] shipping validation error:', error);
+      structuredLog('warn', 'checkout.shipping_validation_failed', { error });
       return badRequest('Não foi possível validar o frete. Calcule novamente e tente outra vez.');
     }
   }
@@ -239,7 +240,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: session.url, id: session.id });
   } catch (err) {
-    console.error('[checkout] Stripe error', err);
+    await captureOperationalError({ fingerprint: 'stripe-checkout-create', category: 'payment.failed', title: 'Falha ao criar pagamento na Stripe', error: err, route: '/api/checkout', severity: 'critical', alert: true });
     return serverError('Erro ao criar sessão de pagamento');
   }
 }

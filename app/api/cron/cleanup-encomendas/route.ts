@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { captureOperationalError, finishCronRun, startCronRun } from '@/lib/observability';
 
 const DAYS_AFTER_DELIVERY = 60;
 
@@ -8,6 +9,8 @@ export async function POST(request: Request) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const cronRun = await startCronRun('cleanup-encomendas');
 
   const admin = getSupabaseAdmin();
   const cutoff = new Date(Date.now() - DAYS_AFTER_DELIVERY * 24 * 60 * 60 * 1000).toISOString();
@@ -20,6 +23,7 @@ export async function POST(request: Request) {
     .not('product_id', 'is', null);
 
   if (!requests || requests.length === 0) {
+    await finishCronRun(cronRun, { status: 'success', processedCount: 0 });
     return NextResponse.json({ deleted: 0 });
   }
 
@@ -28,6 +32,7 @@ export async function POST(request: Request) {
     .filter(Boolean) as string[];
 
   if (productIds.length === 0) {
+    await finishCronRun(cronRun, { status: 'success', processedCount: 0 });
     return NextResponse.json({ deleted: 0 });
   }
 
@@ -38,9 +43,13 @@ export async function POST(request: Request) {
     .eq('category', 'encomenda');
 
   if (error) {
-    console.error('[cleanup-encomendas] delete error:', error);
+    await finishCronRun(cronRun, { status: 'failed', error });
+    await captureOperationalError({ fingerprint: 'cron-cleanup-encomendas', category: 'cron.failed', title: 'Falha na limpeza de encomendas antigas', error, route: '/api/cron/cleanup-encomendas', alert: true });
     return NextResponse.json({ error: 'Erro ao excluir' }, { status: 500 });
   }
 
+  await finishCronRun(cronRun, { status: 'success', processedCount: productIds.length });
   return NextResponse.json({ deleted: productIds.length });
 }
+
+export const GET = POST;

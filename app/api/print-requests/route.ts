@@ -151,6 +151,7 @@ export async function POST(request: Request) {
       nome: currentUser.name,
       title: data.title,
       newStatus: 'pending',
+      requestId: data.id,
     }).catch(err => console.error('[email] user confirmation failed:', err));
   }
 

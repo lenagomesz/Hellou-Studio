@@ -1,4 +1,6 @@
 import { Resend } from 'resend';
+import { sendTrackedEmail } from '@/lib/email-delivery';
+import { structuredLog } from '@/lib/observability';
 
 let cached: Resend | null = null;
 let warned = false;
@@ -8,7 +10,7 @@ function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     if (!warned) {
-      console.warn('[email] RESEND_API_KEY não configurado — emails desabilitados');
+      structuredLog('warn', 'email.provider_not_configured');
       warned = true;
     }
     return null;
@@ -33,7 +35,7 @@ export async function sendWelcomeEmail(email: string, nome: string | null) {
   const greeting = nome ? `Olá, ${nome}!` : 'Olá!';
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: email,
       subject: `🎉 Bem-vindo(a) à HellouStudio!${nome ? `, ${nome}` : ''}`,
@@ -114,14 +116,14 @@ export async function sendWelcomeEmail(email: string, nome: string | null) {
           </div>
         </div>
       `,
-    });
+    }, { emailType: 'welcome' });
     if (res.error) {
-      console.error('[email] boas-vindas ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'welcome' });
     } else {
-      console.log('[email] boas-vindas ENVIADO para:', email, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'welcome', providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] boas-vindas EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'welcome', error: err });
   }
 }
 
@@ -133,7 +135,7 @@ export async function sendPasswordResetEmail(email: string, nome: string | null,
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: email,
       subject: '🔐 Redefinir sua senha — HellouStudio',
@@ -181,14 +183,14 @@ export async function sendPasswordResetEmail(email: string, nome: string | null,
           </div>
         </div>
       `,
-    });
+    }, { emailType: 'password_reset' });
     if (res.error) {
-      console.error('[email] reset-password ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'password_reset' });
     } else {
-      console.log('[email] reset-password ENVIADO para:', email, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'password_reset', providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] reset-password EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'password_reset', error: err });
   }
 }
 
@@ -213,6 +215,7 @@ export async function sendPrintRequestStatusEmail(params: {
   quotedPrice?: number | null;
   rejectionReason?: string | null;
   productId?: string | null;
+  requestId?: string;
 }) {
   const resend = getResend();
   if (!resend) return;
@@ -261,7 +264,7 @@ export async function sendPrintRequestStatusEmail(params: {
   }
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.email,
       subject: `🖨️ Atualização: "${params.title}" — ${statusLabel}`,
@@ -316,14 +319,14 @@ export async function sendPrintRequestStatusEmail(params: {
           </div>
         </div>
       `,
-    });
+    }, { emailType: 'print_request_status', printRequestId: params.requestId });
     if (res.error) {
-      console.error('[email] print-request-status ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'print_request_status' });
     } else {
-      console.log('[email] print-request-status ENVIADO para:', params.email, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'print_request_status', providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] print-request-status EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'print_request_status', error: err });
   }
 }
 
@@ -337,19 +340,13 @@ export async function sendOrderConfirmationEmail(params: {
   const resend = getResend();
   if (!resend) return;
 
-  console.log('[email] sendOrderConfirmationEmail called with:', {
-    email: params.email,
-    nome: params.nome,
-    pedidoId: params.pedidoId,
-  });
-
   const baseUrl = getBaseUrl();
   const formattedTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.total);
   const formattedDate = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
   const isSTLOrder = params.itens.some(item => item.nome.toLowerCase().includes('stl') || item.nome.toLowerCase().includes('arquivo'));
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.email,
       subject: `${isSTLOrder ? '📁 Arquivo Disponível!' : '🎉 Pedido Confirmado!'} #${params.pedidoId.slice(0, 8).toUpperCase()}`,
@@ -464,14 +461,14 @@ export async function sendOrderConfirmationEmail(params: {
           </div>
         </div>
       `,
-    });
+    }, { emailType: 'order_confirmation', orderId: params.pedidoId });
     if (res.error) {
-      console.error('[email] pedido-confirmado ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'order_confirmation', orderId: params.pedidoId });
     } else {
-      console.log('[email] pedido-confirmado ENVIADO para:', params.email, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'order_confirmation', orderId: params.pedidoId, providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] pedido-confirmado EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'order_confirmation', orderId: params.pedidoId, error: err });
   }
 }
 
@@ -496,7 +493,7 @@ export async function sendPixPaymentEmail(params: {
   const safePixCode = params.pixCode.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.email,
       subject: `PIX gerado para o pedido #${shortId}`,
@@ -521,11 +518,11 @@ export async function sendPixPaymentEmail(params: {
           </div>
         </div>
       `,
-    });
-    if (res.error) console.error('[email] pix-pending ERRO:', JSON.stringify(res.error, null, 2));
-    else console.log('[email] pix-pending ENVIADO para:', params.email, '| id:', res.data?.id);
+    }, { emailType: 'pix_payment', orderId: params.orderId });
+    if (res.error) structuredLog('error', 'email.provider_response_error', { emailType: 'pix_payment', orderId: params.orderId });
+    else structuredLog('info', 'email.send_completed', { emailType: 'pix_payment', orderId: params.orderId, providerEmailId: res.data?.id });
   } catch (err) {
-    console.error('[email] pix-pending EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'pix_payment', orderId: params.orderId, error: err });
   }
 }
 
@@ -626,7 +623,7 @@ export async function sendOrderStatusEmail(params: {
       ? ORDER_STATUS_SUBJECTS[params.newStatus](params.nome)
       : defaultSubject;
 
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.email,
       subject,
@@ -665,14 +662,14 @@ export async function sendOrderStatusEmail(params: {
           </p>
         </div>
       `,
-    });
+    }, { emailType: 'order_status', orderId: params.orderId, metadata: { status: params.newStatus } });
     if (res.error) {
-      console.error('[email] order-status ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'order_status', orderId: params.orderId });
     } else {
-      console.log('[email] order-status ENVIADO para:', params.email, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'order_status', orderId: params.orderId, providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] order-status EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'order_status', orderId: params.orderId, error: err });
   }
 }
 
@@ -699,7 +696,7 @@ export async function sendAdminNewOrderEmail(params: {
     : '<span style="display: inline-block; padding: 4px 12px; background: #F0FDF4; color: #166534; border-radius: 12px; font-size: 12px; font-weight: 600;">🖨️ Produto Físico</span>';
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.adminEmail,
       subject: `🔔 Novo pedido! #${params.orderId.slice(0, 8).toUpperCase()} — ${price}`,
@@ -743,14 +740,14 @@ export async function sendAdminNewOrderEmail(params: {
           </p>
         </div>
       `,
-    });
+    }, { emailType: 'admin_new_order', orderId: params.orderId });
     if (res.error) {
-      console.error('[email] admin-new-order ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'admin_new_order', orderId: params.orderId });
     } else {
-      console.log('[email] admin-new-order ENVIADO para:', params.adminEmail, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'admin_new_order', orderId: params.orderId, providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] admin-new-order EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'admin_new_order', orderId: params.orderId, error: err });
   }
 }
 
@@ -768,7 +765,7 @@ export async function sendInvoiceRequestEmail(params: {
   const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.total);
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.adminEmail,
       subject: `Nota Fiscal solicitada — Pedido #${params.orderId.slice(0, 8).toUpperCase()}`,
@@ -791,14 +788,14 @@ export async function sendInvoiceRequestEmail(params: {
           </a>
         </div>
       `,
-    });
+    }, { emailType: 'invoice_request', orderId: params.orderId });
     if (res.error) {
-      console.error('[email] invoice-request ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'invoice_request', orderId: params.orderId });
     } else {
-      console.log('[email] invoice-request ENVIADO para:', params.adminEmail, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'invoice_request', orderId: params.orderId, providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] invoice-request EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'invoice_request', orderId: params.orderId, error: err });
   }
 }
 
@@ -815,7 +812,7 @@ export async function sendAdminNewPrintRequestEmail(params: {
   const baseUrl = getBaseUrl();
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.adminEmail,
       subject: `Nova solicitação de impressão: "${params.title}"`,
@@ -834,14 +831,14 @@ export async function sendAdminNewPrintRequestEmail(params: {
           </a>
         </div>
       `,
-    });
+    }, { emailType: 'admin_new_print_request', printRequestId: params.requestId });
     if (res.error) {
-      console.error('[email] admin-new-print-request ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'admin_new_print_request', printRequestId: params.requestId });
     } else {
-      console.log('[email] admin-new-print-request ENVIADO para:', params.adminEmail, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'admin_new_print_request', printRequestId: params.requestId, providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] admin-new-print-request EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'admin_new_print_request', printRequestId: params.requestId, error: err });
   }
 }
 
@@ -859,7 +856,7 @@ export async function sendSTLOrderConfirmationEmail(params: {
   const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.price);
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.email,
       subject: `Seu arquivo STL está pronto! #${params.orderId.slice(0, 8).toUpperCase()}`,
@@ -882,14 +879,14 @@ export async function sendSTLOrderConfirmationEmail(params: {
           </p>
         </div>
       `,
-    });
+    }, { emailType: 'stl_order_confirmation', orderId: params.orderId });
     if (res.error) {
-      console.error('[email] stl-order-confirmation ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'stl_order_confirmation', orderId: params.orderId });
     } else {
-      console.log('[email] stl-order-confirmation ENVIADO para:', params.email, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'stl_order_confirmation', orderId: params.orderId, providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] stl-order-confirmation EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'stl_order_confirmation', orderId: params.orderId, error: err });
   }
 }
 
@@ -908,7 +905,7 @@ export async function sendSTLAdminNotificationEmail(params: {
   const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.price);
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.adminEmail,
       subject: `Novo pedido digital! #${params.orderId.slice(0, 8).toUpperCase()} — ${price}`,
@@ -929,14 +926,14 @@ export async function sendSTLAdminNotificationEmail(params: {
           </a>
         </div>
       `,
-    });
+    }, { emailType: 'stl_admin_notification', orderId: params.orderId });
     if (res.error) {
-      console.error('[email] stl-admin-notification ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'stl_admin_notification', orderId: params.orderId });
     } else {
-      console.log('[email] stl-admin-notification ENVIADO para:', params.adminEmail, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'stl_admin_notification', orderId: params.orderId, providerEmailId: res.data?.id });
     }
   } catch (err) {
-    console.error('[email] stl-admin-notification EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'stl_admin_notification', orderId: params.orderId, error: err });
   }
 }
 
@@ -948,7 +945,7 @@ export async function sendSTLDeliveryEmail(params: {
 }): Promise<boolean> {
   const resend = getResend();
   if (!resend) {
-    console.log('[email] sendSTLDeliveryEmail: RESEND_API_KEY not configured');
+    structuredLog('warn', 'email.provider_not_configured', { emailType: 'stl_delivery' });
     return false;
   }
 
@@ -956,7 +953,7 @@ export async function sendSTLDeliveryEmail(params: {
   const downloadUrl = `${baseUrl}/dashboard/orders/${params.orderId}`;
 
   try {
-    const res = await resend.emails.send({
+    const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.email,
       subject: `Seu arquivo está pronto! #${params.orderId.slice(0, 8).toUpperCase()}`,
@@ -979,16 +976,16 @@ export async function sendSTLDeliveryEmail(params: {
           </p>
         </div>
       `,
-    });
+    }, { emailType: 'stl_delivery', orderId: params.orderId });
     if (res.error) {
-      console.error('[email] stl-delivery ERRO:', JSON.stringify(res.error, null, 2));
+      structuredLog('error', 'email.provider_response_error', { emailType: 'stl_delivery', orderId: params.orderId });
       return false;
     } else {
-      console.log('[email] stl-delivery ENVIADO para:', params.email, '| id:', res.data?.id);
+      structuredLog('info', 'email.send_completed', { emailType: 'stl_delivery', orderId: params.orderId, providerEmailId: res.data?.id });
       return true;
     }
   } catch (err) {
-    console.error('[email] stl-delivery EXCEPTION:', err);
+    structuredLog('error', 'email.template_exception', { emailType: 'stl_delivery', orderId: params.orderId, error: err });
     return false;
   }
 }

@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail } from '@/lib/email';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import type { CartItem, Order, OrderItem, Product, ProductOption } from '@/types/database';
+import { captureOperationalError, structuredLog } from '@/lib/observability';
 
 type CartRowForFulfillment = CartItem & {
   product: Pick<
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'unknown error';
+    await captureOperationalError({ fingerprint: 'stripe-webhook-invalid-signature', category: 'webhook.rejected', title: 'Webhook da Stripe rejeitado', error: err, route: '/api/webhooks/stripe', severity: 'warning', alert: true });
     return new Response(`Webhook error: ${message}`, { status: 400 });
   }
 
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
         break;
     }
   } catch (err) {
-    console.error('[stripe webhook] handler error', event.type, err);
+    await captureOperationalError({ fingerprint: `stripe-webhook-${event.type}`, category: 'webhook.failed', title: 'Falha ao processar webhook da Stripe', error: err, route: '/api/webhooks/stripe', severity: 'critical', metadata: { eventType: event.type }, alert: true });
     return new Response(
       `Webhook handler failed: ${err instanceof Error ? err.message : 'unknown'}`,
       { status: 500 },
@@ -234,7 +236,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
       .update({ stock: newStock })
       .eq('id', row.option.id);
     if (stockError) {
-      console.error('[stripe webhook] stock update error', stockError);
+      structuredLog('error', 'stripe.stock_update_failed', { error: stockError, orderId });
     }
   }
 
@@ -243,7 +245,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     .delete()
     .eq('user_id', userId);
   if (clearError) {
-    console.error('[stripe webhook] cart clear error', clearError);
+    structuredLog('warn', 'stripe.cart_clear_failed', { error: clearError, orderId });
   }
 
   const { data: user } = await admin

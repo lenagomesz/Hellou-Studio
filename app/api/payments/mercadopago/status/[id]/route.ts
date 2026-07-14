@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireUser, badRequest, serverError } from '@/lib/api';
 import { getPaymentClient } from '@/lib/mercadopago';
+import { structuredLog } from '@/lib/observability';
 
 export async function GET(
   _request: Request,
@@ -42,7 +43,7 @@ export async function GET(
 
     return NextResponse.json(responseData);
   } catch (err: unknown) {
-    console.error('[mp-status] error:', err);
+    structuredLog('warn', 'mercadopago.status_check_failed', { error: err });
     return serverError('Erro ao consultar status do pagamento');
   }
 }

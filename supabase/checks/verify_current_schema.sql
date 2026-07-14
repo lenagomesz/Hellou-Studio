@@ -12,7 +12,12 @@ WITH required_tables(schema_name, object_name) AS (
     ('public', 'inventory_materials'),
     ('public', 'inventory_expenses'),
     ('public', 'admin_notifications'),
-    ('public', 'user_activity_events')
+    ('public', 'user_activity_events'),
+    ('public', 'email_delivery_logs'),
+    ('public', 'email_delivery_events'),
+    ('public', 'operational_errors'),
+    ('public', 'service_health_checks'),
+    ('public', 'cron_runs')
 ),
 required_columns(table_name, column_name) AS (
   VALUES

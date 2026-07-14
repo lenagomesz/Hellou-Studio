@@ -3,6 +3,7 @@ import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderStatusEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { captureOperationalError, finishCronRun, startCronRun, structuredLog } from '@/lib/observability';
 
 const PIX_EXPIRATION_MINUTES = 30;
 
@@ -11,6 +12,8 @@ export async function POST(request: Request) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
+
+  const cronRun = await startCronRun('cancel-expired-pix');
 
   const admin = getSupabaseAdmin();
   const cutoff = new Date(Date.now() - PIX_EXPIRATION_MINUTES * 60 * 1000).toISOString();
@@ -22,7 +25,8 @@ export async function POST(request: Request) {
     .lt('created_at', cutoff);
 
   if (fetchError) {
-    console.error('[cancel-expired-pix] fetch error:', fetchError);
+    await finishCronRun(cronRun, { status: 'failed', error: fetchError });
+    await captureOperationalError({ fingerprint: 'cron-cancel-pix-fetch', category: 'cron.failed', title: 'Falha ao verificar PIX expirados', error: fetchError, route: '/api/cron/cancel-expired-pix', alert: true });
     return NextResponse.json({ error: 'Erro ao buscar pedidos' }, { status: 500 });
   }
 
@@ -40,11 +44,14 @@ export async function POST(request: Request) {
       const canceledByProvider = ['cancelled', 'rejected'].includes(payment.status ?? '');
       if (expirationReached || canceledByProvider) expiredOrders.push(order);
     } catch (error) {
-      console.error('[cancel-expired-pix] payment check failed:', order.mp_payment_id, error);
+      await captureOperationalError({ fingerprint: 'cron-cancel-pix-provider-check', category: 'payment.provider_check_failed', title: 'Falha ao consultar pagamento PIX', error, orderId: order.id, severity: 'warning', alert: true });
     }
   }
 
-  if (expiredOrders.length === 0) return NextResponse.json({ canceled: 0 });
+  if (expiredOrders.length === 0) {
+    await finishCronRun(cronRun, { status: 'success', processedCount: 0 });
+    return NextResponse.json({ canceled: 0 });
+  }
 
   const ids = expiredOrders.map((order) => order.id);
   const { error: updateError } = await admin
@@ -54,7 +61,8 @@ export async function POST(request: Request) {
     .in('id', ids);
 
   if (updateError) {
-    console.error('[cancel-expired-pix] update error:', updateError);
+    await finishCronRun(cronRun, { status: 'failed', error: updateError });
+    await captureOperationalError({ fingerprint: 'cron-cancel-pix-update', category: 'cron.failed', title: 'Falha ao cancelar pedidos com PIX expirado', error: updateError, route: '/api/cron/cancel-expired-pix', alert: true });
     return NextResponse.json({ error: 'Erro ao cancelar pedidos' }, { status: 500 });
   }
 
@@ -74,6 +82,9 @@ export async function POST(request: Request) {
     }
   }
 
-  console.log(`[cancel-expired-pix] canceled ${ids.length} orders`);
+  await finishCronRun(cronRun, { status: 'success', processedCount: ids.length });
+  structuredLog('info', 'cron.cancel_expired_pix.completed', { processedCount: ids.length });
   return NextResponse.json({ canceled: ids.length });
 }
+
+export const GET = POST;

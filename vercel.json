@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/cron/cancel-expired-pix", "schedule": "0 8 * * *" },
-    { "path": "/api/cron/cleanup-encomendas", "schedule": "0 3 * * 0" }
+    { "path": "/api/cron/cleanup-encomendas", "schedule": "0 3 * * 0" },
+    { "path": "/api/cron/admin-reminders", "schedule": "0 9 * * *" }
   ]
 }

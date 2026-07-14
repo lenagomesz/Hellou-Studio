@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdmin } from '@/lib/api';
+import { finishCronRun, startCronRun } from '@/lib/observability';
 
-export async function POST() {
-  const auth = await requireAdmin();
-  if (auth.response) return auth.response;
+export async function POST(request: Request) {
+  const isCron = Boolean(process.env.CRON_SECRET)
+    && request.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`;
+  if (!isCron) {
+    const auth = await requireAdmin();
+    if (auth.response) return auth.response;
+  }
+
+  const cronRun = await startCronRun('admin-reminders');
 
   const admin = getSupabaseAdmin();
   let createdCount = 0;
@@ -167,5 +174,8 @@ export async function POST() {
     }
   }
 
+  await finishCronRun(cronRun, { status: 'success', processedCount: createdCount });
   return NextResponse.json({ success: true, created_count: createdCount });
 }
+
+export const GET = POST;

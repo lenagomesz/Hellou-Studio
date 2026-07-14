@@ -1,0 +1,134 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { Activity, AlertTriangle, CheckCircle2, Clock3, Mail, RefreshCw, Server, XCircle } from 'lucide-react';
+
+type Service = { service: string; status: 'healthy' | 'degraded' | 'down' | 'unknown'; latencyMs?: number; configured?: boolean };
+type CronRun = { id: string; cron_name: string; status: string; started_at: string; duration_ms?: number | null; processed_count: number };
+type Health = {
+  checkedAt: string;
+  services: Service[];
+  email24h: { total: number; failed: number; counts: Record<string, number> };
+  openErrors: number;
+  cronRuns: CronRun[];
+};
+type OperationalError = {
+  id: string;
+  category: string;
+  severity: 'warning' | 'error' | 'critical';
+  title: string;
+  safe_message: string | null;
+  occurrence_count: number;
+  last_seen_at: string;
+  resolved_at: string | null;
+};
+
+const SERVICE_LABELS: Record<string, string> = {
+  database: 'Banco de dados', resend: 'Resend e webhook', sentry: 'Sentry', mercado_pago: 'Mercado Pago', stripe: 'Stripe', crons: 'Rotinas automáticas',
+};
+const STATUS_LABELS: Record<string, string> = { healthy: 'Saudável', degraded: 'Atenção', down: 'Indisponível', unknown: 'Desconhecido' };
+
+export default function ServiceHealthPage() {
+  const [health, setHealth] = useState<Health | null>(null);
+  const [errors, setErrors] = useState<OperationalError[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [healthResponse, errorsResponse] = await Promise.all([
+        fetch('/api/admin/observability/health', { cache: 'no-store' }),
+        fetch('/api/admin/observability/errors', { cache: 'no-store' }),
+      ]);
+      if (healthResponse.ok) setHealth(await healthResponse.json());
+      if (errorsResponse.ok) setErrors((await errorsResponse.json()).errors ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function resolveError(id: string, resolved: boolean) {
+    const response = await fetch('/api/admin/observability/errors', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, resolved }),
+    });
+    if (response.ok) await load();
+  }
+
+  const latestCronByName = Array.from(new Map((health?.cronRuns ?? []).map((run) => [run.cron_name, run])).values());
+  const openErrors = errors.filter((error) => !error.resolved_at);
+
+  return (
+    <div className="min-h-screen bg-[#f5f6f8] p-4 text-slate-950 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <header className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-5 bg-gradient-to-r from-slate-950 via-slate-900 to-pink-950 p-7 text-white sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-pink-200"><Activity className="h-3.5 w-3.5" /> Observabilidade</span>
+              <h1 className="text-3xl font-black tracking-tight">Saúde dos serviços</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Acompanhe integrações, entregas de e-mail, tarefas automáticas e falhas operacionais sem expor dados dos clientes.</p>
+            </div>
+            <button type="button" onClick={() => void load()} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-pink-50 disabled:opacity-60">
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar agora
+            </button>
+          </div>
+        </header>
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {(health?.services ?? []).map((service) => {
+            const healthy = service.status === 'healthy';
+            return (
+              <article key={service.service} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${healthy ? 'bg-emerald-50 text-emerald-600' : service.status === 'down' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}><Server className="h-5 w-5" /></span>
+                  {healthy ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> : service.status === 'down' ? <XCircle className="h-5 w-5 text-red-500" /> : <AlertTriangle className="h-5 w-5 text-amber-500" />}
+                </div>
+                <h2 className="mt-4 text-sm font-extrabold">{SERVICE_LABELS[service.service] ?? service.service}</h2>
+                <p className={`mt-1 text-xs font-bold ${healthy ? 'text-emerald-600' : service.status === 'down' ? 'text-red-600' : 'text-amber-600'}`}>{STATUS_LABELS[service.status]}</p>
+                {service.latencyMs != null && <p className="mt-2 text-xs text-slate-500">Resposta em {service.latencyMs} ms</p>}
+              </article>
+            );
+          })}
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-3">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <Mail className="h-6 w-6 text-pink-600" /><p className="mt-4 text-3xl font-black">{health?.email24h.total ?? 0}</p><p className="text-sm font-bold text-slate-700">e-mails nas últimas 24 horas</p><p className="mt-2 text-xs text-slate-500">{health?.email24h.failed ?? 0} não entregues ou rejeitados</p>
+          </article>
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <AlertTriangle className="h-6 w-6 text-amber-500" /><p className="mt-4 text-3xl font-black">{openErrors.length}</p><p className="text-sm font-bold text-slate-700">ocorrências abertas</p><p className="mt-2 text-xs text-slate-500">Falhas iguais são agrupadas automaticamente.</p>
+          </article>
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <Clock3 className="h-6 w-6 text-violet-600" /><p className="mt-4 text-3xl font-black">{latestCronByName.length}</p><p className="text-sm font-bold text-slate-700">tarefas automáticas monitoradas</p><p className="mt-2 text-xs text-slate-500">Última execução de cada rotina.</p>
+          </article>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 p-5"><h2 className="font-black">Histórico de erros</h2><p className="mt-1 text-xs text-slate-500">Somente mensagens higienizadas, sem CPF, e-mail ou payload completo.</p></div>
+            <div className="divide-y divide-slate-100">
+              {errors.length === 0 && <p className="p-8 text-center text-sm text-slate-500">Nenhum erro registrado.</p>}
+              {errors.slice(0, 20).map((error) => (
+                <article key={error.id} className={`p-5 ${error.resolved_at ? 'opacity-55' : ''}`}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div><span className={`rounded-full px-2 py-1 text-[10px] font-black uppercase ${error.severity === 'critical' ? 'bg-red-100 text-red-700' : error.severity === 'error' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>{error.severity}</span><h3 className="mt-3 text-sm font-extrabold">{error.title}</h3><p className="mt-1 text-xs text-slate-500">{error.safe_message ?? error.category} · {error.occurrence_count} ocorrência(s) · {new Date(error.last_seen_at).toLocaleString('pt-BR')}</p></div>
+                    <button type="button" onClick={() => void resolveError(error.id, Boolean(error.resolved_at))} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold hover:bg-slate-50">{error.resolved_at ? 'Reabrir' : 'Marcar resolvido'}</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 p-5"><h2 className="font-black">Rotinas automáticas</h2><p className="mt-1 text-xs text-slate-500">Última execução conhecida de cada cron.</p></div>
+            <div className="divide-y divide-slate-100">
+              {latestCronByName.length === 0 && <p className="p-8 text-center text-sm text-slate-500">Ainda não há execuções registradas.</p>}
+              {latestCronByName.map((run) => <div key={run.id} className="flex items-center justify-between gap-3 p-5"><div><p className="text-sm font-extrabold">{run.cron_name}</p><p className="mt-1 text-xs text-slate-500">{new Date(run.started_at).toLocaleString('pt-BR')} · {run.processed_count} item(ns)</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${run.status === 'success' ? 'bg-emerald-100 text-emerald-700' : run.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{run.status}</span></div>)}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

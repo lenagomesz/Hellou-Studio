@@ -9,6 +9,7 @@ import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import { calculateShipping, sanitizeCep } from '@/lib/shipping';
 import { SUCCESSFUL_ORDER_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
+import { captureOperationalError, structuredLog } from '@/lib/observability';
 
 const PIX_EXPIRATION_MINUTES = 30;
 
@@ -123,7 +124,7 @@ export async function POST(request: Request) {
     .eq('user_id', user.id)
     .in('status', [...SUCCESSFUL_ORDER_STATUSES]);
 
-  console.log('[mp-create] First purchase check:', {
+  structuredLog('info', 'mercadopago.first_purchase_checked', {
     user_id: user.id,
     totalOrders: orderCount,
     isFirstPurchase: (orderCount ?? 0) === 0,
@@ -154,7 +155,7 @@ export async function POST(request: Request) {
       if (!selectedShipping) return badRequest('Opção de frete indisponível para este CEP');
       validatedShipping = selectedShipping.price;
     } catch (error) {
-      console.error('[mp-create] shipping validation error:', error);
+      structuredLog('warn', 'mercadopago.shipping_validation_failed', { error });
       return badRequest('Não foi possível validar o frete. Calcule novamente e tente outra vez.');
     }
   }
@@ -171,7 +172,7 @@ export async function POST(request: Request) {
     .eq('id', user.id)
     .single();
 
-  console.log('[mp-create] userData fetched:', {
+  structuredLog('info', 'mercadopago.user_loaded', {
     user_id: user.id,
     userData_email: userData?.email,
     userData_name: userData?.name,
@@ -215,7 +216,7 @@ export async function POST(request: Request) {
       if (issuer_id) paymentBody.issuer_id = issuer_id;
     }
 
-    console.log('[mp-create] creating payment:', {
+    structuredLog('info', 'mercadopago.payment_creating', {
       method: payment_method,
       amount: paymentBody.transaction_amount,
       items: cartItems.length,
@@ -226,13 +227,13 @@ export async function POST(request: Request) {
     const mpPaymentId = String(result.id);
     const mpStatus = result.status;
 
-    console.log('[mp-create] Payment response from Mercado Pago:', {
+    structuredLog('info', 'mercadopago.payment_created', {
       mpPaymentId,
       mpStatus,
       result_status_detail: (result as unknown as Record<string, unknown>).status_detail,
     });
 
-    console.log('[mp-create] Payment created:', {
+    structuredLog('info', 'mercadopago.payment_result', {
       paymentId: mpPaymentId,
       status: mpStatus,
       itemCount: cartItems.length,
@@ -251,7 +252,7 @@ export async function POST(request: Request) {
       orderStatus = 'awaiting_payment';
     }
 
-    console.log('[mp-create] Order status set:', {
+    structuredLog('info', 'mercadopago.order_status_selected', {
       mpStatus,
       isDigitalOrder,
       orderStatus,
@@ -278,11 +279,11 @@ export async function POST(request: Request) {
       .single();
 
     if (orderError || !order) {
-      console.error('[mp-create] order insert error:', orderError);
+      structuredLog('error', 'mercadopago.order_insert_failed', { error: orderError });
       return serverError('Erro ao criar pedido');
     }
 
-    console.log('[mp-create] Order inserted successfully:', {
+    structuredLog('info', 'mercadopago.order_inserted', {
       orderId: order.id,
       status: orderStatus,
       mpStatus,
@@ -354,7 +355,7 @@ export async function POST(request: Request) {
           );
         }
       } catch (e) {
-        console.error('[mp-create] notification error:', e);
+        structuredLog('warn', 'mercadopago.notification_failed', { error: e });
       }
 
       // Create admin alert for real-time notification
@@ -364,11 +365,11 @@ export async function POST(request: Request) {
         body: `Cliente: ${userData?.name || user.email} | Total: R$ ${totalAmount.toFixed(2)}`,
         priority: isDigitalOrder ? 'normal' : 'high',
         related_order_id: order.id,
-      }).catch(err => console.error('[admin-alerts] create failed:', err));
+      }).catch((error) => structuredLog('warn', 'admin_alert.create_failed', { error }));
 
       // Send order confirmation email
       const customerEmail = userData?.email || user.email;
-      console.log('[mp-create] Order confirmation email:', {
+      structuredLog('info', 'mercadopago.order_email_prepared', {
         userData_email: userData?.email,
         user_email: user.email,
         final_email: customerEmail,
@@ -385,11 +386,11 @@ export async function POST(request: Request) {
           precoUnitario: item.unit_price,
           personalizacao: item.customization_text ?? null,
         })),
-      }).catch((e) => console.error('[mp-create] email error:', e));
+      }).catch((error) => structuredLog('warn', 'mercadopago.email_failed', { error, orderId: order.id }));
 
       // Handle STL delivery notifications and emails
       const stlItems = orderItems.filter(item => (item.product_snapshot as Record<string, unknown>)?.type === 'digital');
-      console.log('[mp-create] STL items found:', {
+      structuredLog('info', 'mercadopago.digital_items_found', {
         stlCount: stlItems.length,
         mpStatus,
         shouldSendEmail: stlItems.length > 0 && isPaymentApproved,
@@ -407,7 +408,7 @@ export async function POST(request: Request) {
               { order_id: order.id, event: 'stl_delivered' },
             );
           } catch (e) {
-            console.error('[mp-create] stl notification error:', e);
+            structuredLog('warn', 'mercadopago.digital_notification_failed', { error: e, orderId: order.id });
           }
         } else {
           // For mixed orders: notify that STL is available (even if order is processing)
@@ -420,7 +421,7 @@ export async function POST(request: Request) {
               { order_id: order.id, event: 'stl_available' },
             );
           } catch (e) {
-            console.error('[mp-create] mixed order stl notification error:', e);
+            structuredLog('warn', 'mercadopago.mixed_notification_failed', { error: e, orderId: order.id });
           }
         }
 
@@ -434,7 +435,7 @@ export async function POST(request: Request) {
               nome: userData?.name || null,
               orderId: order.id,
               fileName: fileName,
-            }).catch((e) => console.error('[mp-create] stl delivery email error:', e));
+            }).catch((error) => structuredLog('warn', 'mercadopago.digital_delivery_email_failed', { error, orderId: order.id }));
           }
 
           // For digital-only orders, update status to 'delivered' after email is sent
@@ -444,7 +445,7 @@ export async function POST(request: Request) {
               .update({ status: 'delivered' })
               .eq('id', order.id);
 
-            console.log('[mp-create] Digital order status updated to delivered:', {
+            structuredLog('info', 'mercadopago.digital_order_delivered', {
               orderId: order.id,
             });
           }
@@ -457,7 +458,7 @@ export async function POST(request: Request) {
         customerName: userData?.name || null,
         customerEmail: userData?.email || user.email,
         total: totalAmount,
-      }).catch((e) => console.error('[mp-create] admin email error:', e));
+      }).catch((error) => structuredLog('warn', 'mercadopago.admin_email_failed', { error, orderId: order.id }));
 
       if (wants_invoice) {
         sendInvoiceRequestEmail({
@@ -466,7 +467,7 @@ export async function POST(request: Request) {
           customerName: userData?.name || null,
           customerEmail: userData?.email || user.email,
           total: totalAmount,
-        }).catch((e) => console.error('[mp-create] invoice email error:', e));
+        }).catch((error) => structuredLog('warn', 'mercadopago.invoice_email_failed', { error, orderId: order.id }));
       }
     }
 
@@ -490,7 +491,7 @@ export async function POST(request: Request) {
             total: totalAmount,
             pixCode,
             expiration: result.date_of_expiration || null,
-          }).catch((e) => console.error('[mp-create] pix email error:', e));
+          }).catch((error) => structuredLog('warn', 'mercadopago.pix_email_failed', { error, orderId: order.id }));
         }
       }
 
@@ -504,7 +505,7 @@ export async function POST(request: Request) {
         );
       }
     } catch (e) {
-      console.error('[mp-create] notification error:', e);
+      structuredLog('warn', 'mercadopago.notification_failed', { error: e });
     }
 
     const responseData: Record<string, unknown> = {
@@ -526,14 +527,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(responseData);
   } catch (err: unknown) {
-    console.error('[mp-create] payment error stack:', err instanceof Error ? err.stack : String(err));
     const mpErr = err as { status?: number; statusCode?: number; message?: string; cause?: unknown[]; apiResponse?: unknown };
-    console.error('[mp-create] payment error details:', {
-      message: mpErr.message,
-      status: mpErr.status ?? mpErr.statusCode,
-      cause: mpErr.cause,
-      apiResponse: mpErr.apiResponse,
-    });
+    await captureOperationalError({ fingerprint: 'mercadopago-payment-create', category: 'payment.failed', title: 'Falha ao criar pagamento no Mercado Pago', error: err, route: '/api/payments/mercadopago/create', severity: 'critical', metadata: { providerStatus: mpErr.status ?? mpErr.statusCode }, alert: true });
 
     const errStatus = mpErr.status ?? mpErr.statusCode;
     if (errStatus && errStatus >= 400 && errStatus < 500) {
@@ -546,7 +541,6 @@ export async function POST(request: Request) {
       );
     }
     const message = err instanceof Error ? err.message : 'Erro ao processar pagamento';
-    console.error('[mp-create] returning error response:', message);
     return serverError(message);
   }
 }

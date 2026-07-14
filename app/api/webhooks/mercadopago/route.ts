@@ -6,6 +6,7 @@ import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import { verifyWebhookSignature } from '@/lib/security';
 import { hasDigitalItems, hasPhysicalItems } from '@/lib/order-helpers';
+import { captureOperationalError, structuredLog } from '@/lib/observability';
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
@@ -24,15 +25,11 @@ export async function POST(request: Request) {
     const xRequestId = request.headers.get('x-request-id');
     const isValid = verifyWebhookSignature(dataId, xSignature, xRequestId, webhookSecret);
     if (!isValid) {
-      console.warn('[mp-webhook] Assinatura inválida rejeitada', {
-        hasXSignature: !!xSignature,
-        hasXRequestId: !!xRequestId,
-        dataId,
-      });
+      await captureOperationalError({ fingerprint: 'mercadopago-webhook-invalid-signature', category: 'webhook.rejected', title: 'Webhook do Mercado Pago rejeitado', error: new Error('Assinatura inválida.'), route: '/api/webhooks/mercadopago', severity: 'warning', alert: true });
       return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
     }
   } else {
-    console.error('[mp-webhook] MERCADO_PAGO_WEBHOOK_SECRET não configurado');
+    structuredLog('error', 'mercadopago.webhook_not_configured');
     if (process.env.NODE_ENV === 'production') {
       return NextResponse.json({ error: 'Webhook não configurado' }, { status: 503 });
     }
@@ -41,7 +38,7 @@ export async function POST(request: Request) {
   const type = body.type as string | undefined;
   const action = body.action as string | undefined;
 
-  console.log('[mp-webhook] recebido:', { type, action, dataId });
+  structuredLog('info', 'mercadopago.webhook_received', { type, action, providerPaymentId: dataId });
 
   if (type !== 'payment' || (action !== 'payment.updated' && action !== 'payment.created')) {
     return NextResponse.json({ received: true });
@@ -71,11 +68,11 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!order) {
-      console.warn('[mp-webhook] order not found for payment:', paymentId, '(type:', typeof paymentId, ')');
+      structuredLog('warn', 'mercadopago.order_not_found', { providerPaymentId: paymentId });
       return NextResponse.json({ received: true });
     }
 
-    console.log('[mp-webhook] found order:', { orderId: order.id, currentStatus: order.status, mpStatus });
+    structuredLog('info', 'mercadopago.order_found', { orderId: order.id, currentStatus: order.status, providerStatus: mpStatus });
 
     // Determine new order status
     let newStatus: string;
@@ -108,7 +105,7 @@ export async function POST(request: Request) {
 
     // Skip notifications if order is already refunded (manual refund already processed)
     if (order.status === 'refunded') {
-      console.log('[mp-webhook] Order already refunded, skipping notifications:', order.id);
+      structuredLog('info', 'mercadopago.refunded_order_skipped', { orderId: order.id });
       // Still update mp_status but don't change order status
       await admin
         .from('orders')
@@ -152,10 +149,10 @@ export async function POST(request: Request) {
           body: 'Cliente será notificado para retentar',
           priority: 'urgent',
           related_order_id: order.id,
-        }).catch(err => console.error('[admin-alerts] create failed:', err));
+        }).catch((error) => structuredLog('warn', 'admin_alert.create_failed', { error }));
       }
     } catch (e) {
-      console.error('[mp-webhook] notification error:', e);
+      structuredLog('warn', 'mercadopago.notification_failed', { error: e, orderId: order.id });
     }
 
     if (newStatus === 'rejected' && (order.status === 'approved' || order.status === 'processing')) {
@@ -235,7 +232,7 @@ export async function POST(request: Request) {
           { order_id: order.id, event: 'order_approved' },
         );
       } catch (e) {
-        console.error('[mp-webhook] notification error:', e);
+        structuredLog('warn', 'mercadopago.notification_failed', { error: e, orderId: order.id });
       }
 
       const metadata = result.metadata as Record<string, unknown> | undefined;
@@ -250,7 +247,7 @@ export async function POST(request: Request) {
         .single();
 
       if (userData?.email) {
-        console.log('[mp-webhook] Enviando emails de confirmação:', {
+        structuredLog('info', 'mercadopago.order_emails_prepared', {
           orderId: order.id,
           email: userData.email,
           itemCount: items?.length || 0,
@@ -268,7 +265,7 @@ export async function POST(request: Request) {
             quantidade: item.quantity,
             precoUnitario: item.unit_price,
           })),
-        }).catch((e) => console.error('[mp-webhook] email error:', e));
+        }).catch((error) => structuredLog('warn', 'mercadopago.email_failed', { error, orderId: order.id }));
 
         // Determine order type for admin email
         const isDigitalWebhook = (items || []).some(
@@ -289,7 +286,7 @@ export async function POST(request: Request) {
           customerEmail: userData.email,
           total: Number(result.transaction_amount) || 0,
           orderType,
-        }).catch((e) => console.error('[mp-webhook] admin email error:', e));
+        }).catch((error) => structuredLog('warn', 'mercadopago.admin_email_failed', { error, orderId: order.id }));
 
         // Create admin alert for real-time notification
         createAdminAlert({
@@ -298,7 +295,7 @@ export async function POST(request: Request) {
           body: `Cliente: ${userData.name || userData.email} | Total: R$ ${(Number(result.transaction_amount) || 0).toFixed(2)}`,
           priority: isDigitalWebhook ? 'normal' : 'high',
           related_order_id: order.id,
-        }).catch(err => console.error('[admin-alerts] create failed:', err));
+        }).catch((error) => structuredLog('warn', 'admin_alert.create_failed', { error }));
 
         const { data: orderFull } = await admin
           .from('orders')
@@ -314,7 +311,7 @@ export async function POST(request: Request) {
             customerName: userData.name || null,
             customerEmail: userData.email,
             total: Number(result.transaction_amount) || 0,
-          }).catch((e) => console.error('[mp-webhook] invoice email error:', e));
+          }).catch((error) => structuredLog('warn', 'mercadopago.invoice_email_failed', { error, orderId: order.id }));
         }
 
         // Send STL-specific emails for digital-only orders
@@ -356,7 +353,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true, status: newStatus });
   } catch (err: unknown) {
-    console.error('[mp-webhook] error:', err);
+    await captureOperationalError({ fingerprint: 'mercadopago-webhook-handler', category: 'webhook.failed', title: 'Falha ao processar webhook do Mercado Pago', error: err, route: '/api/webhooks/mercadopago', severity: 'critical', alert: true });
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

@@ -73,7 +73,8 @@ describe('STL Order Emails', () => {
         expect.objectContaining({
           to: 'customer@example.com',
           subject: expect.stringContaining('ORDER-12'),
-        })
+        }),
+        expect.objectContaining({ idempotencyKey: expect.stringContaining('hellou-stl_order_confirmation-') }),
       );
     });
 
@@ -92,10 +93,7 @@ describe('STL Order Emails', () => {
         price: 19.99,
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[email] stl-order-confirmation ERRO'),
-        expect.anything()
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"event":"email.send_failed"'));
 
       consoleSpy.mockRestore();
     });
@@ -118,7 +116,8 @@ describe('STL Order Emails', () => {
         expect.objectContaining({
           to: 'admin@example.com',
           subject: expect.stringContaining('Novo pedido digital'),
-        })
+        }),
+        expect.objectContaining({ idempotencyKey: expect.stringContaining('hellou-stl_admin_notification-') }),
       );
     });
 

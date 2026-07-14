@@ -166,6 +166,7 @@ export async function PATCH(
       quotedPrice: printRequest.quoted_price,
       rejectionReason: printRequest.rejection_reason,
       productId: printRequest.product_id,
+      requestId: printRequest.id,
     }).catch(() => {});
   }
 

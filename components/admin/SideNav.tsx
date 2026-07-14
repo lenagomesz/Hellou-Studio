@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
   AlertCircle,
+  Activity,
   BarChart3,
   Box,
   Calculator,
@@ -77,6 +78,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: '/admin/security', label: 'Segurança (2FA)', icon: Shield },
       { href: '/dashboard/settings/features', label: 'Recursos da loja', icon: Settings2, ownerOnly: true },
+      { href: '/dashboard/settings/health', label: 'Saúde dos serviços', icon: Activity, ownerOnly: true },
     ],
   },
 ];

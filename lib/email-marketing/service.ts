@@ -2,6 +2,8 @@
 import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { renderTemplate } from './templates';
+import { sendTrackedEmail } from '@/lib/email-delivery';
+import { structuredLog } from '@/lib/observability';
 import type {
   EmailCampaign,
   CampaignAnalytics,
@@ -21,7 +23,7 @@ function getResend(): Resend | null {
   if (resendClient) return resendClient;
   const key = process.env.RESEND_API_KEY;
   if (!key) {
-    console.warn('[email-marketing] RESEND_API_KEY not configured');
+    structuredLog('warn', 'email.provider_not_configured', { emailType: 'campaign' });
     return null;
   }
   resendClient = new Resend(key);
@@ -195,7 +197,7 @@ export async function sendCampaign(campaignId: string) {
 
     if (resend) {
       try {
-        const result = await resend.emails.send({
+        const result = await sendTrackedEmail(resend, {
           from: getFrom(),
           to: recipient.email,
           subject: renderedSubject,
@@ -203,7 +205,7 @@ export async function sendCampaign(campaignId: string) {
           headers: {
             'List-Unsubscribe': `<${unsubscribeUrl}>`,
           },
-        });
+        }, { emailType: 'campaign', campaignId, metadata: { variant: recipient.variant ?? 'A' } });
 
         if (!result.error) {
           sentCount++;

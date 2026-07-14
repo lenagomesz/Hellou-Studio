@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { requirePermission, badRequest, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { startOfMonth, subMonths, format } from 'date-fns';
+import { sendTrackedEmail } from '@/lib/email-delivery';
 
 export async function POST(req: NextRequest) {
   const auth = await requirePermission('analytics.view');
@@ -62,14 +63,14 @@ export async function POST(req: NextRequest) {
     }
 
     const resend = new Resend(resendKey);
-    await resend.emails.send({
-      from: 'Studio Hellou <noreply@studiohellou.com>',
+    const result = await sendTrackedEmail(resend, {
+      from: process.env.RESEND_FROM_EMAIL || 'helloustudio <onboarding@resend.dev>',
       to: email,
-      subject: `Relatorio Dashboard - ${format(now, 'dd/MM/yyyy')}`,
+      subject: `Relatório do painel — ${format(now, 'dd/MM/yyyy')}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #ec4899;">Relatorio do Dashboard</h1>
-          <p>Periodo: ${format(thisMonthStart, 'dd/MM/yyyy')} - ${format(now, 'dd/MM/yyyy')}</p>
+          <h1 style="color: #ec4899;">Relatório do painel</h1>
+          <p>Período: ${format(thisMonthStart, 'dd/MM/yyyy')} - ${format(now, 'dd/MM/yyyy')}</p>
 
           <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
             <tr style="background: #f9fafb;">
@@ -95,7 +96,8 @@ export async function POST(req: NextRequest) {
           </p>
         </div>
       `,
-    });
+    }, { emailType: 'analytics_report' });
+    if (result.error) throw result.error;
 
     return NextResponse.json({
       success: true,

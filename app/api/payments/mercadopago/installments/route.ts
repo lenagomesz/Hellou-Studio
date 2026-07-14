@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireUser, badRequest, serverError } from '@/lib/api';
+import { structuredLog } from '@/lib/observability';
 
 export async function GET(request: Request) {
   const auth = await requireUser();
@@ -24,8 +25,7 @@ export async function GET(request: Request) {
     );
 
     if (!response.ok) {
-      const text = await response.text();
-      console.error('[mp-installments] API error:', text);
+      structuredLog('warn', 'mercadopago.installments_provider_error', { providerStatus: response.status });
       return serverError('Erro ao buscar parcelas');
     }
 
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
       payment_type_id: first.payment_type_id,
     });
   } catch (err: unknown) {
-    console.error('[mp-installments] error:', err);
+    structuredLog('warn', 'mercadopago.installments_failed', { error: err });
     return serverError('Erro ao buscar parcelas');
   }
 }
