@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { recordServiceHealth } from '@/lib/observability';
+import { getCronHealth, getIntegrationHealth } from '@/lib/service-health';
 
 export async function GET() {
   const auth = await requirePermission('settings.manage');
@@ -28,31 +29,44 @@ export async function GET() {
   const failedEmails = ['failed', 'bounced', 'complained', 'suppressed']
     .reduce((total, status) => total + (emailCounts[status] ?? 0), 0);
 
-  const configured = [
-    { service: 'resend', configured: Boolean(process.env.RESEND_API_KEY && process.env.RESEND_WEBHOOK_SECRET) },
-    { service: 'sentry', configured: Boolean(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN) },
-    { service: 'mercado_pago', configured: Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN) },
-  ];
   const latestCronRuns = Array.from(new Map((cronResult.data ?? []).map((run) => [run.cron_name, run])).values());
-  const expectedHours: Record<string, number> = {
-    'cancel-expired-pix': 26,
-    'admin-reminders': 26,
-    'cleanup-encomendas': 8 * 24,
-  };
-  const cronHasFailure = latestCronRuns.some((run) => run.status === 'failed');
-  const cronIsStale = latestCronRuns.some((run) => {
-    const limit = expectedHours[run.cron_name];
-    return limit ? Date.now() - new Date(run.started_at).getTime() > limit * 60 * 60 * 1000 : false;
-  });
-  const cronStatus = latestCronRuns.length === 0 ? 'degraded' : cronHasFailure || cronIsStale ? 'down' : 'healthy';
-  await recordServiceHealth({ service: 'crons', status: cronStatus, metadata: { monitoredRoutines: latestCronRuns.length } });
+  const cronHealth = cronResult.error
+    ? { status: 'down' as const, summary: 'O histórico das rotinas não pôde ser consultado.', action: 'Verifique a migration de observabilidade.', missing: [], failed: [], stale: [] }
+    : getCronHealth({ runs: latestCronRuns, hasSecret: Boolean(process.env.CRON_SECRET) });
+  const integrations = getIntegrationHealth(process.env);
+
+  await Promise.all([
+    recordServiceHealth({
+      service: 'crons',
+      status: cronHealth.status,
+      message: cronHealth.summary,
+      metadata: { monitoredRoutines: latestCronRuns.length, missing: cronHealth.missing.length, failed: cronHealth.failed.length, stale: cronHealth.stale.length },
+    }),
+    ...integrations.map((integration) => recordServiceHealth({
+      service: integration.service,
+      status: integration.status,
+      message: integration.summary,
+      metadata: { configured: integration.configured, missingCount: integration.missing.length },
+    })),
+  ]);
 
   return NextResponse.json({
     checkedAt: new Date().toISOString(),
     services: [
-      { service: 'database', status: databaseStatus, latencyMs: databaseLatency },
-      { service: 'crons', status: cronStatus },
-      ...configured.map((item) => ({ ...item, status: item.configured ? 'healthy' : 'degraded' })),
+      {
+        service: 'database',
+        status: databaseStatus,
+        latencyMs: databaseLatency,
+        configured: true,
+        summary: databaseError
+          ? 'Não foi possível consultar o banco de dados.'
+          : databaseStatus === 'degraded'
+            ? 'O banco respondeu, mas acima do tempo esperado.'
+            : 'Conexão e consulta funcionando normalmente.',
+        action: databaseError ? 'Confira as credenciais e a disponibilidade do Supabase.' : undefined,
+      },
+      { service: 'crons', configured: Boolean(process.env.CRON_SECRET), ...cronHealth },
+      ...integrations,
     ],
     email24h: { total: emailResult.data?.length ?? 0, failed: failedEmails, counts: emailCounts },
     openErrors: errorsResult.count ?? errorsResult.data?.length ?? 0,

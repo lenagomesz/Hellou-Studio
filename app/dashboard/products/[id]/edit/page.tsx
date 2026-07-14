@@ -25,7 +25,7 @@ async function getProductWithOptions(id: string) {
 }
 
 export default async function EditProductPage(
-  props: PageProps<'/dashboard/products/[id]/edit'>,
+  props: { params: Promise<{ id: string }> },
 ) {
   const { id } = await props.params;
   const result = await getProductWithOptions(id);

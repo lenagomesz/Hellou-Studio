@@ -88,7 +88,13 @@ async function getProducts(filters: {
 }
 
 export default async function ProductsCatalogPage(
-  props: PageProps<'/products'>,
+  props: {
+    searchParams: Promise<{
+      category?: string | string[];
+      search?: string | string[];
+      sort?: string | string[];
+    }>;
+  },
 ) {
   const searchParams = await props.searchParams;
   const category =

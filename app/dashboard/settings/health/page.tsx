@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Activity, AlertTriangle, CheckCircle2, Clock3, Mail, RefreshCw, Server, XCircle } from 'lucide-react';
+import { Activity, AlertTriangle, Bug, CheckCircle2, Clock3, CreditCard, Database, Mail, RefreshCw, Server, XCircle } from 'lucide-react';
 
-type Service = { service: string; status: 'healthy' | 'degraded' | 'down' | 'unknown'; latencyMs?: number; configured?: boolean };
+type Service = { service: string; status: 'healthy' | 'degraded' | 'down' | 'unknown'; latencyMs?: number; configured?: boolean; summary?: string; action?: string; missing?: string[] };
 type CronRun = { id: string; cron_name: string; status: string; started_at: string; duration_ms?: number | null; processed_count: number };
 type Health = {
   checkedAt: string;
@@ -27,6 +27,7 @@ const SERVICE_LABELS: Record<string, string> = {
   database: 'Banco de dados', resend: 'Resend e webhook', sentry: 'Sentry', mercado_pago: 'Mercado Pago', crons: 'Rotinas automáticas',
 };
 const STATUS_LABELS: Record<string, string> = { healthy: 'Saudável', degraded: 'Atenção', down: 'Indisponível', unknown: 'Desconhecido' };
+const SERVICE_ICONS = { database: Database, crons: Clock3, resend: Mail, sentry: Bug, mercado_pago: CreditCard } as const;
 
 export default function ServiceHealthPage() {
   const [health, setHealth] = useState<Health | null>(null);
@@ -58,35 +59,51 @@ export default function ServiceHealthPage() {
 
   const latestCronByName = Array.from(new Map((health?.cronRuns ?? []).map((run) => [run.cron_name, run])).values());
   const openErrors = errors.filter((error) => !error.resolved_at);
+  const services = health?.services ?? [];
+  const healthyServices = services.filter((service) => service.status === 'healthy').length;
+  const attentionServices = services.filter((service) => service.status !== 'healthy').length;
+  const healthScore = services.length ? Math.round((healthyServices / services.length) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-[#f5f6f8] p-4 text-slate-950 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-5 bg-gradient-to-r from-slate-950 via-slate-900 to-pink-950 p-7 text-white sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-6 bg-gradient-to-br from-white via-pink-50 to-orange-50 p-7 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-pink-200"><Activity className="h-3.5 w-3.5" /> Observabilidade</span>
-              <h1 className="text-3xl font-black tracking-tight">Saúde dos serviços</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Acompanhe integrações, entregas de e-mail, tarefas automáticas e falhas operacionais sem expor dados dos clientes.</p>
+              <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-pink-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-pink-600 shadow-sm"><Activity className="h-3.5 w-3.5" /> Observabilidade</span>
+              <h1 className="text-3xl font-black tracking-tight text-slate-950">Saúde dos serviços</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Veja o que está funcionando e, quando houver atenção, a causa exata e como resolver. Nenhum dado sensível dos clientes é exibido.</p>
             </div>
-            <button type="button" onClick={() => void load()} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-pink-50 disabled:opacity-60">
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar agora
-            </button>
+            <div className="flex flex-col gap-3 sm:items-end">
+              <div className="flex items-center gap-4 rounded-2xl border border-white bg-white/85 px-4 py-3 shadow-sm backdrop-blur">
+                <div className="relative grid h-14 w-14 place-items-center rounded-full" style={{ background: `conic-gradient(#10b981 ${healthScore * 3.6}deg, #e2e8f0 0deg)` }}><span className="grid h-11 w-11 place-items-center rounded-full bg-white text-xs font-black text-slate-900">{healthScore}%</span></div>
+                <div><p className="text-xs font-bold uppercase tracking-wider text-slate-400">Visão geral</p><p className="mt-0.5 text-sm font-black text-slate-900">{healthyServices} de {services.length || 5} saudáveis</p><p className="text-xs text-slate-500">{attentionServices ? `${attentionServices} item(ns) para revisar` : 'Tudo funcionando'}</p></div>
+              </div>
+              <button type="button" onClick={() => void load()} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-pink-600 disabled:opacity-60">
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar agora
+              </button>
+            </div>
           </div>
         </header>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {(health?.services ?? []).map((service) => {
+          {services.map((service) => {
             const healthy = service.status === 'healthy';
+            const ServiceIcon = SERVICE_ICONS[service.service as keyof typeof SERVICE_ICONS] ?? Server;
+            const statusLabel = service.configured === false && service.status !== 'down'
+              ? 'Configuração pendente'
+              : STATUS_LABELS[service.status];
             return (
-              <article key={service.service} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <article key={service.service} className={`flex min-h-64 flex-col rounded-2xl border bg-white p-5 shadow-sm ${healthy ? 'border-slate-200' : service.status === 'down' ? 'border-red-200' : 'border-amber-200'}`}>
                 <div className="flex items-center justify-between">
-                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${healthy ? 'bg-emerald-50 text-emerald-600' : service.status === 'down' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}><Server className="h-5 w-5" /></span>
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${healthy ? 'bg-emerald-50 text-emerald-600' : service.status === 'down' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}><ServiceIcon className="h-5 w-5" /></span>
                   {healthy ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> : service.status === 'down' ? <XCircle className="h-5 w-5 text-red-500" /> : <AlertTriangle className="h-5 w-5 text-amber-500" />}
                 </div>
                 <h2 className="mt-4 text-sm font-extrabold">{SERVICE_LABELS[service.service] ?? service.service}</h2>
-                <p className={`mt-1 text-xs font-bold ${healthy ? 'text-emerald-600' : service.status === 'down' ? 'text-red-600' : 'text-amber-600'}`}>{STATUS_LABELS[service.status]}</p>
+                <p className={`mt-1 text-xs font-bold ${healthy ? 'text-emerald-600' : service.status === 'down' ? 'text-red-600' : 'text-amber-600'}`}>{statusLabel}</p>
                 {service.latencyMs != null && <p className="mt-2 text-xs text-slate-500">Resposta em {service.latencyMs} ms</p>}
+                <p className="mt-3 text-xs leading-5 text-slate-600">{service.summary ?? 'Verificação ainda sem detalhes.'}</p>
+                {service.action && <div className={`mt-auto rounded-xl p-3 text-[11px] font-semibold leading-4 ${service.status === 'down' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'}`}><span className="block font-black">Como resolver</span>{service.action}</div>}
               </article>
             );
           })}

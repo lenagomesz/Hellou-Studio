@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from 'crypto';
 import type { CreateEmailOptions, CreateEmailResponse, Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
