@@ -376,30 +376,46 @@ export async function POST(request: Request) {
       p_consume_inventory: consumeInventory,
     });
 
+    let checkoutStateChanged = true;
     if (finalizeError) {
-      // Mantém a referência do provedor no pedido para o webhook reconciliar a cobrança.
-      await admin.from('orders').update({
+      // O provedor já decidiu o pagamento. Confirma o pedido para o cliente e deixa
+      // apenas os efeitos auxiliares sob reconciliação operacional.
+      const { error: fallbackUpdateError } = await admin.from('orders').update({
         mp_payment_id: mpPaymentId,
         mp_status: mpStatus ?? null,
+        status: orderStatus,
+        // O pedido já pode seguir para o cliente, mas os efeitos internos
+        // (estoque e cupom) ainda precisam ser reconciliados pela função SQL.
         checkout_state: 'reconciliation_required',
+        checkout_finalized_at: new Date().toISOString(),
       }).eq('id', order.id).eq('user_id', user.id);
+
+      if (!fallbackUpdateError && mpStatus !== 'rejected') {
+        await admin.from('cart_items').delete().eq('user_id', user.id);
+        await admin.from('cart_recovery_events').update({
+          status: 'converted',
+          converted_at: new Date().toISOString(),
+        }).eq('user_id', user.id).eq('status', 'sent');
+      }
+
       await captureOperationalError({
         fingerprint: 'mercadopago-checkout-finalize',
         category: 'payment.failed',
-        title: 'Pagamento criado, mas pedido precisa de reconciliação',
+        title: 'Pedido confirmado pelo fallback do checkout',
         error: finalizeError,
         route: '/api/payments/mercadopago/create',
-        severity: 'critical',
-        metadata: { orderId: order.id, providerPaymentId: mpPaymentId },
+        severity: fallbackUpdateError ? 'critical' : 'warning',
+        metadata: {
+          orderId: order.id,
+          providerPaymentId: mpPaymentId,
+          fallbackPersisted: !fallbackUpdateError,
+        },
         alert: true,
       });
-      return NextResponse.json(
-        { error: 'O pagamento foi recebido, mas ainda estamos confirmando o pedido. Não tente pagar novamente.', order_id: order.id },
-        { status: 503 },
-      );
+    } else {
+      const finalizedCheckout = Array.isArray(finalizedRows) ? finalizedRows[0] : finalizedRows;
+      checkoutStateChanged = finalizedCheckout?.state_changed !== false;
     }
-    const finalizedCheckout = Array.isArray(finalizedRows) ? finalizedRows[0] : finalizedRows;
-    const checkoutStateChanged = finalizedCheckout?.state_changed !== false;
 
     structuredLog('info', 'mercadopago.order_inserted', {
       orderId: order.id,

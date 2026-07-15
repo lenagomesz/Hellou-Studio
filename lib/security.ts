@@ -10,7 +10,7 @@ export function verifyWebhookSignature(
   xRequestId: string | null,
   secret: string,
 ): boolean {
-  if (!xSignature || !xRequestId) return false;
+  if (!xSignature) return false;
 
   const parts = xSignature.split(',');
   let ts = '';
@@ -29,7 +29,11 @@ export function verifyWebhookSignature(
   const timestampMs = rawTimestamp < 10_000_000_000 ? rawTimestamp * 1000 : rawTimestamp;
   if (Math.abs(Date.now() - timestampMs) > 5 * 60 * 1000) return false;
 
-  const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+  const manifestParts: string[] = [];
+  if (dataId) manifestParts.push(`id:${dataId.toLowerCase()}`);
+  if (xRequestId) manifestParts.push(`request-id:${xRequestId}`);
+  manifestParts.push(`ts:${ts}`);
+  const manifest = `${manifestParts.join(';')};`;
   const computed = createHmac('sha256', secret).update(manifest).digest('hex');
 
   try {

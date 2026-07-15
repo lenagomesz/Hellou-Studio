@@ -410,7 +410,7 @@ describe('POST /api/payments/mercadopago/create', () => {
       expect(mockPaymentCreate).not.toHaveBeenCalled();
     });
 
-    it('keeps the provider reference for reconciliation when finalization fails', async () => {
+    it('confirms an approved payment for the customer when atomic finalization needs fallback', async () => {
       mockPaymentCreate.mockResolvedValue({ id: 'mp-needs-reconciliation', status: 'approved' });
       mockRpc
         .mockResolvedValueOnce({ data: [{ order_id: 'order-abc', reused: false }], error: null })
@@ -423,10 +423,12 @@ describe('POST /api/payments/mercadopago/create', () => {
       }));
       const data = await response.json();
 
-      expect(response.status).toBe(503);
+      expect(response.status).toBe(200);
       expect(data.order_id).toBe('order-abc');
+      expect(data.status).toBe('approved');
       expect(ordersBuilder.update).toHaveBeenCalledWith(expect.objectContaining({
         mp_payment_id: 'mp-needs-reconciliation',
+        status: 'processing',
         checkout_state: 'reconciliation_required',
       }));
     });

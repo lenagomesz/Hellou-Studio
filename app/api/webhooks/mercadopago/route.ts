@@ -19,7 +19,13 @@ export async function POST(request: Request) {
 
   const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
   const dataObj = body.data as Record<string, unknown> | undefined;
-  const dataId = String(dataObj?.id ?? '');
+  const requestUrl = new URL(request.url);
+  const dataId = String(
+    requestUrl.searchParams.get('data.id')
+      ?? requestUrl.searchParams.get('data_id')
+      ?? dataObj?.id
+      ?? '',
+  );
 
   if (webhookSecret) {
     const xSignature = request.headers.get('x-signature');
