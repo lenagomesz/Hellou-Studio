@@ -21,17 +21,12 @@ export default async function AppleIcon() {
           borderRadius: '50%',
           overflow: 'hidden',
           background: '#fafafa',
+          backgroundImage: `url("${logoBase64}")`,
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'cover',
         }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse exige elemento HTML nativo. */}
-        <img
-          src={logoBase64}
-          alt=""
-          width={180}
-          height={180}
-          style={{ objectFit: 'cover' }}
-        />
-      </div>
+      />
     ),
     { ...size }
   );
