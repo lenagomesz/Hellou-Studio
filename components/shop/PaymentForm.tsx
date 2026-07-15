@@ -50,6 +50,7 @@ export function PaymentForm({
   const mpRef = useRef<MercadoPagoInstance | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const formTopRef = useRef<HTMLDivElement>(null);
+  const paymentAttemptKeysRef = useRef<Partial<Record<'pix' | 'credit_card' | 'debit_card', string>>>({});
 
   const [cpf, setCpf] = useState(userCpf ? formatCpf(userCpf) : '');
   const [cpfError, setCpfError] = useState('');
@@ -80,6 +81,19 @@ export function PaymentForm({
   const [installmentsLoading, setInstallmentsLoading] = useState(false);
 
   const [error, setError] = useState('');
+
+  function getPaymentAttemptKey(method: 'pix' | 'credit_card' | 'debit_card') {
+    const existingKey = paymentAttemptKeysRef.current[method];
+    if (existingKey) return existingKey;
+
+    const key = crypto.randomUUID();
+    paymentAttemptKeysRef.current[method] = key;
+    return key;
+  }
+
+  function resetPaymentAttemptKey(method: 'pix' | 'credit_card' | 'debit_card') {
+    delete paymentAttemptKeysRef.current[method];
+  }
 
   function scrollToTop() {
     formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -155,11 +169,14 @@ export function PaymentForm({
     setPixLoading(true);
     setError('');
 
+    const idempotencyKey = getPaymentAttemptKey('pix');
+
     try {
       const res = await fetch('/api/payments/mercadopago/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
         body: JSON.stringify({
+          idempotency_key: idempotencyKey,
           payment_method: 'pix',
           cpf: cleanCpf(cpf),
           shipping_method: shippingMethod,
@@ -171,6 +188,7 @@ export function PaymentForm({
 
       const data = await res.json();
       if (!res.ok) {
+        if (data.mp_error) resetPaymentAttemptKey('pix');
         setErrorAndScroll(data.error || 'Erro ao gerar PIX');
         setPixLoading(false);
         return;
@@ -229,6 +247,8 @@ export function PaymentForm({
     setCardLoading(true);
     setError('');
 
+    const idempotencyKey = getPaymentAttemptKey('credit_card');
+
     try {
       if (!mpRef.current) {
         setErrorAndScroll('Erro ao processar pagamento. Tente novamente.');
@@ -249,8 +269,9 @@ export function PaymentForm({
 
       const res = await fetch('/api/payments/mercadopago/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
         body: JSON.stringify({
+          idempotency_key: idempotencyKey,
           payment_method: 'credit_card',
           token: tokenResult.id,
           installments,
@@ -265,6 +286,7 @@ export function PaymentForm({
 
       const data = await res.json();
       if (!res.ok) {
+        if (data.mp_error) resetPaymentAttemptKey('credit_card');
         setErrorAndScroll(data.error || 'Erro ao processar pagamento');
         setCardLoading(false);
         return;
@@ -279,6 +301,7 @@ export function PaymentForm({
           router.push(`/checkout/success?order_id=${data.order_id}`);
         }, 3000);
       } else if (data.status === 'rejected') {
+        resetPaymentAttemptKey('credit_card');
         setErrorAndScroll(getRejectMessage(data.status_detail));
         setCardLoading(false);
       } else {
@@ -317,6 +340,8 @@ export function PaymentForm({
     setCardLoading(true);
     setError('');
 
+    const idempotencyKey = getPaymentAttemptKey('debit_card');
+
     try {
       if (!mpRef.current) {
         setErrorAndScroll('Erro ao processar pagamento. Tente novamente.');
@@ -337,8 +362,9 @@ export function PaymentForm({
 
       const res = await fetch('/api/payments/mercadopago/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
         body: JSON.stringify({
+          idempotency_key: idempotencyKey,
           payment_method: 'debit_card',
           token: tokenResult.id,
           installments: 1,
@@ -352,6 +378,7 @@ export function PaymentForm({
 
       const data = await res.json();
       if (!res.ok) {
+        if (data.mp_error) resetPaymentAttemptKey('debit_card');
         setErrorAndScroll(data.error || 'Erro ao processar pagamento');
         setCardLoading(false);
         return;
@@ -366,6 +393,7 @@ export function PaymentForm({
           router.push(`/checkout/success?order_id=${data.order_id}`);
         }, 3000);
       } else if (data.status === 'rejected') {
+        resetPaymentAttemptKey('debit_card');
         setErrorAndScroll(getRejectMessage(data.status_detail));
         setCardLoading(false);
       } else {

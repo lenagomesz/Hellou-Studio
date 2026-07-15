@@ -173,7 +173,7 @@ export function Navbar() {
                 </button>
               )}
 
-              <NotificationBell />
+              {status === 'authenticated' && session?.user && <NotificationBell />}
 
               <button
                 type="button"
@@ -250,9 +250,11 @@ export function Navbar() {
                 )}
               </Link>
 
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-gray-800">
-                <NotificationBell />
-              </div>
+              {status === 'authenticated' && session?.user && (
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-gray-800">
+                  <NotificationBell />
+                </div>
+              )}
 
               {status === 'loading' ? (
                 <div className="h-10 w-24 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />

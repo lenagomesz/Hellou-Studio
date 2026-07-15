@@ -158,7 +158,10 @@ describe('POST /api/webhooks/mercadopago', () => {
       const json = await res.json();
 
       expect(json.status).toBe('processing');
-      expect(mockUpdate).toHaveBeenCalled();
+      expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
+        p_order_status: 'processing',
+        p_consume_inventory: true,
+      }));
     });
 
     it('fulfills order: clears cart and sends email', async () => {
@@ -215,7 +218,10 @@ describe('POST /api/webhooks/mercadopago', () => {
       const json = await res.json();
 
       expect(json.status).toBe('canceled');
-      expect(mockUpdate).toHaveBeenCalled();
+      expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
+        p_order_status: 'canceled',
+        p_consume_inventory: false,
+      }));
     });
 
     it('does NOT fulfill order when cancelled', async () => {
@@ -232,7 +238,10 @@ describe('POST /api/webhooks/mercadopago', () => {
 
       const { sendOrderConfirmationEmail } = await import('@/lib/email');
       expect(sendOrderConfirmationEmail).not.toHaveBeenCalled();
-      expect(mockRpc).not.toHaveBeenCalled();
+      expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
+        p_consume_inventory: false,
+      }));
+      expect(mockRpc).not.toHaveBeenCalledWith('increment_coupon_usage', expect.anything());
     });
   });
 

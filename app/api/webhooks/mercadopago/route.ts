@@ -62,11 +62,25 @@ export async function POST(request: Request) {
 
     const admin = getSupabaseAdmin();
 
-    const { data: order } = await admin
+    const { data: orderByPayment } = await admin
       .from('orders')
-      .select('id, status, user_id')
+      .select('id, status, user_id, checkout_coupon_id')
       .eq('mp_payment_id', String(paymentId))
       .maybeSingle();
+
+    let order = orderByPayment;
+    if (!order) {
+      const metadata = result.metadata as Record<string, unknown> | undefined;
+      const referencedOrderId = String(result.external_reference || metadata?.order_id || '');
+      if (referencedOrderId) {
+        const { data: orderByReference } = await admin
+          .from('orders')
+          .select('id, status, user_id, checkout_coupon_id')
+          .eq('id', referencedOrderId)
+          .maybeSingle();
+        order = orderByReference;
+      }
+    }
 
     if (!order) {
       structuredLog('warn', 'mercadopago.order_not_found', { providerPaymentId: paymentId });
@@ -107,15 +121,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
-    const updateData: Record<string, unknown> = { status: newStatus, mp_status: mpStatus };
-    if (newStatus === 'completed') {
-      updateData.shipped_at = new Date().toISOString();
+    const shouldConsumeInventory = isPaymentApproved && order.status === 'awaiting_payment';
+    const { data: finalizedRows, error: finalizeError } = await admin.rpc('finalize_checkout_order', {
+      p_order_id: order.id,
+      p_user_id: order.user_id,
+      p_mp_payment_id: String(paymentId),
+      p_mp_status: mpStatus,
+      p_order_status: newStatus,
+      p_consume_inventory: shouldConsumeInventory,
+    });
+    if (finalizeError) {
+      throw new Error(`Falha ao finalizar pedido pelo webhook: ${finalizeError.message}`);
     }
-
-    await admin
-      .from('orders')
-      .update(updateData)
-      .eq('id', order.id);
+    const finalizedCheckout = Array.isArray(finalizedRows) ? finalizedRows[0] : finalizedRows;
+    if (finalizedCheckout?.state_changed === false) {
+      return NextResponse.json({ received: true, status: newStatus });
+    }
 
     try {
       if (newStatus === 'canceled' && order.status !== 'canceled') {
@@ -185,20 +206,6 @@ export async function POST(request: Request) {
         .select('*, option:product_options(*), product:products(*)')
         .eq('order_id', order.id);
 
-      if (items) {
-        for (const item of items) {
-          if (item.product_option_id) {
-            await admin
-              .from('product_options')
-              .update({ stock: Math.max(0, (item.option?.stock ?? 0) - item.quantity) })
-              .eq('id', item.product_option_id);
-          }
-        }
-      }
-
-      await admin.from('cart_items').delete().eq('user_id', order.user_id);
-      await admin.from('cart_recovery_events').update({ status: 'converted', converted_at: new Date().toISOString() }).eq('user_id', order.user_id).eq('status', 'sent');
-
       try {
         const itemsData = items ?? [];
         const hasDigital = hasDigitalItems(itemsData);
@@ -230,7 +237,7 @@ export async function POST(request: Request) {
       }
 
       const metadata = result.metadata as Record<string, unknown> | undefined;
-      if (metadata?.coupon_id) {
+      if (metadata?.coupon_id && !order.checkout_coupon_id) {
         await admin.rpc('increment_coupon_usage', { coupon_id: metadata.coupon_id });
       }
 

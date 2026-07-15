@@ -2,13 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // --- Mocks (hoisted so vi.mock factories can reference them) ---
 
-const { mockPaymentCreate, mockUser } = vi.hoisted(() => ({
+const { mockPaymentCreate, mockPaymentGet, mockUser } = vi.hoisted(() => ({
   mockPaymentCreate: vi.fn(),
+  mockPaymentGet: vi.fn(),
   mockUser: { id: 'user-123', email: 'test@example.com', role: 'user' },
 }));
 
 vi.mock('@/lib/mercadopago', () => ({
-  getPaymentClient: () => ({ create: mockPaymentCreate }),
+  getPaymentClient: () => ({ create: mockPaymentCreate, get: mockPaymentGet }),
 }));
 
 vi.mock('@/lib/api', () => ({
@@ -34,7 +35,7 @@ vi.mock('@/lib/shipping', () => ({
   }),
 }));
 
-const mockRpc = vi.fn().mockResolvedValue({ error: null });
+const mockRpc = vi.fn();
 function createBuilder(resolvedData: unknown = null) {
   const chain: Record<string, ReturnType<typeof vi.fn>> = {};
   chain.select = vi.fn().mockReturnValue(chain);
@@ -121,6 +122,15 @@ describe('POST /api/payments/mercadopago/create', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupMockAdmin();
+    mockRpc.mockImplementation((name: string) => {
+      if (name === 'prepare_checkout_order') {
+        return Promise.resolve({ data: [{ order_id: 'order-abc', reused: false }], error: null });
+      }
+      if (name === 'finalize_checkout_order') {
+        return Promise.resolve({ data: [{ order_id: 'order-abc', effects_applied: true }], error: null });
+      }
+      return Promise.resolve({ data: null, error: null });
+    });
   });
 
   describe('Validation', () => {
@@ -175,10 +185,15 @@ describe('POST /api/payments/mercadopago/create', () => {
       expect(json.pix_qr_code_base64).toBe('base64data');
       expect(json.order_id).toBe('order-abc');
 
-      // Verify order was inserted with awaiting_payment
-      expect(ordersBuilder.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'awaiting_payment' }),
-      );
+      expect(mockRpc).toHaveBeenCalledWith('prepare_checkout_order', expect.objectContaining({
+        p_user_id: 'user-123',
+        p_payment_method: 'pix',
+      }));
+      expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
+        p_order_id: 'order-abc',
+        p_order_status: 'awaiting_payment',
+        p_consume_inventory: false,
+      }));
     });
 
     it('does NOT fulfill order (no stock decrement, no cart clear) for pending PIX', async () => {
@@ -190,7 +205,9 @@ describe('POST /api/payments/mercadopago/create', () => {
 
       await POST(makeRequest({ payment_method: 'pix', cpf: '12345678909' }));
 
-      expect(mockRpc).not.toHaveBeenCalledWith('decrement_stock', expect.anything());
+      expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
+        p_consume_inventory: false,
+      }));
     });
   });
 
@@ -205,8 +222,10 @@ describe('POST /api/payments/mercadopago/create', () => {
       }));
 
       expect((await response.json()).status).toBe('in_process');
-      expect(ordersBuilder.insert).toHaveBeenCalledWith(expect.objectContaining({ status: 'awaiting_payment' }));
-      expect(mockRpc).not.toHaveBeenCalledWith('decrement_stock', expect.anything());
+      expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
+        p_order_status: 'awaiting_payment',
+        p_consume_inventory: false,
+      }));
     });
 
     it('creates order em processamento when card is approved immediately', async () => {
@@ -227,9 +246,10 @@ describe('POST /api/payments/mercadopago/create', () => {
       expect(json.order_id).toBe('order-abc');
 
       // Pagamento aprovado de produto físico entra na fila de produção.
-      expect(ordersBuilder.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'processing' }),
-      );
+      expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
+        p_order_status: 'processing',
+        p_consume_inventory: true,
+      }));
     });
 
     it('fulfills order when card is approved (stock, cart, emails)', async () => {
@@ -244,11 +264,10 @@ describe('POST /api/payments/mercadopago/create', () => {
         cpf: '12345678909',
       }));
 
-      // Stock decrement should be called
-      expect(mockRpc).toHaveBeenCalledWith('decrement_stock', {
-        option_id: 'opt-1',
-        qty: 2,
-      });
+      // Estoque, cupom e carrinho são processados pela mesma transação.
+      expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
+        p_consume_inventory: true,
+      }));
 
       // Emails should be sent
       const { sendOrderConfirmationEmail, sendAdminNewOrderEmail } = await import('@/lib/email');
@@ -273,9 +292,10 @@ describe('POST /api/payments/mercadopago/create', () => {
       expect(json.status).toBe('rejected');
       expect(json.status_detail).toBe('cc_rejected_insufficient_amount');
 
-      expect(ordersBuilder.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'rejected' }),
-      );
+      expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
+        p_order_status: 'rejected',
+        p_consume_inventory: false,
+      }));
     });
 
     it('passes installments and issuer_id to MP for credit card', async () => {
@@ -295,6 +315,7 @@ describe('POST /api/payments/mercadopago/create', () => {
           installments: 3,
           issuer_id: 'issuer-456',
         }),
+        requestOptions: { idempotencyKey: expect.any(String) },
       });
     });
   });
@@ -321,7 +342,92 @@ describe('POST /api/payments/mercadopago/create', () => {
         body: expect.objectContaining({
           transaction_amount: 64,
         }),
+        requestOptions: { idempotencyKey: expect.any(String) },
       });
+    });
+  });
+
+  describe('Idempotency and atomic preparation', () => {
+    it('reuses the checkout key in Supabase and Mercado Pago', async () => {
+      const idempotencyKey = '123e4567-e89b-42d3-a456-426614174000';
+      mockPaymentCreate.mockResolvedValue({ id: 'mp-idempotent', status: 'approved' });
+
+      const response = await POST(makeRequest({
+        idempotency_key: idempotencyKey,
+        payment_method: 'credit_card',
+        token: 'tok_idempotent',
+        cpf: '12345678909',
+      }));
+
+      expect(response.status).toBe(200);
+      expect(mockRpc).toHaveBeenCalledWith('prepare_checkout_order', expect.objectContaining({
+        p_idempotency_key: idempotencyKey,
+      }));
+      expect(mockPaymentCreate).toHaveBeenCalledWith(expect.objectContaining({
+        requestOptions: { idempotencyKey },
+      }));
+    });
+
+    it('does not contact Mercado Pago when the pending order cannot be prepared', async () => {
+      mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'database unavailable' } });
+
+      const response = await POST(makeRequest({
+        payment_method: 'pix',
+        cpf: '12345678909',
+      }));
+
+      expect(response.status).toBe(500);
+      expect(mockPaymentCreate).not.toHaveBeenCalled();
+    });
+
+    it('recovers the existing provider payment after a lost response', async () => {
+      const idempotencyKey = '123e4567-e89b-42d3-a456-426614174111';
+      ordersBuilder.maybeSingle = vi.fn().mockResolvedValue({
+        data: { id: 'order-existing', mp_payment_id: 'mp-existing', mp_status: 'pending' },
+        error: null,
+      });
+      mockPaymentGet.mockResolvedValue({
+        id: 'mp-existing',
+        status: 'pending',
+        point_of_interaction: { transaction_data: { qr_code: 'existing-pix' } },
+      });
+
+      const response = await POST(makeRequest({
+        idempotency_key: idempotencyKey,
+        payment_method: 'pix',
+        cpf: '12345678909',
+      }));
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toEqual(expect.objectContaining({
+        reused: true,
+        order_id: 'order-existing',
+        payment_id: 'mp-existing',
+        pix_qr_code: 'existing-pix',
+      }));
+      expect(mockPaymentCreate).not.toHaveBeenCalled();
+    });
+
+    it('keeps the provider reference for reconciliation when finalization fails', async () => {
+      mockPaymentCreate.mockResolvedValue({ id: 'mp-needs-reconciliation', status: 'approved' });
+      mockRpc
+        .mockResolvedValueOnce({ data: [{ order_id: 'order-abc', reused: false }], error: null })
+        .mockResolvedValueOnce({ data: null, error: { message: 'commit failed' } });
+
+      const response = await POST(makeRequest({
+        payment_method: 'credit_card',
+        token: 'tok_reconcile',
+        cpf: '12345678909',
+      }));
+      const data = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(data.order_id).toBe('order-abc');
+      expect(ordersBuilder.update).toHaveBeenCalledWith(expect.objectContaining({
+        mp_payment_id: 'mp-needs-reconciliation',
+        checkout_state: 'reconciliation_required',
+      }));
     });
   });
 

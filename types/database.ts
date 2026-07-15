@@ -67,6 +67,13 @@ export interface Order {
   mp_payment_method: string | null;
   mp_status: string | null;
   payment_provider: string;
+  checkout_idempotency_key?: string | null;
+  checkout_payload_hash?: string | null;
+  checkout_state?: 'legacy' | 'prepared' | 'pending' | 'completed' | 'failed' | 'reconciliation_required';
+  checkout_finalized_at?: string | null;
+  inventory_processed_at?: string | null;
+  coupon_processed_at?: string | null;
+  checkout_coupon_id?: string | null;
   status: OrderStatus;
   total: number;
   shipping_address: Record<string, unknown> | null;

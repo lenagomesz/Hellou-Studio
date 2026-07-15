@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createHash, randomUUID } from 'node:crypto';
 import { requireUser, badRequest, serverError } from '@/lib/api';
 import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
     shipping_cep,
     coupon_code,
     wants_invoice = false,
+    idempotency_key,
   } = body as {
     payment_method: 'pix' | 'credit_card' | 'debit_card';
     token?: string;
@@ -48,6 +50,7 @@ export async function POST(request: Request) {
     shipping_cep?: string;
     coupon_code?: string;
     wants_invoice?: boolean;
+    idempotency_key?: string;
   };
 
   if (!payment_method) return badRequest('Método de pagamento não informado');
@@ -60,7 +63,60 @@ export async function POST(request: Request) {
     return badRequest('CPF válido é obrigatório para pagamento');
   }
 
+  const requestedIdempotencyKey = request.headers.get('idempotency-key') || idempotency_key;
+  const checkoutIdempotencyKey = requestedIdempotencyKey || randomUUID();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(checkoutIdempotencyKey)) {
+    return badRequest('Identificador da tentativa de pagamento inválido');
+  }
+
   const admin = getSupabaseAdmin();
+
+  const { data: existingAttempt, error: existingAttemptError } = await admin
+    .from('orders')
+    .select('id, mp_payment_id, mp_status')
+    .eq('user_id', user.id)
+    .eq('checkout_idempotency_key', checkoutIdempotencyKey)
+    .maybeSingle();
+  if (existingAttemptError) {
+    return serverError('Não foi possível verificar esta tentativa de pagamento.');
+  }
+
+  if (existingAttempt?.mp_payment_id) {
+    try {
+      const existingPayment = await getPaymentClient().get({ id: existingAttempt.mp_payment_id });
+      const existingResponse: Record<string, unknown> = {
+        payment_id: String(existingPayment.id || existingAttempt.mp_payment_id),
+        status: existingPayment.status || existingAttempt.mp_status,
+        order_id: existingAttempt.id,
+        reused: true,
+      };
+      const transactionData = (existingPayment.point_of_interaction as Record<string, unknown> | undefined)?.transaction_data as Record<string, unknown> | undefined;
+      if (transactionData) {
+        existingResponse.pix_qr_code = transactionData.qr_code;
+        existingResponse.pix_qr_code_base64 = transactionData.qr_code_base64;
+        existingResponse.pix_expiration = existingPayment.date_of_expiration;
+      }
+      if (existingPayment.status === 'rejected') {
+        existingResponse.status_detail = existingPayment.status_detail;
+      }
+      return NextResponse.json(existingResponse);
+    } catch (error) {
+      await captureOperationalError({
+        fingerprint: 'mercadopago-idempotency-recovery',
+        category: 'payment.failed',
+        title: 'Falha ao recuperar uma tentativa de pagamento existente',
+        error,
+        route: '/api/payments/mercadopago/create',
+        severity: 'warning',
+        metadata: { orderId: existingAttempt.id },
+        alert: true,
+      });
+      return NextResponse.json(
+        { error: 'O pagamento já foi iniciado e ainda está sendo confirmado. Não tente pagar novamente.', order_id: existingAttempt.id },
+        { status: 503 },
+      );
+    }
+  }
 
   const { data: cartItems } = await admin
     .from('cart_items')
@@ -188,7 +244,57 @@ export async function POST(request: Request) {
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(' ') || firstName;
 
+  const checkoutItems = cartItems.map((item) => ({
+    product_id: item.product_id,
+    product_option_id: item.product_option_id,
+    quantity: item.quantity,
+    unit_price: (item.product?.base_price ?? 0) + (item.option?.price_modifier ?? 0),
+    customization_text: item.customization_text ?? null,
+    product_snapshot: {
+      name: item.product?.name,
+      type: item.product?.type,
+      image_url: item.product?.image_url,
+      option_name: item.option?.name,
+      option_color: item.option?.color,
+      customization_text: item.customization_text ?? null,
+    },
+  }));
+
+  const checkoutShippingAddress = {
+    ...shipping_address,
+    shipping_method: isDigitalOrder ? null : shipping_method ?? null,
+    shipping_cost: validatedShipping,
+    wants_invoice: !!wants_invoice,
+  };
+  const checkoutPayloadHash = createHash('sha256').update(JSON.stringify({
+    userId: user.id,
+    paymentMethod: payment_method,
+    total: totalAmount,
+    couponId,
+    shippingAddress: checkoutShippingAddress,
+    items: checkoutItems,
+  })).digest('hex');
+
+  let preparedOrderId: string | null = null;
+
   try {
+    const { data: preparedRows, error: prepareError } = await admin.rpc('prepare_checkout_order', {
+      p_user_id: user.id,
+      p_idempotency_key: checkoutIdempotencyKey,
+      p_payload_hash: checkoutPayloadHash,
+      p_total: totalAmount,
+      p_shipping_address: checkoutShippingAddress,
+      p_payment_method: payment_method,
+      p_coupon_id: couponId,
+      p_items: checkoutItems,
+    });
+    const preparedOrder = Array.isArray(preparedRows) ? preparedRows[0] : preparedRows;
+    if (prepareError || !preparedOrder?.order_id) {
+      structuredLog('error', 'mercadopago.order_prepare_failed', { error: prepareError, userId: user.id });
+      return serverError('Não foi possível preparar o pedido. Tente novamente.');
+    }
+    preparedOrderId = String(preparedOrder.order_id);
+
     const payment = getPaymentClient();
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
@@ -207,7 +313,9 @@ export async function POST(request: Request) {
       metadata: {
         user_id: user.id,
         coupon_id: couponId || null,
+        order_id: preparedOrderId,
       },
+      external_reference: preparedOrderId,
     };
 
     if (payment_method === 'pix') {
@@ -228,7 +336,10 @@ export async function POST(request: Request) {
       items: cartItems.length,
       user: user.id,
     });
-    const result = await payment.create({ body: paymentBody });
+    const result = await payment.create({
+      body: paymentBody,
+      requestOptions: { idempotencyKey: checkoutIdempotencyKey },
+    });
 
     const mpPaymentId = String(result.id);
     const mpStatus = result.status;
@@ -254,30 +365,41 @@ export async function POST(request: Request) {
       orderStatus,
     });
 
-    const { data: order, error: orderError } = await admin
-      .from('orders')
-      .insert({
-        user_id: user.id,
-        mp_payment_id: mpPaymentId,
-        mp_payment_method: payment_method,
-        mp_status: mpStatus ?? null,
-        payment_provider: 'mercadopago',
-        status: orderStatus,
-        total: totalAmount,
-        shipping_address: {
-          ...shipping_address,
-          shipping_method: isDigitalOrder ? null : shipping_method ?? null,
-          shipping_cost: validatedShipping,
-          wants_invoice: !!wants_invoice,
-        },
-      })
-      .select('id')
-      .single();
+    const order = { id: preparedOrderId };
+    const consumeInventory = isPaymentApproved;
+    const { data: finalizedRows, error: finalizeError } = await admin.rpc('finalize_checkout_order', {
+      p_order_id: order.id,
+      p_user_id: user.id,
+      p_mp_payment_id: mpPaymentId,
+      p_mp_status: mpStatus ?? 'unknown',
+      p_order_status: orderStatus,
+      p_consume_inventory: consumeInventory,
+    });
 
-    if (orderError || !order) {
-      structuredLog('error', 'mercadopago.order_insert_failed', { error: orderError });
-      return serverError('Erro ao criar pedido');
+    if (finalizeError) {
+      // Mantém a referência do provedor no pedido para o webhook reconciliar a cobrança.
+      await admin.from('orders').update({
+        mp_payment_id: mpPaymentId,
+        mp_status: mpStatus ?? null,
+        checkout_state: 'reconciliation_required',
+      }).eq('id', order.id).eq('user_id', user.id);
+      await captureOperationalError({
+        fingerprint: 'mercadopago-checkout-finalize',
+        category: 'payment.failed',
+        title: 'Pagamento criado, mas pedido precisa de reconciliação',
+        error: finalizeError,
+        route: '/api/payments/mercadopago/create',
+        severity: 'critical',
+        metadata: { orderId: order.id, providerPaymentId: mpPaymentId },
+        alert: true,
+      });
+      return NextResponse.json(
+        { error: 'O pagamento foi recebido, mas ainda estamos confirmando o pedido. Não tente pagar novamente.', order_id: order.id },
+        { status: 503 },
+      );
     }
+    const finalizedCheckout = Array.isArray(finalizedRows) ? finalizedRows[0] : finalizedRows;
+    const checkoutStateChanged = finalizedCheckout?.state_changed !== false;
 
     structuredLog('info', 'mercadopago.order_inserted', {
       orderId: order.id,
@@ -286,52 +408,12 @@ export async function POST(request: Request) {
       isDigitalOrder,
     });
 
-    const orderItems = cartItems.map((item) => ({
+    const orderItems = checkoutItems.map((item) => ({
       order_id: order.id,
-      product_id: item.product_id,
-      product_option_id: item.product_option_id,
-      quantity: item.quantity,
-      unit_price: (item.product?.base_price ?? 0) + (item.option?.price_modifier ?? 0),
-      customization_text: item.customization_text ?? null,
-      product_snapshot: {
-        name: item.product?.name,
-        image_url: item.product?.image_url,
-        option_name: item.option?.name,
-        option_color: item.option?.color,
-        customization_text: item.customization_text ?? null,
-      },
+      ...item,
     }));
 
-    await admin.from('order_items').insert(orderItems);
-
-    if (mpStatus === 'rejected') {
-      await admin.from('order_items').delete().eq('order_id', order.id);
-      await admin.from('orders').delete().eq('id', order.id);
-    } else {
-      await admin.from('cart_items').delete().eq('user_id', user.id);
-      await admin.from('cart_recovery_events').update({ status: 'converted', converted_at: new Date().toISOString() }).eq('user_id', user.id).eq('status', 'sent');
-    }
-
-    if (orderStatus === 'processing' || orderStatus === 'completed') {
-      for (const item of cartItems) {
-        if (item.product_option_id) {
-          const { error: rpcErr } = await admin.rpc('decrement_stock', {
-            option_id: item.product_option_id,
-            qty: item.quantity,
-          });
-          if (rpcErr) {
-            await admin
-              .from('product_options')
-              .update({ stock: Math.max(0, (item.option?.stock ?? 0) - item.quantity) })
-              .eq('id', item.product_option_id ?? '');
-          }
-        }
-      }
-
-      if (couponId) {
-        await admin.rpc('increment_coupon_usage', { coupon_id: couponId });
-      }
-
+    if (isPaymentApproved && checkoutStateChanged) {
       try {
         // Create different notifications based on product type
         if (isDigitalOrder) {
@@ -492,7 +574,7 @@ export async function POST(request: Request) {
         }
       }
 
-      if (mpStatus === 'rejected') {
+      if (mpStatus === 'rejected' && checkoutStateChanged) {
         await createNotification(
           user.id,
           'order_status',
@@ -529,6 +611,13 @@ export async function POST(request: Request) {
 
     const errStatus = mpErr.status ?? mpErr.statusCode;
     if (errStatus && errStatus >= 400 && errStatus < 500) {
+      if (preparedOrderId) {
+        await admin.from('orders').update({
+          status: 'rejected',
+          checkout_state: 'failed',
+          mp_status: 'rejected',
+        }).eq('id', preparedOrderId).eq('user_id', user.id);
+      }
       const detail = Array.isArray(mpErr.cause)
         ? (mpErr.cause[0] as Record<string, unknown>)?.description
         : mpErr.message;
