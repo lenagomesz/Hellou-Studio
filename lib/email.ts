@@ -457,7 +457,7 @@ export async function sendOrderConfirmationEmail(params: {
             </div>
           </div>
 
-          <a href="${baseUrl}/account/orders/${params.pedidoId}" style="display: inline-block; margin: 32px 0 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+          <a href="${buildEmailUrl(baseUrl, `/pedido/${params.pedidoId}`)}" style="display: inline-block; margin: 32px 0 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
             ${isSTLOrder ? 'Baixar meu arquivo' : 'Acompanhe seu pedido'}
           </a>
 
@@ -524,7 +524,7 @@ export async function sendPixPaymentEmail(params: {
               <p style="margin:24px 0 8px;color:#99949f;font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;">PIX copia e cola</p>
               <div style="padding:15px;border:1px solid #eeeaf0;border-radius:14px;background:#faf8fa;color:#39333d;font-family:monospace;font-size:11px;line-height:1.55;word-break:break-all;">${safePixCode}</div>
               <p style="margin:10px 0 0;color:#8e8995;font-size:11px;line-height:1.55;">Válido até ${expiration}. Se o prazo terminar sem pagamento, o pedido será cancelado automaticamente.</p>
-              <a href="${baseUrl}/account/orders/${params.orderId}" style="display:block;margin-top:24px;padding:15px 20px;border-radius:13px;background:linear-gradient(100deg,#ff2f92,#ff9d28);color:#fff;text-align:center;text-decoration:none;font-size:13px;font-weight:800;">Abrir pedido e pagar</a>
+              <a href="${buildEmailUrl(baseUrl, `/pedido/${params.orderId}`)}" style="display:block;margin-top:24px;padding:15px 20px;border-radius:13px;background:linear-gradient(100deg,#ff2f92,#ff9d28);color:#fff;text-align:center;text-decoration:none;font-size:13px;font-weight:800;">Abrir pedido e pagar</a>
             </div>
             <div style="padding:22px 30px 26px;border-top:1px solid #eeeaf0;background:#faf8fa;color:#8e8995;text-align:center;font-size:10px;line-height:1.7;"><strong style="color:#2a2730;">helloustudio</strong><br />Objetos cheios de personalidade, feitos camada por camada.<br />Este é um e-mail automático sobre o seu pedido.</div>
           </div>
@@ -664,7 +664,7 @@ export async function sendOrderStatusEmail(params: {
           </div>
           
           <div style="text-align: center; margin-top: 24px;">
-            <a href="${baseUrl}/account/orders/${params.orderId}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+            <a href="${buildEmailUrl(baseUrl, `/pedido/${params.orderId}`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
               Ver detalhes do pedido
             </a>
           </div>
@@ -883,7 +883,7 @@ export async function sendSTLOrderConfirmationEmail(params: {
               Valor: ${price}
             </p>
           </div>
-          <a href="${buildEmailUrl(baseUrl, `/account/orders/${params.orderId}`)}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+          <a href="${buildEmailUrl(baseUrl, `/pedido/${params.orderId}`)}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
             Acessar pedido e baixar
           </a>
           <p style="color: #888; font-size: 13px; margin-top: 24px; line-height: 1.5;">
@@ -962,7 +962,7 @@ export async function sendSTLDeliveryEmail(params: {
   }
 
   const baseUrl = getBaseUrl();
-  const downloadUrl = buildEmailUrl(baseUrl, `/account/orders/${params.orderId}`);
+  const downloadUrl = buildEmailUrl(baseUrl, `/pedido/${params.orderId}`);
 
   try {
     const res = await sendTrackedEmail(resend, {

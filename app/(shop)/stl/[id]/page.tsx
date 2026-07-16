@@ -8,6 +8,7 @@ import { ProductReviews } from '@/components/shop/ProductReviews';
 import { getCurrentUser } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
 import { absoluteUrl, plainText, productImages, safeJsonLd } from '@/lib/seo';
+import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -104,6 +105,15 @@ export default async function STLProductDetailPage(
     getRelatedProducts(product.id),
     getCurrentUser(),
   ]);
+  let ownedOrderId: string | null = null;
+  if (user) {
+    try {
+      const ownedProducts = await findOwnedDigitalProducts(getSupabaseAdmin(), user.id, [product.id]);
+      ownedOrderId = ownedProducts.get(product.id) ?? null;
+    } catch (error) {
+      console.error('[stl-detail] Could not verify product ownership:', error);
+    }
+  }
 
   const price = product.sale_price ?? product.base_price;
   const productJsonLd = {
@@ -140,7 +150,7 @@ export default async function STLProductDetailPage(
         <span className="text-gray-900 dark:text-gray-100">{product.name}</span>
       </nav>
 
-      <ProductDetail product={product} options={options} />
+      <ProductDetail product={product} options={options} ownedOrderId={ownedOrderId} />
 
       <ProductReviews productId={product.id} isAdmin={user?.role === 'admin'} />
 

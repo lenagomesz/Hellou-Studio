@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { subDays, subMonths, format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { getStoreDateGroupKey } from '@/lib/store-time';
+import { subDays, subMonths } from 'date-fns';
 
 function getDateRange(period: string) {
   const now = new Date();
@@ -15,11 +16,7 @@ function getDateRange(period: string) {
 }
 
 function groupDate(date: Date, groupBy: 'day' | 'week' | 'month'): string {
-  switch (groupBy) {
-    case 'day': return format(startOfDay(date), 'yyyy-MM-dd');
-    case 'week': return format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-    case 'month': return format(startOfMonth(date), 'yyyy-MM');
-  }
+  return getStoreDateGroupKey(date, groupBy);
 }
 
 export async function GET(req: NextRequest) {

@@ -4,6 +4,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderStatusEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { getStoreDayBounds } from '@/lib/store-time';
 import type { OrderStatus } from '@/types/database';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -461,16 +462,14 @@ export async function processRefund(params: {
 // Get order quick stats
 export async function getOrderQuickStats() {
   const admin = getSupabaseAdmin();
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayISO = today.toISOString();
+  const { start: todayStart, endExclusive: tomorrowStart } = getStoreDayBounds();
 
   // Today's orders
   const { count: todayCount } = await admin
     .from('orders')
     .select('id', { count: 'exact', head: true })
-    .gte('created_at', todayISO);
+    .gte('created_at', todayStart.toISOString())
+    .lt('created_at', tomorrowStart.toISOString());
 
   // By status counts
   const { count: processingCount } = await admin
@@ -513,7 +512,8 @@ export async function getOrderQuickStats() {
   const { data: todayOrders } = await admin
     .from('orders')
     .select('total')
-    .gte('created_at', todayISO)
+    .gte('created_at', todayStart.toISOString())
+    .lt('created_at', tomorrowStart.toISOString())
     .not('status', 'in', '("canceled","refunded")');
 
   const todayRevenue = (todayOrders ?? []).reduce((acc: number, o: { total: number }) => acc + o.total, 0);

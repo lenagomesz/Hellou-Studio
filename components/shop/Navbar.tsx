@@ -13,36 +13,29 @@ const NAV_LINKS = [
   {
     href: '/',
     label: 'Home',
-    emoji: '🏠',
     icon: 'M3 10.75 12 3l9 7.75M5.5 9.5v10.25h13V9.5M9.25 19.75v-6h5.5v6',
   },
   {
     href: '/products',
     label: 'Catálogo',
-    emoji: '🛍️',
     icon: 'M4.75 3.75h4.5a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-4.5a1 1 0 0 1-1-1v-4.5a1 1 0 0 1 1-1Zm10 0h4.5a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-4.5a1 1 0 0 1-1-1v-4.5a1 1 0 0 1 1-1Zm-10 10h4.5a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-4.5a1 1 0 0 1-1-1v-4.5a1 1 0 0 1 1-1Zm10 0h4.5a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-4.5a1 1 0 0 1-1-1v-4.5a1 1 0 0 1 1-1Z',
   },
   {
     href: '/stl',
     label: 'STL',
-    emoji: '📁',
     icon: 'M6.5 2.75h7l4 4v14.5h-11V2.75Zm7 0v4h4M9.25 12h5.5m-5.5 4h5.5',
   },
   {
     href: '/request-print',
     label: 'Encomendas',
-    emoji: '🧊',
     icon: 'm12 2.75 8.5 4.75L12 12.25 3.5 7.5 12 2.75Zm-8.5 9L12 16.5l8.5-4.75m-17 5L12 21.5l8.5-4.75',
   },
   {
     href: '/about',
     label: 'Sobre',
-    emoji: '✨',
     icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-10v6m0-10h.01',
   },
 ];
-
-const EMOJI_FONT = "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif";
 
 function ThemeGlyph({ dark }: { dark: boolean }) {
   return dark ? (
@@ -61,6 +54,16 @@ function BagIcon({ className = 'h-5 w-5' }: { className?: string }) {
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className={className}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" />
     </svg>
+  );
+}
+
+function MenuIcon({ path, filled = false }: { path: string; filled?: boolean }) {
+  return (
+    <span aria-hidden="true" className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-gray-400 dark:text-gray-500">
+      <svg viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.7} className="h-[18px] w-[18px]">
+        <path strokeLinecap="round" strokeLinejoin="round" d={path} />
+      </svg>
+    </span>
   );
 }
 
@@ -85,13 +88,13 @@ export function Navbar() {
     .toUpperCase();
   const accountLinks = session?.user?.role === 'admin'
     ? [
-        { href: '/dashboard', label: 'Painel Admin', emoji: '🛠️' },
-        { href: '/account', label: 'Minha conta', emoji: '👤' },
+        { href: '/dashboard', label: 'Painel Admin', icon: 'M4.75 4.75h5.5v5.5h-5.5v-5.5Zm9 0h5.5v5.5h-5.5v-5.5Zm-9 9h5.5v5.5h-5.5v-5.5Zm9 0h5.5v5.5h-5.5v-5.5Z' },
+        { href: '/account', label: 'Minha conta', icon: 'M15.75 7a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20a7.5 7.5 0 0 1 15 0' },
       ]
     : [
-        { href: '/account', label: 'Minha conta', emoji: '👤' },
-        { href: '/account/orders', label: 'Meus pedidos', emoji: '📦' },
-        { href: '/account/bonus', label: 'Meus bônus', emoji: '🎁' },
+        { href: '/account', label: 'Minha conta', icon: 'M15.75 7a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20a7.5 7.5 0 0 1 15 0' },
+        { href: '/account/orders', label: 'Meus pedidos', icon: 'm12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm-8 4.5 8 4.5 8-4.5M12 12v9' },
+        { href: '/account/bonus', label: 'Meus bônus', icon: 'M4 10.25h16v10H4v-10Zm-1-4h18v4H3v-4ZM12 6.25v14M12 6.25H8.75A2.25 2.25 0 1 1 11 4v2.25m1 0h3.25A2.25 2.25 0 1 0 13 4v2.25' },
       ];
 
   useEffect(() => setMounted(true), []);
@@ -354,9 +357,7 @@ export function Navbar() {
                       : 'border-transparent text-gray-700 hover:border-gray-100 hover:bg-orange-50/60 dark:text-gray-300 dark:hover:border-gray-800 dark:hover:bg-gray-800'
                   }`}
                 >
-                  <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-base shadow-sm dark:bg-gray-800">
-                    {link.emoji}
-                  </span>
+                  <MenuIcon path={link.icon} />
                   {link.label}
                   <span aria-hidden="true" className="ml-auto text-gray-400">→</span>
                 </Link>
@@ -378,7 +379,7 @@ export function Navbar() {
                   : 'border-transparent text-gray-700 hover:border-gray-100 hover:bg-orange-50/60 dark:text-gray-300 dark:hover:border-gray-800 dark:hover:bg-gray-800'
               }`}
             >
-              <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-base shadow-sm dark:bg-gray-800">🛒</span>
+              <span aria-hidden="true" className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-gray-400 dark:text-gray-500"><BagIcon className="h-[18px] w-[18px]" /></span>
               Carrinho
               {count > 0 && <span className="ml-auto rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-2 py-0.5 text-[10px] font-black text-white">{count > 99 ? '99+' : count}</span>}
             </Link>
@@ -388,14 +389,14 @@ export function Navbar() {
               Atendimento
             </p>
 
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-200 hover:bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300">
-              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm shadow-emerald-500/25">
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl border border-transparent px-3 text-sm font-semibold text-gray-700 transition hover:border-gray-100 hover:bg-gray-50 dark:text-gray-300 dark:hover:border-gray-800 dark:hover:bg-gray-800">
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-gray-400 dark:text-gray-500">
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884" />
               </svg>
               </span>
-              <span><strong className="block">Entre em contato</strong><small className="block text-[10px] font-medium text-emerald-600 dark:text-emerald-400">Fale conosco pelo WhatsApp</small></span>
-              <span aria-hidden="true" className="ml-auto">→</span>
+              <span><strong className="block">Entre em contato</strong><small className="block text-[10px] font-medium text-gray-400 dark:text-gray-500">Fale conosco pelo WhatsApp</small></span>
+              <span aria-hidden="true" className="ml-auto text-gray-400">→</span>
             </a>
 
             <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
@@ -409,12 +410,12 @@ export function Navbar() {
               <>
                 {accountLinks.map((item) => (
                   <Link key={item.href} href={item.href} scroll onClick={handleMobileNavigation} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-gray-700 transition hover:bg-orange-50/60 dark:text-gray-300 dark:hover:bg-gray-800">
-                    <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gray-50 text-base dark:bg-gray-800">{item.emoji}</span>
+                    <MenuIcon path={item.icon} />
                     {item.label}<span aria-hidden="true" className="ml-auto">→</span>
                   </Link>
                 ))}
                 <button type="button" onClick={() => { handleMobileNavigation(); void signOut({ callbackUrl: '/' }); }} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
-                  <span aria-hidden="true" style={{ fontFamily: EMOJI_FONT }} className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-base dark:bg-red-950/50">🚪</span>
+                  <MenuIcon path="M14.25 8.25 18 12m0 0-3.75 3.75M18 12H8.25m2.25-8.25H5.75A1.75 1.75 0 0 0 4 5.5v13c0 .966.784 1.75 1.75 1.75h4.75" />
                   Sair da conta
                 </button>
               </>

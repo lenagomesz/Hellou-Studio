@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import {
+  getStoreDateKey,
+  getStoreDayBounds,
+  getStoreMonthBounds,
+} from '@/lib/store-time';
+import {
   subDays,
-  subMonths,
-  startOfMonth,
   startOfWeek,
-  startOfDay,
-  endOfDay,
   format,
   addDays,
   differenceInDays,
@@ -78,17 +79,17 @@ export async function GET() {
 async function computeAnalytics() {
   const admin = getSupabaseAdmin();
   const now = new Date();
+  const calendarNow = new Date(`${getStoreDateKey(now)}T12:00:00.000Z`);
 
   // Date boundaries
-  const thisMonthStart = startOfMonth(now);
-  const lastMonthStart = startOfMonth(subMonths(now, 1));
-  const lastMonthEnd = subDays(thisMonthStart, 1);
-  const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });
-  const lastWeekStart = startOfWeek(subDays(thisWeekStart, 1), { weekStartsOn: 1 });
-  const lastWeekEnd = subDays(thisWeekStart, 1);
-  const fortyFourDaysAgo = subDays(now, 44); // 30 + 14 buffer for anomaly rolling mean
-  const todayStart = startOfDay(now);
-  const todayEnd = endOfDay(now);
+  const monthBounds = getStoreMonthBounds(now);
+  const thisMonthStart = monthBounds.start;
+  const lastMonthStart = monthBounds.previousStart;
+  const thisWeekCalendarStart = startOfWeek(calendarNow, { weekStartsOn: 1 });
+  const thisWeekStart = getStoreDayBounds(thisWeekCalendarStart).start;
+  const lastWeekStart = getStoreDayBounds(subDays(thisWeekCalendarStart, 7)).start;
+  const fortyFourDaysAgo = getStoreDayBounds(subDays(calendarNow, 44)).start;
+  const { start: todayStart, endExclusive: tomorrowStart } = getStoreDayBounds(now);
 
   // Fetch all orders from the last ~44 days (covers anomaly window + historical)
   const validStatuses = ['paid', 'processing', 'shipped', 'delivered'];
@@ -112,7 +113,7 @@ async function computeAnalytics() {
       .select('id, total, created_at')
       .in('status', validStatuses)
       .gte('created_at', todayStart.toISOString())
-      .lte('created_at', todayEnd.toISOString()),
+      .lt('created_at', tomorrowStart.toISOString()),
   ]);
 
   const orders = ordersResult.data ?? [];
@@ -150,14 +151,14 @@ async function computeAnalytics() {
   );
   const lastMonthOrders = orders.filter((o) => {
     const d = new Date(o.created_at);
-    return d >= lastMonthStart && d <= lastMonthEnd;
+    return d >= lastMonthStart && d < thisMonthStart;
   });
   const thisWeekOrders = orders.filter(
     (o) => new Date(o.created_at) >= thisWeekStart,
   );
   const lastWeekOrders = orders.filter((o) => {
     const d = new Date(o.created_at);
-    return d >= lastWeekStart && d <= lastWeekEnd;
+    return d >= lastWeekStart && d < thisWeekStart;
   });
 
   const thisMonthUsers = users.filter(
@@ -165,18 +166,19 @@ async function computeAnalytics() {
   );
   const lastMonthUsers = users.filter((u) => {
     const d = new Date(u.created_at);
-    return d >= lastMonthStart && d <= lastMonthEnd;
+    return d >= lastMonthStart && d < thisMonthStart;
   });
   const thisWeekUsers = users.filter(
     (u) => new Date(u.created_at) >= thisWeekStart,
   );
   const lastWeekUsers = users.filter((u) => {
     const d = new Date(u.created_at);
-    return d >= lastWeekStart && d <= lastWeekEnd;
+    return d >= lastWeekStart && d < thisWeekStart;
   });
 
   // Daily comparison: this month vs last month (day by day)
-  const daysInThisMonth = differenceInDays(now, thisMonthStart) + 1;
+  const calendarMonthStart = new Date(`${getStoreDateKey(thisMonthStart)}T12:00:00.000Z`);
+  const daysInThisMonth = differenceInDays(calendarNow, calendarMonthStart) + 1;
   const dailyComparison: Array<{
     date: string;
     thisMonthRevenue: number;
@@ -184,17 +186,17 @@ async function computeAnalytics() {
   }> = [];
 
   for (let i = 0; i < daysInThisMonth; i++) {
-    const thisDay = addDays(thisMonthStart, i);
-    const lastDay = addDays(lastMonthStart, i);
+    const thisDay = addDays(calendarMonthStart, i);
+    const lastDay = addDays(new Date(`${getStoreDateKey(lastMonthStart)}T12:00:00.000Z`), i);
     const thisDayStr = format(thisDay, 'yyyy-MM-dd');
     const lastDayStr = format(lastDay, 'yyyy-MM-dd');
 
     const thisRevenue = thisMonthOrders
-      .filter((o) => format(new Date(o.created_at), 'yyyy-MM-dd') === thisDayStr)
+      .filter((o) => getStoreDateKey(o.created_at) === thisDayStr)
       .reduce((sum, o) => sum + (o.total ?? 0), 0);
 
     const lastRevenue = lastMonthOrders
-      .filter((o) => format(new Date(o.created_at), 'yyyy-MM-dd') === lastDayStr)
+      .filter((o) => getStoreDateKey(o.created_at) === lastDayStr)
       .reduce((sum, o) => sum + (o.total ?? 0), 0);
 
     dailyComparison.push({
@@ -219,10 +221,10 @@ async function computeAnalytics() {
   const revenueValues: number[] = [];
 
   for (let i = 29; i >= 0; i--) {
-    const day = subDays(now, i);
+    const day = subDays(calendarNow, i);
     const dayStr = format(day, 'yyyy-MM-dd');
     const dayRevenue = allRecentOrders
-      .filter((o) => format(new Date(o.created_at), 'yyyy-MM-dd') === dayStr)
+      .filter((o) => getStoreDateKey(o.created_at) === dayStr)
       .reduce((sum, o) => sum + (o.total ?? 0), 0);
     dailyRevenue.push({ date: dayStr, revenue: round2(dayRevenue) });
     revenueValues.push(dayRevenue);
@@ -236,7 +238,7 @@ async function computeAnalytics() {
   // 7-day forecast
   const forecast: Array<{ date: string; revenue: number; lower: number; upper: number }> = [];
   for (let i = 1; i <= 7; i++) {
-    const futureDay = addDays(now, i);
+    const futureDay = addDays(calendarNow, i);
     const x = 29 + i; // continuing from day index 29 (today)
     const predicted = slope * x + intercept;
     const clampedPredicted = Math.max(0, predicted);
@@ -289,10 +291,10 @@ async function computeAnalytics() {
   const extendedDates: string[] = [];
 
   for (let i = 43; i >= 0; i--) {
-    const day = subDays(now, i);
+    const day = subDays(calendarNow, i);
     const dayStr = format(day, 'yyyy-MM-dd');
     const dayRevenue = allRecentOrders
-      .filter((o) => format(new Date(o.created_at), 'yyyy-MM-dd') === dayStr)
+      .filter((o) => getStoreDateKey(o.created_at) === dayStr)
       .reduce((sum, o) => sum + (o.total ?? 0), 0);
     extendedDailyRevenue.push(dayRevenue);
     extendedDates.push(dayStr);

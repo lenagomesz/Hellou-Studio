@@ -71,7 +71,7 @@ export const STLOrderConfirmationEmail = ({
 
       {/* CTA */}
       <a
-        href={buildEmailUrl(baseUrl, `/account/orders/${orderId}`)}
+        href={buildEmailUrl(baseUrl, `/pedido/${orderId}`)}
         style={{
           display: 'inline-block',
           margin: '32px 0 24px 0',

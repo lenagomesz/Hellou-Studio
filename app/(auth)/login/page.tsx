@@ -9,7 +9,11 @@ import { useTheme } from 'next-themes';
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const requestedCallbackUrl = searchParams.get('callbackUrl');
+  const callbackUrl = requestedCallbackUrl?.startsWith('/') && !requestedCallbackUrl.startsWith('//')
+    ? requestedCallbackUrl
+    : '/';
+  const isOrderAccess = callbackUrl.startsWith('/pedido/') || callbackUrl.startsWith('/account/orders/');
 
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -153,10 +157,12 @@ function LoginForm() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-orange-900 dark:text-orange-200 mb-1">
-                    Conta necessária para comprar
+                    {isOrderAccess ? 'Entre para visualizar seu pedido' : 'Conta necessária para comprar'}
                   </p>
                   <p className="text-xs text-orange-800 dark:text-orange-300">
-                    Para realizar compras ou encomendas, você precisa ter uma conta. Isso nos permite rastrear seus pedidos e manter contato com você sobre suas solicitações.
+                    {isOrderAccess
+                      ? 'Após o login, você será direcionado automaticamente para o pedido mencionado no e-mail.'
+                      : 'Para realizar compras ou encomendas, você precisa ter uma conta. Isso nos permite rastrear seus pedidos e manter contato com você sobre suas solicitações.'}
                   </p>
                 </div>
               </div>

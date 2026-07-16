@@ -1,7 +1,12 @@
 import { type NextRequest } from 'next/server';
 import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { startOfMonth, subMonths, subDays, format, startOfDay } from 'date-fns';
+import { subDays } from 'date-fns';
+import {
+  formatStoreDateTime,
+  getStoreDateKey,
+  getStoreMonthBounds,
+} from '@/lib/store-time';
 
 export async function GET(_req: NextRequest) {
   const auth = await requirePermission('analytics.view');
@@ -9,8 +14,7 @@ export async function GET(_req: NextRequest) {
 
   const admin = getSupabaseAdmin();
   const now = new Date();
-  const thisMonthStart = startOfMonth(now);
-  const lastMonthStart = startOfMonth(subMonths(now, 1));
+  const { start: thisMonthStart, previousStart: lastMonthStart } = getStoreMonthBounds(now);
   const thirtyDaysAgo = subDays(now, 30);
 
   const [ordersRes, usersRes, productsRes] = await Promise.all([
@@ -50,7 +54,8 @@ export async function GET(_req: NextRequest) {
   // Daily revenue for chart representation
   const dailyRevenue = new Map<string, number>();
   for (const order of orders.filter(o => new Date(o.created_at) >= thirtyDaysAgo)) {
-    const key = format(startOfDay(new Date(order.created_at)), 'dd/MM');
+    const [, month, day] = getStoreDateKey(order.created_at).split('-');
+    const key = `${day}/${month}`;
     dailyRevenue.set(key, (dailyRevenue.get(key) ?? 0) + (order.total ?? 0));
   }
 
@@ -94,7 +99,7 @@ export async function GET(_req: NextRequest) {
 <body>
   <div class="header">
     <div class="logo">Studio Hellou</div>
-    <div class="date">Relatorio gerado em ${format(now, 'dd/MM/yyyy HH:mm')}</div>
+    <div class="date">Relatório gerado em ${formatStoreDateTime(now, { dateStyle: 'short', timeStyle: 'short' })}</div>
   </div>
 
   <div class="no-print" style="margin-bottom:20px;">

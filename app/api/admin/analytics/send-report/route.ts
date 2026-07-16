@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { requirePermission, badRequest, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { startOfMonth, subMonths, format } from 'date-fns';
 import { sendTrackedEmail } from '@/lib/email-delivery';
+import { formatStoreDateTime, getStoreMonthBounds } from '@/lib/store-time';
 
 export async function POST(req: NextRequest) {
   const auth = await requirePermission('analytics.view');
@@ -23,8 +23,12 @@ export async function POST(req: NextRequest) {
   // Build summary data
   const admin = getSupabaseAdmin();
   const now = new Date();
-  const thisMonthStart = startOfMonth(now);
-  const lastMonthStart = startOfMonth(subMonths(now, 1));
+  const { start: thisMonthStart, previousStart: lastMonthStart } = getStoreMonthBounds(now);
+  const reportDate = formatStoreDateTime(now, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 
   const { data: orders } = await admin
     .from('orders')
@@ -66,11 +70,11 @@ export async function POST(req: NextRequest) {
     const result = await sendTrackedEmail(resend, {
       from: process.env.RESEND_FROM_EMAIL || 'helloustudio <onboarding@resend.dev>',
       to: email,
-      subject: `Relatório do painel — ${format(now, 'dd/MM/yyyy')}`,
+      subject: `Relatório do painel — ${reportDate}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #ec4899;">Relatório do painel</h1>
-          <p>Período: ${format(thisMonthStart, 'dd/MM/yyyy')} - ${format(now, 'dd/MM/yyyy')}</p>
+          <p>Período: ${formatStoreDateTime(thisMonthStart, { day: '2-digit', month: '2-digit', year: 'numeric' })} - ${reportDate}</p>
 
           <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
             <tr style="background: #f9fafb;">
@@ -92,7 +96,7 @@ export async function POST(req: NextRequest) {
           </table>
 
           <p style="color: #6b7280; font-size: 12px;">
-            Gerado automaticamente em ${format(now, 'dd/MM/yyyy HH:mm')}
+            Gerado automaticamente em ${formatStoreDateTime(now, { dateStyle: 'short', timeStyle: 'short' })}
           </p>
         </div>
       `,

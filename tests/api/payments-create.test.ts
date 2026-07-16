@@ -3,14 +3,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // --- Mocks (hoisted so vi.mock factories can reference them) ---
 
-const { mockPaymentCreate, mockPaymentGet, mockUser } = vi.hoisted(() => ({
+const { mockPaymentCreate, mockPaymentGet, mockFindOwnedDigitalProducts, mockUser } = vi.hoisted(() => ({
   mockPaymentCreate: vi.fn(),
   mockPaymentGet: vi.fn(),
+  mockFindOwnedDigitalProducts: vi.fn(),
   mockUser: { id: 'user-123', email: 'test@example.com', role: 'user' },
 }));
 
 vi.mock('@/lib/mercadopago', () => ({
   getPaymentClient: () => ({ create: mockPaymentCreate, get: mockPaymentGet }),
+}));
+
+vi.mock('@/lib/digital-purchases', () => ({
+  findOwnedDigitalProducts: mockFindOwnedDigitalProducts,
 }));
 
 vi.mock('@/lib/api', () => ({
@@ -64,7 +69,7 @@ const mockCartItems = [
     product_id: 'prod-1',
     product_option_id: 'opt-1',
     quantity: 2,
-    product: { name: 'Chaveiro Dragão', base_price: 25, image_url: '/img.png' },
+    product: { name: 'Chaveiro Dragão', base_price: 25, image_url: '/img.png', type: 'physical' },
     option: { name: 'Azul', color: '#0000ff', price_modifier: 5, stock: 10 },
   },
 ];
@@ -123,6 +128,7 @@ describe('POST /api/payments/mercadopago/create', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupMockAdmin();
+    mockFindOwnedDigitalProducts.mockResolvedValue(new Map());
     mockRpc.mockImplementation((name: string) => {
       if (name === 'prepare_checkout_order') {
         return Promise.resolve({ data: [{ order_id: 'order-abc', reused: false }], error: null });
@@ -135,6 +141,24 @@ describe('POST /api/payments/mercadopago/create', () => {
   });
 
   describe('Validation', () => {
+    it('bloqueia um STL já comprado antes de criar pedido ou pagamento', async () => {
+      mockCartItems[0].product.type = 'digital';
+      mockFindOwnedDigitalProducts.mockResolvedValue(new Map([['prod-1', 'old-order']]));
+
+      try {
+        const res = await POST(makeRequest({ payment_method: 'pix', cpf: '12345678909' }));
+        const json = await res.json();
+
+        expect(res.status).toBe(400);
+        expect(json.error).toContain('já comprou');
+        expect(json.error).toContain('Não houve nova cobrança');
+        expect(mockPaymentCreate).not.toHaveBeenCalled();
+        expect(mockRpc).not.toHaveBeenCalledWith('prepare_checkout_order', expect.anything());
+      } finally {
+        mockCartItems[0].product.type = 'physical';
+      }
+    });
+
     it('rejects missing payment_method', async () => {
       const res = await POST(makeRequest({ cpf: '12345678909' }));
       expect(res.status).toBe(400);

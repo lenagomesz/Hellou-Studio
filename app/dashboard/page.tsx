@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
-import { subDays, subMonths, startOfMonth, format, startOfDay } from 'date-fns';
+import { subDays } from 'date-fns';
 import type { Order, PrintRequest, User, AdminNotification } from '@/types/database';
 import { DashboardCharts } from '@/components/admin/charts/DashboardCharts';
 import { UrgentAlerts } from '@/components/admin/UrgentAlerts';
@@ -10,6 +10,7 @@ import { getAlertLevel } from '@/lib/inventory';
 import type { StockAlertLevel } from '@/types/inventory';
 import { ArrowUpRight, BarChart3, Box, ClipboardCheck, PackageCheck, Truck } from 'lucide-react';
 import { getCurrentUser } from '@/lib/api';
+import { getStoreDateKey, getStoreMonthBounds } from '@/lib/store-time';
 
 type OrderRow = Order & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
 type RequestRow = PrintRequest & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
@@ -34,8 +35,7 @@ const getDashboardData = unstable_cache(
       (async () => {
         const admin = getSupabaseAdmin();
         const now = new Date();
-        const thisMonthStart = startOfMonth(now);
-        const lastMonthStart = startOfMonth(subMonths(now, 1));
+        const { start: thisMonthStart, previousStart: lastMonthStart } = getStoreMonthBounds(now);
         const thirtyDaysAgo = subDays(now, 30);
 
         const [
@@ -91,7 +91,7 @@ const getDashboardData = unstable_cache(
 
         const revenueChartData = new Map<string, { revenue: number; count: number }>();
         for (const order of revenueChartRes.data ?? []) {
-          const key = format(startOfDay(new Date(order.created_at)), 'yyyy-MM-dd');
+          const key = getStoreDateKey(order.created_at);
           const entry = revenueChartData.get(key) ?? { revenue: 0, count: 0 };
           entry.revenue += order.total ?? 0;
           entry.count += 1;

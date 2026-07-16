@@ -7,9 +7,9 @@ describe('links transacionais de e-mail', () => {
       .toBe('https://helloustudio.com.br');
   });
 
-  it('gera o endereço da página real do pedido do cliente', () => {
-    expect(buildEmailUrl('https://helloustudio.com.br/', '/account/orders/order-123'))
-      .toBe('https://helloustudio.com.br/account/orders/order-123');
+  it('gera o acesso de e-mail que preserva login e pedido', () => {
+    expect(buildEmailUrl('https://helloustudio.com.br/', '/pedido/order-123'))
+      .toBe('https://helloustudio.com.br/pedido/order-123');
   });
 
   it('gera endereços válidos das demais áreas usadas nos e-mails', () => {

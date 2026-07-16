@@ -12,6 +12,7 @@ import { calculateShipping, sanitizeCep } from '@/lib/shipping';
 import { calculateCheckoutTotals, SUCCESSFUL_ORDER_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
 import { isMercadoPagoApproved, mapMercadoPagoOrderStatus } from '@/lib/payment-status';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
+import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
 
 const PIX_EXPIRATION_MINUTES = 30;
 
@@ -139,31 +140,22 @@ export async function POST(request: Request) {
     return badRequest((e as Error).message);
   }
 
-  // Validate STL products can only be purchased once per user
+  // Impede uma nova cobrança por arquivos que esta conta já possui.
   const stlItems = cartItems.filter(item => item.product?.type === 'digital');
-  for (const stlItem of stlItems) {
-    if (!stlItem.product_id) continue;
-
-    const { data: existingPurchase } = await admin
-      .from('orders')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('payment_provider', 'mercadopago')
-      .in('status', ['approved', 'completed', 'processing', 'paid', 'shipped', 'delivered'])
-      .single();
-
-    if (existingPurchase) {
-      const { count: hasPurchasedStl } = await admin
-        .from('order_items')
-        .select('id', { count: 'exact', head: true })
-        .eq('order_id', existingPurchase.id)
-        .eq('product_id', stlItem.product_id);
-
-      if ((hasPurchasedStl ?? 0) > 0) {
-        const productName = stlItem.product?.name || 'Arquivo STL';
-        return badRequest(`Você já adquiriu "${productName}". Cada arquivo STL pode ser comprado apenas uma vez.`);
-      }
+  try {
+    const ownedProducts = await findOwnedDigitalProducts(
+      admin,
+      user.id,
+      stlItems.map((item) => item.product_id),
+    );
+    const alreadyOwned = stlItems.find((item) => ownedProducts.has(item.product_id));
+    if (alreadyOwned) {
+      const productName = alreadyOwned.product?.name || 'este arquivo STL';
+      return badRequest(`Você já comprou "${productName}". Não houve nova cobrança. Acesse Meus pedidos para baixar o arquivo novamente.`);
     }
+  } catch (error) {
+    structuredLog('error', 'checkout.digital_ownership_check_failed', { userId: user.id, error });
+    return serverError('Não foi possível confirmar seus arquivos já adquiridos. Nenhum pagamento foi criado; tente novamente.');
   }
 
   let subtotal = 0;

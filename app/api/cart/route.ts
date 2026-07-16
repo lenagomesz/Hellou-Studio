@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { badRequest, requireUser, serverError } from '@/lib/api';
 import type { CartItemView } from '@/lib/cart';
 import type { CartItem, Product, ProductOption } from '@/types/database';
+import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
 
 type RawCartRow = CartItem & {
   product: Pick<
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
 
   const { data: productRow, error: productError } = await admin
     .from('products')
-    .select('id, active, is_customizable')
+    .select('id, name, type, active, is_customizable')
     .eq('id', product_id)
     .maybeSingle();
 
@@ -115,6 +116,22 @@ export async function POST(request: Request) {
     return badRequest('Produto indisponível');
   }
   const product = productRow;
+  if (product.type === 'digital') {
+    try {
+      const ownedProducts = await findOwnedDigitalProducts(admin, auth.user.id, [product_id]);
+      const ownedOrderId = ownedProducts.get(product_id);
+      if (ownedOrderId) {
+        return NextResponse.json({
+          error: `Você já comprou "${product.name}". Acesse Meus pedidos para baixar o arquivo novamente.`,
+          code: 'STL_ALREADY_PURCHASED',
+          order_id: ownedOrderId,
+        }, { status: 409 });
+      }
+    } catch (error) {
+      console.error('[cart] digital ownership check failed:', error);
+      return serverError('Não foi possível verificar seus arquivos adquiridos. Tente novamente.');
+    }
+  }
   if (product.is_customizable && !normalizedCustomization) {
     return badRequest('Preencha a personalização antes de adicionar ao carrinho');
   }

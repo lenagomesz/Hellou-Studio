@@ -101,8 +101,8 @@ async function postServerItem(input: AddItemInput) {
     }),
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || 'Falha ao adicionar item');
+    const payload = await res.json().catch(() => null) as { error?: string } | null;
+    throw new Error(payload?.error || 'Falha ao adicionar item');
   }
 }
 

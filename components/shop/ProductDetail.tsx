@@ -24,9 +24,11 @@ function formatPrice(value: number) {
 export function ProductDetail({
   product,
   options,
+  ownedOrderId = null,
 }: Readonly<{
   product: Product;
   options: ProductOption[];
+  ownedOrderId?: string | null;
 }>) {
   const { addItem, removeItem, status } = useCart();
   const { status: sessionStatus } = useSession();
@@ -34,8 +36,10 @@ export function ProductDetail({
   const router = useRouter();
   const replaceCartItemId = searchParams.get('replace');
   const [feedback, setFeedback] = useState<'idle' | 'added' | 'error'>('idle');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
   const [shared, setShared] = useState(false);
   const isAuthenticated = sessionStatus === 'authenticated';
+  const isOwnedDigital = product.type === 'digital' && Boolean(ownedOrderId);
   const requiresReadyStock = product.fulfillment_mode === 'ready_stock';
 
   const inStockOptions = useMemo(
@@ -74,7 +78,7 @@ export function ProductDetail({
   const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, 50) : 50;
   const hasRequiredCustomization = !product.is_customizable || customizationText.trim().length > 0;
   const hasSelectedOption = options.length === 0 || selectedOption !== null;
-  const canAddToCart = hasSelectedOption && hasRequiredCustomization;
+  const canAddToCart = !isOwnedDigital && hasSelectedOption && hasRequiredCustomization;
   const isSyncing = status === 'syncing';
 
   const handleAddToCart = async () => {
@@ -86,6 +90,7 @@ export function ProductDetail({
     }
 
     try {
+      setFeedbackMessage('');
       if (replaceCartItemId) {
         await removeItem(replaceCartItemId);
       }
@@ -116,7 +121,8 @@ export function ProductDetail({
       }
       setFeedback('added');
       globalThis.setTimeout(() => setFeedback('idle'), 2500);
-    } catch {
+    } catch (error) {
+      setFeedbackMessage(error instanceof Error ? error.message : 'Não foi possível adicionar. Tente novamente.');
       setFeedback('error');
     }
   };
@@ -174,7 +180,9 @@ export function ProductDetail({
           <p className="text-xs font-medium uppercase tracking-wider text-pink-600 dark:text-pink-400">
             {CATEGORY_LABELS[product.category] ?? product.category}
           </p>
-          <span className="rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:text-green-400">Em estoque</span>
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${isOwnedDigital ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300' : 'bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-400'}`}>
+            {isOwnedDigital ? '✓ Adquirido' : 'Em estoque'}
+          </span>
         </div>
         <h1 className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</h1>
         <div className="mt-3 flex items-baseline gap-3">
@@ -358,7 +366,7 @@ export function ProductDetail({
           </div>
         ) : null}
 
-        <div className="mt-6">
+        {product.type !== 'digital' && <div className="mt-6">
           <label
             htmlFor="quantity"
             className="block text-sm font-semibold text-gray-900 dark:text-white"
@@ -388,23 +396,29 @@ export function ProductDetail({
               +
             </button>
           </div>
-        </div>
+        </div>}
 
         <div className="mt-8">
-          <button
-            type="button"
-            disabled={!canAddToCart || isSyncing}
-            onClick={() => void handleAddToCart()}
-            className="w-full rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {!hasSelectedOption
-              ? 'Selecione uma variação'
-              : !hasRequiredCustomization
-                ? 'Preencha a personalização'
-              : isSyncing
-                ? 'Adicionando...'
-                : 'Adicionar ao carrinho'}
-          </button>
+          {isOwnedDigital && ownedOrderId ? (
+            <Link href={`/account/orders/${ownedOrderId}`} className="flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">
+              ✓ Adquirido — acessar arquivo
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled={!canAddToCart || isSyncing}
+              onClick={() => void handleAddToCart()}
+              className="w-full rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {!hasSelectedOption
+                ? 'Selecione uma variação'
+                : !hasRequiredCustomization
+                  ? 'Preencha a personalização'
+                : isSyncing
+                  ? 'Adicionando...'
+                  : 'Adicionar ao carrinho'}
+            </button>
+          )}
           <button
             type="button"
             onClick={async () => {
@@ -446,7 +460,10 @@ export function ProductDetail({
             </p>
           ) : feedback === 'error' ? (
             <p className="mt-3 rounded-lg bg-red-50 dark:bg-red-950/50 px-3 py-2 text-xs text-red-700 dark:text-red-400">
-              Não foi possível adicionar. Tente novamente.
+              {feedbackMessage || 'Não foi possível adicionar. Tente novamente.'}{' '}
+              {feedbackMessage.includes('já comprou') && (
+                <Link href="/account/orders" className="font-bold underline">Abrir Meus pedidos</Link>
+              )}
             </p>
           ) : null}
         </div>
