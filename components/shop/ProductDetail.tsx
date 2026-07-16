@@ -122,7 +122,7 @@ export function ProductDetail({
   };
 
   return (
-    <div className="grid gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
+    <div className="grid gap-2 sm:gap-6 lg:grid-cols-2 lg:gap-8">
       <div className="space-y-6">
         <div className="group relative">
           {galleryImages.length > 0 ? (
@@ -176,7 +176,7 @@ export function ProductDetail({
           </p>
           <span className="rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:text-green-400">Em estoque</span>
         </div>
-        <h1 className="mt-2 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{product.name}</h1>
+        <h1 className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</h1>
         <div className="mt-3 flex items-baseline gap-3">
           <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">
             {formatPrice(finalPrice)}

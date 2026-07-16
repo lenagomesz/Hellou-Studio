@@ -10,37 +10,46 @@ import { getCurrentUser } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
 import { absoluteUrl, plainText, productImages, safeJsonLd } from '@/lib/seo';
 
-function getProductWithOptions(id: string) {
-  return unstable_cache(
-    () =>
-      withTimeout(
-        (async () => {
-          const admin = getSupabaseAdmin();
-          const [productRes, optionsRes] = await Promise.all([
-            admin
-              .from('products')
-              .select('*')
-              .eq('id', id)
-              .eq('type', 'physical')
-              .eq('active', true)
-              .maybeSingle(),
-            admin
-              .from('product_options')
-              .select('*')
-              .eq('product_id', id)
-              .order('created_at', { ascending: true }),
-          ]);
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-          if (!productRes.data) return null;
-          return {
-            product: productRes.data as Product,
-            options: (optionsRes.data ?? []) as ProductOption[],
-          };
-        })(),
-      ).catch(() => null),
-    [`product-${id}`],
-    { revalidate: 60 },
-  )();
+async function loadProductWithOptions(id: string) {
+  const admin = getSupabaseAdmin();
+  const [productRes, optionsRes] = await withTimeout(
+    Promise.all([
+      admin
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .eq('type', 'physical')
+        .eq('active', true)
+        .maybeSingle(),
+      admin
+        .from('product_options')
+        .select('*')
+        .eq('product_id', id)
+        .order('created_at', { ascending: true }),
+    ]),
+    12000,
+  );
+
+  if (productRes.error) throw productRes.error;
+  if (optionsRes.error) throw optionsRes.error;
+  if (!productRes.data) return null;
+
+  return {
+    product: productRes.data as Product,
+    options: (optionsRes.data ?? []) as ProductOption[],
+  };
+}
+
+async function getProductWithOptions(id: string) {
+  try {
+    return await loadProductWithOptions(id);
+  } catch (firstError) {
+    console.error('[product-detail] First product query failed; retrying:', firstError);
+    return loadProductWithOptions(id);
+  }
 }
 
 function getRelatedProducts(category: string, excludeId: string, productType: string) {
@@ -130,9 +139,9 @@ export default async function ProductDetailPage(
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(productJsonLd) }} />
-      <nav className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+      <nav className="mb-4 text-sm text-gray-600 sm:mb-6 dark:text-gray-400">
         <Link href="/" className="hover:text-gray-900 dark:hover:text-gray-100">
           Início
         </Link>

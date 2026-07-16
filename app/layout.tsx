@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Hellou Studio | Impressão 3D e arquivos STL',
+    default: 'Hellou Studio',
     template: '%s | Hellou Studio',
   },
   description: 'Produtos personalizados impressos em 3D, peças feitas sob demanda e arquivos STL prontos para imprimir.',

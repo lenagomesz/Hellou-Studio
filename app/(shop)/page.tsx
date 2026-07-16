@@ -12,7 +12,7 @@ import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import type { Product } from '@/types/database';
 
 export const metadata: Metadata = {
-  title: 'Impressão 3D personalizada e arquivos STL',
+  title: { absolute: 'Hellou Studio' },
   description: 'Descubra produtos impressos em 3D, peças personalizadas feitas sob demanda e arquivos STL prontos para seus projetos.',
   alternates: { canonical: '/' },
 };
