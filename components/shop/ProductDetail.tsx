@@ -59,7 +59,8 @@ export function ProductDetail({
     options.find((o) => o.id === selectedOptionId) ?? null;
 
   const finalPrice =
-    product.base_price + (selectedOption?.price_modifier ?? 0);
+    (product.sale_price ?? product.base_price) + (selectedOption?.price_modifier ?? 0);
+  const originalPrice = product.base_price + (selectedOption?.price_modifier ?? 0);
 
   const currentDisplayImage = displayImageUrl || selectedOption?.image_url || product.image_url;
 
@@ -99,6 +100,7 @@ export function ProductDetail({
           id: product.id,
           name: product.name,
           base_price: product.base_price,
+          sale_price: product.sale_price,
           image_url: product.image_url,
           category: product.category,
           type: product.type,
@@ -189,6 +191,9 @@ export function ProductDetail({
           <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">
             {formatPrice(finalPrice)}
           </p>
+          {product.sale_price !== null && product.sale_price < product.base_price && (
+            <span className="text-sm text-gray-400 line-through">{formatPrice(originalPrice)}</span>
+          )}
           {finalPrice >= 99 && (
             <span className="text-xs text-green-600 font-medium">+ frete grátis</span>
           )}

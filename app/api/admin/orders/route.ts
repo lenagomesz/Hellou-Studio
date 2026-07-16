@@ -1,13 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin, serverError } from '@/lib/api';
+import { badRequest, requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderStatusEmail } from '@/lib/email';
 import type { OrderStatus } from '@/types/database';
 
-const VALID_STATUSES: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded', 'rejected'];
+const VALID_STATUSES: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'rejected'];
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('orders.manage');
   if (auth.response) return auth.response;
 
   const status = req.nextUrl.searchParams.get('status') ?? '';
@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('orders.manage');
   if (auth.response) return auth.response;
 
   const body = await request.json();
@@ -88,13 +88,21 @@ export async function PATCH(request: Request) {
   if (!orderId || !status) {
     return NextResponse.json({ error: 'orderId and status are required' }, { status: 400 });
   }
+  if (!VALID_STATUSES.includes(status as OrderStatus)) {
+    return badRequest(status === 'refunded'
+      ? 'Use o fluxo de reembolso do pedido para devolver o pagamento com segurança.'
+      : 'Status inválido');
+  }
+  if (status === 'shipped' && !trackingCode?.trim()) {
+    return badRequest('Código de rastreio é obrigatório para envio');
+  }
 
   const admin = getSupabaseAdmin();
 
   // Fetch order
   const { data: order, error: fetchError } = await admin
     .from('orders')
-    .select('id, user_id, status')
+    .select('id, user_id, status, shipping_address')
     .eq('id', orderId)
     .single();
 
@@ -110,7 +118,10 @@ export async function PATCH(request: Request) {
   // Update status
   const updatePayload: Record<string, unknown> = { status };
   if (status === 'shipped' && trackingCode) {
-    updatePayload.tracking_code = trackingCode;
+    updatePayload.shipping_address = {
+      ...((order.shipping_address ?? {}) as Record<string, unknown>),
+      tracking_code: trackingCode.trim(),
+    };
   }
 
   const { error: updateError } = await admin

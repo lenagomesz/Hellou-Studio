@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, serverError } from '@/lib/api';
+import { requirePermission, serverError } from '@/lib/api';
+import { getStoreDateKey } from '@/lib/store-time';
 
 // GET /api/admin/products/export - Export products as CSV
 export async function GET() {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
   const admin = getSupabaseAdmin();
@@ -35,7 +36,7 @@ export async function GET() {
     status: 200,
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="products_export_${new Date().toISOString().slice(0, 10)}.csv"`,
+      'Content-Disposition': `attachment; filename="products_export_${getStoreDateKey()}.csv"`,
     },
   });
 }

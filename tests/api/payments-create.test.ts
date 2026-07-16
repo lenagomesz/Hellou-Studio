@@ -69,8 +69,8 @@ const mockCartItems = [
     product_id: 'prod-1',
     product_option_id: 'opt-1',
     quantity: 2,
-    product: { name: 'Chaveiro Dragão', base_price: 25, image_url: '/img.png', type: 'physical' },
-    option: { name: 'Azul', color: '#0000ff', price_modifier: 5, stock: 10 },
+    product: { name: 'Chaveiro Dragão', base_price: 25, sale_price: null as number | null, image_url: '/img.png', type: 'physical' },
+    option: { product_id: 'prod-1', name: 'Azul', color: '#0000ff', price_modifier: 5, stock: 10 },
   },
 ];
 
@@ -189,6 +189,28 @@ describe('POST /api/payments/mercadopago/create', () => {
   });
 
   describe('PIX payment flow', () => {
+    it('cobra o preço promocional exibido no produto', async () => {
+      mockCartItems[0].product.sale_price = 20;
+      mockPaymentCreate.mockResolvedValue({
+        id: 'mp-sale-price',
+        status: 'pending',
+        point_of_interaction: { transaction_data: { qr_code: 'sale', qr_code_base64: 'sale64' } },
+      });
+
+      try {
+        await POST(makeRequest({ payment_method: 'pix', cpf: '12345678909' }));
+
+        // 2 × (R$ 20 promocional + R$ 5 da variação) = R$ 50;
+        // primeira compra (-10%) + frete validado de R$ 10 = R$ 55.
+        expect(mockPaymentCreate).toHaveBeenCalledWith({
+          body: expect.objectContaining({ transaction_amount: 55 }),
+          requestOptions: { idempotencyKey: expect.any(String) },
+        });
+      } finally {
+        mockCartItems[0].product.sale_price = null;
+      }
+    });
+
     it('creates order with awaiting_payment status when PIX is pending', async () => {
       mockPaymentCreate.mockResolvedValue({
         id: 'mp-pay-123',

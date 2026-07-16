@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin, serverError } from '@/lib/api';
+import { requirePermission, serverError } from '@/lib/api';
 import { generateStockCSV } from '@/lib/inventory';
+import { getStoreDateKey } from '@/lib/store-time';
 
 export async function GET() {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('inventory.manage');
   if (auth.response) return auth.response;
 
   try {
@@ -13,7 +14,7 @@ export async function GET() {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="estoque_${new Date().toISOString().split('T')[0]}.csv"`,
+        'Content-Disposition': `attachment; filename="estoque_${getStoreDateKey()}.csv"`,
       },
     });
   } catch (err) {

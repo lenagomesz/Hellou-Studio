@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 
 const mockSelect = vi.fn();
 const mockDelete = vi.fn();
@@ -6,6 +6,7 @@ const mockEq = vi.fn();
 const mockLt = vi.fn();
 const mockNot = vi.fn();
 const mockIn = vi.fn();
+let POST: typeof import('@/app/api/cron/cleanup-encomendas/route').POST;
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseAdmin: () => ({
@@ -36,13 +37,15 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 describe('Cron Cleanup Encomendas', () => {
+  beforeAll(async () => {
+    ({ POST } = await import('@/app/api/cron/cleanup-encomendas/route'));
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should reject requests without valid CRON_SECRET', async () => {
-    const { POST } = await import('@/app/api/cron/cleanup-encomendas/route');
-
     const request = new Request('http://localhost/api/cron/cleanup-encomendas', {
       method: 'POST',
       headers: { authorization: 'Bearer wrong-secret' },
@@ -59,8 +62,6 @@ describe('Cron Cleanup Encomendas', () => {
   it('should return deleted: 0 when no requests found', async () => {
     mockNot.mockResolvedValue({ data: [] });
     process.env.CRON_SECRET = 'test-secret';
-
-    const { POST } = await import('@/app/api/cron/cleanup-encomendas/route');
 
     const request = new Request('http://localhost/api/cron/cleanup-encomendas', {
       method: 'POST',

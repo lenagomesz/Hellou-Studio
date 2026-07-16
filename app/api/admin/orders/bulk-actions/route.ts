@@ -1,14 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin, badRequest } from '@/lib/api';
+import { requirePermission, badRequest } from '@/lib/api';
 import { bulkUpdateStatus, bulkAddNote, generateInvoice, processRefund } from '@/lib/order-management';
 import type { OrderStatus } from '@/types/database';
 
 const VALID_STATUSES: OrderStatus[] = [
-  'pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'refunded',
+  'pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled',
 ];
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('orders.manage');
   if (auth.response) return auth.response;
 
   const body = await req.json();
@@ -112,6 +112,9 @@ export async function POST(req: NextRequest) {
     }
 
     case 'bulk_refund': {
+      const financeAuth = await requirePermission('finance.view');
+      if (financeAuth.response) return financeAuth.response;
+
       if (!params.refundReason?.trim()) {
         return badRequest('Motivo do reembolso obrigatorio');
       }

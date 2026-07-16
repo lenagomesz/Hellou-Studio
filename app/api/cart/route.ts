@@ -8,7 +8,7 @@ import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
 type RawCartRow = CartItem & {
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'type' | 'active'
+    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'active'
   > | null;
   option:
     | Pick<ProductOption, 'id' | 'product_id' | 'name' | 'price_modifier' | 'stock' | 'color'>
@@ -28,6 +28,7 @@ function toView(row: RawCartRow): CartItemView | null {
       id: row.product.id,
       name: row.product.name,
       base_price: row.product.base_price,
+      sale_price: row.product.sale_price,
       image_url: row.product.image_url,
       category: row.product.category,
       type: row.product.type,
@@ -52,7 +53,7 @@ export async function GET() {
   const { data, error } = await admin
     .from('cart_items')
     .select(
-      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, image_url, category, type, active), option:product_options(id, product_id, name, price_modifier, stock, color)',
+      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, sale_price, image_url, category, type, active), option:product_options(id, product_id, name, price_modifier, stock, color)',
     )
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: true });
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
 
   const { data: productRow, error: productError } = await admin
     .from('products')
-    .select('id, name, type, active, is_customizable')
+    .select('id, name, type, category, active, is_customizable')
     .eq('id', product_id)
     .maybeSingle();
 
@@ -116,6 +117,22 @@ export async function POST(request: Request) {
     return badRequest('Produto indisponível');
   }
   const product = productRow;
+  if (product.category === 'encomenda') {
+    const { data: requestOwner, error: ownerError } = await admin
+      .from('print_requests')
+      .select('id')
+      .eq('product_id', product_id)
+      .eq('user_id', auth.user.id)
+      .maybeSingle();
+
+    if (ownerError) return serverError('Erro ao validar a encomenda exclusiva');
+    if (!requestOwner) {
+      return NextResponse.json(
+        { error: 'Esta encomenda é exclusiva de outro cliente.' },
+        { status: 403 },
+      );
+    }
+  }
   if (product.type === 'digital') {
     try {
       const ownedProducts = await findOwnedDigitalProducts(admin, auth.user.id, [product_id]);

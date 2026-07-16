@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { badRequest, requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getStoreDateKey } from '@/lib/store-time';
 
 const categories = new Set(['filament', 'packaging', 'maintenance', 'tool', 'shipping', 'energy', 'other']);
 const paymentStatuses = new Set(['pending', 'paid', 'canceled']);
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await getSupabaseAdmin()
     .from('inventory_expenses')
     .select('*, material:inventory_materials(id, name, color_name, color_hex)')
-    .gte('purchase_date', since.toISOString().slice(0, 10))
+    .gte('purchase_date', getStoreDateKey(since))
     .order('purchase_date', { ascending: false })
     .limit(500);
   if (error) return serverError('Erro ao carregar gastos. Aplique a migration mais recente no Supabase.');
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
     quantity,
     supplier_name: typeof body?.supplier_name === 'string' ? body.supplier_name.trim() || null : null,
     material_id: typeof body?.material_id === 'string' && body.material_id ? body.material_id : null,
-    purchase_date: typeof body?.purchase_date === 'string' ? body.purchase_date : new Date().toISOString().slice(0, 10),
+    purchase_date: typeof body?.purchase_date === 'string' ? body.purchase_date : getStoreDateKey(),
     payment_status: paymentStatus,
     notes: typeof body?.notes === 'string' ? body.notes.trim() || null : null,
     created_by: auth.user.id,

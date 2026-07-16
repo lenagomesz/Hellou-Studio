@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/api';
+import { requirePermission } from '@/lib/api';
 import { getOrderQuickStats } from '@/lib/order-management';
 
 export async function GET() {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('orders.manage');
   if (auth.response) return auth.response;
 
   try {

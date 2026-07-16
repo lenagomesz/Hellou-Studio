@@ -28,6 +28,16 @@ export async function POST(request: Request) {
   if (!changes || Object.keys(changes).length === 0) {
     return badRequest('Nenhuma alteracao fornecida');
   }
+  if (changes.base_price !== undefined && (
+    typeof changes.base_price !== 'number'
+    || !Number.isFinite(changes.base_price)
+    || changes.base_price < 0
+  )) {
+    return badRequest('Preço base inválido');
+  }
+  if (changes.active !== undefined && typeof changes.active !== 'boolean') {
+    return badRequest('Situação do produto inválida');
+  }
 
   const admin = getSupabaseAdmin();
 

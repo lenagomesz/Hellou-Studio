@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin, badRequest } from '@/lib/api';
+import { requirePermission, badRequest } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { generateInvoice, logNotification } from '@/lib/order-management';
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('finance.view');
   if (auth.response) return auth.response;
 
   const orderId = req.nextUrl.searchParams.get('orderId');
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('finance.view');
   if (auth.response) return auth.response;
 
   const body = await req.json();

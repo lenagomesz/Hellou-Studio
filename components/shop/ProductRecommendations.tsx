@@ -7,6 +7,7 @@ interface RecommendedProduct {
   id: string;
   name: string;
   base_price: number;
+  sale_price: number | null;
   image_url: string | null;
   category: string;
 }
@@ -56,7 +57,7 @@ export function ProductRecommendations({ excludeId, title }: { excludeId?: strin
             </div>
             <div className="p-3">
               <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.name}</p>
-              <p className="mt-1 text-sm font-semibold text-pink-600 dark:text-pink-400">{formatPrice(p.base_price)}</p>
+              <p className="mt-1 text-sm font-semibold text-pink-600 dark:text-pink-400">{formatPrice(p.sale_price ?? p.base_price)}</p>
             </div>
           </Link>
         ))}

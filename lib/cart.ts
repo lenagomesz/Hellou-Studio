@@ -9,7 +9,7 @@ export interface CartItemView {
   created_at?: string;
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'image_url' | 'category' | 'type'
+    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type'
   >;
   option: Pick<
     ProductOption,
@@ -25,7 +25,7 @@ export interface AddItemInput {
 }
 
 export function computeUnitPrice(item: CartItemView): number {
-  return item.product.base_price + (item.option?.price_modifier ?? 0);
+  return (item.product.sale_price ?? item.product.base_price) + (item.option?.price_modifier ?? 0);
 }
 
 export function computeItemTotal(item: CartItemView): number {

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, requireUser, badRequest, notFound, serverError } from '@/lib/api';
+import { requirePermission, requireUser, badRequest, notFound, serverError } from '@/lib/api';
 import { sendOrderStatusEmail, sendSTLDeliveryEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { createTimelineEvent } from '@/lib/order-management';
@@ -14,7 +14,7 @@ const VALID_STATUSES: OrderStatus[] = [
 type RouteCtx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, ctx: RouteCtx) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('orders.manage');
   if (auth.response) return auth.response;
 
   const { id } = await ctx.params;
@@ -119,6 +119,9 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   }
 
   // --- Admin flow (unchanged) ---
+  const orderPermission = await requirePermission('orders.manage');
+  if (orderPermission.response) return orderPermission.response;
+
   if (status && !VALID_STATUSES.includes(status as OrderStatus)) {
     return badRequest('Status inválido');
   }
@@ -135,6 +138,9 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   if (!current) return notFound('Pedido não encontrado');
 
   if (status === 'refunded' && current.payment_provider === 'mercadopago' && current.mp_payment_id) {
+    const financePermission = await requirePermission('finance.view');
+    if (financePermission.response) return financePermission.response;
+
     try {
       const refundClient = getRefundClient();
       console.log('[refund] Attempting refund for payment:', current.mp_payment_id);

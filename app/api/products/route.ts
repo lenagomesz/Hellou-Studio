@@ -81,6 +81,11 @@ export async function POST(request: Request) {
   if (typeof base_price !== 'number' || base_price < 0) {
     return badRequest('Preço base inválido');
   }
+  if (sale_price !== undefined && sale_price !== null && (
+    typeof sale_price !== 'number' || !Number.isFinite(sale_price) || sale_price < 0
+  )) {
+    return badRequest('Preço promocional inválido');
+  }
   const fulfillmentMode = ['made_to_order', 'ready_stock', 'hybrid'].includes(fulfillment_mode ?? '') ? fulfillment_mode : 'made_to_order';
 
   const admin = getSupabaseAdmin();

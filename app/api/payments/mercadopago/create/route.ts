@@ -128,6 +128,45 @@ export async function POST(request: Request) {
     return badRequest('Carrinho vazio');
   }
 
+  const unavailableItem = cartItems.find((item) => !item.product || item.product.active === false);
+  if (unavailableItem) {
+    return badRequest('Um produto do carrinho não está mais disponível. Remova-o e revise o pedido antes de pagar.');
+  }
+
+  const invalidCartItem = cartItems.find((item) =>
+    !Number.isInteger(item.quantity)
+    || item.quantity < 1
+    || (item.product_option_id && (!item.option || item.option.product_id !== item.product_id))
+  );
+  if (invalidCartItem) {
+    return badRequest('O carrinho possui uma quantidade ou variação inválida. Atualize o carrinho antes de pagar.');
+  }
+
+  const exclusiveProductIds = Array.from(new Set(
+    cartItems
+      .filter((item) => item.product?.category === 'encomenda')
+      .map((item) => item.product_id),
+  ));
+  if (exclusiveProductIds.length > 0) {
+    const { data: ownedRequests, error: ownershipError } = await admin
+      .from('print_requests')
+      .select('product_id')
+      .eq('user_id', user.id)
+      .in('product_id', exclusiveProductIds);
+
+    if (ownershipError) {
+      return serverError('Não foi possível validar a encomenda exclusiva. Nenhum pagamento foi criado.');
+    }
+
+    const authorizedIds = new Set((ownedRequests ?? []).map((request) => request.product_id));
+    if (exclusiveProductIds.some((productId) => !authorizedIds.has(productId))) {
+      return NextResponse.json(
+        { error: 'O carrinho contém uma encomenda exclusiva de outra conta. Nenhum pagamento foi criado.' },
+        { status: 403 },
+      );
+    }
+  }
+
   const incompleteCustomization = cartItems.find((item) => item.product?.is_customizable && !item.customization_text?.trim());
   if (incompleteCustomization) {
     return badRequest(`Preencha a personalização de ${incompleteCustomization.product?.name ?? 'um produto'}`);
@@ -160,7 +199,7 @@ export async function POST(request: Request) {
 
   let subtotal = 0;
   for (const item of cartItems) {
-    const basePrice = item.product?.base_price ?? 0;
+    const basePrice = item.product?.sale_price ?? item.product?.base_price ?? 0;
     const modifier = item.option?.price_modifier ?? 0;
     subtotal += (basePrice + modifier) * item.quantity;
   }
@@ -240,7 +279,7 @@ export async function POST(request: Request) {
     product_id: item.product_id,
     product_option_id: item.product_option_id,
     quantity: item.quantity,
-    unit_price: (item.product?.base_price ?? 0) + (item.option?.price_modifier ?? 0),
+    unit_price: (item.product?.sale_price ?? item.product?.base_price ?? 0) + (item.option?.price_modifier ?? 0),
     customization_text: item.customization_text ?? null,
     product_snapshot: {
       name: item.product?.name,

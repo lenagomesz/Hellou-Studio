@@ -3,15 +3,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CalendarDays, CircleDollarSign, Clock3, Plus, ReceiptText, WalletCards } from 'lucide-react';
+import { getStoreDateKey } from '@/lib/store-time';
 
 type Expense = { id: string; category: string; description: string; amount: number; quantity: number; supplier_name: string | null; purchase_date: string; payment_status: string; material?: { name: string; color_name: string; color_hex: string } | null };
 const CATEGORY: Record<string, string> = { filament: 'Filamento', packaging: 'Embalagem', maintenance: 'Manutenção', tool: 'Ferramenta', shipping: 'Frete', energy: 'Energia', other: 'Outro' };
-const initialForm = { category: 'filament', description: '', amount: 0, quantity: 1, supplier_name: '', purchase_date: new Date().toISOString().slice(0, 10), payment_status: 'paid', notes: '' };
+const createInitialForm = () => ({ category: 'filament', description: '', amount: 0, quantity: 1, supplier_name: '', purchase_date: getStoreDateKey(), payment_status: 'paid', notes: '' });
 const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
 export default function InventoryCostsPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(createInitialForm);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,9 +29,9 @@ export default function InventoryCostsPage() {
     return { paid, pending, filament, entries: month.length };
   }, [expenses]);
 
-  async function submit(event: React.FormEvent) { event.preventDefault(); setSaving(true); setError(''); const response = await fetch('/api/admin/inventory/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) }); const result = await response.json(); setSaving(false); if (!response.ok) return setError(result.error ?? 'Erro ao registrar gasto'); setForm(initialForm); setShowForm(false); await load(); }
+  async function submit(event: React.FormEvent) { event.preventDefault(); setSaving(true); setError(''); const response = await fetch('/api/admin/inventory/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) }); const result = await response.json(); setSaving(false); if (!response.ok) return setError(result.error ?? 'Erro ao registrar gasto'); setForm(createInitialForm()); setShowForm(false); await load(); }
 
-  return <div className="space-y-6"><header className="relative overflow-hidden rounded-[28px] border border-pink-100 bg-gradient-to-br from-white via-pink-50 to-orange-50 p-6 shadow-sm sm:p-8"><div className="relative flex flex-wrap items-end justify-between gap-4"><div><Link href="/dashboard/inventory" className="inline-flex items-center gap-1 text-xs font-bold text-pink-600"><ArrowLeft className="h-3.5 w-3.5" />Voltar ao estoque</Link><p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Custos operacionais</p><h1 className="mt-2 text-3xl font-bold text-slate-950">Gastos do estoque</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Registre filamentos, embalagens, manutenção e ferramentas para saber quanto a produção realmente consome.</p></div><button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-pink-600"><Plus className="h-4 w-4" />Registrar gasto</button></div></header>
+  return <div className="space-y-6"><header className="relative overflow-hidden rounded-[28px] border border-pink-100 bg-gradient-to-br from-white via-pink-50 to-orange-50 p-6 shadow-sm sm:p-8"><div className="relative flex flex-wrap items-end justify-between gap-4"><div><Link href="/dashboard/inventory" className="inline-flex items-center gap-1 text-xs font-bold text-pink-600"><ArrowLeft className="h-3.5 w-3.5" />Voltar ao estoque</Link><p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Custos operacionais</p><h1 className="mt-2 text-3xl font-bold text-slate-950">Gastos do estoque</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Registre filamentos, embalagens, manutenção e ferramentas para saber quanto a produção realmente consome.</p></div><button onClick={() => { setForm(createInitialForm()); setShowForm(true); }} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-pink-600"><Plus className="h-4 w-4" />Registrar gasto</button></div></header>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
       { label: 'Pago neste mês', value: money(summary.paid), note: `${summary.entries} lançamentos`, icon: CircleDollarSign, tone: 'bg-emerald-50 text-emerald-600' },
       { label: 'Pendente', value: money(summary.pending), note: 'contas a pagar', icon: Clock3, tone: 'bg-amber-50 text-amber-600' },

@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
 
   let query = admin
     .from('products')
-    .select('id, name, base_price, image_url, category')
+    .select('id, name, base_price, sale_price, image_url, category')
     .eq('active', true)
     .in('category', ['chaveiros', 'escritorio', 'criaturas'])
     .not('name', 'ilike', 'Encomenda%')

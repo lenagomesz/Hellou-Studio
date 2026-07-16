@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { subDays, startOfMonth, subMonths } from 'date-fns';
+import { subDays } from 'date-fns';
+import { getStoreMonthBounds } from '@/lib/store-time';
 
 export async function GET() {
   const auth = await requirePermission('analytics.view');
@@ -9,8 +10,7 @@ export async function GET() {
 
   const admin = getSupabaseAdmin();
   const now = new Date();
-  const thisMonthStart = startOfMonth(now);
-  const lastMonthStart = startOfMonth(subMonths(now, 1));
+  const { start: thisMonthStart, previousStart: lastMonthStart } = getStoreMonthBounds(now);
 
   const [ordersRes, usersRes, productsRes] = await Promise.all([
     admin

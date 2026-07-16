@@ -50,10 +50,14 @@ export async function POST(
     productId = product.id;
 
     // Link product to print request
-    await admin
+    const { error: linkError } = await admin
       .from('print_requests')
       .update({ product_id: productId })
       .eq('id', id);
+    if (linkError) {
+      await admin.from('products').delete().eq('id', productId);
+      return serverError('Erro ao vincular o produto à solicitação');
+    }
   } else {
     // Ensure existing product is active
     const { data: existing } = await admin
@@ -80,12 +84,22 @@ export async function POST(
       if (productErr || !product) return serverError('Erro ao recriar produto');
       productId = product.id;
 
-      await admin
+      const { error: relinkError } = await admin
         .from('print_requests')
         .update({ product_id: productId })
         .eq('id', id);
-    } else if (!existing.active) {
-      await admin.from('products').update({ active: true }).eq('id', productId);
+      if (relinkError) {
+        await admin.from('products').delete().eq('id', productId);
+        return serverError('Erro ao vincular o novo produto à solicitação');
+      }
+    } else {
+      const { error: updateProductError } = await admin.from('products').update({
+        name: `Encomenda - ${pr.title}`,
+        description: `Encomenda personalizada - ${pr.title}`,
+        base_price: price,
+        active: true,
+      }).eq('id', productId);
+      if (updateProductError) return serverError('Erro ao atualizar o produto exclusivo');
     }
   }
 

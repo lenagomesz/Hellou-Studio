@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, badRequest, serverError } from '@/lib/api';
+import { requirePermission, badRequest, serverError } from '@/lib/api';
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('customers.manage');
   if (auth.response) return auth.response;
 
   let body: unknown;
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
 // Bulk VIP update
 export async function PUT(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('customers.manage');
   if (auth.response) return auth.response;
 
   let body: unknown;

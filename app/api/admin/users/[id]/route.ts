@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, requirePermission, badRequest, notFound, serverError } from '@/lib/api';
+import { requirePermission, badRequest, notFound, serverError } from '@/lib/api';
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: RouteCtx) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('customers.view');
   if (auth.response) return auth.response;
 
   const { id } = await ctx.params;

@@ -370,6 +370,18 @@ export async function processRefund(params: {
     return { success: false, error: 'Pedido ja foi reembolsado' };
   }
 
+  const orderTotal = Number(order.total);
+  if (!Number.isFinite(orderTotal) || orderTotal <= 0) {
+    return { success: false, error: 'O pedido não possui um valor válido para reembolso' };
+  }
+
+  // O cliente do Mercado Pago abaixo executa reembolso integral. Impedimos que
+  // um valor parcial seja apenas registrado no painel enquanto o provedor devolve o total.
+  if (params.amount > 0 && Math.abs(params.amount - orderTotal) > 0.01) {
+    return { success: false, error: 'Reembolso parcial não é suportado por este fluxo' };
+  }
+  const refundAmount = orderTotal;
+
   // For MercadoPago, attempt real refund
   if (order.payment_provider === 'mercadopago' && order.mp_payment_id) {
     try {
@@ -395,7 +407,7 @@ export async function processRefund(params: {
   // Log the refund
   await admin.from('refund_logs').insert({
     order_id: params.orderId,
-    amount: params.amount,
+    amount: refundAmount,
     reason: params.reason,
     refunded_by: params.adminId,
     refunded_by_name: params.adminName,
@@ -410,8 +422,8 @@ export async function processRefund(params: {
     previousStatus: order.status,
     changedBy: params.adminId,
     changedByName: params.adminName,
-    message: `Reembolso de R$ ${params.amount.toFixed(2)} processado. Motivo: ${params.reason}`,
-    metadata: { amount: params.amount, reason: params.reason },
+    message: `Reembolso de R$ ${refundAmount.toFixed(2)} processado. Motivo: ${params.reason}`,
+    metadata: { amount: refundAmount, reason: params.reason },
   });
 
   // Send email to customer
@@ -428,7 +440,7 @@ export async function processRefund(params: {
         nome: user.name ?? null,
         orderId: params.orderId,
         newStatus: 'refunded',
-        refundAmount: params.amount,
+        refundAmount,
         refundReason: params.reason,
       });
 
@@ -448,7 +460,7 @@ export async function processRefund(params: {
         order.user_id,
         'order_status',
         `Pedido #${params.orderId.slice(0, 8).toUpperCase()} — Reembolsado`,
-        `Seu reembolso de R$ ${params.amount.toFixed(2)} foi processado. Motivo: ${params.reason}`,
+        `Seu reembolso de R$ ${refundAmount.toFixed(2)} foi processado. Motivo: ${params.reason}`,
         { order_id: params.orderId, status: 'refunded' },
       );
     }

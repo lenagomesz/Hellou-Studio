@@ -90,6 +90,13 @@ export async function PATCH(
       update.base_price = input.base_price;
     }
     if (input.sale_price !== undefined) {
+      if (input.sale_price !== null && (
+        typeof input.sale_price !== 'number'
+        || !Number.isFinite(input.sale_price)
+        || input.sale_price < 0
+      )) {
+        return badRequest('Preço promocional inválido');
+      }
       update.sale_price = input.sale_price;
     }
     if (input.image_url !== undefined) {

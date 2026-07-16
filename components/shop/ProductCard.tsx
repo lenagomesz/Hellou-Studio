@@ -19,6 +19,7 @@ function formatPrice(value: number) {
 
 export function ProductCard({ product, basePath = "/products" }: { product: Product; basePath?: string }) {
   const [zoomed, setZoomed] = useState(false);
+  const currentPrice = product.sale_price ?? product.base_price;
 
   useEffect(() => {
     const timer = setInterval(() => setZoomed((z) => !z), 5000);
@@ -52,9 +53,12 @@ export function ProductCard({ product, basePath = "/products" }: { product: Prod
         <h3 className="mt-1 line-clamp-1 text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
           {product.name}
         </h3>
-        <p className="mt-1.5 text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
-          {formatPrice(product.base_price)}
-        </p>
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
+          <p className="text-sm font-semibold text-gray-900 sm:text-base dark:text-white">{formatPrice(currentPrice)}</p>
+          {product.sale_price !== null && product.sale_price < product.base_price && (
+            <span className="text-[10px] text-gray-400 line-through sm:text-xs">{formatPrice(product.base_price)}</span>
+          )}
+        </div>
       </div>
     </Link>
   );

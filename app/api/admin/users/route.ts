@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, serverError } from '@/lib/api';
+import { requirePermission, serverError } from '@/lib/api';
 import { sanitizeSearchInput } from '@/lib/security';
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('customers.view');
   if (auth.response) return auth.response;
 
   const rawSearch = req.nextUrl.searchParams.get('search') ?? '';
