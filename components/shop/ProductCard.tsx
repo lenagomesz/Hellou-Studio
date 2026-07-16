@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import type { Product } from '@/types/database';
+import type { Product, ProductCategory } from '@/types/database';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -17,7 +17,7 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
-export function ProductCard({ product, basePath = "/products" }: { product: Product; basePath?: string }) {
+export function ProductCard({ product, basePath = "/products", category }: { product: Product; basePath?: string; category?: Pick<ProductCategory, 'name' | 'color'> }) {
   const [zoomed, setZoomed] = useState(false);
   const currentPrice = product.sale_price ?? product.base_price;
 
@@ -47,8 +47,8 @@ export function ProductCard({ product, basePath = "/products" }: { product: Prod
         )}
       </div>
       <div className="p-3 sm:p-4">
-        <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-pink-600 dark:text-pink-400">
-          {CATEGORY_LABELS[product.category] ?? product.category}
+        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider" style={{ color: category?.color ?? '#EC4899' }}>
+          {category?.name ?? CATEGORY_LABELS[product.category] ?? product.category}
         </p>
         <h3 className="mt-1 line-clamp-1 text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
           {product.name}

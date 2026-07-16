@@ -37,7 +37,9 @@ export function ProductLivePreview({
   options = [],
 }: Props) {
   const categories = useProductCategories();
-  const categoryName = categories.find((item) => item.slug === category)?.name ?? category;
+  const selectedCategory = categories.find((item) => item.slug === category);
+  const categoryName = selectedCategory?.name ?? category;
+  const categoryColor = selectedCategory?.color ?? '#EC4899';
   const validBasePrice = Number.isFinite(basePrice) ? basePrice : 0;
   const validSalePrice = salePrice !== null && salePrice !== undefined && Number.isFinite(salePrice) ? salePrice : null;
   const displayedPrice = validSalePrice ?? validBasePrice;
@@ -77,7 +79,7 @@ export function ProductLivePreview({
 
         <div className="flex flex-col p-6 sm:p-8">
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-pink-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-pink-600">{categoryName || 'Categoria'}</span>
+            <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: categoryColor, backgroundColor: `${categoryColor}18` }}>{categoryName || 'Categoria'}</span>
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">{type === 'digital' ? 'Arquivo STL' : 'Produto físico'}</span>
           </div>
           <h3 className="mt-4 text-2xl font-black leading-tight text-slate-950 dark:text-white">{name.trim() || 'Nome do produto'}</h3>

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProductCard } from '@/components/shop/ProductCard';
-import type { Category, Product } from '@/types/database';
+import { getCatalogCategories } from '@/lib/catalog-categories';
+import type { Product } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,19 +12,6 @@ export const metadata: Metadata = {
   description: 'Chaveiros, organizadores, criaturas e peças personalizadas impressas em 3D e produzidas sob demanda.',
   alternates: { canonical: '/products' },
 };
-
-const CATEGORIES: { slug: Category | 'all'; label: string }[] = [
-  { slug: 'all', label: 'Todos' },
-  { slug: 'chaveiros', label: 'Chaveiros' },
-  { slug: 'escritorio', label: 'Escritório' },
-  { slug: 'criaturas', label: 'Criaturas' },
-];
-
-const VALID_CATEGORIES: Category[] = ['chaveiros', 'escritorio', 'criaturas'];
-
-function isCategory(value: string): value is Category {
-  return (VALID_CATEGORIES as string[]).includes(value);
-}
 
 const SORT_OPTIONS: { value: string; label: string }[] = [
   { value: 'recent', label: 'Mais recentes' },
@@ -50,9 +38,9 @@ async function getProductsRaw(filters: {
     return [];
   }
 
-  let query = admin.from('products').select('*').eq('active', true).in('category', ['chaveiros', 'escritorio', 'criaturas']).not('name', 'ilike', 'Encomenda%').neq('type', 'digital');
+  let query = admin.from('products').select('*').eq('active', true).or('type.eq.physical,type.is.null').neq('category', 'encomenda').not('name', 'ilike', 'Encomenda%');
 
-  if (filters.category && isCategory(filters.category)) {
+  if (filters.category) {
     query = query.eq('category', filters.category);
   }
 
@@ -104,8 +92,11 @@ export default async function ProductsCatalogPage(
   const sort =
     typeof searchParams.sort === 'string' ? searchParams.sort : undefined;
 
-  const products = await getProducts({ category, search, sort });
-  const activeCategory = category && isCategory(category) ? category : 'all';
+  const categories = await getCatalogCategories('physical');
+  const validCategory = category && categories.some((item) => item.slug === category) ? category : undefined;
+  const products = await getProducts({ category: validCategory, search, sort });
+  const activeCategory = validCategory ?? 'all';
+  const categoryTabs = [{ slug: 'all', name: 'Todos' }, ...categories];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
@@ -129,24 +120,26 @@ export default async function ProductsCatalogPage(
       </header>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        {CATEGORIES.map((cat) => {
+        {categoryTabs.map((cat) => {
           const params = new URLSearchParams();
           if (cat.slug !== 'all') params.set('category', cat.slug);
           if (search) params.set('search', search);
           if (sort) params.set('sort', sort);
           const href = `/products${params.toString() ? `?${params}` : ''}`;
           const isActive = activeCategory === cat.slug;
+          const categoryColor = 'color' in cat ? cat.color : '#EC4899';
           return (
             <Link
               key={cat.slug}
               href={href}
+              style={isActive ? { backgroundColor: categoryColor } : undefined}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
                 isActive
-                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                  ? 'text-white shadow-sm'
                   : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
-              {cat.label}
+              {cat.name}
             </Link>
           );
         })}
@@ -156,8 +149,8 @@ export default async function ProductsCatalogPage(
         method="get"
         className="mb-8 grid gap-3 grid-cols-[1fr_auto] rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm sm:grid-cols-[1fr_180px_auto]"
       >
-        {category ? (
-          <input type="hidden" name="category" value={category} />
+        {validCategory ? (
+          <input type="hidden" name="category" value={validCategory} />
         ) : null}
         <div className="relative col-span-2 sm:col-span-1">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-600">
@@ -192,7 +185,7 @@ export default async function ProductsCatalogPage(
 
       {products.length === 0 ? (
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
-          {category || search ? (
+          {validCategory || search ? (
             <>
               <p className="text-gray-600 dark:text-gray-400">
                 Nenhum produto encontrado com esses filtros.
@@ -220,7 +213,7 @@ export default async function ProductsCatalogPage(
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} category={categories.find((category) => category.slug === product.category)} />
           ))}
         </div>
       )}

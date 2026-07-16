@@ -4,6 +4,7 @@ export interface ProductCategory {
   id: string;
   name: string;
   slug: string;
+  color: string;
   active: boolean;
   sort_order: number;
   is_system: boolean;
@@ -265,6 +266,7 @@ export interface Database {
           id?: string;
           name: string;
           slug: string;
+          color?: string;
           active?: boolean;
           sort_order?: number;
           is_system?: boolean;
@@ -275,6 +277,7 @@ export interface Database {
           id?: string;
           name?: string;
           slug?: string;
+          color?: string;
           active?: boolean;
           sort_order?: number;
           is_system?: boolean;

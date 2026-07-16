@@ -120,6 +120,7 @@ async function uploadSTL(productId: string, file: File) {
 }
 
 function revalidateProduct(productId: string) {
+  revalidatePath('/', 'page');
   revalidatePath('/stl', 'page');
   revalidatePath(`/stl/${productId}`, 'page');
   revalidatePath('/dashboard/products', 'page');

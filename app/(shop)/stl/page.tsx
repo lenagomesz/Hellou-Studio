@@ -1,6 +1,8 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { ProductCard } from '@/components/shop/ProductCard';
+import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
 
 export const metadata: Metadata = {
@@ -9,15 +11,16 @@ export const metadata: Metadata = {
   alternates: { canonical: '/stl' },
 };
 
-async function getSTLProducts(): Promise<Product[]> {
+async function getSTLProducts(category?: string): Promise<Product[]> {
   try {
     const admin = getSupabaseAdmin();
-    const { data, error } = await admin
+    let query = admin
       .from('products')
       .select('*')
       .eq('type', 'digital')
-      .eq('active', true)
-      .order('created_at', { ascending: false });
+      .eq('active', true);
+    if (category) query = query.eq('category', category);
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('[stl-page] Query error:', error);
@@ -32,8 +35,12 @@ async function getSTLProducts(): Promise<Product[]> {
   }
 }
 
-export default async function STLMarketplacePage() {
-  const products = await getSTLProducts();
+export default async function STLMarketplacePage(props: { searchParams: Promise<{ category?: string | string[] }> }) {
+  const searchParams = await props.searchParams;
+  const requestedCategory = typeof searchParams.category === 'string' ? searchParams.category : undefined;
+  const categories = await getCatalogCategories('digital');
+  const activeCategory = requestedCategory && categories.some((item) => item.slug === requestedCategory) ? requestedCategory : undefined;
+  const products = await getSTLProducts(activeCategory);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
@@ -79,6 +86,15 @@ export default async function STLMarketplacePage() {
           </p>
         </header>
 
+        {categories.length > 0 && (
+          <nav aria-label="Categorias de arquivos STL" className="mb-6 flex flex-wrap gap-2">
+            <Link href="/stl" style={!activeCategory ? { backgroundColor: '#EC4899' } : undefined} className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${!activeCategory ? 'text-white shadow-sm' : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'}`}>Todos</Link>
+            {categories.map((category) => (
+              <Link key={category.id} href={`/stl?category=${encodeURIComponent(category.slug)}`} style={activeCategory === category.slug ? { backgroundColor: category.color } : { borderColor: `${category.color}55` }} className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${activeCategory === category.slug ? 'text-white shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300'}`}>{category.name}</Link>
+            ))}
+          </nav>
+        )}
+
         {products.length === 0 ? (
           <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
             <span className="text-5xl">✨🎨</span>
@@ -93,7 +109,7 @@ export default async function STLMarketplacePage() {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} basePath="/stl" />
+              <ProductCard key={product.id} product={product} basePath="/stl" category={categories.find((category) => category.slug === product.category)} />
             ))}
           </div>
         )}

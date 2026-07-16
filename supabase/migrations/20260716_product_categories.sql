@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS public.product_categories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   slug text NOT NULL UNIQUE CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+  color text NOT NULL DEFAULT '#EC4899' CHECK (color ~ '^#[0-9A-Fa-f]{6}$'),
   active boolean NOT NULL DEFAULT true,
   sort_order integer NOT NULL DEFAULT 0,
   is_system boolean NOT NULL DEFAULT false,
@@ -11,12 +12,12 @@ CREATE TABLE IF NOT EXISTS public.product_categories (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-INSERT INTO public.product_categories (name, slug, sort_order, is_system)
+INSERT INTO public.product_categories (name, slug, color, sort_order, is_system)
 VALUES
-  ('Chaveiros', 'chaveiros', 10, true),
-  ('Escritório', 'escritorio', 20, true),
-  ('Criaturas', 'criaturas', 30, true),
-  ('Encomenda', 'encomenda', 40, true)
+  ('Chaveiros', 'chaveiros', '#EC4899', 10, true),
+  ('Escritório', 'escritorio', '#F97316', 20, true),
+  ('Criaturas', 'criaturas', '#A855F7', 30, true),
+  ('Encomenda', 'encomenda', '#64748B', 40, true)
 ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name;
 
 DO $$
@@ -53,4 +54,3 @@ DROP POLICY IF EXISTS "Public can read active product categories" ON public.prod
 CREATE POLICY "Public can read active product categories"
   ON public.product_categories FOR SELECT
   USING (active = true);
-

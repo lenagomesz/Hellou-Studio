@@ -153,6 +153,9 @@ export async function PATCH(
     // Invalidate cache for product pages
     revalidatePath(`/products/${id}`, 'page');
     revalidatePath(`/dashboard/products/${id}`, 'page');
+    revalidatePath('/');
+    revalidatePath('/products');
+    revalidatePath('/stl');
 
     return NextResponse.json({ product: data as Product });
   } catch (err) {
@@ -195,6 +198,9 @@ export async function DELETE(
     }
 
     console.log('[products-delete] product deleted successfully:', id);
+    revalidatePath('/');
+    revalidatePath('/products');
+    revalidatePath('/stl');
     return new NextResponse(null, { status: 204 });
   } catch (err) {
     console.error('[products-delete] exception:', {

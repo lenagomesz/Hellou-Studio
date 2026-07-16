@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import {
   badRequest,
@@ -103,6 +104,7 @@ export async function POST(request: Request) {
       name: name.trim(),
       description: description?.trim() || null,
       category,
+      type: 'physical',
       base_price,
       sale_price: sale_price ?? null,
       image_url: image_url?.trim() || null,
@@ -133,5 +135,7 @@ export async function POST(request: Request) {
     }
   }
 
+  revalidatePath('/');
+  revalidatePath('/products');
   return NextResponse.json({ product: data as Product }, { status: 201 });
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { badRequest, notFound, requireAdmin, serverError } from '@/lib/api';
 import type { ProductCategory } from '@/types/database';
@@ -8,7 +9,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (auth.response) return auth.response;
   const { id } = await context.params;
 
-  let body: { name?: string; active?: boolean; sort_order?: number };
+  let body: { name?: string; color?: string; active?: boolean; sort_order?: number };
   try {
     body = await request.json();
   } catch {
@@ -23,6 +24,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     update.name = name;
   }
   if (body.active !== undefined) update.active = Boolean(body.active);
+  if (body.color !== undefined) {
+    const color = body.color.toUpperCase();
+    if (!/^#[0-9A-F]{6}$/.test(color)) return badRequest('Cor da categoria inválida');
+    update.color = color;
+  }
   if (body.sort_order !== undefined) {
     if (!Number.isInteger(body.sort_order)) return badRequest('A ordem deve ser um número inteiro');
     update.sort_order = body.sort_order;
@@ -37,6 +43,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
   if (error) return serverError('Erro ao atualizar categoria');
   if (!data) return notFound('Categoria não encontrada');
+  revalidatePath('/');
+  revalidatePath('/products');
+  revalidatePath('/stl');
   return NextResponse.json({ category: data as ProductCategory });
 }
 
@@ -62,5 +71,8 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
 
   const { error } = await admin.from('product_categories').delete().eq('id', id);
   if (error) return serverError('Erro ao excluir categoria');
+  revalidatePath('/');
+  revalidatePath('/products');
+  revalidatePath('/stl');
   return new NextResponse(null, { status: 204 });
 }

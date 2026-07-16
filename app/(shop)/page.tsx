@@ -9,6 +9,7 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 // import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { Marquee } from '@/components/ui/Marquee';
 import { ProductCardSkeleton } from '@/components/ui/Skeleton';
+import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
 
 export const metadata: Metadata = {
@@ -17,29 +18,23 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
-const CATEGORIES = [
-  {
-    slug: 'chaveiros',
-    label: 'Chaveiros',
+const CATEGORY_PRESENTATION: Record<string, { emoji: string; description: string; color: string }> = {
+  chaveiros: {
     emoji: '🔑',
     description: 'Chaveiros personalizáveis para todos os estilos.',
     color: 'from-pink-400 to-orange-400',
   },
-  {
-    slug: 'escritorio',
-    label: 'Escritório',
+  escritorio: {
     emoji: '🖊️',
     description: 'Organizadores e acessórios 3D para seu desk.',
     color: 'from-orange-400 to-pink-400',
   },
-  {
-    slug: 'criaturas',
-    label: 'Criaturas',
+  criaturas: {
     emoji: '🦊',
     description: 'Personagens adoráveis feitos com carinho.',
     color: 'from-pink-500 to-orange-400',
   },
-];
+};
 
 const FEATURES = [
   {
@@ -102,11 +97,12 @@ const getFeaturedProducts = unstable_cache(
         let query = admin
           .from('products')
           .select('*')
-          .eq('active', true)
-          .eq('type', type);
+          .eq('active', true);
 
         if (type === 'physical') {
-          query = query.in('category', ['chaveiros', 'escritorio', 'criaturas']).not('name', 'ilike', 'Encomenda%');
+          query = query.or('type.eq.physical,type.is.null').neq('category', 'encomenda').not('name', 'ilike', 'Encomenda%');
+        } else {
+          query = query.eq('type', 'digital');
         }
 
         const { data, error } = await query
@@ -150,7 +146,8 @@ function FeaturedSkeleton() {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const catalogCategories = await getCatalogCategories('physical');
   return (
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
       {/* Promo banner */}
@@ -277,26 +274,33 @@ export default function HomePage() {
           </ScrollReveal>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {CATEGORIES.map((cat, i) => (
+            {catalogCategories.map((cat, i) => {
+              const presentation = CATEGORY_PRESENTATION[cat.slug] ?? {
+                emoji: '📦',
+                description: `Explore os produtos da categoria ${cat.name}.`,
+                color: '',
+              };
+              return (
               <ScrollReveal key={cat.slug} delay={i * 150} direction={i === 0 ? 'left' : i === 2 ? 'right' : 'up'}>
                 <Link
                   href={`/products?category=${cat.slug}`}
-                  className="group relative overflow-hidden rounded-3xl border border-orange-100/60 dark:border-gray-800 bg-gradient-to-br from-orange-50/50 to-pink-50/30 dark:from-gray-900 dark:to-gray-900 p-8 text-center hover-lift block transition-all duration-500 hover:border-pink-200 dark:hover:border-pink-800 hover:bg-white dark:hover:bg-gray-800"
+                  style={{ borderColor: `${cat.color}44`, backgroundImage: `linear-gradient(135deg, ${cat.color}14, transparent 65%)` }}
+                  className="group relative overflow-hidden rounded-3xl border bg-white dark:bg-gray-900 p-8 text-center hover-lift block transition-all duration-500 dark:border-gray-800 dark:hover:bg-gray-800"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 transition-opacity duration-500 group-hover:opacity-[0.08]`} />
-                  <div className={`absolute -top-10 -right-10 h-28 w-28 rounded-full bg-gradient-to-br ${cat.color} opacity-0 blur-2xl transition-all duration-700 group-hover:opacity-30 group-hover:top-0 group-hover:right-0`} />
+                  <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{ backgroundImage: `linear-gradient(135deg, ${cat.color}18, transparent)` }} />
+                  <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-0 blur-2xl transition-all duration-700 group-hover:right-0 group-hover:top-0 group-hover:opacity-30" style={{ backgroundColor: cat.color }} />
 
                   <div className="relative">
-                    <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 to-pink-100 text-3xl shadow-sm transition-all duration-500 group-hover:scale-125 group-hover:shadow-lg group-hover:-rotate-6">
-                      {cat.emoji}
+                    <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-sm transition-all duration-500 group-hover:scale-125 group-hover:shadow-lg group-hover:-rotate-6" style={{ backgroundColor: `${cat.color}20` }}>
+                      {presentation.emoji}
                     </span>
                     <h3 className="mt-5 text-lg font-bold text-gray-900 dark:text-white transition-colors duration-300 group-hover:text-pink-700 dark:group-hover:text-pink-400">
-                      {cat.label}
+                      {cat.name}
                     </h3>
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                      {cat.description}
+                      {presentation.description}
                     </p>
-                    <p className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-pink-600 dark:text-pink-400 transition-all duration-300 group-hover:gap-3">
+                    <p className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold transition-all duration-300 group-hover:gap-3" style={{ color: cat.color }}>
                       Ver produtos
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-3.5 w-3.5 transition-transform duration-500 group-hover:translate-x-2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
@@ -305,7 +309,8 @@ export default function HomePage() {
                   </div>
                 </Link>
               </ScrollReveal>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

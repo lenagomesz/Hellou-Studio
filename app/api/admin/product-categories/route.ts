@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { badRequest, requireAdmin, serverError } from '@/lib/api';
 import type { ProductCategory } from '@/types/database';
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
   const auth = await requireAdmin();
   if (auth.response) return auth.response;
 
-  let body: { name?: string; slug?: string; active?: boolean; sort_order?: number };
+  let body: { name?: string; slug?: string; color?: string; active?: boolean; sort_order?: number };
   try {
     body = await request.json();
   } catch {
@@ -40,15 +41,18 @@ export async function POST(request: Request) {
 
   const name = body.name?.trim();
   const slug = createSlug(body.slug?.trim() || name || '');
+  const color = body.color?.toUpperCase() || '#EC4899';
   if (!name) return badRequest('Nome da categoria é obrigatório');
   if (!slug) return badRequest('Identificador da categoria é inválido');
   if (name.length > 60) return badRequest('O nome deve ter no máximo 60 caracteres');
+  if (!/^#[0-9A-F]{6}$/.test(color)) return badRequest('Cor da categoria inválida');
 
   const { data, error } = await getSupabaseAdmin()
     .from('product_categories')
     .insert({
       name,
       slug,
+      color,
       active: body.active ?? true,
       sort_order: Number.isInteger(body.sort_order) ? body.sort_order : 0,
     })
@@ -57,5 +61,8 @@ export async function POST(request: Request) {
 
   if (error?.code === '23505') return badRequest('Já existe uma categoria com esse nome ou identificador');
   if (error || !data) return serverError('Erro ao criar categoria');
+  revalidatePath('/');
+  revalidatePath('/products');
+  revalidatePath('/stl');
   return NextResponse.json({ category: data as ProductCategory }, { status: 201 });
 }

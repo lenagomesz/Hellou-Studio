@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import type { ProductCategory } from '@/types/database';
 
 const FALLBACK_CATEGORIES: ProductCategory[] = [
-  { id: 'chaveiros', name: 'Chaveiros', slug: 'chaveiros', active: true, sort_order: 10, is_system: true, created_at: '', updated_at: '' },
-  { id: 'escritorio', name: 'Escritório', slug: 'escritorio', active: true, sort_order: 20, is_system: true, created_at: '', updated_at: '' },
-  { id: 'criaturas', name: 'Criaturas', slug: 'criaturas', active: true, sort_order: 30, is_system: true, created_at: '', updated_at: '' },
-  { id: 'encomenda', name: 'Encomenda', slug: 'encomenda', active: true, sort_order: 40, is_system: true, created_at: '', updated_at: '' },
+  { id: 'chaveiros', name: 'Chaveiros', slug: 'chaveiros', color: '#EC4899', active: true, sort_order: 10, is_system: true, created_at: '', updated_at: '' },
+  { id: 'escritorio', name: 'Escritório', slug: 'escritorio', color: '#F97316', active: true, sort_order: 20, is_system: true, created_at: '', updated_at: '' },
+  { id: 'criaturas', name: 'Criaturas', slug: 'criaturas', color: '#A855F7', active: true, sort_order: 30, is_system: true, created_at: '', updated_at: '' },
+  { id: 'encomenda', name: 'Encomenda', slug: 'encomenda', color: '#64748B', active: true, sort_order: 40, is_system: true, created_at: '', updated_at: '' },
 ];
 
 export function useProductCategories() {

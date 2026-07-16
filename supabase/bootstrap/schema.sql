@@ -43,6 +43,7 @@ create table if not exists public.product_categories (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   slug        text not null unique check (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+  color       text not null default '#EC4899' check (color ~ '^#[0-9A-Fa-f]{6}$'),
   active      boolean not null default true,
   sort_order  integer not null default 0,
   is_system   boolean not null default false,
@@ -50,12 +51,12 @@ create table if not exists public.product_categories (
   updated_at  timestamptz not null default now()
 );
 
-insert into public.product_categories (name, slug, sort_order, is_system)
+insert into public.product_categories (name, slug, color, sort_order, is_system)
 values
-  ('Chaveiros', 'chaveiros', 10, true),
-  ('Escritório', 'escritorio', 20, true),
-  ('Criaturas', 'criaturas', 30, true),
-  ('Encomenda', 'encomenda', 40, true)
+  ('Chaveiros', 'chaveiros', '#EC4899', 10, true),
+  ('Escritório', 'escritorio', '#F97316', 20, true),
+  ('Criaturas', 'criaturas', '#A855F7', 30, true),
+  ('Encomenda', 'encomenda', '#64748B', 40, true)
 on conflict (slug) do nothing;
 
 -- products
@@ -64,6 +65,7 @@ create table if not exists public.products (
   name        text not null,
   description text,
   category    text not null references public.product_categories(slug) on update cascade on delete restrict,
+  type        text not null default 'physical' check (type in ('physical', 'digital')),
   base_price  numeric(10,2) not null check (base_price >= 0),
   image_url   text,
   active      boolean not null default true,
