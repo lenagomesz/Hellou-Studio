@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { matchesCatalogSearch } from '@/lib/catalog-search';
 
 const VALID_CATEGORIES = ['chaveiros', 'escritorio', 'criaturas'] as const;
 type Category = (typeof VALID_CATEGORIES)[number];
@@ -15,6 +16,28 @@ function shouldShowInCatalog(product: { category: string; name: string; active: 
 }
 
 describe('Catalog Filters', () => {
+  describe('catalog search', () => {
+    const product = {
+      name: 'Dragão articulado',
+      description: 'Modelo impresso em PLA',
+      tags: [{ name: 'Presente criativo' }, { name: 'Colecionável' }],
+    };
+
+    it('finds products by tag', () => {
+      expect(matchesCatalogSearch(product, 'presente')).toBe(true);
+      expect(matchesCatalogSearch(product, 'colecionavel')).toBe(true);
+    });
+
+    it('continues finding by name and description', () => {
+      expect(matchesCatalogSearch(product, 'dragao')).toBe(true);
+      expect(matchesCatalogSearch(product, 'PLA')).toBe(true);
+    });
+
+    it('rejects unrelated terms', () => {
+      expect(matchesCatalogSearch(product, 'chaveiro')).toBe(false);
+    });
+  });
+
   describe('isCategory', () => {
     it('should accept valid categories', () => {
       expect(isCategory('chaveiros')).toBe(true);

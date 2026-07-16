@@ -5,6 +5,7 @@ import { ProductCard } from '@/components/shop/ProductCard';
 import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
+import { matchesCatalogSearch } from '@/lib/catalog-search';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,10 +46,6 @@ async function getProductsRaw(filters: {
     query = query.eq('category', filters.category);
   }
 
-  if (filters.search) {
-    query = query.ilike('name', `%${filters.search}%`);
-  }
-
   switch (filters.sort) {
     case 'price_asc':
       query = query.order('base_price', { ascending: true });
@@ -65,7 +62,10 @@ async function getProductsRaw(filters: {
 
   const { data, error } = await query;
   console.log('[products/page] query result - count:', data?.length ?? 0, 'error:', error?.message ?? 'none');
-  return attachProductTags((data ?? []) as Product[]);
+  const products = await attachProductTags((data ?? []) as Product[]);
+  if (!filters.search?.trim()) return products;
+
+  return products.filter((product) => matchesCatalogSearch(product, filters.search ?? ''));
 }
 
 async function getProducts(filters: {
@@ -161,7 +161,7 @@ export default async function ProductsCatalogPage(
             type="text"
             name="search"
             defaultValue={search ?? ''}
-            placeholder="Buscar por nome..."
+            placeholder="Buscar por nome, descrição ou tag..."
             className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all focus:bg-white dark:focus:bg-gray-700 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
           />
         </div>

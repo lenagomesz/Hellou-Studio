@@ -33,7 +33,7 @@ export function ProductCard({ product, basePath = "/products", category }: { pro
       prefetch={false}
       className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:shadow-gray-900/50"
     >
-      <div className="aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
+      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
         {product.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -46,18 +46,24 @@ export function ProductCard({ product, basePath = "/products", category }: { pro
             ◇
           </div>
         )}
+        {product.tags && product.tags.length > 0 && (
+          <div className="absolute left-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap gap-1.5 sm:left-3 sm:top-3">
+            {product.tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag.id}
+                className="rounded-full px-2.5 py-1 text-[9px] font-bold text-white shadow-md ring-1 ring-white/40 backdrop-blur-sm"
+                style={{ backgroundColor: tag.color }}
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <div className="p-3 sm:p-4">
         <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-pink-600">
           {category?.name ?? CATEGORY_LABELS[product.category] ?? product.category}
         </p>
-        {product.tags && product.tags.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {product.tags.slice(0, 3).map((tag) => (
-              <span key={tag.id} className="rounded-full px-2 py-0.5 text-[9px] font-bold text-white" style={{ backgroundColor: tag.color }}>{tag.name}</span>
-            ))}
-          </div>
-        )}
         <h3 className="mt-1 line-clamp-1 text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
           {product.name}
         </h3>

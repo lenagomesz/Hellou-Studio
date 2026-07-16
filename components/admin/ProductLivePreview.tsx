@@ -2,6 +2,7 @@
 
 import { Download, Eye, ImageIcon, Package, ShoppingCart } from 'lucide-react';
 import { useProductCategories } from '@/components/admin/ProductCategorySelect';
+import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 
 type PreviewOption = {
   id: string;
@@ -101,7 +102,7 @@ export function ProductLivePreview({
                 {options.slice(0, 6).map((option) => option.name ? (
                   <span key={option.id} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">{option.name}</span>
                 ) : option.color ? (
-                  <span key={option.id} title={option.color} className="h-8 w-8 rounded-full border-2 border-white shadow ring-1 ring-slate-200" style={{ backgroundColor: option.color }} />
+                  <span key={option.id} title={getProductColorName(option.color)} className="h-8 w-8 rounded-full border-2 border-white shadow ring-1 ring-slate-200" style={{ backgroundColor: getProductColorValue(option.color) }} />
                 ) : null)}
               </div>
             </div>

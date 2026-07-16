@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
+import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -273,11 +274,11 @@ export function ProductDetail({
                                 ? 'border-pink-500 ring-2 ring-pink-200 scale-110'
                                 : 'border-gray-300 hover:border-gray-400 hover:scale-105'
                           }`}
-                          title={color}
+                          title={getProductColorName(color)}
                         >
                           <span
                             className="absolute inset-1 rounded-full"
-                            style={{ backgroundColor: color }}
+                            style={{ backgroundColor: getProductColorValue(color) }}
                           />
                           {allOutOfStock && (
                             <span className="absolute inset-0 flex items-center justify-center">

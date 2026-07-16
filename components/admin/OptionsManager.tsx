@@ -4,26 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProductOption } from '@/types/database';
 import { Loader2 } from 'lucide-react';
+import { getProductColorName, getProductColorValue, PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
 
-const COLOR_PALETTE = [
-  { name: 'Branco', hex: '#FFFFFF' },
-  { name: 'Preto', hex: '#1a1a1a' },
-  { name: 'Rosa', hex: '#ec4899' },
-  { name: 'Vermelho', hex: '#ef4444' },
-  { name: 'Laranja', hex: '#f97316' },
-  { name: 'Amarelo', hex: '#eab308' },
-  { name: 'Verde', hex: '#22c55e' },
-  { name: 'Verde Escuro', hex: '#15803d' },
-  { name: 'Azul', hex: '#3b82f6' },
-  { name: 'Azul Escuro', hex: '#1e40af' },
-  { name: 'Roxo', hex: '#a855f7' },
-  { name: 'Lilás', hex: '#c084fc' },
-  { name: 'Cinza', hex: '#6b7280' },
-  { name: 'Bege', hex: '#d4a574' },
-  { name: 'Dourado', hex: '#d4af37' },
-  { name: 'Prata', hex: '#c0c0c0' },
-  { name: 'Transparente', hex: 'transparent' },
-];
+const COLOR_PALETTE = PRODUCT_COLOR_PALETTE;
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
@@ -611,10 +594,10 @@ function OptionRow({
           <div className="flex items-center gap-2 flex-wrap">
             {option.name && <p className="text-sm font-medium text-gray-900 dark:text-white">{option.name}</p>}
             {option.color && (
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800" title={option.color}>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800" title={getProductColorName(option.color)}>
                 <span
                   className="h-4 w-4 rounded-full border border-gray-200 dark:border-gray-600"
-                  style={{ backgroundColor: option.color.toLowerCase() }}
+                  style={{ backgroundColor: getProductColorValue(option.color) }}
                 />
               </span>
             )}
