@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProductForm } from '@/components/admin/ProductForm';
+import { ProductTypeTabs } from '@/components/admin/ProductTypeTabs';
+import { STLProductForm } from '@/components/admin/STLProductForm';
 import { OptionsManager } from '@/components/admin/OptionsManager';
 import type { Product, ProductOption } from '@/types/database';
 
@@ -33,6 +35,24 @@ export default async function EditProductPage(
 
   const { product, options } = result;
 
+  if (product.type === 'digital') {
+    return (
+      <div className="max-w-5xl space-y-6">
+        <header className="rounded-[26px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/60 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
+          <Link href={`/dashboard/products/${product.id}`} className="text-sm text-gray-600 hover:text-gray-900">
+            &larr; Voltar para o produto
+          </Link>
+          <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Produto digital</p>
+          <h1 className="mt-1 text-3xl font-bold">Editar produto STL</h1>
+          <p className="mt-2 text-sm text-slate-600">{product.name}</p>
+        </header>
+
+        <ProductTypeTabs active="digital" />
+        <STLProductForm mode="edit" product={product} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-3xl">
       <header>
@@ -42,10 +62,11 @@ export default async function EditProductPage(
         >
           ← Voltar para o produto
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">Editar produto</h1>
+        <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">Editar produto físico</h1>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{product.name}</p>
       </header>
 
+      <ProductTypeTabs active="physical" />
       <ProductForm mode="edit" product={product} />
 
       <div className="rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800">

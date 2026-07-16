@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   let query = admin
     .from('products')
     .select('*')
-    .neq('category', 'encomenda')
+    .or('category.neq.encomenda,type.eq.digital')
     .order('created_at', { ascending: false });
 
   if (!includeInactive) {

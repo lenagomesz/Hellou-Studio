@@ -185,7 +185,7 @@ export default function ProductsPage() {
           onClick={() => setFilter('digital')}
           className={`px-4 py-2 rounded font-medium transition ${filter === 'digital' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
         >
-          Arquivos Digitais
+          Arquivos STL
         </button>
       </div>
 
