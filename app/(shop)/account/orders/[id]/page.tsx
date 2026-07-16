@@ -217,7 +217,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     {item.option.color && (
                       <span className="inline-block h-3 w-3 rounded-full border border-gray-200" style={{ backgroundColor: item.option.color }} />
                     )}
-                    Variação: {item.option.name}
+                    {item.option.name ? `Variação: ${item.option.name}` : 'Cor selecionada'}
                   </p>
                 )}
                 {item.customization_text && (

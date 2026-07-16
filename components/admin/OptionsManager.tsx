@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProductOption } from '@/types/database';
 import { Loader2 } from 'lucide-react';
@@ -34,9 +34,9 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
             key={c.hex}
             type="button"
             title={c.name}
-            onClick={() => onChange(value === c.name ? '' : c.name)}
+            onClick={() => onChange(value === c.hex || value === c.name ? '' : c.hex)}
             className={`h-6 w-6 rounded-full border-2 transition ${
-              value === c.name
+              value === c.hex || value === c.name
                 ? 'border-pink-500 ring-2 ring-pink-300 dark:ring-pink-700 scale-110'
                 : 'border-gray-200 dark:border-gray-600 hover:scale-110'
             } ${c.hex === 'transparent' ? 'bg-gradient-to-br from-white to-gray-300 dark:from-gray-600 dark:to-gray-800' : ''}`}
@@ -121,14 +121,13 @@ export function OptionsManager({
     router.refresh();
   }
 
-  async function handleAdd(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleAdd() {
     setError(null);
 
     const modifier = Number(priceModifier);
     const stockValue = Number(stock);
-    if (!name.trim()) {
-      setError('Nome da variação é obrigatório');
+    if (!name.trim() && !color.trim()) {
+      setError('Informe um nome, um tamanho ou escolha uma cor');
       return;
     }
     if (Number.isNaN(modifier)) {
@@ -198,13 +197,14 @@ export function OptionsManager({
 
     setBulkSubmitting(true);
     for (const { name: colorName, imageUrl: colorImageUrl } of selectedColors) {
+      const paletteColor = COLOR_PALETTE.find((item) => item.name === colorName);
       const res = await fetch('/api/product-options', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           product_id: productId,
-          name: colorName,
-          color: colorName,
+          name: '',
+          color: paletteColor?.hex ?? colorName,
           price_modifier: modifier,
           stock: stockValue,
           image_url: colorImageUrl.trim() || undefined,
@@ -413,14 +413,14 @@ export function OptionsManager({
         </button>
       )}
 
-      <form onSubmit={handleAdd} className="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 space-y-3">
+      <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 space-y-3">
         <p className="text-sm font-medium text-gray-900 dark:text-white">Adicionar variação individual</p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ex: Tamanho M"
+            placeholder="Nome ou tamanho (opcional com cor)"
             className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
           <input
@@ -463,13 +463,14 @@ export function OptionsManager({
           <ColorPicker value={color} onChange={setColor} />
         </div>
         <button
-          type="submit"
+          type="button"
+          onClick={handleAdd}
           disabled={submitting}
           className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition"
         >
           {submitting ? 'Adicionando...' : 'Adicionar'}
         </button>
-      </form>
+      </div>
 
       {error && (
         <p className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-3 py-2 text-sm text-red-700 dark:text-red-400">
@@ -501,6 +502,7 @@ function OptionRow({
   const [saving, setSaving] = useState(false);
 
   async function save() {
+    if (!name.trim() && !color.trim()) return;
     setSaving(true);
     await onUpdate({
       name: name.trim(),
@@ -578,7 +580,7 @@ function OptionRow({
           <button
             type="button"
             onClick={save}
-            disabled={saving}
+            disabled={saving || (!name.trim() && !color.trim())}
             className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition"
           >
             {saving ? '...' : 'Salvar'}
@@ -602,19 +604,18 @@ function OptionRow({
         {option.image_url && (
           <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={option.image_url} alt={option.name} className="h-full w-full object-cover" />
+            <img src={option.image_url} alt={option.name || 'Variação por cor'} className="h-full w-full object-cover" />
           </div>
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">{option.name}</p>
+            {option.name && <p className="text-sm font-medium text-gray-900 dark:text-white">{option.name}</p>}
             {option.color && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[10px] font-medium text-gray-700 dark:text-gray-300">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800" title={option.color}>
                 <span
-                  className="h-2.5 w-2.5 rounded-full border border-gray-200 dark:border-gray-600"
+                  className="h-4 w-4 rounded-full border border-gray-200 dark:border-gray-600"
                   style={{ backgroundColor: option.color.toLowerCase() }}
                 />
-                {option.color}
               </span>
             )}
           </div>

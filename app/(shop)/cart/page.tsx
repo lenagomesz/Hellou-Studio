@@ -712,7 +712,7 @@ export default function CartPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-gray-900 dark:text-white text-xs line-clamp-2">{item.product.name}</p>
-                          <p className="text-xs text-gray-400">×{item.quantity}{item.option ? ` · ${item.option.name}` : ''}</p>
+                          <p className="text-xs text-gray-400">×{item.quantity}{item.option?.name ? ` · ${item.option.name}` : ''}</p>
                         </div>
                       </div>
                       <div className="flex-shrink-0 text-right">

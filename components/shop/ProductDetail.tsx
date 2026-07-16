@@ -293,17 +293,17 @@ export function ProductDetail({
             })()}
 
             {/* Size / Variation pills */}
-            <div>
+            {options.some((option) => option.name.trim()) && <div>
               <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-                {options.every((o) => ['P', 'M', 'G'].includes(o.name.toUpperCase())) ? 'Tamanho' : 'Variação'}
+                {options.filter((option) => option.name.trim()).every((o) => ['P', 'M', 'G'].includes(o.name.toUpperCase())) ? 'Tamanho' : 'Variação'}
               </h2>
               <div className="mt-3 flex flex-wrap gap-2">
                 {(() => {
                   const hasColors = options.some((o) => o.color);
                   const selectedColor = selectedOption?.color ?? null;
-                  const visibleOptions = hasColors && selectedColor
+                  const visibleOptions = (hasColors && selectedColor
                     ? options.filter((o) => o.color === selectedColor)
-                    : options;
+                    : options).filter((option) => option.name.trim());
                   return visibleOptions.map((option) => {
                     const isSelected = selectedOptionId === option.id;
                     const outOfStock = requiresReadyStock && option.stock === 0;
@@ -334,7 +334,7 @@ export function ProductDetail({
               {selectedOption ? (
                 <div className="mt-3 rounded-xl border border-pink-100 bg-pink-50/70 px-3 py-2.5 dark:border-pink-900/60 dark:bg-pink-950/30">
                   <p className="text-xs font-bold text-pink-700 dark:text-pink-300">
-                    Preço com “{selectedOption.name}”: {formatPrice(finalPrice)}
+                    {selectedOption.name ? `Preço com “${selectedOption.name}”` : 'Novo preço'}: {formatPrice(finalPrice)}
                   </p>
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {requiresReadyStock
@@ -345,7 +345,7 @@ export function ProductDetail({
                   </p>
                 </div>
               ) : null}
-            </div>
+            </div>}
 
             {options.some((o) => o.dimensions) ? (
               <details className="group rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">

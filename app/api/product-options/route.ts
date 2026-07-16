@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   };
 
   if (!product_id) return badRequest('product_id é obrigatório');
-  if (!name || !name.trim()) return badRequest('Nome é obrigatório');
+  if (!name?.trim() && !color?.trim()) return badRequest('Informe um nome ou uma cor');
 
   const modifier = price_modifier ?? 0;
   if (typeof modifier !== 'number') return badRequest('price_modifier inválido');
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     .from('product_options')
     .insert({
       product_id,
-      name: name.trim(),
+      name: name?.trim() || '',
       price_modifier: modifier,
       stock: stockValue,
       dimensions: dimensions?.trim() || null,

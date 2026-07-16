@@ -8,6 +8,7 @@ import type { Product, ProductOption } from '@/types/database';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
 import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
 import { ProductTagSelect, replaceProductTags } from '@/components/admin/ProductTagSelect';
+import { OptionsManager } from '@/components/admin/OptionsManager';
 
 type ProductFormProps =
   | { mode: 'create'; product?: undefined }
@@ -77,7 +78,7 @@ export function ProductForm(props: ProductFormProps) {
     }
 
     const normalizedOptions = options
-      .filter((option) => option.name.trim())
+      .filter((option) => option.name.trim() || option.color.trim())
       .map((option) => ({
         name: option.name.trim(),
         dimensions: option.dimensions.trim() || null,
@@ -430,14 +431,31 @@ export function ProductForm(props: ProductFormProps) {
             active={active}
             compact
             options={props.mode === 'edit'
-              ? (props.productOptions ?? []).map((option) => ({ id: option.id, name: option.name, priceModifier: option.price_modifier }))
-              : options.filter((option) => option.name.trim()).map((option) => ({ id: option.id, name: option.name, priceModifier: Number(option.priceModifier) || 0 }))}
+              ? (props.productOptions ?? []).map((option) => ({ id: option.id, name: option.name, color: option.color, priceModifier: option.price_modifier }))
+              : options.filter((option) => option.name.trim() || option.color.trim()).map((option) => ({ id: option.id, name: option.name, color: option.color || null, priceModifier: Number(option.priceModifier) || 0 }))}
           />
           <div className="rounded-2xl border border-pink-100 bg-pink-50/70 p-4 text-xs leading-5 text-slate-600 dark:border-pink-900/40 dark:bg-pink-500/10 dark:text-slate-300">
             O preview acompanha nome, preço, capa, categoria e variações em tempo real. Salve para publicar as alterações na loja.
           </div>
         </aside>
       </div>
+
+      {props.mode === 'edit' && (
+        <section className="rounded-[26px] border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">02 · Variações</p>
+          <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Tamanhos, cores e adicionais</h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            O nome é opcional quando uma cor for escolhida. Nesse caso, o cliente verá somente a bolinha da cor.
+          </p>
+          <div className="mt-5">
+            <OptionsManager
+              productId={props.product.id}
+              initialOptions={props.productOptions ?? []}
+              basePrice={Number(salePrice) || Number(basePrice) || 0}
+            />
+          </div>
+        </section>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">

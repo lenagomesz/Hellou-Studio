@@ -31,7 +31,6 @@ export async function PATCH(
   const update: Record<string, unknown> = {};
 
   if (input.name !== undefined) {
-    if (!input.name.trim()) return badRequest('Nome não pode ser vazio');
     update.name = input.name.trim();
   }
   if (input.price_modifier !== undefined) {
@@ -65,6 +64,19 @@ export async function PATCH(
   }
 
   const admin = getSupabaseAdmin();
+  if (input.name !== undefined || input.color !== undefined) {
+    const { data: current } = await admin
+      .from('product_options')
+      .select('name, color')
+      .eq('id', id)
+      .maybeSingle();
+    if (!current) return notFound('Variação não encontrada');
+
+    const nextName = input.name !== undefined ? input.name.trim() : current.name.trim();
+    const nextColor = input.color !== undefined ? input.color?.trim() ?? '' : current.color?.trim() ?? '';
+    if (!nextName && !nextColor) return badRequest('Informe um nome ou uma cor');
+  }
+
   const { data, error } = await admin
     .from('product_options')
     .update(update)

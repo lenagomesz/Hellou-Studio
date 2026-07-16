@@ -4,7 +4,6 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { ProductTypeTabs } from '@/components/admin/ProductTypeTabs';
 import { STLProductForm } from '@/components/admin/STLProductForm';
-import { OptionsManager } from '@/components/admin/OptionsManager';
 import type { Product, ProductOption } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -69,20 +68,6 @@ export default async function EditProductPage(
 
       <ProductTypeTabs active="physical" />
       <ProductForm mode="edit" product={product} productOptions={options} />
-
-      <div className="rounded-[26px] bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 sm:p-8">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tamanhos e variações</h2>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          Adicione tamanhos (P, M, G), cores ou outras variações com modificadores de preço e controle de estoque.
-        </p>
-        <div className="mt-4">
-          <OptionsManager
-            productId={product.id}
-            initialOptions={options}
-            basePrice={product.sale_price ?? product.base_price}
-          />
-        </div>
-      </div>
     </div>
   );
 }

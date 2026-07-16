@@ -123,11 +123,11 @@ export async function POST(request: Request) {
 
   if (error || !data) return serverError('Erro ao criar produto');
 
-  const validOptions = (options ?? []).filter((option) => option.name?.trim());
+  const validOptions = (options ?? []).filter((option) => option.name?.trim() || option.color?.trim());
   if (validOptions.length > 0) {
     const { error: optionsError } = await admin.from('product_options').insert(validOptions.map((option) => ({
       product_id: data.id,
-      name: option.name.trim(),
+      name: option.name?.trim() || '',
       dimensions: option.dimensions?.trim() || null,
       color: option.color?.trim() || null,
       price_modifier: Number(option.price_modifier ?? 0),
