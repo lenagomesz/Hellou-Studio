@@ -3,12 +3,13 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import type { Product } from '@/types/database';
+import type { Product, ProductOption } from '@/types/database';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
+import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
 
 type ProductFormProps =
   | { mode: 'create'; product?: undefined }
-  | { mode: 'edit'; product: Product };
+  | { mode: 'edit'; product: Product; productOptions?: ProductOption[] };
 
 type DraftOption = {
   id: string;
@@ -378,6 +379,20 @@ export function ProductForm(props: ProductFormProps) {
           <span className="text-sm text-gray-700 dark:text-gray-300">Produto ativo (visível na loja)</span>
         </label>
       </div>
+
+      <ProductLivePreview
+        name={name}
+        description={description}
+        category={category}
+        basePrice={Number(basePrice) || 0}
+        salePrice={salePrice ? Number(salePrice) : null}
+        images={images}
+        type="physical"
+        active={active}
+        options={props.mode === 'edit'
+          ? (props.productOptions ?? []).map((option) => ({ id: option.id, name: option.name, priceModifier: option.price_modifier }))
+          : options.filter((option) => option.name.trim()).map((option) => ({ id: option.id, name: option.name, priceModifier: Number(option.priceModifier) || 0 }))}
+      />
 
       {error && (
         <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">

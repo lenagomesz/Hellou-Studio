@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, FileUp, ImagePlus, Loader2, Upload, X } from 'lucide-react';
 import type { Product } from '@/types/database';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
+import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
 
 const MAX_STL_SIZE = 100 * 1024 * 1024;
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
@@ -196,6 +197,16 @@ export function STLProductForm({ mode, product }: Props) {
         </div>
         <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" /> Produto ativo e visível na loja</label>
       </section>
+
+      <ProductLivePreview
+        name={name}
+        description={description}
+        category={category}
+        basePrice={Number(price) || 0}
+        images={allImages.map((image) => image.url)}
+        type="digital"
+        active={active}
+      />
 
       <div className="flex flex-wrap gap-3">
         <button type="submit" disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-500 px-6 py-3 font-semibold text-white shadow-lg disabled:opacity-50">{loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}{loading ? 'Salvando...' : mode === 'edit' ? 'Salvar alterações' : 'Criar produto STL'}</button>

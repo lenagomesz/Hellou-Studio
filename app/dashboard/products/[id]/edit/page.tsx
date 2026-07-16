@@ -67,7 +67,7 @@ export default async function EditProductPage(
       </header>
 
       <ProductTypeTabs active="physical" />
-      <ProductForm mode="edit" product={product} />
+      <ProductForm mode="edit" product={product} productOptions={options} />
 
       <div className="rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tamanhos e variações</h2>
