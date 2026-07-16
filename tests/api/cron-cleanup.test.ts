@@ -6,7 +6,12 @@ const mockEq = vi.fn();
 const mockLt = vi.fn();
 const mockNot = vi.fn();
 const mockIn = vi.fn();
+const mockRequireAdmin = vi.fn();
 let POST: typeof import('@/app/api/cron/cleanup-encomendas/route').POST;
+
+vi.mock('@/lib/api', () => ({
+  requireAdmin: mockRequireAdmin,
+}));
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseAdmin: () => ({
@@ -43,6 +48,12 @@ describe('Cron Cleanup Encomendas', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRequireAdmin.mockResolvedValue({
+      response: new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    });
   });
 
   it('should reject requests without valid CRON_SECRET', async () => {
@@ -71,5 +82,21 @@ describe('Cron Cleanup Encomendas', () => {
     const response = await POST(request);
     const body = await response.json();
     expect(body.deleted).toBe(0);
+  });
+
+  it('allows an authenticated administrator to run it manually', async () => {
+    mockRequireAdmin.mockResolvedValue({ response: null });
+    mockNot.mockResolvedValue({ data: [] });
+    process.env.CRON_SECRET = 'test-secret';
+
+    const request = new Request('http://localhost/api/cron/cleanup-encomendas', {
+      method: 'POST',
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(mockRequireAdmin).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({ deleted: 0 });
   });
 });

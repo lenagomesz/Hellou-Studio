@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { captureOperationalError, finishCronRun, startCronRun } from '@/lib/observability';
+import { requireAdmin } from '@/lib/api';
 
 const DAYS_AFTER_DELIVERY = 60;
 
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const isCron = Boolean(process.env.CRON_SECRET)
+    && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  if (!isCron) {
+    const auth = await requireAdmin();
+    if (auth.response) return auth.response;
   }
 
   const cronRun = await startCronRun('cleanup-encomendas');

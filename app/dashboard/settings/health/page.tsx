@@ -55,11 +55,19 @@ const CRON_DETAILS: Record<string, { label: string; description: string; singula
   },
 };
 const CRON_STATUS_LABELS: Record<string, string> = { success: 'Concluída', failed: 'Falhou', running: 'Em execução' };
+const CRON_ENDPOINTS: Record<string, string> = {
+  'recover-abandoned-carts': '/api/cron/recover-abandoned-carts',
+  'admin-reminders': '/api/cron/admin-reminders',
+  'cancel-expired-pix': '/api/cron/cancel-expired-pix',
+  'cleanup-encomendas': '/api/cron/cleanup-encomendas',
+};
 
 export default function ServiceHealthPage() {
   const [health, setHealth] = useState<Health | null>(null);
   const [errors, setErrors] = useState<OperationalError[]>([]);
   const [loading, setLoading] = useState(true);
+  const [runningCron, setRunningCron] = useState<string | null>(null);
+  const [cronFeedback, setCronFeedback] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -82,6 +90,26 @@ export default function ServiceHealthPage() {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, resolved }),
     });
     if (response.ok) await load();
+  }
+
+  async function runCron(cronName: string) {
+    const endpoint = CRON_ENDPOINTS[cronName];
+    if (!endpoint) return;
+    setRunningCron(cronName);
+    setCronFeedback(null);
+    try {
+      const response = await fetch(endpoint, { method: 'POST' });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(payload?.error ?? 'Não foi possível executar a rotina.');
+      }
+      setCronFeedback('Rotina executada com sucesso.');
+      await load();
+    } catch (error) {
+      setCronFeedback(error instanceof Error ? error.message : 'Não foi possível executar a rotina.');
+    } finally {
+      setRunningCron(null);
+    }
   }
 
   const latestCronByName = Array.from(new Map((health?.cronRuns ?? []).map((run) => [run.cron_name, run])).values());
@@ -165,10 +193,31 @@ export default function ServiceHealthPage() {
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 p-5"><h2 className="font-black">Rotinas automáticas</h2><p className="mt-1 text-xs text-slate-500">Tarefas que a loja executa sozinha para manter pedidos, alertas e carrinhos organizados.</p></div>
+            <div className="border-b border-slate-100 p-5">
+              <h2 className="font-black">Rotinas automáticas</h2>
+              <p className="mt-1 text-xs text-slate-500">Tarefas que a loja executa sozinha para manter pedidos, alertas e carrinhos organizados.</p>
+              {cronFeedback && <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">{cronFeedback}</p>}
+            </div>
             <div className="divide-y divide-slate-100">
-              {latestCronByName.length === 0 && <p className="p-8 text-center text-sm text-slate-500">Ainda não há execuções registradas.</p>}
-              {latestCronByName.map((run) => { const details = CRON_DETAILS[run.cron_name] ?? { label: 'Rotina do sistema', description: 'Executa uma tarefa automática de manutenção da loja.', singular: 'ação realizada', plural: 'ações realizadas' }; return <div key={run.id} className="p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-extrabold text-slate-900">{details.label}</p><p className="mt-1 text-xs leading-5 text-slate-500">{details.description}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${run.status === 'success' ? 'bg-emerald-100 text-emerald-700' : run.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{CRON_STATUS_LABELS[run.status] ?? run.status}</span></div><p className="mt-3 text-[11px] font-semibold text-slate-400">Última execução: {new Date(run.started_at).toLocaleString('pt-BR')} · {run.processed_count} {run.processed_count === 1 ? details.singular : details.plural}</p></div>; })}
+              {Object.entries(CRON_DETAILS).map(([cronName, details]) => {
+                const run = latestCronByName.find((item) => item.cron_name === cronName);
+                const isRunning = runningCron === cronName;
+                return (
+                  <div key={cronName} className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div><p className="text-sm font-extrabold text-slate-900">{details.label}</p><p className="mt-1 text-xs leading-5 text-slate-500">{details.description}</p></div>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${run?.status === 'success' ? 'bg-emerald-100 text-emerald-700' : run?.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{run ? (CRON_STATUS_LABELS[run.status] ?? run.status) : 'Nunca executada'}</span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-[11px] font-semibold text-slate-400">{run ? <>Última execução: {new Date(run.started_at).toLocaleString('pt-BR')} · {run.processed_count} {run.processed_count === 1 ? details.singular : details.plural}</> : 'Nenhuma execução registrada.'}</p>
+                      <button type="button" onClick={() => void runCron(cronName)} disabled={runningCron !== null} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-pink-200 hover:bg-pink-50 hover:text-pink-700 disabled:cursor-not-allowed disabled:opacity-50">
+                        <RefreshCw className={`h-3.5 w-3.5 ${isRunning ? 'animate-spin' : ''}`} />
+                        {isRunning ? 'Executando...' : 'Executar agora'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

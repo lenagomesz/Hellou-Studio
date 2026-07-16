@@ -5,13 +5,17 @@ import { sendOrderStatusEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { isMercadoPagoApproved } from '@/lib/payment-status';
 import { captureOperationalError, finishCronRun, startCronRun, structuredLog } from '@/lib/observability';
+import { requireAdmin } from '@/lib/api';
 
 const PIX_EXPIRATION_MINUTES = 30;
 
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  const isCron = Boolean(process.env.CRON_SECRET)
+    && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  if (!isCron) {
+    const auth = await requireAdmin();
+    if (auth.response) return auth.response;
   }
 
   const cronRun = await startCronRun('cancel-expired-pix');
