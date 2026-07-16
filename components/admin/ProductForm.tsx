@@ -21,7 +21,7 @@ type DraftOption = {
 };
 
 function createDraftOption(): DraftOption {
-  return { id: crypto.randomUUID(), name: '', dimensions: '', color: '#ec4899', priceModifier: '0', stock: '0' };
+  return { id: crypto.randomUUID(), name: '', dimensions: '', color: '', priceModifier: '0', stock: '0' };
 }
 
 export function ProductForm(props: ProductFormProps) {
@@ -271,7 +271,33 @@ export function ProductForm(props: ProductFormProps) {
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
                     <label className="lg:col-span-2"><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Nome ou tamanho</span><input value={option.name} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, name: event.target.value } : item))} placeholder="Ex.: P, M, G ou Único" className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
                     <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Dimensões</span><input value={option.dimensions} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, dimensions: event.target.value } : item))} placeholder="Ex.: 12 × 8 cm" className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
-                    <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Cor</span><div className="mt-1 flex rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800"><input type="color" value={option.color} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, color: event.target.value } : item))} className="h-8 w-10 cursor-pointer border-0 bg-transparent" /><input value={option.color} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, color: event.target.value } : item))} className="min-w-0 flex-1 bg-transparent px-1 text-xs uppercase outline-none" /></div></label>
+                    <label>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Cor <span className="font-normal text-gray-400">(opcional)</span></span>
+                      <div className="mt-1 flex items-center rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
+                        <input
+                          type="color"
+                          value={option.color || '#ec4899'}
+                          aria-label="Selecionar cor da variação"
+                          onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, color: event.target.value } : item))}
+                          className={`h-8 w-10 cursor-pointer border-0 bg-transparent ${option.color ? '' : 'opacity-40'}`}
+                        />
+                        <input
+                          value={option.color}
+                          onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, color: event.target.value } : item))}
+                          placeholder="Sem cor"
+                          className="min-w-0 flex-1 bg-transparent px-1 text-xs uppercase outline-none placeholder:normal-case placeholder:text-gray-400"
+                        />
+                        {option.color && (
+                          <button
+                            type="button"
+                            onClick={() => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, color: '' } : item))}
+                            className="rounded-md px-2 py-1 text-[10px] font-semibold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Remover
+                          </button>
+                        )}
+                      </div>
+                    </label>
                     <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Adicional (R$)</span><input type="number" step="0.01" value={option.priceModifier} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, priceModifier: event.target.value } : item))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
                     <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Pronta-entrega</span><input type="number" min="0" step="1" value={option.stock} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, stock: event.target.value } : item))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
                   </div>
