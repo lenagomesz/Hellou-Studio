@@ -119,7 +119,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   }
 
   // --- Admin flow (unchanged) ---
-  const orderPermission = await requirePermission('orders.manage');
+  const orderPermission = await requirePermission('orders.status.manage');
   if (orderPermission.response) return orderPermission.response;
 
   if (status && !VALID_STATUSES.includes(status as OrderStatus)) {

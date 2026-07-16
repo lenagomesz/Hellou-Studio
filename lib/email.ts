@@ -128,6 +128,68 @@ export async function sendWelcomeEmail(email: string, nome: string | null) {
   }
 }
 
+function escapeEmailHtml(value: string) {
+  return value.replace(/[&<>'"]/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;',
+  })[character] ?? character);
+}
+
+export async function sendPartnerWelcomeEmail(email: string, nome: string): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) return false;
+
+  const safeName = escapeEmailHtml(nome);
+  const loginUrl = buildEmailUrl(getBaseUrl(), '/login?callbackUrl=%2Fdashboard');
+
+  try {
+    const res = await sendTrackedEmail(resend, {
+      from: getFrom(),
+      to: email,
+      subject: '💗 Bem-vinda à equipe da Hellou Studio!',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#ffffff;color:#334155;">
+          <div style="border-radius:18px;background:linear-gradient(135deg,#fff1f7,#fff7ed);padding:28px;border:1px solid #fbcfe8;">
+            <p style="margin:0 0 8px;color:#db2777;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;">Hellou Studio</p>
+            <h1 style="margin:0;color:#0f172a;font-size:26px;line-height:1.2;">Bem-vinda à equipe, ${safeName}! ✨</h1>
+            <p style="margin:14px 0 0;line-height:1.65;font-size:15px;">Seu acesso de <strong>sócia operacional</strong> foi criado. Estamos muito felizes em ter você construindo essa história com a gente.</p>
+          </div>
+
+          <div style="margin:26px 0;padding:20px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;">
+            <p style="margin:0 0 10px;font-size:14px;font-weight:800;color:#0f172a;">No painel você poderá:</p>
+            <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;">
+              <li>consultar pedidos sem alterar o status;</li>
+              <li>gerenciar encomendas;</li>
+              <li>cadastrar e editar produtos sem ativar ou inativar;</li>
+              <li>controlar estoque e custos operacionais;</li>
+              <li>consultar clientes e moderar avaliações.</li>
+            </ul>
+          </div>
+
+          <p style="font-size:13px;line-height:1.65;color:#64748b;">Por segurança, alteração do status de pedidos, ativação ou inativação de produtos, financeiro consolidado, análises de receita, campanhas, cupons, configurações, exclusões sensíveis e gestão da equipe ficam restritos à administradora principal.</p>
+
+          <a href="${loginUrl}" style="display:block;margin:26px 0;padding:14px 20px;border-radius:12px;background:linear-gradient(100deg,#ec4899,#f97316);color:#ffffff;text-align:center;text-decoration:none;font-size:14px;font-weight:800;">Acessar o painel administrativo</a>
+
+          <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">Entre com este e-mail e com a senha temporária informada pela administradora principal. A senha não é enviada neste e-mail por segurança.</p>
+        </div>
+      `,
+    }, { emailType: 'partner_welcome', metadata: { accessLevel: 'partner' } });
+
+    if (res.error) {
+      structuredLog('error', 'email.provider_response_error', { emailType: 'partner_welcome' });
+      return false;
+    }
+    structuredLog('info', 'email.send_completed', { emailType: 'partner_welcome', providerEmailId: res.data?.id });
+    return true;
+  } catch (error) {
+    structuredLog('error', 'email.template_exception', { emailType: 'partner_welcome', error });
+    return false;
+  }
+}
+
 export async function sendPasswordResetEmail(email: string, nome: string | null, token: string) {
   const resend = getResend();
   if (!resend) return;

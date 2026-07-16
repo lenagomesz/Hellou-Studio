@@ -33,6 +33,8 @@ export async function POST(req: NextRequest) {
 
   switch (action) {
     case 'update_status': {
+      const statusAuth = await requirePermission('orders.status.manage');
+      if (statusAuth.response) return statusAuth.response;
       if (!params.status || !VALID_STATUSES.includes(params.status as OrderStatus)) {
         return badRequest('Status inválido');
       }

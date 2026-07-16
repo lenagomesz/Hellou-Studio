@@ -6,6 +6,7 @@ import { forceLightEmailHtml } from '@/lib/email-html';
 
 export type TransactionalEmailType =
   | 'welcome'
+  | 'partner_welcome'
   | 'password_reset'
   | 'print_request_status'
   | 'order_confirmation'

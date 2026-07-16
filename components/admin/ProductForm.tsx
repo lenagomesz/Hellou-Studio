@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import type { Product, ProductOption } from '@/types/database';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
 import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
@@ -26,6 +27,8 @@ function createDraftOption(): DraftOption {
 
 export function ProductForm(props: ProductFormProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const canChangeProductStatus = session?.user?.accessLevel !== 'partner';
   const initial = props.mode === 'edit' ? props.product : null;
 
   const [name, setName] = useState(initial?.name ?? '');
@@ -95,7 +98,7 @@ export function ProductForm(props: ProductFormProps) {
       sale_price: salePriceNumber,
       image_url: images[0] || null,
       images: images.length > 0 ? images : null,
-      active,
+      ...(canChangeProductStatus ? { active } : props.mode === 'create' ? { active: true } : {}),
       fulfillment_mode: fulfillmentMode,
       is_customizable: isCustomizable,
       options: props.mode === 'create' ? normalizedOptions : undefined,
@@ -395,7 +398,7 @@ export function ProductForm(props: ProductFormProps) {
           </p>
         </div>
 
-        <label className="flex items-center gap-2">
+        {canChangeProductStatus && <label className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={active}
@@ -403,7 +406,7 @@ export function ProductForm(props: ProductFormProps) {
             className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
           />
           <span className="text-sm text-gray-700 dark:text-gray-300">Produto ativo (visível na loja)</span>
-        </label>
+        </label>}
       </div>
 
       <ProductLivePreview

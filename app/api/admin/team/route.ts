@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 import { badRequest, requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { sendPartnerWelcomeEmail } from '@/lib/email';
 
 export async function GET() {
   const auth = await requirePermission('team.manage');
@@ -44,7 +45,8 @@ export async function POST(request: Request) {
   }).select('id, name, email, admin_access_level, admin_active, last_login_at, created_at').single();
 
   if (error) return serverError(`Erro ao criar acesso: ${error.message}`);
-  return NextResponse.json({ member: data }, { status: 201 });
+  const welcomeEmailSent = await sendPartnerWelcomeEmail(email, name);
+  return NextResponse.json({ member: data, welcome_email_sent: welcomeEmailSent }, { status: 201 });
 }
 
 export async function PATCH(request: Request) {

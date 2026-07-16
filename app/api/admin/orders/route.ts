@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requirePermission('orders.manage');
+  const auth = await requirePermission('orders.status.manage');
   if (auth.response) return auth.response;
 
   const body = await request.json();

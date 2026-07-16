@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { isCategory, requireAdmin } from '@/lib/api';
+import { isCategory, requirePermission } from '@/lib/api';
 import type { Category, Product } from '@/types/database';
 
 export const maxDuration = 300;
@@ -19,6 +19,7 @@ type ProductFields = {
   price: number;
   category: Category;
   active: boolean;
+  activeProvided: boolean;
   existingImages: string[];
   stlFile: File | null;
   imageFiles: File[];
@@ -37,6 +38,7 @@ function parseFormData(formData: FormData): ProductFields | string {
   const description = String(formData.get('description') ?? '').trim() || null;
   const price = Number(formData.get('price'));
   const category = String(formData.get('category') ?? 'encomenda');
+  const activeProvided = formData.has('active');
   const active = formData.get('active') !== 'false';
   const stlEntry = formData.get('stl');
   const stlFile = stlEntry instanceof File && stlEntry.size > 0 ? stlEntry : null;
@@ -63,7 +65,7 @@ function parseFormData(formData: FormData): ProductFields | string {
     if (image.size > MAX_IMAGE_SIZE) return `A imagem ${image.name} ultrapassa 8 MB`;
   }
 
-  return { name, description, price, category, active, existingImages, stlFile, imageFiles };
+  return { name, description, price, category, active, activeProvided, existingImages, stlFile, imageFiles };
 }
 
 async function ensureImageBucket() {
@@ -129,12 +131,16 @@ function revalidateProduct(productId: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
   try {
     const fields = parseFormData(await request.formData());
     if (typeof fields === 'string') return errorResponse(fields);
+    if (fields.active === false) {
+      const statusAuth = await requirePermission('products.status.manage');
+      if (statusAuth.response) return statusAuth.response;
+    }
     if (!fields.stlFile) return errorResponse('Arquivo STL é obrigatório');
 
     const supabase = getSupabaseAdmin();
@@ -186,7 +192,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
   try {
@@ -200,6 +206,10 @@ export async function PATCH(request: NextRequest) {
     const { data: currentProduct } = await supabase.from('products').select('*').eq('id', productId).maybeSingle();
     if (!currentProduct) return errorResponse('Produto não encontrado', 404);
     if (currentProduct.type !== 'digital') return errorResponse('Este produto não é um arquivo STL');
+    if (fields.activeProvided && fields.active !== currentProduct.active) {
+      const statusAuth = await requirePermission('products.status.manage');
+      if (statusAuth.response) return statusAuth.response;
+    }
     const { data: productCategory } = await supabase.from('product_categories').select('slug').eq('slug', fields.category).maybeSingle();
     if (!productCategory) return errorResponse('Categoria não encontrada');
 
@@ -222,7 +232,7 @@ export async function PATCH(request: NextRequest) {
       description: fields.description,
       category: fields.category,
       base_price: fields.price,
-      active: fields.active,
+      active: fields.activeProvided ? fields.active : currentProduct.active,
       image_url: images[0] ?? null,
       images: images.length > 0 ? images : null,
       ...(newSTLPath ? { file_path: newSTLPath } : {}),

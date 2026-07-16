@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import type { OrderStatus } from '@/types/database';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -104,6 +105,8 @@ type EmailDelivery = {
 };
 
 export default function OrderDetailPage() {
+  const { data: session } = useSession();
+  const canChangeOrderStatus = session?.user?.accessLevel !== 'partner';
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -391,7 +394,7 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Gerenciar pedido */}
-          <div className="rounded-[24px] border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+          {canChangeOrderStatus ? <div className="rounded-[24px] border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
             <div className="mb-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-pink-600">Ação operacional</p>
               <h2 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">Atualizar pedido</h2>
@@ -576,7 +579,7 @@ export default function OrderDetailPage() {
                 {saveMsg.startsWith('Erro') ? '✕' : '✓'} {saveMsg}
               </div>
             )}
-          </div>
+          </div> : <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600"><p className="font-semibold text-slate-800">Pedido em modo somente leitura</p><p className="mt-1 text-xs leading-5">Seu acesso permite acompanhar o pedido, mas somente a administradora principal pode alterar o status.</p></div>}
         </div>
 
         {/* Sidebar */}

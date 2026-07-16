@@ -5,7 +5,7 @@ import {
   badRequest,
   getCurrentUser,
   isCategory,
-  requireAdmin,
+  requirePermission,
   serverError,
 } from '@/lib/api';
 import type { Product } from '@/types/database';
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
   let body: unknown;
@@ -76,6 +76,11 @@ export async function POST(request: Request) {
     is_customizable?: boolean;
     options?: Array<{ name: string; dimensions?: string | null; color?: string | null; price_modifier?: number; stock?: number }>;
   };
+
+  if (active === false) {
+    const statusAuth = await requirePermission('products.status.manage');
+    if (statusAuth.response) return statusAuth.response;
+  }
 
   if (!name || !name.trim()) return badRequest('Nome é obrigatório');
   if (!category || !isCategory(category)) return badRequest('Categoria inválida');

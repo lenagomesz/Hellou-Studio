@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { badRequest, requireAdmin, serverError } from '@/lib/api';
+import { badRequest, requirePermission, serverError } from '@/lib/api';
 
 interface BulkEditPayload {
   product_ids: string[];
@@ -12,7 +12,7 @@ interface BulkEditPayload {
 
 // POST /api/admin/products/bulk-edit - Apply bulk changes to products
 export async function POST(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
   let body: unknown;
@@ -23,6 +23,11 @@ export async function POST(request: Request) {
   }
 
   const { product_ids, changes } = (body ?? {}) as BulkEditPayload;
+
+  if (changes?.active !== undefined) {
+    const statusAuth = await requirePermission('products.status.manage');
+    if (statusAuth.response) return statusAuth.response;
+  }
 
   if (!product_ids?.length) return badRequest('product_ids é obrigatório');
   if (!changes || Object.keys(changes).length === 0) {

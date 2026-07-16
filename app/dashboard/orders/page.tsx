@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import type { OrderStatus } from '@/types/database';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -53,6 +54,8 @@ type OrderRow = {
 };
 
 export default function OrdersListPage() {
+  const { data: session } = useSession();
+  const canChangeOrderStatus = session?.user?.accessLevel !== 'partner';
   const searchParams = useSearchParams();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -245,12 +248,12 @@ export default function OrdersListPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3.5">
-                    <QuickStatusSelect
+                    {canChangeOrderStatus ? <QuickStatusSelect
                       currentStatus={order.status}
                       orderId={order.id}
                       updating={updatingId === order.id}
                       onUpdate={quickUpdateStatus}
-                    />
+                    /> : <span className="text-xs font-medium text-slate-400">Somente leitura</span>}
                   </td>
                   <td className="px-4 py-3.5 text-xs text-gray-500">{formatDate(order.created_at)}</td>
                   <td className="px-4 py-3.5 text-right">

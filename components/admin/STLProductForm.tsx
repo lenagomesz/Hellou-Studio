@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { AlertCircle, FileUp, ImagePlus, Loader2, Upload, X } from 'lucide-react';
 import type { Product } from '@/types/database';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
@@ -24,6 +25,8 @@ function formatFileSize(bytes: number) {
 
 export function STLProductForm({ mode, product }: Props) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const canChangeProductStatus = session?.user?.accessLevel !== 'partner';
   const stlInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const initialImages = useMemo(() => {
@@ -107,7 +110,7 @@ export function STLProductForm({ mode, product }: Props) {
       formData.append('description', description.trim());
       formData.append('price', price);
       formData.append('category', category);
-      formData.append('active', String(active));
+      if (canChangeProductStatus) formData.append('active', String(active));
       formData.append('existingImages', JSON.stringify(existingImages));
       imageFiles.forEach((image) => formData.append('images', image));
       if (product) formData.append('productId', product.id);
@@ -195,7 +198,7 @@ export function STLProductForm({ mode, product }: Props) {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço (R$) *<input type="number" step="0.01" min="0.01" value={price} onChange={(event) => setPrice(event.target.value)} required className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" /></label>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria<ProductCategorySelect value={category} onChange={setCategory} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" /></label>
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" /> Produto ativo e visível na loja</label>
+        {canChangeProductStatus && <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" /> Produto ativo e visível na loja</label>}
       </section>
 
       <ProductLivePreview

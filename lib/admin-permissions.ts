@@ -3,8 +3,10 @@ export type AdminAccessLevel = 'owner' | 'partner';
 export type AdminPermission =
   | 'dashboard.view'
   | 'orders.manage'
+  | 'orders.status.manage'
   | 'requests.manage'
   | 'products.manage'
+  | 'products.status.manage'
   | 'products.delete'
   | 'inventory.manage'
   | 'customers.view'
@@ -48,9 +50,9 @@ export function isRestrictedAdminPath(pathname: string, level: AdminAccessLevel)
     '/dashboard/campaigns',
     '/dashboard/coupons',
     '/dashboard/calculadora',
+    '/dashboard/orders/bulk-actions',
     '/dashboard/settings',
     '/dashboard/users/access',
     '/dashboard/users/activity',
   ].some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
-

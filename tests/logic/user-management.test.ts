@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { hasAdminPermission } from '@/lib/admin-permissions';
 
 interface BannedEmail {
   email: string;
@@ -15,6 +16,20 @@ function normalizeEmail(email: string): string {
 }
 
 describe('User Management', () => {
+  describe('permissões da sócia operacional', () => {
+    it('permite consultar e gerenciar dados operacionais sem alterar status sensíveis', () => {
+      expect(hasAdminPermission('partner', 'orders.manage')).toBe(true);
+      expect(hasAdminPermission('partner', 'products.manage')).toBe(true);
+      expect(hasAdminPermission('partner', 'orders.status.manage')).toBe(false);
+      expect(hasAdminPermission('partner', 'products.status.manage')).toBe(false);
+    });
+
+    it('mantém as alterações de status disponíveis para a administradora principal', () => {
+      expect(hasAdminPermission('owner', 'orders.status.manage')).toBe(true);
+      expect(hasAdminPermission('owner', 'products.status.manage')).toBe(true);
+    });
+  });
+
   describe('isEmailBanned', () => {
     const bannedList: BannedEmail[] = [
       { email: 'bad@example.com', reason: 'spam', banned_at: '2024-01-01T00:00:00Z' },

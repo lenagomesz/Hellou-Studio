@@ -31,6 +31,7 @@ type ProductRow = {
 export default function ProductsPage() {
   const { data: session } = useSession();
   const canDeleteProducts = session?.user?.accessLevel !== 'partner';
+  const canChangeProductStatus = session?.user?.accessLevel !== 'partner';
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -232,10 +233,10 @@ export default function ProductsPage() {
                   <Link href={`/dashboard/products/${product.id}/edit`} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition dark:text-gray-400 dark:hover:bg-gray-800">
                     <Pencil className="h-3 w-3" /> Editar
                   </Link>
-                  <button onClick={() => toggleActive(product.id, product.active)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition dark:text-gray-400 dark:hover:bg-gray-800">
+                  {canChangeProductStatus && <button onClick={() => toggleActive(product.id, product.active)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition dark:text-gray-400 dark:hover:bg-gray-800">
                     {product.active ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                     {product.active ? 'Desativar' : 'Ativar'}
-                  </button>
+                  </button>}
                   {canDeleteProducts && <button onClick={() => deleteProduct(product.id, product.name)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition ml-auto">
                     <Trash2 className="h-3 w-3" />
                   </button>}

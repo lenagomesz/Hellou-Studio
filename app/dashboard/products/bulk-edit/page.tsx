@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import {
   ArrowLeft,
   CheckSquare,
@@ -38,6 +39,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default function BulkEditPage() {
+  const { data: session } = useSession();
+  const canChangeProductStatus = session?.user?.accessLevel !== 'partner';
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -186,7 +189,7 @@ export default function BulkEditPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Base Price */}
-          <div className="rounded-xl border border-gray-100 p-4 dark:border-gray-800">
+          {canChangeProductStatus && <div className="rounded-xl border border-gray-100 p-4 dark:border-gray-800">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
@@ -208,7 +211,7 @@ export default function BulkEditPage() {
                 className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
               />
             )}
-          </div>
+          </div>}
 
           {/* Active/Inactive */}
           <div className="rounded-xl border border-gray-100 p-4 dark:border-gray-800">

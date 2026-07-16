@@ -5,7 +5,6 @@ import {
   badRequest,
   isCategory,
   notFound,
-  requireAdmin,
   requirePermission,
   serverError,
 } from '@/lib/api';
@@ -37,7 +36,7 @@ export async function PATCH(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireAdmin();
+    const auth = await requirePermission('products.manage');
     if (auth.response) return auth.response;
 
     const { id } = await ctx.params;
@@ -64,6 +63,11 @@ export async function PATCH(
     };
 
     const update: Record<string, unknown> = {};
+
+    if (input.active !== undefined) {
+      const statusAuth = await requirePermission('products.status.manage');
+      if (statusAuth.response) return statusAuth.response;
+    }
 
     if (input.name !== undefined) {
       if (!input.name.trim()) return badRequest('Nome não pode ser vazio');

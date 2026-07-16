@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { badRequest, requireAdmin } from '@/lib/api';
+import { badRequest, requirePermission } from '@/lib/api';
 
 interface CSVRow {
   id?: string;
@@ -92,7 +92,7 @@ function validateRow(row: CSVRow, index: number): { valid: boolean; errors: stri
 
 // POST /api/admin/products/import - Import products from CSV
 export async function POST(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
   let body: unknown;
@@ -111,6 +111,11 @@ export async function POST(request: Request) {
 
   const importMode = mode || 'upsert';
   const rows = parseCSV(csv_content);
+
+  if (rows.some((row) => row.active !== undefined)) {
+    const statusAuth = await requirePermission('products.status.manage');
+    if (statusAuth.response) return statusAuth.response;
+  }
 
   if (rows.length === 0) {
     return badRequest('CSV vazio ou formato inválido');

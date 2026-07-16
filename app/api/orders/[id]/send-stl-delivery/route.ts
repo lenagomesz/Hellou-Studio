@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdmin, notFound } from '@/lib/api';
+import { requirePermission, notFound } from '@/lib/api';
 import { sendSTLDeliveryEmail, sendOrderStatusEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 
@@ -15,7 +15,7 @@ interface OrderItemWithProduct {
 }
 
 export async function POST(req: NextRequest, ctx: RouteCtx) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('orders.status.manage');
   if (auth.response) return auth.response;
 
   const { id } = await ctx.params;
