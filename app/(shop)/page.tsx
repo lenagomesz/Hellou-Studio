@@ -119,15 +119,21 @@ const getFeaturedProducts = unstable_cache(
 );
 
 async function FeaturedProducts() {
-  const [physicalProducts, digitalProducts] = await Promise.all([
+  const [physicalProducts, digitalProducts, physicalCategories, digitalCategories] = await Promise.all([
     getFeaturedProducts('physical'),
     getFeaturedProducts('digital'),
+    getCatalogCategories('physical'),
+    getCatalogCategories('digital'),
   ]);
 
   if (physicalProducts.length === 0 && digitalProducts.length === 0) return null;
 
   return (
-    <FeaturedProductsClient physicalProducts={physicalProducts} digitalProducts={digitalProducts} />
+    <FeaturedProductsClient
+      physicalProducts={physicalProducts}
+      digitalProducts={digitalProducts}
+      categories={[...physicalCategories, ...digitalCategories].filter((category, index, all) => all.findIndex((item) => item.slug === category.slug) === index)}
+    />
   );
 }
 

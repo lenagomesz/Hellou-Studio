@@ -2,16 +2,18 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import type { Product } from '@/types/database';
+import type { Product, ProductCategory } from '@/types/database';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 export function FeaturedProductsClient({
   physicalProducts,
   digitalProducts,
+  categories,
 }: {
   physicalProducts: Product[];
   digitalProducts: Product[];
+  categories: ProductCategory[];
 }) {
   const [selectedTab, setSelectedTab] = useState<'physical' | 'digital'>('physical');
 
@@ -71,7 +73,7 @@ export function FeaturedProductsClient({
           {featured.map((product, i) => (
             <ScrollReveal key={product.id} delay={i * 100} direction={i % 2 === 0 ? 'up' : 'scale'}>
               <div className="hover-lift transition-all duration-500">
-                <ProductCard product={product} />
+                <ProductCard product={product} category={categories.find((category) => category.slug === product.category)} />
               </div>
             </ScrollReveal>
           ))}
