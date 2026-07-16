@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   if (auth.response) return auth.response;
 
   const orderId = req.nextUrl.searchParams.get('orderId');
-  if (!orderId) return badRequest('orderId obrigatorio');
+  if (!orderId) return badRequest('orderId obrigatório');
 
   const admin = getSupabaseAdmin();
   const { data, error } = await admin

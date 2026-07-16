@@ -137,6 +137,8 @@ export async function POST(request: NextRequest) {
     if (!fields.stlFile) return errorResponse('Arquivo STL é obrigatório');
 
     const supabase = getSupabaseAdmin();
+    const { data: productCategory } = await supabase.from('product_categories').select('slug').eq('slug', fields.category).eq('active', true).maybeSingle();
+    if (!productCategory) return errorResponse('Categoria não encontrada ou inativa');
     const { data: product, error: productError } = await supabase.from('products').insert({
       name: fields.name,
       description: fields.description,
@@ -197,6 +199,8 @@ export async function PATCH(request: NextRequest) {
     const { data: currentProduct } = await supabase.from('products').select('*').eq('id', productId).maybeSingle();
     if (!currentProduct) return errorResponse('Produto não encontrado', 404);
     if (currentProduct.type !== 'digital') return errorResponse('Este produto não é um arquivo STL');
+    const { data: productCategory } = await supabase.from('product_categories').select('slug').eq('slug', fields.category).maybeSingle();
+    if (!productCategory) return errorResponse('Categoria não encontrada');
 
     const uploadedImages = await uploadImages(productId, fields.imageFiles);
     if (uploadedImages.error) return errorResponse(uploadedImages.error, 500);

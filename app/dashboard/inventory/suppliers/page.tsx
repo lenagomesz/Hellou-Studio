@@ -70,7 +70,7 @@ export default function SuppliersPage() {
         setMessage({ type: 'error', text: data.error || 'Erro ao criar fornecedor.' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Erro de conexao.' });
+      setMessage({ type: 'error', text: 'Erro de conexão.' });
     } finally {
       setSaving(false);
     }

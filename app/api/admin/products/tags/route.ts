@@ -27,12 +27,12 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return badRequest('JSON invalido');
+    return badRequest('JSON inválido');
   }
 
   const { name, color } = (body ?? {}) as { name?: string; color?: string };
 
-  if (!name || !name.trim()) return badRequest('Nome da tag e obrigatorio');
+  if (!name || !name.trim()) return badRequest('Nome da tag é obrigatório');
 
   const admin = getSupabaseAdmin();
   const { data, error } = await admin
@@ -56,7 +56,7 @@ export async function DELETE(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  if (!id) return badRequest('ID da tag e obrigatorio');
+  if (!id) return badRequest('ID da tag é obrigatório');
 
   const admin = getSupabaseAdmin();
   const { error } = await admin.from('product_tags').delete().eq('id', id);
@@ -75,7 +75,7 @@ export async function PATCH(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return badRequest('JSON invalido');
+    return badRequest('JSON inválido');
   }
 
   const { action, product_ids, tag_ids } = (body ?? {}) as {
@@ -87,8 +87,8 @@ export async function PATCH(request: Request) {
   if (!action || !['assign', 'remove'].includes(action)) {
     return badRequest('Action deve ser "assign" ou "remove"');
   }
-  if (!product_ids?.length) return badRequest('product_ids e obrigatorio');
-  if (!tag_ids?.length) return badRequest('tag_ids e obrigatorio');
+  if (!product_ids?.length) return badRequest('product_ids é obrigatório');
+  if (!tag_ids?.length) return badRequest('tag_ids é obrigatório');
 
   const admin = getSupabaseAdmin();
 

@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return badRequest('JSON invalido');
+    return badRequest('JSON inválido');
   }
 
   const { name, filters } = (body ?? {}) as {
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     filters?: Record<string, unknown>;
   };
 
-  if (!name?.trim()) return badRequest('Nome do filtro e obrigatorio');
+  if (!name?.trim()) return badRequest('Nome do filtro é obrigatório');
   if (!filters) return badRequest('Filtros sao obrigatorios');
 
   const admin = getSupabaseAdmin();
@@ -62,7 +62,7 @@ export async function DELETE(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  if (!id) return badRequest('ID do filtro e obrigatorio');
+  if (!id) return badRequest('ID do filtro é obrigatório');
 
   const admin = getSupabaseAdmin();
   const { error } = await admin

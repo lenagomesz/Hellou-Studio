@@ -94,11 +94,11 @@ export default function FinanceiroPage() {
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Este mes</p>
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Este mês</p>
             <GrowthBadge value={data.growth.revenue} />
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{formatPrice(data.thisMonthRevenue)}</p>
-          <p className="mt-2 text-xs text-gray-400">vs mes anterior</p>
+          <p className="mt-2 text-xs text-gray-400">vs. mês anterior</p>
         </div>
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -135,7 +135,7 @@ export default function FinanceiroPage() {
                 <td className="px-6 py-4 text-right"><GrowthBadge value={data.growth.revenue} /></td>
               </tr>
               <tr>
-                <td className="px-6 py-4 text-gray-800 dark:text-gray-200">Pedidos no mes</td>
+                <td className="px-6 py-4 text-gray-800 dark:text-gray-200">Pedidos no mês</td>
                 <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">{data.totalOrders}</td>
                 <td className="px-6 py-4 text-right"><GrowthBadge value={data.growth.orders} /></td>
               </tr>

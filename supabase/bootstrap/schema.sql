@@ -38,12 +38,32 @@ create table if not exists public.users (
   updated_at    timestamptz not null default now()
 );
 
+-- product categories
+create table if not exists public.product_categories (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  slug        text not null unique check (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+  active      boolean not null default true,
+  sort_order  integer not null default 0,
+  is_system   boolean not null default false,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+insert into public.product_categories (name, slug, sort_order, is_system)
+values
+  ('Chaveiros', 'chaveiros', 10, true),
+  ('Escritório', 'escritorio', 20, true),
+  ('Criaturas', 'criaturas', 30, true),
+  ('Encomenda', 'encomenda', 40, true)
+on conflict (slug) do nothing;
+
 -- products
 create table if not exists public.products (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   description text,
-  category    product_category not null,
+  category    text not null references public.product_categories(slug) on update cascade on delete restrict,
   base_price  numeric(10,2) not null check (base_price >= 0),
   image_url   text,
   active      boolean not null default true,

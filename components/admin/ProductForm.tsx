@@ -4,13 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Product } from '@/types/database';
-import { VALID_CATEGORIES } from '@/lib/api';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  chaveiros: 'Chaveiros',
-  escritorio: 'Escritório',
-  criaturas: 'Criaturas',
-};
+import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
 
 type ProductFormProps =
   | { mode: 'create'; product?: undefined }
@@ -184,18 +178,13 @@ export function ProductForm(props: ProductFormProps) {
             <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Categoria
             </label>
-            <select
+            <ProductCategorySelect
               id="category"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={setCategory}
+              exclude={['encomenda']}
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              {VALID_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {CATEGORY_LABELS[cat]}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div>
@@ -264,7 +253,7 @@ export function ProductForm(props: ProductFormProps) {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">02 · Variações</p>
                 <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">Tamanhos, cores e estoque inicial</h2>
-                <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Cada linha pode representar uma combinação, como “M · Rosa”. Para produtos sob demanda, use estoque zero.</p>
+                <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Cada linha pode representar uma combinação, como “M · Rosa”. No campo adicional, use 5 para cobrar R$ 5,00 a mais nessa variação.</p>
               </div>
               <button type="button" onClick={() => setOptions((current) => [...current, createDraftOption()])} className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-pink-600 shadow-sm ring-1 ring-pink-200 transition hover:bg-pink-50 dark:bg-gray-900 dark:ring-pink-900">
                 + Adicionar variação

@@ -126,7 +126,7 @@ export function AdvancedAnalyticsDashboard() {
       {/* Mini Reports with Sparklines */}
       <section>
         <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">
-          Resumo Rapido
+          Resumo rápido
         </h2>
         <MiniReports data={miniReportsData} />
       </section>
@@ -140,7 +140,7 @@ export function AdvancedAnalyticsDashboard() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Comparativo de Periodos
+            Comparativo de períodos
           </h2>
           <ExportDashboard />
         </div>

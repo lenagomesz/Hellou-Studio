@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     refundAmount?: number;
   };
 
-  if (!action) return badRequest('Acao obrigatoria');
+  if (!action) return badRequest('Ação obrigatória');
   if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
     return badRequest('Selecione pelo menos um pedido');
   }
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   switch (action) {
     case 'update_status': {
       if (!params.status || !VALID_STATUSES.includes(params.status as OrderStatus)) {
-        return badRequest('Status invalido');
+        return badRequest('Status inválido');
       }
       const results = await bulkUpdateStatus({
         orderIds,
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     case 'add_note': {
       if (!params.note?.trim()) {
-        return badRequest('Conteudo da nota obrigatorio');
+        return badRequest('Conteúdo da nota obrigatório');
       }
       const results = await bulkAddNote({
         orderIds,
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       if (financeAuth.response) return financeAuth.response;
 
       if (!params.refundReason?.trim()) {
-        return badRequest('Motivo do reembolso obrigatorio');
+        return badRequest('Motivo do reembolso obrigatório');
       }
 
       const results = [];
@@ -146,6 +146,6 @@ export async function POST(req: NextRequest) {
     }
 
     default:
-      return badRequest(`Acao desconhecida: ${action}`);
+      return badRequest(`Ação desconhecida: ${action}`);
   }
 }

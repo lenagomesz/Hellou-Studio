@@ -30,7 +30,7 @@ interface CustomizableKPIsProps {
 type KPIKey = keyof KPIData;
 
 const KPI_DEFINITIONS: Record<KPIKey, { label: string; icon: typeof DollarSign; format: string }> = {
-  revenue: { label: 'Receita do Mes', icon: DollarSign, format: 'currency' },
+  revenue: { label: 'Receita do mês', icon: DollarSign, format: 'currency' },
   orders: { label: 'Pedidos', icon: ShoppingCart, format: 'number' },
   newUsers: { label: 'Novos Usuários', icon: Users, format: 'number' },
   avgTicket: { label: 'Ticket Medio', icon: BarChart3, format: 'currency' },

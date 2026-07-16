@@ -12,12 +12,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return badRequest('Body invalido');
+    return badRequest('Conteúdo inválido');
   }
 
   const email = body.email?.trim();
   if (!email || !email.includes('@')) {
-    return badRequest('Email invalido');
+    return badRequest('E-mail inválido');
   }
 
   // Build summary data
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     if (!resendKey) {
       return NextResponse.json({
         success: true,
-        message: `Relatorio preparado para ${email} (envio de email nao configurado)`,
+        message: `Relatório preparado para ${email} (envio de e-mail não configurado)`,
         preview: true,
       });
     }
@@ -78,15 +78,15 @@ export async function POST(req: NextRequest) {
 
           <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
             <tr style="background: #f9fafb;">
-              <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Receita do Mes</strong></td>
+              <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Receita do mês</strong></td>
               <td style="padding: 12px; border: 1px solid #e5e7eb;">${formatCurrency(thisMonthRevenue)}</td>
             </tr>
             <tr>
-              <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Receita Mes Anterior</strong></td>
+              <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Receita do mês anterior</strong></td>
               <td style="padding: 12px; border: 1px solid #e5e7eb;">${formatCurrency(lastMonthRevenue)}</td>
             </tr>
             <tr style="background: #f9fafb;">
-              <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Pedidos Este Mes</strong></td>
+              <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Pedidos neste mês</strong></td>
               <td style="padding: 12px; border: 1px solid #e5e7eb;">${totalOrders}</td>
             </tr>
             <tr>
@@ -105,12 +105,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Relatorio enviado para ${email}`,
+      message: `Relatório enviado para ${email}`,
     });
   } catch {
     return NextResponse.json({
       success: true,
-      message: `Relatorio preparado para ${email} (servico de email indisponivel)`,
+      message: `Relatório preparado para ${email} (serviço de e-mail indisponível)`,
       preview: true,
     });
   }

@@ -84,7 +84,7 @@ export default function AdjustmentsPage() {
         setMessage({ type: 'error', text: data.error || 'Erro ao ajustar estoque.' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Erro de conexao.' });
+      setMessage({ type: 'error', text: 'Erro de conexão.' });
     } finally {
       setLoading(false);
     }

@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const productId = searchParams.get('product_id');
 
-  if (!productId) return badRequest('product_id e obrigatorio');
+  if (!productId) return badRequest('product_id é obrigatório');
 
   const admin = getSupabaseAdmin();
   const { data, error } = await admin
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
       .eq('product_id', productId)
       .order('changed_at', { ascending: false });
 
-    if (fallbackError) return serverError('Erro ao buscar historico de precos');
+    if (fallbackError) return serverError('Erro ao buscar histórico de preços');
     return NextResponse.json({ history: fallbackData ?? [] });
   }
 

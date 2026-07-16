@@ -35,7 +35,7 @@ export default function DripCampaignsPage() {
       { delay_days: 0, subject: 'Bem-vindo(a)!', body_html: '<h1>Ola {customer_name}!</h1><p>Bem-vindo(a) a helloustudio!</p>' },
       { delay_days: 3, subject: 'Produto em destaque', body_html: '<h1>Ola {customer_name}!</h1><p>Veja nosso produto mais popular...</p>' },
       { delay_days: 7, subject: 'O que dizem nossos clientes', body_html: '<h1>Social proof</h1><p>Veja o que nossos clientes acharam...</p>' },
-      { delay_days: 14, subject: 'Sentimos sua falta!', body_html: '<h1>Volte!</h1><p>Temos um desconto especial para voce...</p>' },
+      { delay_days: 14, subject: 'Sentimos sua falta!', body_html: '<h1>Volte!</h1><p>Temos um desconto especial para você...</p>' },
     ] as DripStep[],
   });
 
@@ -131,7 +131,7 @@ export default function DripCampaignsPage() {
         <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center dark:border-gray-800 dark:bg-gray-900">
           <p className="text-gray-400">Nenhuma drip campaign configurada.</p>
           <button onClick={() => setShowCreate(true)} className="mt-2 text-sm text-pink-500">
-            Criar primeira sequencia
+            Criar primeira sequência
           </button>
         </div>
       ) : (
@@ -220,7 +220,7 @@ export default function DripCampaignsPage() {
                   onChange={e => setForm(p => ({ ...p, break_on_purchase: e.target.checked }))}
                   className="rounded border-gray-300"
                 />
-                Remover usuário da sequencia se fizer uma compra
+                Remover usuário da sequência se fizer uma compra
               </label>
 
               {/* Steps */}

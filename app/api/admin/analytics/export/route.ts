@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   if (error) return serverError('Erro ao buscar pedidos para exportacao');
 
   const rows: string[] = [];
-  rows.push('Data,Pedido,Cliente,Email,Produto,Quantidade,Preco Unitario,Total Pedido,Status');
+  rows.push('Data,Pedido,Cliente,E-mail,Produto,Quantidade,Preço unitário,Total do pedido,Status');
 
   for (const order of data ?? []) {
     const date = format(new Date(order.created_at), 'dd/MM/yyyy');

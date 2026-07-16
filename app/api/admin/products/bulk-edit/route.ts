@@ -19,12 +19,12 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return badRequest('JSON invalido');
+    return badRequest('JSON inválido');
   }
 
   const { product_ids, changes } = (body ?? {}) as BulkEditPayload;
 
-  if (!product_ids?.length) return badRequest('product_ids e obrigatorio');
+  if (!product_ids?.length) return badRequest('product_ids é obrigatório');
   if (!changes || Object.keys(changes).length === 0) {
     return badRequest('Nenhuma alteracao fornecida');
   }

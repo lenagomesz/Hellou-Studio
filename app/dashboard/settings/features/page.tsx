@@ -295,9 +295,9 @@ export default function FeaturesPage() {
             <option value="Orders">Pedidos</option>
             <option value="Users">Usuários</option>
             <option value="Analytics">Analiticos</option>
-            <option value="Automation">Automacao</option>
+            <option value="Automation">Automação</option>
             <option value="Inventory">Estoque</option>
-            <option value="Integrations">Integracoes</option>
+            <option value="Integrations">Integrações</option>
           </select>
           <select
             value={filterStatus}
@@ -520,7 +520,7 @@ function FeatureDetailModal({
           {/* Metadata */}
           <div>
             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-              <Clock className="h-4 w-4" /> Informacoes
+              <Clock className="h-4 w-4" /> Informações
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -528,7 +528,7 @@ function FeatureDetailModal({
                 <span className="font-medium text-gray-700 dark:text-gray-300">{flag.category}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Ultima atualizacao</span>
+                <span className="text-gray-500 dark:text-gray-400">Última atualização</span>
                 <span className="font-medium text-gray-700 dark:text-gray-300">
                   {new Date(flag.updated_at).toLocaleDateString('pt-BR')}
                 </span>

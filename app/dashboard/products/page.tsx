@@ -2,15 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search, Download, Edit3 } from 'lucide-react';
+import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search, Download, Edit3, Tags } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  chaveiros: 'Chaveiros',
-  escritorio: 'Escritório',
-  criaturas: 'Criaturas',
-  encomenda: 'Encomenda',
-};
+import { ProductCategorySelect, useProductCategories } from '@/components/admin/ProductCategorySelect';
 
 const CATEGORY_COLORS: Record<string, string> = {
   chaveiros: 'bg-pink-100 text-pink-700',
@@ -47,6 +41,8 @@ export default function ProductsPage() {
   const [toast, setToast] = useState('');
   const [fetchKey, setFetchKey] = useState(0);
   const [filter, setFilter] = useState<'all' | 'physical' | 'digital'>('all');
+  const productCategories = useProductCategories();
+  const categoryLabels = Object.fromEntries(productCategories.map((item) => [item.slug, item.name]));
 
   const filteredProducts = products.filter(p => {
     if (filter !== 'all' && p.type !== filter) return false;
@@ -123,7 +119,10 @@ export default function ProductsPage() {
             <Download className="h-4 w-4" /> Exportar CSV
           </a>
           <Link href="/dashboard/products/bulk-edit" className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-            <Edit3 className="h-4 w-4" /> Edicao em Massa
+            <Edit3 className="h-4 w-4" /> Edição em massa
+          </Link>
+          <Link href="/dashboard/products/categories" className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+            <Tags className="h-4 w-4" /> Categorias
           </Link>
           <Link href="/dashboard/products/new" className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition">
             <Plus className="h-4 w-4" /> Novo produto
@@ -136,12 +135,7 @@ export default function ProductsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome..." className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
         </div>
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
-          <option value="">Todas categorias</option>
-          <option value="chaveiros">Chaveiros</option>
-          <option value="escritorio">Escritório</option>
-          <option value="criaturas">Criaturas</option>
-        </select>
+        <ProductCategorySelect value={category} onChange={setCategory} allowEmpty emptyLabel="Todas as categorias" className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
           <option value="">Todos</option>
           <option value="active">Ativos</option>
@@ -179,7 +173,7 @@ export default function ProductsPage() {
           onClick={() => setFilter('physical')}
           className={`px-4 py-2 rounded font-medium transition ${filter === 'physical' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
         >
-          Produtos Fisicos
+          Produtos físicos
         </button>
         <button
           onClick={() => setFilter('digital')}
@@ -216,7 +210,7 @@ export default function ProductsPage() {
                     ? 'bg-blue-100 text-blue-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {product.type === 'digital' ? '📥 Digital' : '📦 Fisico'}
+                  {product.type === 'digital' ? '📥 STL digital' : '📦 Físico'}
                 </span>
               </div>
               <div className="absolute top-2 right-2">
@@ -229,7 +223,7 @@ export default function ProductsPage() {
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-white">{product.name}</h3>
                     <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${CATEGORY_COLORS[product.category] ?? 'bg-gray-100 text-gray-600'}`}>
-                      {CATEGORY_LABELS[product.category] ?? product.category}
+                      {categoryLabels[product.category] ?? product.category}
                     </span>
                   </div>
                   <p className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(product.base_price)}</p>

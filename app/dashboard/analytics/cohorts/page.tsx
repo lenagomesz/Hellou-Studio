@@ -31,15 +31,15 @@ export default function CohortsPage() {
     }
 
     if (best3m.month) {
-      result.push(`Coorte de ${formatMonth(best3m.month)} tem ${best3m.retention}% de retencao em 3 meses (melhor)`);
+      result.push(`Coorte de ${formatMonth(best3m.month)} tem ${best3m.retention}% de retenção em 3 meses (melhor)`);
     }
     if (worst3m.month && worst3m.month !== best3m.month) {
-      result.push(`Coorte de ${formatMonth(worst3m.month)} tem ${worst3m.retention}% de retencao em 3 meses (pior)`);
+      result.push(`Coorte de ${formatMonth(worst3m.month)} tem ${worst3m.retention}% de retenção em 3 meses (pior)`);
     }
 
     // Average retention
     const avgRetention1m = cohorts.reduce((s, c) => s + (c.retention[1] ?? 0), 0) / cohorts.length;
-    result.push(`Retencao media no 1o mes: ${Math.round(avgRetention1m)}%`);
+    result.push(`Retenção média no 1º mês: ${Math.round(avgRetention1m)}%`);
 
     return result;
   }, [cohorts]);
@@ -52,10 +52,10 @@ export default function CohortsPage() {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Calendar className="h-6 w-6 text-indigo-500" />
-          Analise de Coortes
+          Análise de coortes
         </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Retencao de clientes agrupados por mes de primeira compra/registro
+          Retenção de clientes agrupados por mês da primeira compra ou cadastro
         </p>
       </header>
 
@@ -76,7 +76,7 @@ export default function CohortsPage() {
         <div className="h-80 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />
       ) : cohorts.length === 0 ? (
         <div className="rounded-2xl bg-white border border-gray-100 p-8 text-center dark:bg-gray-900 dark:border-gray-800">
-          <p className="text-sm text-gray-500">Dados insuficientes para analise de coortes.</p>
+          <p className="text-sm text-gray-500">Dados insuficientes para análise de coortes.</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
@@ -138,7 +138,7 @@ export default function CohortsPage() {
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded bg-gray-200" /> 0%
         </span>
-        <span className="text-gray-400">M1-M12 = Meses apos registro</span>
+        <span className="text-gray-400">M1–M12 = meses após o cadastro</span>
       </div>
     </div>
   );

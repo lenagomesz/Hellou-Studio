@@ -16,7 +16,7 @@ export async function GET() {
     .eq('role', 'user')
     .order('created_at', { ascending: true });
 
-  if (usersError) return serverError('Erro ao buscar usuarios');
+  if (usersError) return serverError('Erro ao buscar usuários');
 
   // Fetch all orders
   const { data: orders, error: ordersError } = await admin

@@ -75,7 +75,7 @@ export async function GET(_req: NextRequest) {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Relatorio Dashboard - Studio Hellou</title>
+  <title>Relatório do painel - Hellou Studio</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; color: #1f2937; }
@@ -111,12 +111,12 @@ export async function GET(_req: NextRequest) {
   <h2>Indicadores Principais</h2>
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">Receita do Mes</div>
+      <div class="kpi-label">Receita do mês</div>
       <div class="kpi-value">${fc(thisMonthRevenue)}</div>
-      <div class="kpi-change ${revenueGrowth >= 0 ? 'positive' : 'negative'}">${revenueGrowth >= 0 ? '↑' : '↓'} ${Math.abs(revenueGrowth)}% vs mes anterior</div>
+      <div class="kpi-change ${revenueGrowth >= 0 ? 'positive' : 'negative'}">${revenueGrowth >= 0 ? '↑' : '↓'} ${Math.abs(revenueGrowth)}% vs. mês anterior</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Pedidos Este Mes</div>
+      <div class="kpi-label">Pedidos neste mês</div>
       <div class="kpi-value">${thisMonthOrders.length}</div>
     </div>
     <div class="kpi-card">
@@ -124,19 +124,19 @@ export async function GET(_req: NextRequest) {
       <div class="kpi-value">${fc(avgTicket)}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Novos Usuarios</div>
+      <div class="kpi-label">Novos usuários</div>
       <div class="kpi-value">${newUsersThisMonth}</div>
     </div>
   </div>
 
   <h2>Resumo</h2>
   <table>
-    <tr><th>Metrica</th><th>Valor</th></tr>
-    <tr><td style="padding:8px;border:1px solid #e5e7eb;">Receita Total (historico)</td><td style="padding:8px;border:1px solid #e5e7eb;">${fc(totalRevenue)}</td></tr>
+    <tr><th>Métrica</th><th>Valor</th></tr>
+    <tr><td style="padding:8px;border:1px solid #e5e7eb;">Receita total (histórico)</td><td style="padding:8px;border:1px solid #e5e7eb;">${fc(totalRevenue)}</td></tr>
     <tr><td style="padding:8px;border:1px solid #e5e7eb;">Total de Pedidos</td><td style="padding:8px;border:1px solid #e5e7eb;">${orders.length}</td></tr>
     <tr><td style="padding:8px;border:1px solid #e5e7eb;">Produtos Ativos</td><td style="padding:8px;border:1px solid #e5e7eb;">${products.length}</td></tr>
-    <tr><td style="padding:8px;border:1px solid #e5e7eb;">Total de Usuarios</td><td style="padding:8px;border:1px solid #e5e7eb;">${users.length}</td></tr>
-    <tr><td style="padding:8px;border:1px solid #e5e7eb;">Receita Mes Anterior</td><td style="padding:8px;border:1px solid #e5e7eb;">${fc(lastMonthRevenue)}</td></tr>
+    <tr><td style="padding:8px;border:1px solid #e5e7eb;">Total de usuários</td><td style="padding:8px;border:1px solid #e5e7eb;">${users.length}</td></tr>
+    <tr><td style="padding:8px;border:1px solid #e5e7eb;">Receita do mês anterior</td><td style="padding:8px;border:1px solid #e5e7eb;">${fc(lastMonthRevenue)}</td></tr>
   </table>
 
   <h2>Receita Diaria (ultimos 30 dias)</h2>
@@ -146,7 +146,7 @@ export async function GET(_req: NextRequest) {
   </table>
 
   <div class="footer">
-    Studio Hellou - Relatorio gerado automaticamente pelo sistema de analytics
+    Hellou Studio — relatório gerado automaticamente pelo sistema de análises
   </div>
 </body>
 </html>`;

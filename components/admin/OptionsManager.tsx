@@ -66,9 +66,11 @@ function formatPrice(value: number) {
 export function OptionsManager({
   productId,
   initialOptions,
+  basePrice,
 }: {
   productId: string;
   initialOptions: ProductOption[];
+  basePrice: number;
 }) {
   const router = useRouter();
   const [options, setOptions] = useState<ProductOption[]>(initialOptions);
@@ -130,7 +132,7 @@ export function OptionsManager({
       return;
     }
     if (Number.isNaN(modifier)) {
-      setError('Modificador de preço inválido');
+      setError('Ajuste de preço inválido');
       return;
     }
     if (!Number.isInteger(stockValue) || stockValue < 0) {
@@ -186,7 +188,7 @@ export function OptionsManager({
     const modifier = Number(bulkPriceModifier);
     const stockValue = Number(bulkStock);
     if (Number.isNaN(modifier)) {
-      setError('Modificador de preço inválido');
+      setError('Ajuste de preço inválido');
       return;
     }
     if (!Number.isInteger(stockValue) || stockValue < 0) {
@@ -261,6 +263,7 @@ export function OptionsManager({
             <OptionRow
               key={option.id}
               option={option}
+              basePrice={basePrice}
               onUpdate={(patch) => handleUpdate(option, patch)}
               onDelete={() => handleDelete(option)}
             />
@@ -336,7 +339,7 @@ export function OptionsManager({
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">Modificador R$ padrão</label>
+              <label className="block text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">Ajuste no preço (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -425,7 +428,7 @@ export function OptionsManager({
             step="0.01"
             value={priceModifier}
             onChange={(e) => setPriceModifier(e.target.value)}
-            placeholder="Modificador R$"
+            placeholder="Ajuste no preço (ex.: 5,00)"
             className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
           <input
@@ -452,6 +455,9 @@ export function OptionsManager({
             className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
         </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Use 5 para acrescentar R$ 5,00. Preço final desta variação: {formatPrice(basePrice + (Number(priceModifier) || 0))}.
+        </p>
         <div>
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Cor (opcional)</p>
           <ColorPicker value={color} onChange={setColor} />
@@ -476,10 +482,12 @@ export function OptionsManager({
 
 function OptionRow({
   option,
+  basePrice,
   onUpdate,
   onDelete,
 }: {
   option: ProductOption;
+  basePrice: number;
   onUpdate: (patch: Partial<ProductOption>) => Promise<void> | void;
   onDelete: () => Promise<void> | void;
 }) {
@@ -532,7 +540,7 @@ function OptionRow({
             step="0.01"
             value={priceModifier}
             onChange={(e) => setPriceModifier(e.target.value)}
-            placeholder="Modificador R$"
+            placeholder="Ajuste no preço (ex.: 5,00)"
             className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
           <input
@@ -559,6 +567,9 @@ function OptionRow({
             className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
         </div>
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          Preço final com esta variação: {formatPrice(basePrice + (Number(priceModifier) || 0))}
+        </p>
         <div className="mt-2">
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Cor</p>
           <ColorPicker value={color} onChange={setColor} />
@@ -609,6 +620,8 @@ function OptionRow({
           </div>
           <p className="text-xs text-gray-600 dark:text-gray-400">
             {option.price_modifier === 0 ? 'sem ajuste' : formatPrice(option.price_modifier)}
+            {' · '}
+            Preço final: {formatPrice(basePrice + option.price_modifier)}
             {' · '}
             Estoque: {option.stock}
             {option.dimensions ? ` · ${option.dimensions}` : ''}

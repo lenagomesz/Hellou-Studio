@@ -74,6 +74,12 @@ export async function PATCH(
     }
     if (input.category !== undefined) {
       if (!isCategory(input.category)) return badRequest('Categoria inválida');
+      const { data: productCategory } = await getSupabaseAdmin()
+        .from('product_categories')
+        .select('slug')
+        .eq('slug', input.category)
+        .maybeSingle();
+      if (!productCategory) return badRequest('Categoria não encontrada');
       update.category = input.category;
     }
     if (input.fulfillment_mode !== undefined) {

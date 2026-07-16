@@ -282,7 +282,7 @@ export default async function DashboardHome() {
             <GrowthBadge value={data.growth.users} />
           </div>
           <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{data.totalUsers}</p>
-          <p className="mt-1 text-xs text-gray-400">+{data.newUsersThisMonth} este mes</p>
+          <p className="mt-1 text-xs text-gray-400">+{data.newUsersThisMonth} este mês</p>
         </Link>
       </div>
 

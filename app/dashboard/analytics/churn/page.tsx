@@ -36,7 +36,7 @@ export default function ChurnDetectionPage() {
 
   function getRecommendation(customer: CustomerMetrics): string {
     if (customer.churnRisk >= 80) {
-      return `Enviar desconto de reativacao em ${customer.topCategory ?? 'produtos favoritos'}`;
+      return `Enviar desconto de reativação em ${customer.topCategory ?? 'produtos favoritos'}`;
     }
     if (customer.churnRisk >= 60) {
       return 'Enviar email de "sentimos sua falta" com novidades';
@@ -50,7 +50,7 @@ export default function ChurnDetectionPage() {
   async function copyEmails(list: CustomerMetrics[]) {
     const emails = list.map(c => c.email).join(', ');
     await navigator.clipboard.writeText(emails);
-    setToast(`${list.length} emails copiados para reativacao`);
+    setToast(`${list.length} e-mails copiados para reativação`);
     setTimeout(() => setToast(''), 3000);
   }
 
@@ -165,11 +165,11 @@ export default function ChurnDetectionPage() {
               <tr className="border-b border-gray-100 dark:border-gray-800">
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cliente</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Risco</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Ultima Compra</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Última compra</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Pedidos</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Total Gasto</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Fatores</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Sugestao</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Sugestão</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-800">

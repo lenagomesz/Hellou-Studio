@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { orderId, sendEmail } = body as { orderId: string; sendEmail?: boolean };
 
-  if (!orderId) return badRequest('orderId obrigatorio');
+  if (!orderId) return badRequest('orderId obrigatório');
 
   const adminId = auth.user.id;
   const adminName = auth.user.name ?? auth.user.email;

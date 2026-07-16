@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return badRequest('JSON invalido');
+    return badRequest('JSON inválido');
   }
 
   const { userId, isVip } = (body ?? {}) as { userId?: string; isVip?: boolean };
@@ -40,7 +40,7 @@ export async function PUT(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return badRequest('JSON invalido');
+    return badRequest('JSON inválido');
   }
 
   const { userIds, isVip } = (body ?? {}) as { userIds?: string[]; isVip?: boolean };

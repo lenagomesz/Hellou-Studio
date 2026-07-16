@@ -75,7 +75,11 @@ export default async function EditProductPage(
           Adicione tamanhos (P, M, G), cores ou outras variações com modificadores de preço e controle de estoque.
         </p>
         <div className="mt-4">
-          <OptionsManager productId={product.id} initialOptions={options} />
+          <OptionsManager
+            productId={product.id}
+            initialOptions={options}
+            basePrice={product.sale_price ?? product.base_price}
+          />
         </div>
       </div>
     </div>

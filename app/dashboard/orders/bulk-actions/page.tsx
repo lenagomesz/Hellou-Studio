@@ -126,7 +126,7 @@ export default function BulkActionsPage() {
         setToast({ message: data.error ?? 'Erro ao executar ação', type: 'error' });
       }
     } catch {
-      setToast({ message: 'Erro de conexao', type: 'error' });
+      setToast({ message: 'Erro de conexão', type: 'error' });
     }
 
     setProcessing(false);
@@ -211,7 +211,7 @@ export default function BulkActionsPage() {
           {processing ? 'Atualizando...' : `Aplicar${selectedCount > 0 ? ` (${selectedCount})` : ''}`}
         </button>
         <span className="ml-auto text-xs text-gray-400">
-          Email enviado automaticamente ao cliente
+          E-mail enviado automaticamente ao cliente
         </span>
       </div>
 

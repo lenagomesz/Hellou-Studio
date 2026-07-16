@@ -18,10 +18,10 @@ interface Template {
 const categoryLabels: Record<string, string> = {
   welcome: 'Boas-vindas',
   abandoned_cart: 'Carrinho abandonado',
-  order_confirmation: 'Confirmacao de pedido',
+  order_confirmation: 'Confirmação de pedido',
   shipping: 'Envio',
-  reactivation: 'Reativacao',
-  promotion: 'Promocao',
+  reactivation: 'Reativação',
+  promotion: 'Promoção',
   newsletter: 'Newsletter',
   birthday: 'Aniversario',
   custom: 'Customizado',
@@ -121,7 +121,7 @@ export default function TemplatesPage() {
                   </div>
                   <h3 className="mt-2 font-semibold text-gray-900 dark:text-white">{t.name}</h3>
                   <p className="mt-1 text-xs text-gray-500">{t.subject}</p>
-                  <p className="mt-2 text-xs text-gray-400">Variaveis: {t.variables.join(', ')}</p>
+                  <p className="mt-2 text-xs text-gray-400">Variáveis: {t.variables.join(', ')}</p>
                   <button
                     onClick={() => setPreviewHtml(t.body_html)}
                     className="mt-3 text-xs font-medium text-pink-500 hover:text-pink-600"

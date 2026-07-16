@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { data: users, error: usersError } = await usersQuery;
-  if (usersError) return serverError('Erro ao buscar usuarios');
+  if (usersError) return serverError('Erro ao buscar usuários');
   if (!users || users.length === 0) {
     return NextResponse.json({ customers: [], stats: getEmptyStats() });
   }

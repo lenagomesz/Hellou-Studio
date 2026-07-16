@@ -218,8 +218,8 @@ export default function RecipientsPage() {
       <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 dark:border-blue-900/30 dark:bg-blue-900/10">
         <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">GDPR Compliance</h3>
         <ul className="mt-2 space-y-1 text-xs text-blue-700 dark:text-blue-400">
-          <li>- Todos os emails incluem link obrigatorio de cancelamento de inscricao</li>
-          <li>- Bounces automaticos: 3+ bounces = email bloqueado automaticamente</li>
+          <li>- Todos os e-mails incluem o link obrigatório de cancelamento de inscrição</li>
+          <li>- Devoluções automáticas: após 3 devoluções, o e-mail é bloqueado automaticamente</li>
           <li>- Consentimento GDPR rastreado por destinatario</li>
           <li>- Exportacao de dados disponível em CSV para auditoria</li>
         </ul>

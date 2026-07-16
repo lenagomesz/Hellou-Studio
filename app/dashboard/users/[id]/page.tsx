@@ -287,20 +287,20 @@ export default function UserDetailPage() {
               <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
                 <p>{analytics.totalOrders} compras realizadas</p>
                 <p>{formatPrice(analytics.totalSpent)} total gasto</p>
-                <p>Ultima compra: {analytics.daysSinceLastPurchase !== null ? `${analytics.daysSinceLastPurchase} dias atras` : 'Nunca'}</p>
+                <p>Última compra: {analytics.daysSinceLastPurchase !== null ? `${analytics.daysSinceLastPurchase} dias atrás` : 'Nunca'}</p>
                 <p>Ticket medio: {formatPrice(analytics.averageTicket)}</p>
               </div>
             </div>
 
             <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
-              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Preferencias & Recomendacao</p>
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Preferências e recomendação</p>
               <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
                 {analytics.topCategory && (
                   <p>Categoria favorita: <span className="font-medium capitalize">{analytics.topCategory}</span> ({analytics.topCategoryCount} itens)</p>
                 )}
                 {analytics.churnRisk >= 70 ? (
                   <p className="text-red-600 dark:text-red-400 font-medium mt-2">
-                    Sugestao: Oferecer desconto em {analytics.topCategory ?? 'produtos'} para reativacao
+                    Sugestão: Oferecer desconto em {analytics.topCategory ?? 'produtos'} para reativação
                   </p>
                 ) : analytics.rfm.segment === 'champion' ? (
                   <p className="text-green-600 dark:text-green-400 font-medium mt-2">
@@ -308,7 +308,7 @@ export default function UserDetailPage() {
                   </p>
                 ) : analytics.rfm.segment === 'potential' ? (
                   <p className="text-purple-600 dark:text-purple-400 font-medium mt-2">
-                    Sugestao: Enviar novidades e ofertas para fidelizar
+                    Sugestão: Enviar novidades e ofertas para fidelizar
                   </p>
                 ) : (
                   <p className="text-blue-600 dark:text-blue-400 font-medium mt-2">

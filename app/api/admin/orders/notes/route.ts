@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   if (auth.response) return auth.response;
 
   const orderId = req.nextUrl.searchParams.get('orderId');
-  if (!orderId) return badRequest('orderId obrigatorio');
+  if (!orderId) return badRequest('orderId obrigatório');
 
   const admin = getSupabaseAdmin();
 
@@ -73,7 +73,7 @@ export async function DELETE(req: NextRequest) {
   if (auth.response) return auth.response;
 
   const noteId = req.nextUrl.searchParams.get('noteId');
-  if (!noteId) return badRequest('noteId obrigatorio');
+  if (!noteId) return badRequest('noteId obrigatório');
 
   const admin = getSupabaseAdmin();
   const { error } = await admin.from('order_notes').delete().eq('id', noteId);

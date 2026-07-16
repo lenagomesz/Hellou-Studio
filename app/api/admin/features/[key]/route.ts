@@ -14,7 +14,7 @@ export async function GET(
   try {
     const flag = await getFeatureFlag(key);
     if (!flag) {
-      return notFound('Feature flag nao encontrada');
+      return notFound('Feature flag não encontrada');
     }
 
     const stats = await getFeatureUsageStats(key);
@@ -41,7 +41,7 @@ export async function PATCH(
     const { enabled } = body;
 
     if (typeof enabled !== 'boolean') {
-      return badRequest('Campo "enabled" (boolean) e obrigatorio');
+      return badRequest('Campo "enabled" (boolean) é obrigatório');
     }
 
     const result = await toggleFeatureFlag(

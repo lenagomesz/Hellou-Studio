@@ -64,18 +64,18 @@ export default function ExportDashboard() {
       });
 
       if (!response.ok) {
-        throw new Error('Falha ao enviar relatorio');
+        throw new Error('Falha ao enviar relatório');
       }
 
       setNotification({
         type: 'success',
-        message: 'Relatorio enviado com sucesso!',
+        message: 'Relatório enviado com sucesso!',
       });
       setEmailModalOpen(false);
     } catch {
       setNotification({
         type: 'error',
-        message: 'Erro ao enviar relatorio. Tente novamente.',
+        message: 'Erro ao enviar relatório. Tente novamente.',
       });
     } finally {
       setSending(false);
@@ -93,7 +93,7 @@ export default function ExportDashboard() {
       >
         <span className="flex items-center gap-2">
           <Download className="h-4 w-4" />
-          Exportar Relatorio
+          Exportar relatório
         </span>
       </button>
 
@@ -126,7 +126,7 @@ export default function ExportDashboard() {
       {emailModalOpen && (
         <div className="absolute right-0 mt-2 w-72 rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-            Enviar relatorio por email
+            Enviar relatório por e-mail
           </p>
           <input
             type="email"

@@ -74,8 +74,8 @@ export function serverError(message = 'Erro interno') {
 }
 
 export const VALID_CATEGORIES = ['chaveiros', 'escritorio', 'criaturas'] as const;
-export type Category = (typeof VALID_CATEGORIES)[number];
+export type Category = string;
 
 export function isCategory(value: unknown): value is Category {
-  return typeof value === 'string' && (VALID_CATEGORIES as readonly string[]).includes(value);
+  return typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 }

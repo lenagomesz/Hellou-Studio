@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     .gte('created_at', start.toISOString())
     .order('created_at', { ascending: true });
 
-  if (error) return serverError('Erro ao buscar dados de usuarios');
+  if (error) return serverError('Erro ao buscar dados de usuários');
 
   const grouped = new Map<string, number>();
 

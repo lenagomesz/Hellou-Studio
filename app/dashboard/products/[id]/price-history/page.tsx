@@ -110,7 +110,7 @@ export default function PriceHistoryPage({ params }: { params: Promise<{ id: str
           <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
             <p className="text-xs font-medium text-gray-500 uppercase">Preço Promocional Atual</p>
             <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-              {product.sale_price ? formatPrice(product.sale_price) : 'Sem promocao'}
+              {product.sale_price ? formatPrice(product.sale_price) : 'Sem promoção'}
             </p>
           </div>
         </div>

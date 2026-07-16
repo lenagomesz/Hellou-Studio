@@ -130,7 +130,7 @@ export default function BulkEditPage() {
         showToast('Erro ao aplicar alterações', 'error');
       }
     } catch {
-      showToast('Erro de conexao', 'error');
+      showToast('Erro de conexão', 'error');
     } finally {
       setApplying(false);
     }
@@ -174,7 +174,7 @@ export default function BulkEditPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edicao em Massa</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edição em massa</h1>
             <p className="text-sm text-gray-500">{selected.size} de {products.length} selecionados</p>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function BulkEditPage() {
               Preview - Confirmar Alterações
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              As seguintes alterações serao aplicadas a {selected.size} produto(s):
+              As seguintes alterações serão aplicadas a {selected.size} produto(s):
             </p>
 
             <div className="mt-4 space-y-2 rounded-xl bg-gray-50 p-4 dark:bg-gray-800">

@@ -1,4 +1,15 @@
-export type Category = 'chaveiros' | 'escritorio' | 'criaturas' | 'encomenda';
+export type Category = string;
+
+export interface ProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+  active: boolean;
+  sort_order: number;
+  is_system: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export type OrderStatus =
   | 'awaiting_payment'
@@ -248,6 +259,30 @@ export interface User {
 export interface Database {
   public: {
     Tables: {
+      product_categories: {
+        Row: ProductCategory;
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          active?: boolean;
+          sort_order?: number;
+          is_system?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          active?: boolean;
+          sort_order?: number;
+          is_system?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       users: {
         Row: User;
         Insert: {

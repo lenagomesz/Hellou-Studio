@@ -89,6 +89,14 @@ export async function POST(request: Request) {
   const fulfillmentMode = ['made_to_order', 'ready_stock', 'hybrid'].includes(fulfillment_mode ?? '') ? fulfillment_mode : 'made_to_order';
 
   const admin = getSupabaseAdmin();
+  const { data: productCategory } = await admin
+    .from('product_categories')
+    .select('slug')
+    .eq('slug', category)
+    .eq('active', true)
+    .maybeSingle();
+  if (!productCategory) return badRequest('Categoria não encontrada ou inativa');
+
   const { data, error } = await admin
     .from('products')
     .insert({

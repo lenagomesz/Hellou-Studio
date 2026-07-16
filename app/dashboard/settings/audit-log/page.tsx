@@ -191,7 +191,7 @@ export default function AuditLogPage() {
             value={filters.to_date}
             onChange={(e) => setFilters((f) => ({ ...f, to_date: e.target.value }))}
             className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
-            placeholder="Ate"
+            placeholder="Até"
           />
         </div>
       </div>

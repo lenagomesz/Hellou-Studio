@@ -149,7 +149,7 @@ export default function SegmentsDashboardPage() {
                   LTV medio: {formatPrice(seg.avgLtv)}
                 </p>
                 <p className="text-xs text-gray-400">
-                  Freq. media: {seg.avgFrequency.toFixed(1)} pedidos
+                  Freq. média: {seg.avgFrequency.toFixed(1)} pedidos
                 </p>
               </div>
             ))}

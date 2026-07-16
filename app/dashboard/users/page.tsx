@@ -22,7 +22,7 @@ function timeAgo(value: string) {
   if (days === 1) return 'Ontem';
   if (days < 30) return `${days}d atras`;
   const months = Math.floor(days / 30);
-  return `${months} mes${months > 1 ? 'es' : ''} atras`;
+  return `${months} ${months > 1 ? 'meses' : 'mês'} atrás`;
 }
 
 export default function UsersPage() {
@@ -53,7 +53,7 @@ export default function UsersPage() {
   }
 
   async function banUser(user: UserRow) {
-    if (!confirm(`Banir ${user.email}? O usuário sera removido e não podera se cadastrar novamente.`)) return;
+    if (!confirm(`Banir ${user.email}? O usuário será removido e não poderá se cadastrar novamente.`)) return;
     const res = await fetch(`/api/admin/users/${user.id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

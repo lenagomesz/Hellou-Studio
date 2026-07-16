@@ -69,7 +69,7 @@ export default function NewCampaignPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Informacoes basicas</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Informações básicas</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Nome da campanha</label>
@@ -79,7 +79,7 @@ export default function NewCampaignPage() {
                 value={form.name}
                 onChange={e => update('name', e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                placeholder="Ex: Promocao Black Friday"
+                placeholder="Ex.: Promoção de Black Friday"
               />
             </div>
             <div className="sm:col-span-2">
@@ -111,7 +111,7 @@ export default function NewCampaignPage() {
 
         {/* Body */}
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Conteudo do email</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Conteúdo do e-mail</h2>
           <div className="space-y-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -123,10 +123,10 @@ export default function NewCampaignPage() {
                 value={form.body_html}
                 onChange={e => update('body_html', e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-4 py-2.5 font-mono text-sm focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                placeholder="<h1>Ola {customer_name}!</h1><p>Conteudo do email aqui...</p>"
+                placeholder="<h1>Olá {customer_name}!</h1><p>Conteúdo do e-mail aqui...</p>"
               />
               <p className="mt-1 text-xs text-gray-400">
-                Variaveis disponiveis: {'{customer_name}'}, {'{order_total}'}, {'{category_preference}'}, {'{unsubscribe_url}'}
+                Variáveis disponíveis: {'{customer_name}'}, {'{order_total}'}, {'{category_preference}'}, {'{unsubscribe_url}'}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -137,7 +137,7 @@ export default function NewCampaignPage() {
                   value={form.cta_text}
                   onChange={e => update('cta_text', e.target.value)}
                   className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                  placeholder="Ver promocao"
+                  placeholder="Ver promoção"
                 />
               </div>
               <div>

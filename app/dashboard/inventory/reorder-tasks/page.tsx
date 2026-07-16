@@ -25,7 +25,7 @@ interface ReorderTaskRow {
 const STATUS_CONFIG: Record<ReorderTaskStatus, { label: string; color: string }> = {
   pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
   ordered: { label: 'Encomendado', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  in_transit: { label: 'Em Transito', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
+  in_transit: { label: 'Em trânsito', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
   received: { label: 'Recebido', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
   canceled: { label: 'Cancelado', color: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300' },
 };
@@ -161,7 +161,7 @@ export default function ReorderTasksPage() {
                           disabled={updating === task.id}
                           className="rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-300"
                         >
-                          Em Transito
+                          Em trânsito
                         </button>
                       )}
                       {(task.status === 'ordered' || task.status === 'in_transit') && (

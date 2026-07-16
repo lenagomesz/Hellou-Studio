@@ -81,7 +81,7 @@ export default function RFMAnalysisPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <TrendingUp className="h-6 w-6 text-pink-500" />
-              Analise RFM
+              Análise RFM
             </h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Recency, Frequency, Monetary - Score de 0 a 5 para cada dimensao
@@ -165,7 +165,7 @@ export default function RFMAnalysisPage() {
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">M</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Score</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Segmento</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Ultima Compra</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Última compra</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Pedidos</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Total Gasto</th>
               </tr>

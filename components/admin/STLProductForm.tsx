@@ -5,13 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, FileUp, ImagePlus, Loader2, Upload, X } from 'lucide-react';
 import type { Product } from '@/types/database';
-
-const CATEGORY_OPTIONS = [
-  { value: 'encomenda', label: 'Encomenda' },
-  { value: 'chaveiros', label: 'Chaveiros' },
-  { value: 'escritorio', label: 'Escritório' },
-  { value: 'criaturas', label: 'Criaturas' },
-] as const;
+import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
 
 const MAX_STL_SIZE = 100 * 1024 * 1024;
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
@@ -198,7 +192,7 @@ export function STLProductForm({ mode, product }: Props) {
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição<textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} className="mt-1 w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" /></label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço (R$) *<input type="number" step="0.01" min="0.01" value={price} onChange={(event) => setPrice(event.target.value)} required className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" /></label>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria<select value={category} onChange={(event) => setCategory(event.target.value as Product['category'])} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">{CATEGORY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria<ProductCategorySelect value={category} onChange={setCategory} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" /></label>
         </div>
         <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" /> Produto ativo e visível na loja</label>
       </section>

@@ -152,8 +152,8 @@ export default function PeriodComparison({
             <XAxis dataKey="date" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => formatPrice(value)} />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="thisMonthRevenue" name="Este Mes" fill="#ec4899" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="lastMonthRevenue" name="Mes Anterior" fill="#9ca3af" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="thisMonthRevenue" name="Este mês" fill="#ec4899" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="lastMonthRevenue" name="Mês anterior" fill="#9ca3af" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

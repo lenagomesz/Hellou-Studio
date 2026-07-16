@@ -87,7 +87,7 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics da campanha</h1>
-          <p className="text-sm text-gray-500">Metricas detalhadas de desempenho</p>
+          <p className="text-sm text-gray-500">Métricas detalhadas de desempenho</p>
         </div>
       </div>
 
@@ -135,12 +135,12 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
       {/* A/B Test Comparison */}
       {analytics.variant_b && (
         <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm dark:border-purple-900/30 dark:bg-gray-900">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Comparacao A/B</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Comparação A/B</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-gray-800">
-                  <th className="pb-3 text-left font-medium text-gray-500">Metrica</th>
+                  <th className="pb-3 text-left font-medium text-gray-500">Métrica</th>
                   <th className="pb-3 text-center font-medium text-gray-500">Variante A</th>
                   <th className="pb-3 text-center font-medium text-gray-500">Variante B</th>
                   <th className="pb-3 text-right font-medium text-gray-500">Diferenca</th>

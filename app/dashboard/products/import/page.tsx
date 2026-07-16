@@ -182,7 +182,7 @@ export default function ImportPage() {
         showToast('Erro na validacao do CSV', 'error');
       }
     } catch {
-      showToast('Erro de conexao', 'error');
+      showToast('Erro de conexão', 'error');
     } finally {
       setImporting(false);
     }

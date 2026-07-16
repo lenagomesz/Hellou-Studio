@@ -72,7 +72,7 @@ export default function AutomationsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Excluir esta automacao?')) return;
+    if (!confirm('Excluir esta automação?')) return;
     await fetch(`/api/email-marketing/automations/${id}`, { method: 'DELETE' });
     fetchAutomations();
   }
@@ -114,7 +114,7 @@ export default function AutomationsPage() {
           onClick={() => setShowCreate(true)}
           className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
-          + Nova automacao
+          + Nova automação
         </button>
       </div>
 
@@ -124,9 +124,9 @@ export default function AutomationsPage() {
         </div>
       ) : automations.length === 0 ? (
         <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-gray-400">Nenhuma automacao configurada.</p>
+          <p className="text-gray-400">Nenhuma automação configurada.</p>
           <button onClick={() => setShowCreate(true)} className="mt-2 text-sm text-pink-500 hover:text-pink-600">
-            Criar primeira automacao
+            Criar primeira automação
           </button>
         </div>
       ) : (
@@ -173,7 +173,7 @@ export default function AutomationsPage() {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900">
-            <h3 className="mb-4 text-lg font-semibold dark:text-white">Nova automacao</h3>
+            <h3 className="mb-4 text-lg font-semibold dark:text-white">Nova automação</h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
@@ -208,7 +208,7 @@ export default function AutomationsPage() {
                     onChange={e => setForm(p => ({ ...p, delay_minutes: parseInt(e.target.value) || 0 }))}
                     className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   />
-                  <p className="mt-1 text-xs text-gray-400">{formatDelay(form.delay_minutes)} apos o trigger</p>
+                  <p className="mt-1 text-xs text-gray-400">{formatDelay(form.delay_minutes)} após o gatilho</p>
                 </div>
               </div>
               <div>
@@ -218,7 +218,7 @@ export default function AutomationsPage() {
                   value={form.subject}
                   onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
                   className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                  placeholder="Assunto do email automatico"
+                  placeholder="Assunto do e-mail automático"
                 />
               </div>
               <div>
@@ -236,7 +236,7 @@ export default function AutomationsPage() {
                   Cancelar
                 </button>
                 <button type="submit" className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-medium text-white">
-                  Criar automacao
+                  Criar automação
                 </button>
               </div>
             </form>

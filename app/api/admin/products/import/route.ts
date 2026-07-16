@@ -64,7 +64,7 @@ function validateRow(row: CSVRow, index: number): { valid: boolean; errors: stri
   const errors: string[] = [];
 
   if (!row.name?.trim()) {
-    errors.push(`Linha ${index + 2}: Nome e obrigatorio`);
+    errors.push(`Linha ${index + 2}: Nome é obrigatório`);
   }
 
   if (row.category && !VALID_CATEGORIES.includes(row.category)) {
@@ -74,16 +74,16 @@ function validateRow(row: CSVRow, index: number): { valid: boolean; errors: stri
   if (row.base_price) {
     const price = parseFloat(row.base_price);
     if (isNaN(price) || price < 0) {
-      errors.push(`Linha ${index + 2}: Preco base invalido "${row.base_price}"`);
+      errors.push(`Linha ${index + 2}: Preço base inválido "${row.base_price}"`);
     }
   } else if (!row.id) {
-    errors.push(`Linha ${index + 2}: Preco base e obrigatorio para novos produtos`);
+    errors.push(`Linha ${index + 2}: Preço base é obrigatório para novos produtos`);
   }
 
   if (row.sale_price && row.sale_price.trim() !== '') {
     const salePrice = parseFloat(row.sale_price);
     if (isNaN(salePrice) || salePrice < 0) {
-      errors.push(`Linha ${index + 2}: Preco promocional invalido "${row.sale_price}"`);
+      errors.push(`Linha ${index + 2}: Preço promocional inválido "${row.sale_price}"`);
     }
   }
 
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return badRequest('JSON invalido');
+    return badRequest('JSON inválido');
   }
 
   const { csv_content, mode } = (body ?? {}) as {
@@ -107,13 +107,13 @@ export async function POST(request: Request) {
     mode?: 'create' | 'update' | 'upsert';
   };
 
-  if (!csv_content) return badRequest('csv_content e obrigatorio');
+  if (!csv_content) return badRequest('csv_content é obrigatório');
 
   const importMode = mode || 'upsert';
   const rows = parseCSV(csv_content);
 
   if (rows.length === 0) {
-    return badRequest('CSV vazio ou formato invalido');
+    return badRequest('CSV vazio ou formato inválido');
   }
 
   // Validate all rows

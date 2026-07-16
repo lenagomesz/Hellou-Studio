@@ -102,7 +102,7 @@ export default function DeadStockPage() {
               <th className="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Dias parado</th>
               <th className="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Custo manter</th>
               <th className="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Receita potencial</th>
-              <th className="px-5 py-3 text-center text-xs font-medium text-gray-400 uppercase">Sugestao</th>
+              <th className="px-5 py-3 text-center text-xs font-medium text-gray-400 uppercase">Sugestão</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
