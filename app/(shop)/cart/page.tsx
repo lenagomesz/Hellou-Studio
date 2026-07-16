@@ -30,6 +30,16 @@ const STEPS = [
   { id: 3, label: 'Pagamento' },
 ] as const;
 
+type PaymentSummarySnapshot = {
+  items: CartItemView[];
+  subtotal: number;
+  shippingCost: number;
+  discountAmount: number;
+  firstPurchaseDiscount: number;
+  total: number;
+  hasOnlyDigitalProducts: boolean;
+};
+
 export default function CartPage() {
   const { items, total, status, updateQuantity, removeItem } = useCart();
   const { data: session } = useSession();
@@ -60,6 +70,7 @@ export default function CartPage() {
   const [userCpf, setUserCpf] = useState<string | undefined>(undefined);
 
   const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [paymentSummary, setPaymentSummary] = useState<PaymentSummarySnapshot | null>(null);
 
   const isLoading = status === 'loading';
   const isSyncing = status === 'syncing';
@@ -198,6 +209,13 @@ export default function CartPage() {
   });
   const firstPurchaseDiscount = checkoutTotals.firstPurchaseDiscount;
   const grandTotal = checkoutTotals.total;
+  const checkoutItems = paymentSummary?.items ?? items;
+  const checkoutSubtotal = paymentSummary?.subtotal ?? total;
+  const checkoutShippingCost = paymentSummary?.shippingCost ?? shippingCost;
+  const checkoutDiscountAmount = paymentSummary?.discountAmount ?? discountAmount;
+  const checkoutFirstPurchaseDiscount = paymentSummary?.firstPurchaseDiscount ?? firstPurchaseDiscount;
+  const checkoutGrandTotal = paymentSummary?.total ?? grandTotal;
+  const checkoutHasOnlyDigitalProducts = paymentSummary?.hasOnlyDigitalProducts ?? hasOnlyDigitalProducts;
 
   const pageTitle = step === 1 ? 'Meu Carrinho' : step === 2 ? 'Entrega' : 'Finalizar Pedido';
   const itemsLabel = items.length === 1 ? 'item selecionado' : 'itens selecionados';
@@ -658,7 +676,7 @@ export default function CartPage() {
           <div className="mb-4 sm:mb-5">
             <button
               type="button"
-              onClick={() => setStep(hasOnlyDigitalProducts ? 1 : 2)}
+              onClick={() => setStep(checkoutHasOnlyDigitalProducts ? 1 : 2)}
               className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
@@ -674,13 +692,13 @@ export default function CartPage() {
               {/* Items */}
               <div className="rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 sm:p-4 md:p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
-                  <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Itens ({items.length})</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Itens ({checkoutItems.length})</h2>
                   <button type="button" onClick={() => setStep(1)} className="text-xs text-pink-600 hover:text-pink-700 transition">
                     Editar
                   </button>
                 </div>
                 <ul className="space-y-2.5">
-                  {items.map((item) => (
+                  {checkoutItems.map((item) => (
                     <li key={item.id} className="flex items-start justify-between gap-2 text-xs">
                       <div className="flex items-start gap-2 min-w-0 flex-1">
                         <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-950/30 dark:to-orange-950/30">
@@ -705,7 +723,7 @@ export default function CartPage() {
               </div>
 
               {/* Shipping — hidden if only digital products */}
-              {!hasOnlyDigitalProducts && (
+              {!checkoutHasOnlyDigitalProducts && (
                 <div className="rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 sm:p-4 md:p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-1.5 sm:mb-2">
                     <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Entrega</h2>
@@ -773,35 +791,35 @@ export default function CartPage() {
                 <dl className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                   <div className="flex justify-between text-gray-600 dark:text-gray-400">
                     <dt>Subtotal</dt>
-                    <dd className="font-medium">{formatPrice(total)}</dd>
+                    <dd className="font-medium">{formatPrice(checkoutSubtotal)}</dd>
                   </div>
                   {isFirstPurchase && (
                     <div className="flex justify-between text-pink-600 dark:text-pink-400">
                       <dt>-10% primeira compra</dt>
-                      <dd className="font-medium">- {formatPrice(firstPurchaseDiscount)}</dd>
+                      <dd className="font-medium">- {formatPrice(checkoutFirstPurchaseDiscount)}</dd>
                     </div>
                   )}
-                  {couponDiscount && discountAmount > 0 && (
+                  {couponDiscount && checkoutDiscountAmount > 0 && (
                     <div className="flex justify-between text-green-700 dark:text-green-400">
                       <dt>Desconto ({couponDiscount.code})</dt>
-                      <dd className="font-medium">-{formatPrice(discountAmount)}</dd>
+                      <dd className="font-medium">-{formatPrice(checkoutDiscountAmount)}</dd>
                     </div>
                   )}
-                  {!hasOnlyDigitalProducts && (
+                  {!checkoutHasOnlyDigitalProducts && (
                     <div className="flex justify-between text-gray-600 dark:text-gray-400">
                       <dt>Frete</dt>
                       <dd className="font-medium">
                         {couponDiscount?.free_shipping
                           ? <span className="text-green-700 dark:text-green-400">Grátis</span>
-                          : selectedShipping
-                            ? formatPrice(selectedShipping.price)
+                          : checkoutShippingCost > 0
+                            ? formatPrice(checkoutShippingCost)
                             : '—'}
                       </dd>
                     </div>
                   )}
                   <div className="flex justify-between border-t border-gray-100 dark:border-gray-800 pt-1.5 sm:pt-2.5">
                     <dt className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">Total</dt>
-                    <dd className="text-base sm:text-lg font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">{formatPrice(grandTotal)}</dd>
+                    <dd className="text-base sm:text-lg font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">{formatPrice(checkoutGrandTotal)}</dd>
                   </div>
                 </dl>
               </div>
@@ -811,13 +829,24 @@ export default function CartPage() {
             <div className="order-2 lg:order-1 lg:col-span-2 max-w-full">
               {session ? (
                 <PaymentForm
-                  grandTotal={grandTotal}
+                  grandTotal={checkoutGrandTotal}
                   shippingMethod={selectedShipping?.id}
                   shippingCep={shippingCep.replace(/\D/g, '')}
                   couponCode={couponDiscount?.code}
                   shippingAddress={paymentShippingAddress}
                   userCpf={userCpf}
-                  onPaymentCompleted={() => setPaymentCompleted(true)}
+                  onPaymentCompleted={() => {
+                    setPaymentSummary({
+                      items: [...items],
+                      subtotal: total,
+                      shippingCost,
+                      discountAmount,
+                      firstPurchaseDiscount,
+                      total: grandTotal,
+                      hasOnlyDigitalProducts,
+                    });
+                    setPaymentCompleted(true);
+                  }}
                 />
               ) : (
                 <div className="text-center space-y-3 py-12">

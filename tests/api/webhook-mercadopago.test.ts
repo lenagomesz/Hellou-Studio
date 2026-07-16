@@ -12,6 +12,7 @@ vi.mock('@/lib/mercadopago', () => ({
 
 vi.mock('@/lib/email', () => ({
   sendOrderConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+  sendOrderStatusEmail: vi.fn().mockResolvedValue(undefined),
   sendInvoiceRequestEmail: vi.fn().mockResolvedValue(undefined),
   sendAdminNewOrderEmail: vi.fn().mockResolvedValue(undefined),
   sendSTLOrderConfirmationEmail: vi.fn().mockResolvedValue(undefined),
@@ -221,6 +222,34 @@ describe('POST /api/webhooks/mercadopago', () => {
       expect(mockRpc).toHaveBeenCalledWith('finalize_checkout_order', expect.objectContaining({
         p_order_status: 'canceled',
         p_consume_inventory: false,
+      }));
+      const { sendOrderStatusEmail } = await import('@/lib/email');
+      expect(sendOrderStatusEmail).toHaveBeenCalledWith(expect.objectContaining({
+        email: 'client@test.com',
+        orderId: 'order-1',
+        newStatus: 'canceled',
+      }));
+    });
+
+    it('envia o e-mail quando o provedor confirma um reembolso', async () => {
+      mockPaymentGet.mockResolvedValue({
+        status: 'refunded',
+        transaction_amount: 54,
+        metadata: {},
+      });
+
+      const res = await POST(makeRequest({
+        type: 'payment',
+        action: 'payment.updated',
+        data: { id: 'pay-refund' },
+      }));
+
+      expect(res.status).toBe(200);
+      const { sendOrderStatusEmail } = await import('@/lib/email');
+      expect(sendOrderStatusEmail).toHaveBeenCalledWith(expect.objectContaining({
+        orderId: 'order-1',
+        newStatus: 'refunded',
+        refundAmount: 54,
       }));
     });
 

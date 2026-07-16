@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import type { CreateEmailOptions, CreateEmailResponse, Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
+import { forceLightEmailHtml } from '@/lib/email-html';
 
 export type TransactionalEmailType =
   | 'welcome'
@@ -66,6 +67,9 @@ export async function sendTrackedEmail(
   payload: CreateEmailOptions,
   context: EmailDeliveryContext,
 ): Promise<CreateEmailResponse> {
+  const lightPayload: CreateEmailOptions = typeof payload.html === 'string'
+    ? { ...payload, html: forceLightEmailHtml(payload.html) }
+    : payload;
   const recipient = getPrimaryRecipient(payload.to);
   const idempotencyKey = `hellou-${context.emailType}-${randomUUID()}`;
   let logId: string | null = null;
@@ -96,7 +100,7 @@ export async function sendTrackedEmail(
 
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      const response = await resend.emails.send(payload, { idempotencyKey });
+      const response = await resend.emails.send(lightPayload, { idempotencyKey });
       lastResponse = response;
       if (!response.error && response.data?.id) {
         await updateDeliveryLog(logId, {

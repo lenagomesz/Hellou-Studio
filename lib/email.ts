@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { sendTrackedEmail } from '@/lib/email-delivery';
 import { structuredLog } from '@/lib/observability';
+import { buildEmailUrl, normalizeEmailBaseUrl } from '@/lib/email-links';
 
 let cached: Resend | null = null;
 let warned = false;
@@ -24,7 +25,7 @@ function getFrom(): string {
 }
 
 function getBaseUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  return normalizeEmailBaseUrl(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
 }
 
 export async function sendWelcomeEmail(email: string, nome: string | null) {
@@ -351,6 +352,17 @@ export async function sendOrderConfirmationEmail(params: {
       to: params.email,
       subject: `${isSTLOrder ? '📁 Arquivo Disponível!' : '🎉 Pedido Confirmado!'} #${params.pedidoId.slice(0, 8).toUpperCase()}`,
       html: `
+        <style type="text/css">
+          .order-confirmation-timeline > div > div:first-child {
+            display: block !important;
+            line-height: 24px !important;
+            text-align: center !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif !important;
+            mso-line-height-rule: exactly;
+          }
+        </style>
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff;">
           <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
             <h1 style="color: #111; margin: 0 0 8px 0; font-size: 24px; font-weight: 700;">
@@ -398,46 +410,46 @@ export async function sendOrderConfirmationEmail(params: {
             <p style="margin: 0 0 16px 0; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">
               ${isSTLOrder ? 'O que acontece agora?' : 'Próximas etapas'}
             </p>
-            <div style="position: relative; padding-left: 32px;">
+            <div class="order-confirmation-timeline" style="position: relative; padding-left: 32px;">
               ${isSTLOrder ? `
                 <div style="margin-bottom: 24px; position: relative;">
-                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #15803d; color: #fff; font-weight: 600; font-size: 12px;">✓</div>
+                  <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #15803d; color: #fff; font-weight: 600; font-size: 12px; font-family: Arial, sans-serif; mso-line-height-rule: exactly;">✓</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Pagamento confirmado</p>
                   <p style="margin: 0; font-size: 13px; color: #888;">Seu pagamento foi processado com sucesso.</p>
                 </div>
                 <div style="margin-bottom: 24px; position: relative;">
-                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">📥</div>
+                  <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px; font-family: &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;, sans-serif; mso-line-height-rule: exactly;">📥</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Download disponível</p>
                   <p style="margin: 0; font-size: 13px; color: #888;">Acesse sua conta para baixar o arquivo STL.</p>
                 </div>
                 <div style="margin-bottom: 24px; position: relative;">
-                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">🖨️</div>
+                  <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px; font-family: &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;, sans-serif; mso-line-height-rule: exactly;">🖨️</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Impressão</p>
                   <p style="margin: 0; font-size: 13px; color: #888;">Imprima em casa ou em um serviço de impressão 3D.</p>
                 </div>
                 <div style="position: relative;">
-                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">✅</div>
+                  <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px; font-family: &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;, sans-serif; mso-line-height-rule: exactly;">✅</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Apoio</p>
                   <p style="margin: 0; font-size: 13px; color: #888;">Precisa de ajuda? Estamos à disposição!</p>
                 </div>
               ` : `
                 <div style="margin-bottom: 24px; position: relative;">
-                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #15803d; color: #fff; font-weight: 600; font-size: 12px;">✓</div>
+                  <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #15803d; color: #fff; font-weight: 600; font-size: 12px; font-family: Arial, sans-serif; mso-line-height-rule: exactly;">✓</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Pagamento confirmado</p>
                   <p style="margin: 0; font-size: 13px; color: #888;">Seu pagamento foi processado com sucesso.</p>
                 </div>
                 <div style="margin-bottom: 24px; position: relative;">
-                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">🖨️</div>
+                  <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px; font-family: &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;, sans-serif; mso-line-height-rule: exactly;">🖨️</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Produção</p>
                   <p style="margin: 0; font-size: 13px; color: #888;">Sua peça será impressa em até 3 dias úteis.</p>
                 </div>
                 <div style="margin-bottom: 24px; position: relative;">
-                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">📦</div>
+                  <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px; font-family: &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;, sans-serif; mso-line-height-rule: exactly;">📦</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Envio</p>
                   <p style="margin: 0; font-size: 13px; color: #888;">Você receberá o código de rastreamento por e-mail.</p>
                 </div>
                 <div style="position: relative;">
-                  <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px;">✅</div>
+                  <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px; font-family: &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;, sans-serif; mso-line-height-rule: exactly;">✅</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Entrega</p>
                   <p style="margin: 0; font-size: 13px; color: #888;">Sua peça chegará com segurança.</p>
                 </div>
@@ -871,8 +883,8 @@ export async function sendSTLOrderConfirmationEmail(params: {
               Valor: ${price}
             </p>
           </div>
-          <a href="${baseUrl}/account/orders" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
-            Acessar Meus Pedidos
+          <a href="${buildEmailUrl(baseUrl, `/account/orders/${params.orderId}`)}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Acessar pedido e baixar
           </a>
           <p style="color: #888; font-size: 13px; margin-top: 24px; line-height: 1.5;">
             O arquivo estará disponível em sua conta helloustudio por tempo ilimitado. Você pode fazer o download quantas vezes precisar.
@@ -950,7 +962,7 @@ export async function sendSTLDeliveryEmail(params: {
   }
 
   const baseUrl = getBaseUrl();
-  const downloadUrl = `${baseUrl}/dashboard/orders/${params.orderId}`;
+  const downloadUrl = buildEmailUrl(baseUrl, `/account/orders/${params.orderId}`);
 
   try {
     const res = await sendTrackedEmail(resend, {

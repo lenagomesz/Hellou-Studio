@@ -1,3 +1,5 @@
+import { buildEmailUrl } from '@/lib/email-links';
+
 export const STLAdminNotificationEmail = ({
   orderId,
   customerName,
@@ -71,7 +73,7 @@ export const STLAdminNotificationEmail = ({
 
       {/* CTA */}
       <a
-        href={`${baseUrl}/dashboard/orders/${orderId}`}
+        href={buildEmailUrl(baseUrl, `/dashboard/orders/${orderId}`)}
         style={{
           display: 'inline-block',
           margin: '24px 0 16px',

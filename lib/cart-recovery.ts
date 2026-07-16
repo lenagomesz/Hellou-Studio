@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendTrackedEmail } from '@/lib/email-delivery';
 import { preBuiltTemplates, renderTemplate } from '@/lib/email-marketing/templates';
+import { normalizeEmailBaseUrl } from '@/lib/email-links';
 
 type Automation = {
   id: string;
@@ -109,7 +110,7 @@ export async function recoverAbandonedCarts() {
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) return { processed: 0, skipped: candidates.length, reason: 'email_provider_unavailable' as const };
   const resend = new Resend(resendKey);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://helloustudio.com.br';
+  const baseUrl = normalizeEmailBaseUrl(process.env.NEXT_PUBLIC_APP_URL);
   const from = process.env.RESEND_FROM_EMAIL || 'helloustudio <onboarding@resend.dev>';
   let processed = 0;
   let skipped = 0;

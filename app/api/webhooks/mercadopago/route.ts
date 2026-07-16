@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPaymentClient } from '@/lib/mercadopago';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { sendOrderConfirmationEmail, sendInvoiceRequestEmail, sendAdminNewOrderEmail, sendSTLOrderConfirmationEmail, sendSTLAdminNotificationEmail } from '@/lib/email';
+import { sendOrderConfirmationEmail, sendInvoiceRequestEmail, sendAdminNewOrderEmail, sendOrderStatusEmail, sendSTLOrderConfirmationEmail, sendSTLAdminNotificationEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import { verifyWebhookSignature } from '@/lib/security';
@@ -173,6 +173,24 @@ export async function POST(request: Request) {
       }
     } catch (e) {
       structuredLog('warn', 'mercadopago.notification_failed', { error: e, orderId: order.id });
+    }
+
+    if (newStatus === 'canceled' || newStatus === 'refunded') {
+      const { data: customer } = await admin
+        .from('users')
+        .select('email, name')
+        .eq('id', order.user_id)
+        .single();
+
+      if (customer?.email) {
+        await sendOrderStatusEmail({
+          email: customer.email,
+          nome: customer.name ?? null,
+          orderId: order.id,
+          newStatus,
+          refundAmount: newStatus === 'refunded' ? Number(result.transaction_amount) : undefined,
+        });
+      }
     }
 
     if (newStatus === 'rejected' && (order.status === 'approved' || order.status === 'processing')) {

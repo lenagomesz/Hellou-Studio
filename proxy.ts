@@ -57,6 +57,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  const legacyCustomerOrderMatch = pathname.match(/^\/dashboard\/orders\/([^/]+)$/);
+  if (isAdminRoute && token.role !== 'admin' && legacyCustomerOrderMatch) {
+    const customerOrderUrl = new URL(`/account/orders/${legacyCustomerOrderMatch[1]}`, request.url);
+    return NextResponse.redirect(customerOrderUrl);
+  }
+
   if (isAdminRoute && token.role !== 'admin') {
     return NextResponse.redirect(new URL('/', request.url));
   }

@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { renderTemplate } from './templates';
 import { sendTrackedEmail } from '@/lib/email-delivery';
 import { structuredLog } from '@/lib/observability';
+import { normalizeEmailBaseUrl } from '@/lib/email-links';
 import type {
   EmailCampaign,
   CampaignAnalytics,
@@ -35,7 +36,7 @@ function getFrom(): string {
 }
 
 function getBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  return normalizeEmailBaseUrl(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
 }
 
 // ====== Campaign Service ======

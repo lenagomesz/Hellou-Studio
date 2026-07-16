@@ -1,3 +1,5 @@
+import { buildEmailUrl } from '@/lib/email-links';
+
 export const STLOrderConfirmationEmail = ({
   nome,
   orderId,
@@ -69,7 +71,7 @@ export const STLOrderConfirmationEmail = ({
 
       {/* CTA */}
       <a
-        href={`${baseUrl}/account/orders/${orderId}`}
+        href={buildEmailUrl(baseUrl, `/account/orders/${orderId}`)}
         style={{
           display: 'inline-block',
           margin: '32px 0 24px 0',

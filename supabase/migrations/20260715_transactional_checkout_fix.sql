@@ -1,6 +1,10 @@
 -- Corrige a ambiguidade entre a coluna order_items.order_id e o campo
 -- order_id retornado pela função. O erro só aparecia ao confirmar pagamentos.
 
+-- Compatibilidade com bancos antigos que criaram cupons sem o contador de uso.
+ALTER TABLE public.coupons
+  ADD COLUMN IF NOT EXISTS used_count integer NOT NULL DEFAULT 0;
+
 CREATE OR REPLACE FUNCTION public.finalize_checkout_order(
   p_order_id uuid,
   p_user_id uuid,
@@ -80,7 +84,7 @@ BEGIN
      AND v_order.checkout_coupon_id IS NOT NULL
      AND v_order.coupon_processed_at IS NULL THEN
     UPDATE public.coupons AS coupons
-    SET used_count = coupons.used_count + 1
+    SET used_count = COALESCE(coupons.used_count, 0) + 1
     WHERE coupons.id = v_order.checkout_coupon_id;
 
     UPDATE public.orders AS orders

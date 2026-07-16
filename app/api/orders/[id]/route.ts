@@ -127,7 +127,11 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     return badRequest('Código de rastreio é obrigatório para envio');
   }
 
-  const { data: current } = await admin.from('orders').select('shipping_address, mp_payment_id, payment_provider').eq('id', id).single();
+  const { data: current } = await admin
+    .from('orders')
+    .select('shipping_address, mp_payment_id, payment_provider, status, total, user_id')
+    .eq('id', id)
+    .single();
   if (!current) return notFound('Pedido não encontrado');
 
   if (status === 'refunded' && current.payment_provider === 'mercadopago' && current.mp_payment_id) {
@@ -167,9 +171,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     updates.shipping_address = shippingData;
   }
 
-  // Get previous status before updating
-  const { data: prevOrder } = await admin.from('orders').select('status').eq('id', id).single();
-  const previousStatus = prevOrder?.status ?? null;
+  const previousStatus = current.status ?? null;
 
   const { error } = await admin.from('orders').update(updates).eq('id', id);
   if (error) return serverError('Erro ao atualizar pedido');
@@ -186,8 +188,8 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     }).catch(() => {});
   }
 
-  // Send email to user when status changes (skip for 'refunded' as it's handled by processRefund)
-  if (status && status !== 'refunded') {
+  // Avisa o cliente apenas quando houve uma mudança real de status.
+  if (status && status !== previousStatus) {
     const { data: order } = await admin
       .from('orders')
       .select('user_id, shipping_address')
@@ -209,6 +211,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
           orderId: id,
           newStatus: status,
           trackingCode: (shipping?.tracking_code as string) ?? null,
+          refundAmount: status === 'refunded' ? Number(current.total) : undefined,
         }).catch(() => {});
       }
 

@@ -38,7 +38,12 @@ function formatPrice(value: number) {
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date(value));
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'America/Sao_Paulo',
+  }).format(new Date(value));
 }
 
 type OrderItemRow = OrderItem & { product: Pick<Product, 'id' | 'name' | 'image_url'> | null };
