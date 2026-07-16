@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -9,6 +9,7 @@ import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect'
 import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
 import { ProductTagSelect, replaceProductTags } from '@/components/admin/ProductTagSelect';
 import { OptionsManager } from '@/components/admin/OptionsManager';
+import { Loader2, Upload } from 'lucide-react';
 
 type ProductFormProps =
   | { mode: 'create'; product?: undefined }
@@ -49,6 +50,9 @@ export function ProductForm(props: ProductFormProps) {
     return list;
   });
   const [newImageUrl, setNewImageUrl] = useState('');
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [imageDragOver, setImageDragOver] = useState(false);
   const [active, setActive] = useState<boolean>(initial?.active ?? true);
   const [fulfillmentMode, setFulfillmentMode] = useState<'made_to_order' | 'ready_stock' | 'hybrid'>(initial?.fulfillment_mode ?? 'made_to_order');
   const [isCustomizable, setIsCustomizable] = useState(initial?.is_customizable ?? false);
@@ -56,6 +60,31 @@ export function ProductForm(props: ProductFormProps) {
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function uploadImages(files: FileList | File[]) {
+    const selected = Array.from(files);
+    if (selected.length === 0) return;
+    if (images.length + selected.length > 6) {
+      setError('Você pode cadastrar até 6 imagens por produto');
+      return;
+    }
+
+    setError(null);
+    setUploadingImages(true);
+    try {
+      const formData = new FormData();
+      selected.forEach((file) => formData.append('images', file));
+      const response = await fetch('/api/upload/product-images', { method: 'POST', body: formData });
+      const data = (await response.json().catch(() => ({}))) as { urls?: string[]; error?: string };
+      if (!response.ok || !data.urls) throw new Error(data.error ?? 'Não foi possível enviar as imagens');
+      setImages((current) => [...current, ...data.urls!]);
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : 'Erro ao enviar imagens');
+    } finally {
+      setUploadingImages(false);
+      if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -323,6 +352,20 @@ export function ProductForm(props: ProductFormProps) {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Imagens do produto
           </label>
+          <button
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            onDragOver={(event) => { event.preventDefault(); setImageDragOver(true); }}
+            onDragLeave={() => setImageDragOver(false)}
+            onDrop={(event) => { event.preventDefault(); setImageDragOver(false); void uploadImages(event.dataTransfer.files); }}
+            disabled={uploadingImages || images.length >= 6}
+            className={`mb-4 flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed p-7 text-center transition ${imageDragOver ? 'border-pink-500 bg-pink-50' : 'border-gray-300 bg-gray-50/60 hover:border-pink-400 hover:bg-pink-50/50 dark:border-gray-700 dark:bg-gray-800/40'} disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            {uploadingImages ? <Loader2 className="h-8 w-8 animate-spin text-pink-500" /> : <Upload className="h-8 w-8 text-pink-500" />}
+            <span className="mt-2 text-sm font-bold text-gray-800 dark:text-white">{uploadingImages ? 'Enviando para o Supabase...' : 'Arraste imagens aqui ou clique para escolher'}</span>
+            <span className="mt-1 text-xs text-gray-500">JPG, PNG ou WebP · máximo de 6 imagens · 8 MB cada</span>
+          </button>
+          <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => event.target.files && void uploadImages(event.target.files)} className="hidden" />
           {images.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
               {images.map((url, idx) => (
@@ -383,7 +426,7 @@ export function ProductForm(props: ProductFormProps) {
               type="url"
               value={newImageUrl}
               onChange={(e) => setNewImageUrl(e.target.value)}
-              placeholder="https://... (cole a URL da imagem)"
+              placeholder="Ou cole uma URL de imagem..."
               className="flex-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
             <button
@@ -402,7 +445,7 @@ export function ProductForm(props: ProductFormProps) {
             </button>
           </div>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            A primeira imagem será usada como capa. Arraste para reordenar.
+            A primeira imagem será usada como capa. As imagens enviadas ficam no bucket products do Supabase.
           </p>
         </div>
 
@@ -467,10 +510,10 @@ export function ProductForm(props: ProductFormProps) {
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || uploadingImages}
             className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-pink-600 disabled:opacity-50 transition dark:bg-white dark:text-slate-950"
           >
-            {submitting ? 'Salvando...' : props.mode === 'edit' ? 'Salvar alterações' : 'Criar produto'}
+            {uploadingImages ? 'Enviando imagens...' : submitting ? 'Salvando...' : props.mode === 'edit' ? 'Salvar alterações' : 'Criar produto'}
           </button>
           <Link
             href={

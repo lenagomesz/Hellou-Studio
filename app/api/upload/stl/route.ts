@@ -6,8 +6,8 @@ import type { Category, Product } from '@/types/database';
 
 export const maxDuration = 300;
 
-const STL_BUCKET = 'products';
-const IMAGE_BUCKET = 'stl-products';
+const STL_BUCKET = 'stl-uploads';
+const IMAGE_BUCKET = 'products';
 const MAX_STL_SIZE = 100 * 1024 * 1024;
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
 const MAX_IMAGES = 6;
@@ -71,19 +71,9 @@ function parseFormData(formData: FormData): ProductFields | string {
 async function ensureImageBucket() {
   const supabase = getSupabaseAdmin();
   const { data } = await supabase.storage.getBucket(IMAGE_BUCKET);
-  if (data) {
-    if (data.public) return null;
-    const { error } = await supabase.storage.updateBucket(IMAGE_BUCKET, {
-      public: true,
-      fileSizeLimit: MAX_IMAGE_SIZE,
-      allowedMimeTypes: Array.from(IMAGE_TYPES),
-    });
-    return error;
-  }
+  if (data) return null;
   const { error } = await supabase.storage.createBucket(IMAGE_BUCKET, {
-    public: true,
-    fileSizeLimit: MAX_IMAGE_SIZE,
-    allowedMimeTypes: Array.from(IMAGE_TYPES),
+    public: false,
   });
   return error;
 }
@@ -97,7 +87,7 @@ async function uploadImages(productId: string, files: File[]) {
   const urls: string[] = [];
   const paths: string[] = [];
   for (const [index, file] of files.entries()) {
-    const path = `products/${productId}/images/${Date.now()}-${index}-${safeFileName(file.name)}`;
+    const path = `product-images/${productId}/${Date.now()}-${index}-${safeFileName(file.name)}`;
     const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, await file.arrayBuffer(), {
       contentType: file.type,
       upsert: false,
@@ -107,7 +97,7 @@ async function uploadImages(productId: string, files: File[]) {
       return { urls: [], paths: [], error: `Erro ao enviar a imagem ${file.name}` };
     }
     paths.push(path);
-    urls.push(supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl);
+    urls.push(`/api/product-images/${path.split('/').map(encodeURIComponent).join('/')}`);
   }
   return { urls, paths, error: null };
 }
