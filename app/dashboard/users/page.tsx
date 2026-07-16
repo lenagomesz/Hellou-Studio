@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Search, Shield, Ban, Trash2, Mail, Star } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -13,6 +13,9 @@ interface UserRow {
   role: 'user' | 'admin';
   is_vip?: boolean;
   created_at: string;
+  total_orders: number;
+  total_spent: number;
+  last_order_at: string | null;
 }
 
 function timeAgo(value: string) {
@@ -20,7 +23,7 @@ function timeAgo(value: string) {
   const days = Math.floor(diff / 86400000);
   if (days === 0) return 'Hoje';
   if (days === 1) return 'Ontem';
-  if (days < 30) return `${days}d atras`;
+  if (days < 30) return `${days}d atrás`;
   const months = Math.floor(days / 30);
   return `${months} ${months > 1 ? 'meses' : 'mês'} atrás`;
 }
@@ -33,23 +36,33 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [vipFilter, setVipFilter] = useState(false);
   const [toast, setToast] = useState('');
+  const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 0 });
 
-  async function fetchUsers(q?: string) {
+  const fetchUsers = useCallback(async (q: string, requestedPage: number) => {
     setLoading(true);
-    const params = q ? `?search=${encodeURIComponent(q)}` : '';
-    const res = await fetch(`/api/admin/users${params}`);
+    setError('');
+    const params = new URLSearchParams({ page: String(requestedPage), limit: '25' });
+    if (q) params.set('search', q);
+    const res = await fetch(`/api/admin/users?${params}`);
     if (res.ok) {
       const data = await res.json();
       setUsers(Array.isArray(data) ? data : data.users ?? []);
+      if (data.pagination) setPagination(data.pagination);
+    } else {
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      setError(data.error ?? 'Erro ao carregar clientes');
     }
     setLoading(false);
-  }
+  }, []);
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { void fetchUsers('', 1); }, [fetchUsers]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    fetchUsers(search);
+    setPage(1);
+    void fetchUsers(search, 1);
   }
 
   async function banUser(user: UserRow) {
@@ -63,6 +76,9 @@ export default function UsersPage() {
       setUsers(prev => prev.filter(u => u.id !== user.id));
       setToast(`${user.email} banido`);
       setTimeout(() => setToast(''), 3000);
+    } else {
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      setError(data.error ?? 'Não foi possível banir o cliente');
     }
   }
 
@@ -73,6 +89,9 @@ export default function UsersPage() {
       setUsers(prev => prev.filter(u => u.id !== user.id));
       setToast(`${user.email} removido`);
       setTimeout(() => setToast(''), 3000);
+    } else {
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      setError(data.error ?? 'Não foi possível excluir o cliente');
     }
   }
 
@@ -87,10 +106,12 @@ export default function UsersPage() {
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_vip: newVip } : u));
       setToast(newVip ? `${user.email} marcado como VIP` : `VIP removido de ${user.email}`);
       setTimeout(() => setToast(''), 3000);
+    } else {
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      setError(data.error ?? 'Não foi possível atualizar o cliente VIP');
     }
   }
 
-  const admins = users.filter(u => u.role === 'admin');
   const displayUsers = vipFilter ? users.filter(u => u.is_vip) : users;
   const vipCount = users.filter(u => u.is_vip).length;
 
@@ -107,7 +128,7 @@ export default function UsersPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Usuários</h1>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-            {users.length} usuários · {admins.length} admins · {vipCount} VIPs
+            {pagination.total} usuários · {vipCount} VIPs nesta página
           </p>
         </div>
       </header>
@@ -143,6 +164,7 @@ export default function UsersPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Usuário</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Role</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cadastro</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Compras</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">Ações</th>
               </tr>
             </thead>
@@ -175,6 +197,7 @@ export default function UsersPage() {
                     )}
                   </td>
                   <td className="px-4 py-3.5 text-xs text-gray-500">{timeAgo(user.created_at)}</td>
+                  <td className="px-4 py-3.5"><p className="text-sm font-bold text-gray-900 dark:text-white">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(user.total_spent)}</p><p className="text-[11px] text-gray-500">{user.total_orders} pedidos{user.last_order_at ? ` · última ${timeAgo(user.last_order_at).toLowerCase()}` : ''}</p></td>
                   <td className="px-4 py-3.5 text-right">
                     {user.role !== 'admin' && (
                       <div className="flex items-center justify-end gap-1">
@@ -204,6 +227,8 @@ export default function UsersPage() {
           </table>
         </div>
       )}
+      {error && <div role="alert" className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Fechar erro">×</button></div>}
+      {!loading && pagination.pages > 1 && <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 text-sm"><span className="text-gray-500">Página {pagination.page} de {pagination.pages}</span><div className="flex gap-2"><button disabled={page <= 1} onClick={() => { const next = Math.max(1, page - 1); setPage(next); void fetchUsers(search, next); }} className="rounded-lg border px-3 py-2 disabled:opacity-40">Anterior</button><button disabled={page >= pagination.pages} onClick={() => { const next = Math.min(pagination.pages, page + 1); setPage(next); void fetchUsers(search, next); }} className="rounded-lg bg-slate-950 px-3 py-2 text-white disabled:opacity-40">Próxima</button></div></div>}
     </div>
   );
 }

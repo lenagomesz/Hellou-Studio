@@ -9,12 +9,18 @@ import {
   serverError,
 } from '@/lib/api';
 import type { Product } from '@/types/database';
+import { attachProductTags } from '@/lib/product-tags';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
   const search = searchParams.get('search');
   const activeParam = searchParams.get('active');
+  const page = Math.max(1, Number(searchParams.get('page')) || 1);
+  const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 24));
+  const type = searchParams.get('type');
+  const minPrice = Number(searchParams.get('min_price'));
+  const maxPrice = Number(searchParams.get('max_price'));
 
   if (category && !isCategory(category)) {
     return badRequest('Categoria inválida');
@@ -32,7 +38,7 @@ export async function GET(request: Request) {
   const admin = getSupabaseAdmin();
   let query = admin
     .from('products')
-    .select('*')
+    .select('*, product_options(id, name, stock, price_modifier)', { count: 'exact' })
     .or('category.neq.encomenda,type.eq.digital')
     .order('created_at', { ascending: false });
 
@@ -44,11 +50,19 @@ export async function GET(request: Request) {
 
   if (category) query = query.eq('category', category);
   if (search) query = query.ilike('name', `%${search}%`);
+  if (type === 'physical' || type === 'digital') query = query.eq('type', type);
+  if (Number.isFinite(minPrice)) query = query.gte('base_price', minPrice);
+  if (Number.isFinite(maxPrice)) query = query.lte('base_price', maxPrice);
 
-  const { data, error } = await query;
+  const from = (page - 1) * limit;
+  const { data, count, error } = await query.range(from, from + limit - 1);
   if (error) return serverError('Erro ao buscar produtos');
 
-  return NextResponse.json({ products: (data ?? []) as Product[] });
+  const products = await attachProductTags((data ?? []) as Product[]);
+  return NextResponse.json({
+    products,
+    pagination: { page, limit, total: count ?? 0, pages: Math.ceil((count ?? 0) / limit) },
+  });
 }
 
 export async function POST(request: Request) {

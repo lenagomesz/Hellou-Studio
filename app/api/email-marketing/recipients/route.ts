@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listEmailPreferences, blacklistEmail, whitelistEmail } from '@/lib/email-marketing/service';
+import { requirePermission } from '@/lib/api';
 
 export async function GET(req: NextRequest) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const subscribed = req.nextUrl.searchParams.get('subscribed');
     const blacklisted = req.nextUrl.searchParams.get('blacklisted');
@@ -19,6 +21,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const body = await req.json();
     const { action, email, reason } = body;

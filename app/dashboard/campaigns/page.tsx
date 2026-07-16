@@ -85,7 +85,7 @@ export default function CampaignsPage() {
           Templates
         </Link>
         <Link href="/dashboard/campaigns/automations" className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-          Automacoes
+          Automações
         </Link>
         <Link href="/dashboard/campaigns/drip" className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
           Drip Campaigns

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listAutomations, createAutomation } from '@/lib/email-marketing/service';
+import { requirePermission } from '@/lib/api';
 
 export async function GET() {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const automations = await listAutomations();
     return NextResponse.json(automations);
@@ -12,6 +14,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const body = await req.json();
     const automation = await createAutomation(body);

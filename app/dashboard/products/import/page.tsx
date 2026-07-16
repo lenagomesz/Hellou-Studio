@@ -51,7 +51,7 @@ export default function ImportPage() {
   function parseCSVPreview(text: string) {
     const lines = text.trim().split('\n');
     if (lines.length < 2) {
-      setValidationErrors(['CSV deve ter pelo menos um cabecalho e uma linha de dados']);
+      setValidationErrors(['CSV deve ter pelo menos um cabeçalho e uma linha de dados']);
       return;
     }
 
@@ -66,13 +66,13 @@ export default function ImportPage() {
     if (mode === 'create' || mode === 'upsert') {
       for (const col of requiredForCreate) {
         if (!headers.includes(col)) {
-          errors.push(`Coluna obrigatoria ausente: ${col}`);
+          errors.push(`Coluna obrigatória ausente: ${col}`);
         }
       }
     }
 
     if (mode === 'update' && !hasId) {
-      errors.push('Coluna "id" e obrigatoria no modo update');
+      errors.push('A coluna "id" é obrigatória no modo de atualização');
     }
 
     setValidationErrors(errors);
@@ -116,7 +116,7 @@ export default function ImportPage() {
 
   function handleFile(file: File) {
     if (!file.name.endsWith('.csv')) {
-      showToast('Apenas arquivos CSV sao aceitos', 'error');
+      showToast('Apenas arquivos CSV são aceitos', 'error');
       return;
     }
 
@@ -171,9 +171,9 @@ export default function ImportPage() {
       if (res.ok) {
         setResults(data.results);
         if (data.success) {
-          showToast('Importacao concluida com sucesso!', 'success');
+          showToast('Importação concluída com sucesso!', 'success');
         } else {
-          showToast('Importacao concluida com alguns erros', 'error');
+          showToast('Importação concluída com alguns erros', 'error');
         }
       } else {
         if (data.errors) {
@@ -235,7 +235,7 @@ export default function ImportPage() {
 
       {/* Mode Selection */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-        <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Modo de Importacao</h2>
+        <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Modo de importação</h2>
         <div className="flex gap-3">
           {[
             { value: 'upsert' as const, label: 'Criar ou Atualizar', desc: 'Atualiza se tem ID, cria se não tem' },
@@ -365,7 +365,7 @@ export default function ImportPage() {
       {/* Results */}
       {results && (
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Resultado da Importacao</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Resultado da importação</h3>
           <div className="grid grid-cols-3 gap-4">
             <div className="rounded-xl bg-green-50 p-4 text-center dark:bg-green-900/20">
               <CheckCircle2 className="mx-auto h-8 w-8 text-green-600" />

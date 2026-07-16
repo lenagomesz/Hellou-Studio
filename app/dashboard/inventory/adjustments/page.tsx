@@ -53,7 +53,7 @@ export default function AdjustmentsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedOption || !quantity || parseInt(quantity) === 0) {
-      setMessage({ type: 'error', text: 'Preencha todos os campos obrigatorios.' });
+      setMessage({ type: 'error', text: 'Preencha todos os campos obrigatórios.' });
       return;
     }
 

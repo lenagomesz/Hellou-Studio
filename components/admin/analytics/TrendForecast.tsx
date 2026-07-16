@@ -205,7 +205,7 @@ export default function TrendForecast({
       </div>
 
       <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-        A previsão e baseada nos dados historicos dos últimos {historical.length} dias. A área
+        A previsão é baseada nos dados históricos dos últimos {historical.length} dias. A área
         sombreada representa o intervalo de confianca da projecao.
       </p>
     </div>

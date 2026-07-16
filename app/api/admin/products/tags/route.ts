@@ -29,7 +29,12 @@ export async function GET(request: Request) {
   if (error) return serverError('Erro ao buscar tags');
 
   const productId = new URL(request.url).searchParams.get('product_id');
-  if (!productId) return NextResponse.json({ tags: data ?? [], assigned_tag_ids: [] });
+  if (!productId) {
+    const { data: assignments } = await admin.from('product_tag_assignments').select('tag_id');
+    const counts = new Map<string, number>();
+    for (const assignment of assignments ?? []) counts.set(assignment.tag_id, (counts.get(assignment.tag_id) ?? 0) + 1);
+    return NextResponse.json({ tags: (data ?? []).map((tag) => ({ ...tag, product_count: counts.get(tag.id) ?? 0 })), assigned_tag_ids: [] });
+  }
 
   const { data: assignments, error: assignmentError } = await admin
     .from('product_tag_assignments')

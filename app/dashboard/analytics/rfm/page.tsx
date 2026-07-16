@@ -207,7 +207,7 @@ export default function RFMAnalysisPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-xs text-gray-500">
-                    {customer.daysSinceLastPurchase !== null ? `${customer.daysSinceLastPurchase}d atras` : '—'}
+                    {customer.daysSinceLastPurchase !== null ? `${customer.daysSinceLastPurchase}d atrás` : '—'}
                   </td>
                   <td className="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">
                     {customer.totalOrders}

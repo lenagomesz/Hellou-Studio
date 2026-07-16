@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCampaignAnalytics, getCampaignTimeline, getCampaignLinkHeatmap } from '@/lib/email-marketing/service';
+import { requirePermission } from '@/lib/api';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const { id } = await params;
     const type = req.nextUrl.searchParams.get('type') || 'overview';

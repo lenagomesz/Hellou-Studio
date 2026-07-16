@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exportRecipients } from '@/lib/email-marketing/service';
+import { requirePermission } from '@/lib/api';
 
 export async function GET(req: NextRequest) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const campaignId = req.nextUrl.searchParams.get('campaign') || undefined;
     const csv = await exportRecipients(campaignId);

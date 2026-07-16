@@ -22,10 +22,15 @@ type ProductRow = {
   name: string;
   category: string;
   base_price: number;
+  sale_price?: number | null;
   image_url: string | null;
   active: boolean;
   created_at: string;
   type?: string;
+  fulfillment_mode?: string;
+  is_customizable?: boolean;
+  product_options?: Array<{ id: string; name: string; stock: number; price_modifier: number }>;
+  tags?: Array<{ id: string; name: string; color: string }>;
 };
 
 export default function ProductsPage() {
@@ -40,36 +45,46 @@ export default function ProductsPage() {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [toast, setToast] = useState('');
-  const [fetchKey, setFetchKey] = useState(0);
+  const [error, setError] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 24, total: 0, pages: 0 });
   const [filter, setFilter] = useState<'all' | 'physical' | 'digital'>('all');
   const productCategories = useProductCategories();
   const categoryLabels = Object.fromEntries(productCategories.map((item) => [item.slug, item.name]));
 
-  const filteredProducts = products.filter(p => {
-    if (filter !== 'all' && p.type !== filter) return false;
-    if (minPrice && p.base_price < parseFloat(minPrice)) return false;
-    if (maxPrice && p.base_price > parseFloat(maxPrice)) return false;
-    return true;
-  });
+  const filteredProducts = products;
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [search]);
 
   useEffect(() => {
     let cancelled = false;
+    setError('');
     const params = new URLSearchParams();
-    if (search) params.set('search', search);
+    if (debouncedSearch) params.set('search', debouncedSearch);
     if (category) params.set('category', category);
     if (status === 'active') params.set('active', 'true');
     else if (status === 'inactive') params.set('active', 'false');
     else params.set('active', 'all');
+    if (filter !== 'all') params.set('type', filter);
+    if (minPrice) params.set('min_price', minPrice);
+    if (maxPrice) params.set('max_price', maxPrice);
+    params.set('page', String(page));
+    params.set('limit', '24');
     fetch(`/api/products?${params.toString()}`)
-      .then(r => r.ok ? r.json() : { products: [] })
-      .then(data => { if (!cancelled) { setProducts(data.products ?? data); setLoading(false); } })
-      .catch(() => { if (!cancelled) setLoading(false); });
+      .then(async r => { if (!r.ok) { const data = await r.json().catch(() => ({})); throw new Error(data.error ?? 'Erro ao carregar produtos'); } return r.json(); })
+      .then(data => { if (!cancelled) { setProducts(data.products ?? data); setPagination(data.pagination ?? { page: 1, limit: 24, total: 0, pages: 0 }); setLoading(false); } })
+      .catch((requestError) => { if (!cancelled) { setError(requestError instanceof Error ? requestError.message : 'Erro ao carregar produtos'); setLoading(false); } });
     return () => { cancelled = true; };
-  }, [category, status, search, fetchKey]);
+  }, [category, status, debouncedSearch, filter, maxPrice, minPrice, page]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    setFetchKey(k => k + 1);
+    setDebouncedSearch(search);
+    setPage(1);
   }
 
   async function toggleActive(id: string, active: boolean) {
@@ -82,6 +97,9 @@ export default function ProductsPage() {
       setProducts(prev => prev.map(p => p.id === id ? { ...p, active: !active } : p));
       setToast(!active ? 'Produto ativado' : 'Produto desativado');
       setTimeout(() => setToast(''), 3000);
+    } else {
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      setError(data.error ?? 'Não foi possível alterar o produto');
     }
   }
 
@@ -92,6 +110,9 @@ export default function ProductsPage() {
       setProducts(prev => prev.filter(p => p.id !== id));
       setToast('Produto excluído');
       setTimeout(() => setToast(''), 3000);
+    } else {
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      setError(data.error ?? 'Não foi possível excluir o produto');
     }
   }
 
@@ -109,7 +130,7 @@ export default function ProductsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Produtos</h1>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-            {products.length} produtos · {activeCount} ativos
+            {pagination.total} produtos encontrados · {activeCount} ativos nesta página
           </p>
         </div>
         <div className="flex gap-2">
@@ -136,8 +157,8 @@ export default function ProductsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome..." className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
         </div>
-        <ProductCategorySelect value={category} onChange={setCategory} allowEmpty emptyLabel="Todas as categorias" className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+        <ProductCategorySelect value={category} onChange={(value) => { setCategory(value); setPage(1); }} allowEmpty emptyLabel="Todas as categorias" className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
           <option value="">Todos</option>
           <option value="active">Ativos</option>
           <option value="inactive">Inativos</option>
@@ -147,7 +168,7 @@ export default function ProductsPage() {
           step="0.01"
           min="0"
           value={minPrice}
-          onChange={(e) => setMinPrice(e.target.value)}
+          onChange={(e) => { setMinPrice(e.target.value); setPage(1); }}
           placeholder="Preço min"
           className="w-28 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         />
@@ -156,7 +177,7 @@ export default function ProductsPage() {
           step="0.01"
           min="0"
           value={maxPrice}
-          onChange={(e) => setMaxPrice(e.target.value)}
+          onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }}
           placeholder="Preço max"
           className="w-28 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         />
@@ -165,19 +186,19 @@ export default function ProductsPage() {
 
       <div className="flex gap-2 mb-4">
         <button
-          onClick={() => setFilter('all')}
+          onClick={() => { setFilter('all'); setPage(1); }}
           className={`px-4 py-2 rounded font-medium transition ${filter === 'all' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
         >
           Todos
         </button>
         <button
-          onClick={() => setFilter('physical')}
+          onClick={() => { setFilter('physical'); setPage(1); }}
           className={`px-4 py-2 rounded font-medium transition ${filter === 'physical' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
         >
           Produtos físicos
         </button>
         <button
-          onClick={() => setFilter('digital')}
+          onClick={() => { setFilter('digital'); setPage(1); }}
           className={`px-4 py-2 rounded font-medium transition ${filter === 'digital' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
         >
           Arquivos STL
@@ -185,7 +206,7 @@ export default function ProductsPage() {
       </div>
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />)}
         </div>
       ) : filteredProducts.length === 0 ? (
@@ -227,7 +248,13 @@ export default function ProductsPage() {
                       {categoryLabels[product.category] ?? product.category}
                     </span>
                   </div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(product.base_price)}</p>
+                  <div className="text-right"><p className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(product.sale_price ?? product.base_price)}</p>{product.sale_price != null && <p className="text-[10px] text-gray-400 line-through">{formatPrice(product.base_price)}</p>}</div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+                  <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold text-slate-600">{product.product_options?.length ?? 0} variações</span>
+                  <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">{(product.product_options ?? []).reduce((sum, option) => sum + option.stock, 0)} em estoque</span>
+                  {product.is_customizable && <span className="rounded-full bg-pink-50 px-2 py-1 font-semibold text-pink-700">Personalizável</span>}
+                  {product.tags?.slice(0, 2).map((tag) => <span key={tag.id} className="rounded-full px-2 py-1 font-semibold text-white" style={{ backgroundColor: tag.color }}>{tag.name}</span>)}
                 </div>
                 <div className="mt-3 flex items-center gap-1.5 border-t border-gray-50 pt-3 dark:border-gray-800">
                   <Link href={`/dashboard/products/${product.id}/edit`} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition dark:text-gray-400 dark:hover:bg-gray-800">
@@ -245,6 +272,10 @@ export default function ProductsPage() {
             </div>
           ))}
         </div>
+      )}
+      {error && <div role="alert" className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Fechar erro">×</button></div>}
+      {!loading && pagination.pages > 1 && (
+        <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 text-sm shadow-sm"><span className="text-gray-500">Página {pagination.page} de {pagination.pages} · {pagination.total} produtos</span><div className="flex gap-2"><button type="button" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-lg border border-gray-200 px-3 py-2 font-semibold disabled:opacity-40">Anterior</button><button type="button" disabled={page >= pagination.pages} onClick={() => setPage((value) => Math.min(pagination.pages, value + 1))} className="rounded-lg bg-slate-950 px-3 py-2 font-semibold text-white disabled:opacity-40">Próxima</button></div></div>
       )}
     </div>
   );

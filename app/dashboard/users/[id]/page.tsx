@@ -349,7 +349,7 @@ export default function UserDetailPage() {
         </div>
         <div className="rounded-xl bg-white border border-gray-100 p-4 dark:bg-gray-900 dark:border-gray-800">
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{addresses.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Enderecos</p>
+          <p className="text-xs text-gray-500 mt-0.5">Endereços</p>
         </div>
       </div>
 
@@ -357,7 +357,7 @@ export default function UserDetailPage() {
       {addresses.length > 0 && (
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 dark:bg-gray-900 dark:border-gray-800">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
-            <MapPin className="h-4 w-4" /> Enderecos
+            <MapPin className="h-4 w-4" /> Endereços
           </h2>
           <div className="space-y-2">
             {addresses.map((addr) => (

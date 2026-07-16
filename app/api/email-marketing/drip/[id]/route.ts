@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDripCampaign, updateDripCampaign, deleteDripCampaign } from '@/lib/email-marketing/service';
+import { requirePermission } from '@/lib/api';
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const { id } = await params;
     const campaign = await getDripCampaign(id);
@@ -19,6 +21,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const { id } = await params;
     const body = await req.json();
@@ -34,6 +37,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const { id } = await params;
     await deleteDripCampaign(id);

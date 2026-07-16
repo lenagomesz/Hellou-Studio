@@ -39,13 +39,13 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   }, [id]);
 
   async function handleSend() {
-    if (!confirm('Enviar campanha agora para todos os destinatarios do segmento?')) return;
+    if (!confirm('Enviar campanha agora para todos os destinatários do segmento?')) return;
     setSending(true);
     try {
       const res = await fetch(`/api/email-marketing/campaigns/${id}/send`, { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
-        alert(`Campanha enviada! ${data.sent}/${data.total} emails enviados.`);
+        alert(`Campanha enviada! ${data.sent}/${data.total} e-mails enviados.`);
         router.push(`/dashboard/campaigns/${id}/analytics`);
       } else {
         alert(`Erro: ${data.error}`);
@@ -59,7 +59,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
     const res = await fetch(`/api/email-marketing/campaigns/${id}/ab-test`, { method: 'POST' });
     const data = await res.json();
     if (res.ok) {
-      alert(`Vencedor: Variante ${data.winner}. Melhoria de ${data.improvement}% em opens.`);
+      alert(`Vencedor: Variante ${data.winner}. Melhoria de ${data.improvement}% em aberturas.`);
       window.location.reload();
     } else {
       alert(`Erro: ${data.error}`);
@@ -79,7 +79,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="w-full space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -116,7 +116,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           <p className="mt-1 text-lg font-bold capitalize text-gray-900 dark:text-white">{campaign.status}</p>
         </div>
         <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-xs font-medium uppercase text-gray-400">Destinatarios</p>
+          <p className="text-xs font-medium uppercase text-gray-400">Destinatários</p>
           <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">{campaign.total_recipients}</p>
         </div>
         <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
@@ -158,7 +158,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           <h2 className="font-semibold text-gray-900 dark:text-white">Preview do email</h2>
         </div>
         <div className="p-6">
-          <div className="mx-auto max-w-md rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          <div className="mx-auto max-w-4xl rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <div className="mb-4 border-b border-gray-100 pb-4 dark:border-gray-700">
               <p className="text-xs text-gray-400">De: helloustudio</p>
               <p className="text-sm font-medium text-gray-900 dark:text-white">{campaign.subject}</p>
@@ -190,7 +190,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300"
             download
           >
-            Exportar destinatarios (CSV)
+            Exportar destinatários (CSV)
           </a>
         </div>
       )}

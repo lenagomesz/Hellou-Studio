@@ -18,14 +18,18 @@ export async function GET() {
   const auth = await requireAdmin();
   if (auth.response) return auth.response;
 
-  const { data, error } = await getSupabaseAdmin()
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin
     .from('product_categories')
     .select('*')
     .order('sort_order', { ascending: true })
     .order('name', { ascending: true });
 
   if (error) return serverError('Erro ao buscar categorias');
-  return NextResponse.json({ categories: (data ?? []) as ProductCategory[] });
+  const { data: products } = await admin.from('products').select('category');
+  const counts = new Map<string, number>();
+  for (const product of products ?? []) counts.set(product.category, (counts.get(product.category) ?? 0) + 1);
+  return NextResponse.json({ categories: (data ?? []).map((category) => ({ ...category, product_count: counts.get(category.slug) ?? 0 })) as Array<ProductCategory & { product_count: number }> });
 }
 
 export async function POST(request: Request) {

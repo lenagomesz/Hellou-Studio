@@ -106,7 +106,7 @@ export default function AutomationsPage() {
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Automacoes</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Automações</h1>
             <p className="text-sm text-gray-500">Workflows automaticos de email baseados em triggers.</p>
           </div>
         </div>
@@ -228,7 +228,7 @@ export default function AutomationsPage() {
                   value={form.body_html}
                   onChange={e => setForm(p => ({ ...p, body_html: e.target.value }))}
                   className="w-full rounded-lg border border-gray-200 px-4 py-2 font-mono text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                  placeholder="<h1>Ola {customer_name}!</h1>"
+                  placeholder="<h1>Olá {customer_name}!</h1>"
                 />
               </div>
               <div className="flex justify-end gap-3">

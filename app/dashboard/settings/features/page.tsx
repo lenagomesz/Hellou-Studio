@@ -175,7 +175,7 @@ export default function FeaturesPage() {
             Painel de Controle
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Gerencie todas as features do sistema em um so lugar
+            Gerencie todos os recursos do sistema em um só lugar
           </p>
         </div>
         <div className="flex gap-2">

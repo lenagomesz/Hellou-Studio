@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listTemplates, createTemplate } from '@/lib/email-marketing/service';
 import { preBuiltTemplates } from '@/lib/email-marketing/templates';
+import { requirePermission } from '@/lib/api';
 
 export async function GET(req: NextRequest) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const category = req.nextUrl.searchParams.get('category') || undefined;
     const includePrebuilt = req.nextUrl.searchParams.get('prebuilt') === 'true';
@@ -24,6 +26,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requirePermission('marketing.manage'); if (auth.response) return auth.response;
   try {
     const body = await req.json();
     const template = await createTemplate(body);

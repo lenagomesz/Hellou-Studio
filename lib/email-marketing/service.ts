@@ -5,6 +5,7 @@ import { renderTemplate } from './templates';
 import { sendTrackedEmail } from '@/lib/email-delivery';
 import { structuredLog } from '@/lib/observability';
 import { normalizeEmailBaseUrl } from '@/lib/email-links';
+import { calculateRFMScore } from '@/lib/customer-analytics';
 import type {
   EmailCampaign,
   CampaignAnalytics,
@@ -60,6 +61,17 @@ export async function getCampaign(id: string) {
 }
 
 export async function createCampaign(input: CreateCampaignInput) {
+  const criteria = input.segment_criteria || {};
+  if (input.segment_type === 'category' && !String(criteria.category ?? '').trim()) {
+    throw new Error('Selecione uma categoria para a segmentação.');
+  }
+  if (input.segment_type === 'rfm' && !String(criteria.segment ?? '').trim()) {
+    throw new Error('Selecione um segmento RFM.');
+  }
+  if (input.segment_type === 'recency' && Number(criteria.days) < 1) {
+    throw new Error('Informe uma recência válida.');
+  }
+
   const admin = getSupabaseAdmin();
   const { data, error } = await admin.from('email_campaigns').insert({
     name: input.name,
@@ -68,7 +80,7 @@ export async function createCampaign(input: CreateCampaignInput) {
     body_html: input.body_html,
     template_id: input.template_id || null,
     segment_type: input.segment_type || 'all',
-    segment_criteria: input.segment_criteria || {},
+    segment_criteria: criteria,
     scheduled_at: input.scheduled_at || null,
     status: input.scheduled_at ? 'scheduled' : 'draft',
     cta_text: input.cta_text || null,
@@ -101,7 +113,7 @@ export async function deleteCampaign(id: string) {
 
 // ====== Segment Resolution ======
 
-async function getSegmentRecipients(segmentType: SegmentType, criteria: Record<string, unknown>) {
+export async function getSegmentRecipients(segmentType: SegmentType, criteria: Record<string, unknown>) {
   const admin = getSupabaseAdmin();
 
   // Campanhas promocionais exigem consentimento explícito e ativo.
@@ -114,19 +126,82 @@ async function getSegmentRecipients(segmentType: SegmentType, criteria: Record<s
   if (preferencesError) throw preferencesError;
   const consentedEmails = new Set((preferences || []).map((preference) => preference.email.toLowerCase()));
 
-  let query = admin.from('users').select('id, email, name').eq('role', 'user');
-
-  if (segmentType === 'recency') {
-    const days = (criteria.days as number) || 30;
-    const since = new Date(Date.now() - days * 86400000).toISOString();
-    query = query.gte('created_at', since);
-  }
-
-  const { data: users, error } = await query;
+  const { data: users, error } = await admin.from('users').select('id, email, name, is_vip').eq('role', 'user');
   if (error) throw error;
 
-  // Sem registro de consentimento, o endereço não recebe campanhas.
-  return (users || []).filter((user) => consentedEmails.has(user.email.toLowerCase()));
+  const consentedUsers = (users || []).filter((user) => consentedEmails.has(user.email.toLowerCase()));
+  if (segmentType === 'all') return consentedUsers;
+  if (consentedUsers.length === 0) return [];
+
+  const userIds = consentedUsers.map((user) => user.id);
+  const { data: orders, error: ordersError } = await admin
+    .from('orders')
+    .select('id, user_id, status, total, created_at')
+    .in('user_id', userIds);
+  if (ordersError) throw ordersError;
+
+  const validOrders = (orders || []).filter((order) => order.status !== 'canceled' && order.status !== 'refunded');
+  const ordersByUser = new Map<string, typeof validOrders>();
+  for (const order of validOrders) {
+    const current = ordersByUser.get(order.user_id) ?? [];
+    current.push(order);
+    ordersByUser.set(order.user_id, current);
+  }
+
+  if (segmentType === 'recency') {
+    const days = Math.max(1, Number(criteria.days) || 30);
+    const cutoff = Date.now() - days * 86400000;
+    return consentedUsers.filter((user) =>
+      (ordersByUser.get(user.id) ?? []).some((order) => new Date(order.created_at).getTime() >= cutoff),
+    );
+  }
+
+  if (segmentType === 'category') {
+    const category = String(criteria.category ?? '').trim();
+    if (!category) return [];
+    const orderIds = validOrders.map((order) => order.id);
+    if (orderIds.length === 0) return [];
+    const { data: items, error: itemsError } = await admin
+      .from('order_items')
+      .select('order_id, product_id')
+      .in('order_id', orderIds);
+    if (itemsError) throw itemsError;
+    const productIds = Array.from(new Set((items || []).map((item) => item.product_id)));
+    if (productIds.length === 0) return [];
+    const { data: products, error: productsError } = await admin
+      .from('products')
+      .select('id, category')
+      .in('id', productIds);
+    if (productsError) throw productsError;
+    const matchingProductIds = new Set((products || []).filter((product) => product.category === category).map((product) => product.id));
+    const matchingOrderIds = new Set((items || []).filter((item) => matchingProductIds.has(item.product_id)).map((item) => item.order_id));
+    const matchingUserIds = new Set(validOrders.filter((order) => matchingOrderIds.has(order.id)).map((order) => order.user_id));
+    return consentedUsers.filter((user) => matchingUserIds.has(user.id));
+  }
+
+  if (segmentType === 'rfm') {
+    const segment = String(criteria.segment ?? '').trim();
+    if (!segment) return [];
+    const maxFrequency = Math.max(1, ...Array.from(ordersByUser.values()).map((items) => items.length));
+    const maxMonetary = Math.max(1, ...Array.from(ordersByUser.values()).map((items) => items.reduce((sum, order) => sum + Number(order.total), 0)));
+    return consentedUsers.filter((user) => calculateRFMScore(
+      (ordersByUser.get(user.id) ?? []).map((order) => ({ ...order, total: Number(order.total) })),
+      { maxRecency: 365, maxFrequency, maxMonetary },
+    ).segment === segment);
+  }
+
+  const minOrders = Math.max(0, Number(criteria.minOrders) || 0);
+  const minSpent = Math.max(0, Number(criteria.minSpent) || 0);
+  const vipOnly = criteria.vipOnly === true;
+  return consentedUsers.filter((user) => {
+    const userOrders = ordersByUser.get(user.id) ?? [];
+    const totalSpent = userOrders.reduce((sum, order) => sum + Number(order.total), 0);
+    return (!vipOnly || user.is_vip) && userOrders.length >= minOrders && totalSpent >= minSpent;
+  });
+}
+
+export async function estimateSegmentRecipients(segmentType: SegmentType, criteria: Record<string, unknown>) {
+  return (await getSegmentRecipients(segmentType, criteria)).length;
 }
 
 // ====== Send Campaign ======

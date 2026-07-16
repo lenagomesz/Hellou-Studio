@@ -32,8 +32,8 @@ export default function DripCampaignsPage() {
     trigger_type: 'signup',
     break_on_purchase: true,
     steps: [
-      { delay_days: 0, subject: 'Bem-vindo(a)!', body_html: '<h1>Ola {customer_name}!</h1><p>Bem-vindo(a) a helloustudio!</p>' },
-      { delay_days: 3, subject: 'Produto em destaque', body_html: '<h1>Ola {customer_name}!</h1><p>Veja nosso produto mais popular...</p>' },
+      { delay_days: 0, subject: 'Bem-vindo(a)!', body_html: '<h1>Olá {customer_name}!</h1><p>Bem-vindo(a) à Hellou Studio!</p>' },
+      { delay_days: 3, subject: 'Produto em destaque', body_html: '<h1>Olá {customer_name}!</h1><p>Veja nosso produto mais popular...</p>' },
       { delay_days: 7, subject: 'O que dizem nossos clientes', body_html: '<h1>Social proof</h1><p>Veja o que nossos clientes acharam...</p>' },
       { delay_days: 14, subject: 'Sentimos sua falta!', body_html: '<h1>Volte!</h1><p>Temos um desconto especial para você...</p>' },
     ] as DripStep[],
