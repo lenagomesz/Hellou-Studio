@@ -143,10 +143,15 @@ export function ProductDetail({
               ◇
             </div>
           )}
-          {/* Badge de categoria */}
-          <span className="absolute top-3 left-3 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-3 py-1 text-[11px] font-semibold text-pink-600 dark:text-pink-400 shadow-sm">
-            {CATEGORY_LABELS[product.category] ?? product.category}
-          </span>
+          {product.tags && product.tags.length > 0 && (
+            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
+              {product.tags.slice(0, 3).map((tag) => (
+                <span key={tag.id} className="rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-md ring-1 ring-white/40" style={{ backgroundColor: tag.color }}>
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+          )}
           {/* Badge de frete grátis se aplicável */}
           {finalPrice >= 99 && (
             <span className="absolute top-3 right-3 rounded-full bg-green-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
@@ -189,11 +194,6 @@ export function ProductDetail({
             {isOwnedDigital ? '✓ Adquirido' : 'Em estoque'}
           </span>
         </div>
-        {product.tags && product.tags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {product.tags.map((tag) => <span key={tag.id} className="rounded-full px-2.5 py-1 text-[10px] font-bold text-white shadow-sm" style={{ backgroundColor: tag.color }}>{tag.name}</span>)}
-          </div>
-        )}
         <h1 className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</h1>
         <div className="mt-3 flex items-baseline gap-3">
           <p

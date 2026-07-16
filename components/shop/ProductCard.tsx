@@ -46,19 +46,6 @@ export function ProductCard({ product, basePath = "/products", category }: { pro
             ◇
           </div>
         )}
-        {product.tags && product.tags.length > 0 && (
-          <div className="absolute left-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap gap-1.5 sm:left-3 sm:top-3">
-            {product.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag.id}
-                className="rounded-full px-2.5 py-1 text-[9px] font-bold text-white shadow-md ring-1 ring-white/40 backdrop-blur-sm"
-                style={{ backgroundColor: tag.color }}
-              >
-                {tag.name}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
       <div className="p-3 sm:p-4">
         <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-pink-600">
