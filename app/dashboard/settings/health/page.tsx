@@ -68,6 +68,7 @@ export default function ServiceHealthPage() {
   const [loading, setLoading] = useState(true);
   const [runningCron, setRunningCron] = useState<string | null>(null);
   const [cronFeedback, setCronFeedback] = useState<string | null>(null);
+  const [errorFeedback, setErrorFeedback] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,11 +86,19 @@ export default function ServiceHealthPage() {
 
   useEffect(() => { void load(); }, [load]);
 
-  async function resolveError(id: string, resolved: boolean) {
+  async function resolveError(id: string) {
+    setErrorFeedback(null);
     const response = await fetch('/api/admin/observability/errors', {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, resolved }),
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, resolved: true }),
     });
-    if (response.ok) await load();
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { error?: string } | null;
+      setErrorFeedback(payload?.error ?? 'Não foi possível marcar o erro como resolvido.');
+      return;
+    }
+    setErrors((current) => current.filter((error) => error.id !== id));
+    setErrorFeedback('Erro marcado como resolvido e removido das pendências.');
+    await load();
   }
 
   async function runCron(cronName: string) {
@@ -178,14 +187,14 @@ export default function ServiceHealthPage() {
 
         <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 p-5"><h2 className="font-black">Histórico de erros</h2><p className="mt-1 text-xs text-slate-500">Somente mensagens higienizadas, sem CPF, e-mail ou payload completo.</p></div>
+            <div className="border-b border-slate-100 p-5"><h2 className="font-black">Erros pendentes</h2><p className="mt-1 text-xs text-slate-500">Ao marcar como resolvido, o erro sai desta lista. Se acontecer novamente, será reaberto automaticamente.</p>{errorFeedback && <p role="status" className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">{errorFeedback}</p>}</div>
             <div className="divide-y divide-slate-100">
-              {errors.length === 0 && <p className="p-8 text-center text-sm text-slate-500">Nenhum erro registrado.</p>}
-              {errors.slice(0, 20).map((error) => (
-                <article key={error.id} className={`p-5 ${error.resolved_at ? 'opacity-55' : ''}`}>
+              {openErrors.length === 0 && <p className="p-8 text-center text-sm text-slate-500">Nenhum erro pendente.</p>}
+              {openErrors.slice(0, 20).map((error) => (
+                <article key={error.id} className="p-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div><span className={`rounded-full px-2 py-1 text-[10px] font-black uppercase ${error.severity === 'critical' ? 'bg-red-100 text-red-700' : error.severity === 'error' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>{error.severity}</span><h3 className="mt-3 text-sm font-extrabold">{error.title}</h3><p className="mt-1 text-xs text-slate-500">{error.safe_message ?? error.category} · {error.occurrence_count} ocorrência(s) · {new Date(error.last_seen_at).toLocaleString('pt-BR')}</p></div>
-                    <button type="button" onClick={() => void resolveError(error.id, Boolean(error.resolved_at))} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold hover:bg-slate-50">{error.resolved_at ? 'Reabrir' : 'Marcar resolvido'}</button>
+                    <button type="button" onClick={() => void resolveError(error.id)} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold hover:bg-slate-50">Marcar resolvido</button>
                   </div>
                 </article>
               ))}

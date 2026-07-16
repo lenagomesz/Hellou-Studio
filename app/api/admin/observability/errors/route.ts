@@ -21,10 +21,13 @@ export async function PATCH(request: Request) {
   const body = await request.json() as { id?: string; resolved?: boolean };
   if (!body.id) return NextResponse.json({ error: 'Erro não informado.' }, { status: 400 });
 
-  const { error } = await getSupabaseAdmin()
+  const { data, error } = await getSupabaseAdmin()
     .from('operational_errors')
     .update({ resolved_at: body.resolved === false ? null : new Date().toISOString() })
-    .eq('id', body.id);
+    .eq('id', body.id)
+    .select('id, resolved_at')
+    .maybeSingle();
   if (error) return NextResponse.json({ error: 'Não foi possível atualizar o erro.' }, { status: 500 });
-  return NextResponse.json({ success: true });
+  if (!data) return NextResponse.json({ error: 'Erro operacional não encontrado.' }, { status: 404 });
+  return NextResponse.json({ success: true, error: data });
 }
