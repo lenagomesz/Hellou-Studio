@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { AlertCircle, FileUp, ImagePlus, Loader2, Upload, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, FileUp, ImagePlus, Loader2, Upload, X } from 'lucide-react';
 import type { Product } from '@/types/database';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
 import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
@@ -47,6 +47,7 @@ export function STLProductForm({ mode, product }: Props) {
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
@@ -99,6 +100,7 @@ export function STLProductForm({ mode, product }: Props) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
+    setSuccess('');
 
     if (mode === 'create' && !file) return setError('Selecione um arquivo STL');
     if (!name.trim()) return setError('Nome do produto é obrigatório');
@@ -126,7 +128,14 @@ export function STLProductForm({ mode, product }: Props) {
 
       await replaceProductTags(data.product.id, tagIds);
 
-      router.push(`/dashboard/products/${data.product.id}`);
+      if (mode === 'create') {
+        router.push(`/dashboard/products/${data.product.id}/edit`);
+        router.refresh();
+        return;
+      }
+
+      setSuccess('Alterações salvas. O produto STL já foi atualizado na loja.');
+      setLoading(false);
       router.refresh();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Erro de conexão. Tente novamente.');
@@ -146,8 +155,13 @@ export function STLProductForm({ mode, product }: Props) {
           <AlertCircle className="h-5 w-5 shrink-0" /> {error}
         </div>
       )}
+      {success && (
+        <div role="status" className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+          <CheckCircle2 className="h-5 w-5 shrink-0" /> {success}
+        </div>
+      )}
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_460px]">
+      <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_460px]">
         <div className="space-y-6">
       <section className="rounded-[26px] border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-8">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">01 · Arquivo digital</p>
@@ -209,7 +223,7 @@ export function STLProductForm({ mode, product }: Props) {
       </section>
         </div>
 
-        <aside className="space-y-4 xl:sticky xl:top-6">
+        <aside className="space-y-4 2xl:sticky 2xl:top-6">
           <ProductLivePreview
             name={name}
             description={description}

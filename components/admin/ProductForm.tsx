@@ -9,7 +9,7 @@ import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect'
 import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
 import { ProductTagSelect, replaceProductTags } from '@/components/admin/ProductTagSelect';
 import { OptionsManager } from '@/components/admin/OptionsManager';
-import { Loader2, Upload } from 'lucide-react';
+import { CheckCircle2, Loader2, Upload } from 'lucide-react';
 
 type ProductFormProps =
   | { mode: 'create'; product?: undefined }
@@ -60,6 +60,7 @@ export function ProductForm(props: ProductFormProps) {
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   async function uploadImages(files: FileList | File[]) {
     const selected = Array.from(files);
@@ -89,6 +90,7 @@ export function ProductForm(props: ProductFormProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setSuccess(null);
 
     const priceNumber = Number(basePrice);
     if (!name.trim()) {
@@ -162,7 +164,14 @@ export function ProductForm(props: ProductFormProps) {
       setSubmitting(false);
       return;
     }
-    router.push(props.mode === 'create' ? `/dashboard/products/${productId}/edit` : `/dashboard/products/${productId}`);
+    if (props.mode === 'create') {
+      router.push(`/dashboard/products/${productId}/edit`);
+      router.refresh();
+      return;
+    }
+
+    setSuccess('Alterações salvas. O produto já foi atualizado na loja.');
+    setSubmitting(false);
     router.refresh();
   }
 
@@ -184,7 +193,13 @@ export function ProductForm(props: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_460px]">
+      {success && (
+        <div role="status" className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+          <CheckCircle2 className="h-5 w-5 shrink-0" /> {success}
+        </div>
+      )}
+
+      <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_460px]">
         <div className="rounded-[26px] bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 space-y-5 sm:p-8">
         <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">01 · Identidade</p><h2 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Informações principais</h2></div>
         <div>
@@ -462,7 +477,7 @@ export function ProductForm(props: ProductFormProps) {
         </label>}
         </div>
 
-        <aside className="space-y-4 xl:sticky xl:top-6">
+        <aside className="space-y-4 2xl:sticky 2xl:top-6">
           <ProductLivePreview
             name={name}
             description={description}

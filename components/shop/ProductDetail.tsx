@@ -55,8 +55,6 @@ export function ProductDetail({
   );
   const [quantity, setQuantity] = useState(1);
   const [customizationText, setCustomizationText] = useState(() => searchParams.get('customization') ?? '');
-  const [displayImageUrl, setDisplayImageUrl] = useState<string | null>(null);
-
   const selectedOption =
     options.find((o) => o.id === selectedOptionId) ?? null;
 
@@ -64,7 +62,7 @@ export function ProductDetail({
     (product.sale_price ?? product.base_price) + (selectedOption?.price_modifier ?? 0);
   const originalPrice = product.base_price + (selectedOption?.price_modifier ?? 0);
 
-  const currentDisplayImage = displayImageUrl || selectedOption?.image_url || product.image_url;
+  const currentDisplayImage = selectedOption?.image_url || product.image_url;
 
   const galleryImages = useMemo(() => {
     const registeredImages = Array.isArray(product.images) ? product.images : [];
@@ -137,7 +135,7 @@ export function ProductDetail({
       <div className="space-y-6">
         <div className="group relative">
           {galleryImages.length > 0 ? (
-            <ImageGallery images={galleryImages} alt={product.name} />
+            <ImageGallery images={galleryImages} alt={product.name} activeImage={currentDisplayImage} />
           ) : (
             <div className="aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 shadow-sm flex h-full w-full items-center justify-center text-7xl text-pink-200">
               ◇
@@ -211,6 +209,49 @@ export function ProductDetail({
           )}
         </div>
 
+        {options.some((option) => option.color) && (() => {
+          const colors = Array.from(new Set(options.filter((option) => option.color).map((option) => option.color!)));
+          const selectedColor = selectedOption?.color ?? colors[0] ?? null;
+          return (
+            <div className="mt-4 lg:hidden">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cor</h2>
+              <div className="mt-3 flex flex-wrap gap-3">
+                {colors.map((color) => {
+                  const isActive = selectedColor === color;
+                  const colorOptions = options.filter((option) => option.color === color);
+                  const allOutOfStock = requiresReadyStock && colorOptions.every((option) => option.stock === 0);
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      disabled={allOutOfStock}
+                      onClick={() => {
+                        const firstInStock = colorOptions.find((option) => !requiresReadyStock || option.stock > 0);
+                        if (firstInStock) {
+                          setSelectedOptionId(firstInStock.id);
+                          setQuantity(1);
+                        }
+                      }}
+                      className={`relative h-8 w-8 rounded-full border-2 transition-all ${
+                        allOutOfStock
+                          ? 'cursor-not-allowed opacity-40'
+                          : isActive
+                            ? 'scale-110 border-pink-500 ring-2 ring-pink-200'
+                            : 'border-gray-300 hover:scale-105 hover:border-gray-400'
+                      }`}
+                      title={getProductColorName(color)}
+                      aria-label={`Cor ${getProductColorName(color)}`}
+                    >
+                      <span className="absolute inset-1 rounded-full" style={{ backgroundColor: getProductColorValue(color) }} />
+                      {allOutOfStock && <span className="absolute inset-0 flex items-center justify-center"><span className="block h-[2px] w-6 rotate-45 rounded bg-gray-400" /></span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {product.description ? (
           <p className="mt-4 whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
             {product.description}
@@ -247,7 +288,7 @@ export function ProductDetail({
               const colors = Array.from(new Set(options.filter((o) => o.color).map((o) => o.color!)));
               const selectedColor = selectedOption?.color ?? colors[0] ?? null;
               return (
-                <div>
+                <div className="hidden lg:block">
                   <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cor</h2>
                   <div className="mt-3 flex flex-wrap gap-3">
                     {colors.map((color) => {
@@ -263,7 +304,6 @@ export function ProductDetail({
                             const firstInStock = colorOptions.find((o) => !requiresReadyStock || o.stock > 0);
                             if (firstInStock) {
                               setSelectedOptionId(firstInStock.id);
-                              setDisplayImageUrl(firstInStock.image_url || null);
                               setQuantity(1);
                             }
                           }}

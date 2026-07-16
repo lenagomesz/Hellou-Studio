@@ -5,21 +5,31 @@ import { useEffect, useMemo, useState } from 'react';
 interface ImageGalleryProps {
   images: string[];
   alt: string;
+  activeImage?: string | null;
 }
 
-export function ImageGallery({ images, alt }: ImageGalleryProps) {
+export function ImageGallery({ images, alt, activeImage = null }: ImageGalleryProps) {
   const normalizedImages = useMemo(
     () => Array.from(new Set(images.map((image) => image.trim()).filter(Boolean))),
     [images],
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<string[]>([]);
-  const availableImages = normalizedImages.filter((image) => !failedImages.includes(image));
+  const availableImages = useMemo(
+    () => normalizedImages.filter((image) => !failedImages.includes(image)),
+    [failedImages, normalizedImages],
+  );
   const hasMultiple = availableImages.length > 1;
 
   useEffect(() => {
     setCurrentImageIndex((current) => Math.min(current, Math.max(availableImages.length - 1, 0)));
   }, [availableImages.length]);
+
+  useEffect(() => {
+    if (!activeImage) return;
+    const activeIndex = availableImages.indexOf(activeImage.trim());
+    if (activeIndex >= 0) setCurrentImageIndex(activeIndex);
+  }, [activeImage, availableImages]);
 
   useEffect(() => {
     if (!hasMultiple) return;
