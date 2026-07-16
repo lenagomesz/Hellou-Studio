@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ProductForm } from '@/components/admin/ProductForm';
+import { ProductTypeTabs } from '@/components/admin/ProductTypeTabs';
 
 export default function NewProductPage() {
   return (
@@ -12,11 +13,13 @@ export default function NewProductPage() {
           ← Voltar para produtos
         </Link>
         <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Catálogo inteligente</p>
-        <h1 className="mt-1 text-3xl font-bold">Criar novo produto</h1>
+        <h1 className="mt-1 text-3xl font-bold">Cadastrar produto</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
           Defina venda sob demanda ou pronta-entrega. Depois você poderá relacionar variações, cores, material e tempo de produção.
         </p>
       </header>
+
+      <ProductTypeTabs active="physical" />
 
       <ProductForm mode="create" />
     </div>

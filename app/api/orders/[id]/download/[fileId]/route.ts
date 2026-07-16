@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import {
+  getStorageCandidates,
+  normalizeProductRelation,
+  type ProductRelation,
+} from '@/lib/stl-download';
 
 interface DigitalOrderItem {
   product_id: string;
-  product: Array<{
-    id: string;
-    name: string;
-    file_path: string | null;
-    type: string;
-  }>;
+  product: ProductRelation;
 }
 
 export async function GET(
@@ -66,10 +66,11 @@ export async function GET(
 
     // Find digital item matching fileId
     const items = order.order_items as unknown as DigitalOrderItem[];
-    const item = items.find(
-      (candidate) => candidate.product[0]?.id === fileId && candidate.product[0]?.type === 'digital',
-    );
-    const product = item?.product[0];
+    const item = items.find((candidate) => {
+      const candidateProduct = normalizeProductRelation(candidate.product);
+      return candidateProduct?.id === fileId && candidateProduct.type === 'digital';
+    });
+    const product = item ? normalizeProductRelation(item.product) : null;
 
     if (!product?.file_path) {
       console.error('[download] Item or file_path not found:', {
@@ -79,29 +80,26 @@ export async function GET(
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    // Extract filename from file_path (handle both full URL and just filename)
-    const filePath = product.file_path;
-    const fileName = filePath.includes('/') ? (filePath.split('/').pop() ?? filePath) : filePath;
+    const storageCandidates = getStorageCandidates(product.file_path);
+    let fileData: Blob | null = null;
+    let lastError: { message?: string } | null = null;
 
-    console.log('[download] Attempting to download:', {
-      originalPath: product.file_path,
-      extractedFileName: fileName,
-      bucket: 'stl-uploads',
-      productName: product.name,
-    });
+    for (const candidate of storageCandidates) {
+      const result = await supabase.storage.from(candidate.bucket).download(candidate.path);
+      if (result.data && !result.error) {
+        fileData = result.data;
+        break;
+      }
+      lastError = result.error;
+    }
 
-    // Download file from Supabase Storage
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from('stl-uploads')
-      .download(fileName);
-
-    if (downloadError || !fileData) {
+    if (!fileData) {
       console.error('[download] Storage error:', {
-        error: downloadError,
         filePath: product.file_path,
-        errorMessage: downloadError?.message,
+        attemptedLocations: storageCandidates.map(({ bucket, path }) => `${bucket}/${path}`),
+        errorMessage: lastError?.message,
       });
-      return NextResponse.json({ error: 'Failed to download file' }, { status: 500 });
+      return NextResponse.json({ error: 'File not found in storage' }, { status: 404 });
     }
 
     // Log download (optional)

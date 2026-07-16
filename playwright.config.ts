@@ -26,7 +26,9 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   timeout: 90_000,
   webServer: usesExternalServer ? undefined : {
-    command: 'npm run start',
+    // Localmente o build precisa herdar o .env.e2e.local para incorporar as
+    // variáveis NEXT_PUBLIC_*. No CI o quality gate já acabou de gerar o build.
+    command: process.env.CI ? 'npm run start' : 'npm run build && npm run start',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Upload, FileUp, Loader2, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { ProductTypeTabs } from '@/components/admin/ProductTypeTabs';
 
 const CATEGORY_OPTIONS = [
   { value: 'encomenda', label: 'Encomenda' },
@@ -143,21 +144,24 @@ export default function STLUploadPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <header>
+    <div className="space-y-6 max-w-5xl">
+      <header className="rounded-[26px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/60 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
         <Link
           href="/dashboard/products"
           className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
         >
           &larr; Voltar para produtos
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-          Upload de Arquivo STL
+        <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Catálogo digital</p>
+        <h1 className="mt-1 text-3xl font-bold">
+          Cadastrar produto
         </h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          Faca upload de um arquivo .stl para criar um novo produto digital automaticamente.
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+          Envie o arquivo STL e configure as informações que o cliente verá antes da compra.
         </p>
       </header>
+
+      <ProductTypeTabs active="digital" />
 
       {/* Success Message */}
       {success && (

@@ -1,13 +1,13 @@
 import { mkdir } from 'node:fs/promises';
 import { test as setup, expect } from '@playwright/test';
-import { e2eValue, requireE2EEnvironment } from './support/env';
+import { buildUniqueE2EEmail, e2eValue, requireE2EEnvironment } from './support/env';
 import { updateRuntime } from './support/runtime';
 
 setup.beforeAll(() => requireE2EEnvironment());
 
 setup('cadastro e login de um usuário real', async ({ page }) => {
   const password = 'E2e!Hellou2026';
-  const email = `e2e+${Date.now()}@${e2eValue('E2E_EMAIL_DOMAIN')}`;
+  const email = buildUniqueE2EEmail(e2eValue('E2E_EMAIL_DOMAIN'));
 
   await page.goto('/register');
   await page.getByLabel(/Nome completo/i).fill('Cliente E2E');
