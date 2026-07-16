@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import type { Product, ProductOption } from '@/types/database';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
 import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
+import { ProductTagSelect, replaceProductTags } from '@/components/admin/ProductTagSelect';
 
 type ProductFormProps =
   | { mode: 'create'; product?: undefined }
@@ -51,6 +52,7 @@ export function ProductForm(props: ProductFormProps) {
   const [fulfillmentMode, setFulfillmentMode] = useState<'made_to_order' | 'ready_stock' | 'hybrid'>(initial?.fulfillment_mode ?? 'made_to_order');
   const [isCustomizable, setIsCustomizable] = useState(initial?.is_customizable ?? false);
   const [options, setOptions] = useState<DraftOption[]>(() => props.mode === 'create' ? [createDraftOption()] : []);
+  const [tagIds, setTagIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -121,13 +123,17 @@ export function ProductForm(props: ProductFormProps) {
       return;
     }
 
-    if (props.mode === 'create') {
-      const data = (await res.json()) as { product: Product };
-      router.push(`/dashboard/products/${data.product.id}/edit`);
-    } else {
-      router.push(`/dashboard/products/${props.product.id}`);
-      router.refresh();
+    const data = (await res.json()) as { product: Product };
+    const productId = data.product?.id ?? (props.mode === 'edit' ? props.product.id : '');
+    try {
+      await replaceProductTags(productId, tagIds);
+    } catch (tagError) {
+      setError(tagError instanceof Error ? tagError.message : 'Não foi possível salvar as tags');
+      setSubmitting(false);
+      return;
     }
+    router.push(props.mode === 'create' ? `/dashboard/products/${productId}/edit` : `/dashboard/products/${productId}`);
+    router.refresh();
   }
 
   async function handleDelete() {
@@ -397,6 +403,8 @@ export function ProductForm(props: ProductFormProps) {
             A primeira imagem será usada como capa. Arraste para reordenar.
           </p>
         </div>
+
+        <div><p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Tags do produto</p><ProductTagSelect productId={props.mode === 'edit' ? props.product.id : undefined} value={tagIds} onChange={setTagIds} /></div>
 
         {canChangeProductStatus && <label className="flex items-center gap-2">
           <input

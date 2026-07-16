@@ -11,6 +11,7 @@ import { Marquee } from '@/components/ui/Marquee';
 import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
+import { attachProductTags } from '@/lib/product-tags';
 
 export const metadata: Metadata = {
   title: { absolute: 'Hellou Studio' },
@@ -110,7 +111,7 @@ const getFeaturedProducts = unstable_cache(
           .limit(8);
 
         if (error) return [];
-        return (data ?? []) as Product[];
+        return attachProductTags((data ?? []) as Product[]);
       })(),
     ).catch((err) => { console.error('[home/page] withTimeout catch:', err); return [] as Product[]; });
   },
@@ -290,14 +291,14 @@ export default async function HomePage() {
               <ScrollReveal key={cat.slug} delay={i * 150} direction={i === 0 ? 'left' : i === 2 ? 'right' : 'up'}>
                 <Link
                   href={`/products?category=${cat.slug}`}
-                  style={{ borderColor: `${cat.color}44`, backgroundImage: `linear-gradient(135deg, ${cat.color}14, transparent 65%)` }}
+                  style={{ borderColor: '#EC489944', backgroundImage: 'linear-gradient(135deg, #EC489914, transparent 65%)' }}
                   className="group relative overflow-hidden rounded-3xl border bg-white dark:bg-gray-900 p-8 text-center hover-lift block transition-all duration-500 dark:border-gray-800 dark:hover:bg-gray-800"
                 >
-                  <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{ backgroundImage: `linear-gradient(135deg, ${cat.color}18, transparent)` }} />
-                  <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-0 blur-2xl transition-all duration-700 group-hover:right-0 group-hover:top-0 group-hover:opacity-30" style={{ backgroundColor: cat.color }} />
+                  <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{ backgroundImage: 'linear-gradient(135deg, #EC489918, transparent)' }} />
+                  <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-pink-500 opacity-0 blur-2xl transition-all duration-700 group-hover:right-0 group-hover:top-0 group-hover:opacity-30" />
 
                   <div className="relative">
-                    <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-sm transition-all duration-500 group-hover:scale-125 group-hover:shadow-lg group-hover:-rotate-6" style={{ backgroundColor: `${cat.color}20` }}>
+                    <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-pink-500/10 text-3xl shadow-sm transition-all duration-500 group-hover:scale-125 group-hover:shadow-lg group-hover:-rotate-6">
                       {presentation.emoji}
                     </span>
                     <h3 className="mt-5 text-lg font-bold text-gray-900 dark:text-white transition-colors duration-300 group-hover:text-pink-700 dark:group-hover:text-pink-400">
@@ -306,7 +307,7 @@ export default async function HomePage() {
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                       {presentation.description}
                     </p>
-                    <p className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold transition-all duration-300 group-hover:gap-3" style={{ color: cat.color }}>
+                    <p className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-pink-600 transition-all duration-300 group-hover:gap-3">
                       Ver produtos
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-3.5 w-3.5 transition-transform duration-500 group-hover:translate-x-2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />

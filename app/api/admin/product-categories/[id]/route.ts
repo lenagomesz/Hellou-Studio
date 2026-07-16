@@ -24,11 +24,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     update.name = name;
   }
   if (body.active !== undefined) update.active = Boolean(body.active);
-  if (body.color !== undefined) {
-    const color = body.color.toUpperCase();
-    if (!/^#[0-9A-F]{6}$/.test(color)) return badRequest('Cor da categoria inválida');
-    update.color = color;
-  }
+  update.color = '#EC4899';
   if (body.sort_order !== undefined) {
     if (!Number.isInteger(body.sort_order)) return badRequest('A ordem deve ser um número inteiro');
     update.sort_order = body.sort_order;

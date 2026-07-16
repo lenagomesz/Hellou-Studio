@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
+import { attachProductTags } from '@/lib/product-tags';
 
 export const metadata: Metadata = {
   title: 'Arquivos STL para impressão 3D',
@@ -28,7 +29,7 @@ async function getSTLProducts(category?: string): Promise<Product[]> {
     }
 
     console.log('[stl-page] Loaded digital products:', data?.length || 0);
-    return (data || []) as Product[];
+    return attachProductTags((data || []) as Product[]);
   } catch (error) {
     console.error('[stl-page] Error loading products:', error);
     return [];
@@ -90,7 +91,7 @@ export default async function STLMarketplacePage(props: { searchParams: Promise<
           <nav aria-label="Categorias de arquivos STL" className="mb-6 flex flex-wrap gap-2">
             <Link href="/stl" style={!activeCategory ? { backgroundColor: '#EC4899' } : undefined} className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${!activeCategory ? 'text-white shadow-sm' : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'}`}>Todos</Link>
             {categories.map((category) => (
-              <Link key={category.id} href={`/stl?category=${encodeURIComponent(category.slug)}`} style={activeCategory === category.slug ? { backgroundColor: category.color } : { borderColor: `${category.color}55` }} className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${activeCategory === category.slug ? 'text-white shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300'}`}>{category.name}</Link>
+              <Link key={category.id} href={`/stl?category=${encodeURIComponent(category.slug)}`} style={activeCategory === category.slug ? { backgroundColor: '#EC4899' } : { borderColor: '#EC489955' }} className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${activeCategory === category.slug ? 'text-white shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300'}`}>{category.name}</Link>
             ))}
           </nav>
         )}

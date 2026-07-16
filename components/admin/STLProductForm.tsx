@@ -8,6 +8,7 @@ import { AlertCircle, FileUp, ImagePlus, Loader2, Upload, X } from 'lucide-react
 import type { Product } from '@/types/database';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
 import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
+import { ProductTagSelect, replaceProductTags } from '@/components/admin/ProductTagSelect';
 
 const MAX_STL_SIZE = 100 * 1024 * 1024;
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
@@ -43,6 +44,7 @@ export function STLProductForm({ mode, product }: Props) {
   const [price, setPrice] = useState(product ? String(product.base_price) : '');
   const [category, setCategory] = useState(product?.category ?? 'encomenda');
   const [active, setActive] = useState(product?.active ?? true);
+  const [tagIds, setTagIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [dragOver, setDragOver] = useState(false);
@@ -122,6 +124,8 @@ export function STLProductForm({ mode, product }: Props) {
       const data = (await response.json().catch(() => ({}))) as { error?: string; product?: Product };
       if (!response.ok || !data.product) throw new Error(data.error ?? 'Não foi possível salvar o produto STL');
 
+      await replaceProductTags(data.product.id, tagIds);
+
       router.push(`/dashboard/products/${data.product.id}`);
       router.refresh();
     } catch (submitError) {
@@ -199,6 +203,7 @@ export function STLProductForm({ mode, product }: Props) {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria<ProductCategorySelect value={category} onChange={setCategory} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" /></label>
         </div>
         {canChangeProductStatus && <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" /> Produto ativo e visível na loja</label>}
+        <div><p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Tags do produto</p><ProductTagSelect productId={mode === 'edit' ? product.id : undefined} value={tagIds} onChange={setTagIds} /></div>
       </section>
 
       <ProductLivePreview

@@ -44,6 +44,7 @@ export interface Product {
   updated_at: string;
   fulfillment_mode?: 'made_to_order' | 'ready_stock' | 'hybrid';
   is_customizable?: boolean;
+  tags?: ProductTag[];
 }
 
 export interface ProductOption {
@@ -217,6 +218,7 @@ export interface ProductTag {
   name: string;
   color: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface ProductTagAssignment {

@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
+import { attachProductTags } from '@/lib/product-tags';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +65,7 @@ async function getProductsRaw(filters: {
 
   const { data, error } = await query;
   console.log('[products/page] query result - count:', data?.length ?? 0, 'error:', error?.message ?? 'none');
-  return (data ?? []) as Product[];
+  return attachProductTags((data ?? []) as Product[]);
 }
 
 async function getProducts(filters: {
@@ -127,7 +128,7 @@ export default async function ProductsCatalogPage(
           if (sort) params.set('sort', sort);
           const href = `/products${params.toString() ? `?${params}` : ''}`;
           const isActive = activeCategory === cat.slug;
-          const categoryColor = 'color' in cat ? cat.color : '#EC4899';
+          const categoryColor = '#EC4899';
           return (
             <Link
               key={cat.slug}

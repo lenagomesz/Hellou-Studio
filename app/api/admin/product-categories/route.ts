@@ -41,11 +41,10 @@ export async function POST(request: Request) {
 
   const name = body.name?.trim();
   const slug = createSlug(body.slug?.trim() || name || '');
-  const color = body.color?.toUpperCase() || '#EC4899';
+  const color = '#EC4899';
   if (!name) return badRequest('Nome da categoria é obrigatório');
   if (!slug) return badRequest('Identificador da categoria é inválido');
   if (name.length > 60) return badRequest('O nome deve ter no máximo 60 caracteres');
-  if (!/^#[0-9A-F]{6}$/.test(color)) return badRequest('Cor da categoria inválida');
 
   const { data, error } = await getSupabaseAdmin()
     .from('product_categories')

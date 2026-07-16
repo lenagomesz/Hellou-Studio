@@ -9,6 +9,7 @@ import { ProductReviews } from '@/components/shop/ProductReviews';
 import { getCurrentUser } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
 import { absoluteUrl, plainText, productImages, safeJsonLd } from '@/lib/seo';
+import { attachProductTags } from '@/lib/product-tags';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -109,12 +110,13 @@ export default async function ProductDetailPage(
   const result = await getProductWithOptions(id);
   if (!result) notFound();
 
-  const { product, options } = result;
+  const { product: rawProduct, options } = result;
+  const product = (await attachProductTags([rawProduct]))[0];
 
   if (product.category === 'encomenda') notFound();
 
   const [related, user] = await Promise.all([
-    getRelatedProducts(product.category, product.id, product.type),
+    getRelatedProducts(product.category, product.id, product.type).then(attachProductTags),
     getCurrentUser(),
   ]);
 

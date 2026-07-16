@@ -48,9 +48,16 @@ export function ProductCard({ product, basePath = "/products", category }: { pro
         )}
       </div>
       <div className="p-3 sm:p-4">
-        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider" style={{ color: category?.color ?? '#EC4899' }}>
+        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-pink-600">
           {category?.name ?? CATEGORY_LABELS[product.category] ?? product.category}
         </p>
+        {product.tags && product.tags.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {product.tags.slice(0, 3).map((tag) => (
+              <span key={tag.id} className="rounded-full px-2 py-0.5 text-[9px] font-bold text-white" style={{ backgroundColor: tag.color }}>{tag.name}</span>
+            ))}
+          </div>
+        )}
         <h3 className="mt-1 line-clamp-1 text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
           {product.name}
         </h3>

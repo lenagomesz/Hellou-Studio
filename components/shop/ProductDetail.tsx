@@ -188,6 +188,11 @@ export function ProductDetail({
             {isOwnedDigital ? '✓ Adquirido' : 'Em estoque'}
           </span>
         </div>
+        {product.tags && product.tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {product.tags.map((tag) => <span key={tag.id} className="rounded-full px-2.5 py-1 text-[10px] font-bold text-white shadow-sm" style={{ backgroundColor: tag.color }}>{tag.name}</span>)}
+          </div>
+        )}
         <h1 className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</h1>
         <div className="mt-3 flex items-baseline gap-3">
           <p

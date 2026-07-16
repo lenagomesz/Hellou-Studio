@@ -9,6 +9,7 @@ import { getCurrentUser } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
 import { absoluteUrl, plainText, productImages, safeJsonLd } from '@/lib/seo';
 import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
+import { attachProductTags } from '@/lib/product-tags';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -99,10 +100,11 @@ export default async function STLProductDetailPage(
   const result = await getProductWithOptions(id);
   if (!result) notFound();
 
-  const { product, options } = result;
+  const { product: rawProduct, options } = result;
+  const product = (await attachProductTags([rawProduct]))[0];
 
   const [related, user] = await Promise.all([
-    getRelatedProducts(product.id),
+    getRelatedProducts(product.id).then(attachProductTags),
     getCurrentUser(),
   ]);
   let ownedOrderId: string | null = null;
