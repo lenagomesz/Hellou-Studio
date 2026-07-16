@@ -104,6 +104,7 @@ export function ProductDetail({
           image_url: product.image_url,
           category: product.category,
           type: product.type,
+          fulfillment_mode: product.fulfillment_mode,
         },
         option: selectedOption
           ? {

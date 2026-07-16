@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { computeCartTotal, computeUnitPrice, type CartItemView } from '@/lib/cart';
+import {
+  clampQuantity,
+  computeCartTotal,
+  computeUnitPrice,
+  getCartStockLimit,
+  type CartItemView,
+} from '@/lib/cart';
 
 function cartItem(salePrice: number | null): CartItemView {
   return {
@@ -16,6 +22,7 @@ function cartItem(salePrice: number | null): CartItemView {
       image_url: null,
       category: 'chaveiros',
       type: 'physical',
+      fulfillment_mode: 'made_to_order',
     },
     option: {
       id: 'option-1',
@@ -38,5 +45,28 @@ describe('preços do carrinho', () => {
     const item = cartItem(null);
     expect(computeUnitPrice(item)).toBe(30);
     expect(computeCartTotal([item])).toBe(60);
+  });
+});
+
+describe('quantidade no carrinho', () => {
+  it('não limita produto sob encomenda pelo estoque da variação', () => {
+    const item = cartItem(null);
+    item.option!.stock = 0;
+
+    const limit = getCartStockLimit(item.product, item.option);
+
+    expect(limit).toBeUndefined();
+    expect(clampQuantity(5, limit)).toBe(5);
+  });
+
+  it('limita produto de pronta-entrega pelo estoque da variação', () => {
+    const item = cartItem(null);
+    item.product.fulfillment_mode = 'ready_stock';
+    item.option!.stock = 3;
+
+    const limit = getCartStockLimit(item.product, item.option);
+
+    expect(limit).toBe(3);
+    expect(clampQuantity(5, limit)).toBe(3);
   });
 });

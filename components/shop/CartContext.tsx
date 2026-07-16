@@ -16,6 +16,7 @@ import {
   computeCartCount,
   computeCartTotal,
   findExistingItem,
+  getCartStockLimit,
   type AddItemInput,
   type CartItemView,
 } from '@/lib/cart';
@@ -224,7 +225,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback(
     async ({ product, option, quantity, customization_text }: AddItemInput) => {
-      const safeQuantity = clampQuantity(quantity, option?.stock);
+      const stockLimit = getCartStockLimit(product, option);
+      const safeQuantity = clampQuantity(quantity, stockLimit);
       const normalizedCustomization = customization_text?.trim() || null;
 
       if (isAuthed) {
@@ -251,7 +253,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (existing) {
           const newQty = clampQuantity(
             existing.quantity + safeQuantity,
-            option?.stock,
+            stockLimit,
           );
           return prev.map((item) =>
             item.id === existing.id ? { ...item, quantity: newQty } : item,
@@ -276,7 +278,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     async (id: string, quantity: number) => {
       const target = items.find((item) => item.id === id);
       if (!target) return;
-      const safeQuantity = clampQuantity(quantity, target.option?.stock);
+      const safeQuantity = clampQuantity(
+        quantity,
+        getCartStockLimit(target.product, target.option),
+      );
 
       if (isAuthed) {
         setStatus('syncing');

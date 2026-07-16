@@ -10,6 +10,7 @@ import { useCart } from '@/components/shop/CartContext';
 import {
   computeItemTotal,
   computeUnitPrice,
+  getCartStockLimit,
   type CartItemView,
 } from '@/lib/cart';
 import type { ShippingOption } from '@/lib/shipping';
@@ -891,7 +892,7 @@ function CartLine({
 }>) {
   const unit = computeUnitPrice(item);
   const lineTotal = computeItemTotal(item);
-  const max = Math.min(item.option?.stock ?? 50, 50);
+  const max = Math.min(getCartStockLimit(item.product, item.option) ?? 50, 50);
   const atMax = item.quantity >= max;
 
   return (

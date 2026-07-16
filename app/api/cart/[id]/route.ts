@@ -6,7 +6,7 @@ import {
   requireUser,
   serverError,
 } from '@/lib/api';
-import type { CartItem, ProductOption } from '@/types/database';
+import type { CartItem, Product, ProductOption } from '@/types/database';
 
 export async function PATCH(
   request: Request,
@@ -38,20 +38,28 @@ export async function PATCH(
 
   const { data: existingRow, error: existingError } = await admin
     .from('cart_items')
-    .select('id, user_id, product_option_id')
+    .select('id, user_id, product_id, product_option_id')
     .eq('id', id)
     .eq('user_id', auth.user.id)
     .maybeSingle();
 
   const existing = existingRow as Pick<
     CartItem,
-    'id' | 'user_id' | 'product_option_id'
+    'id' | 'user_id' | 'product_id' | 'product_option_id'
   > | null;
   if (existingError) return serverError('Erro ao buscar item');
   if (!existing) return notFound('Item não encontrado');
 
   let cap = 50;
-  if (existing.product_option_id) {
+  const { data: productRow, error: productError } = await admin
+    .from('products')
+    .select('fulfillment_mode')
+    .eq('id', existing.product_id)
+    .maybeSingle();
+  if (productError) return serverError('Erro ao validar produto');
+  const product = productRow as Pick<Product, 'fulfillment_mode'> | null;
+
+  if (product?.fulfillment_mode === 'ready_stock' && existing.product_option_id) {
     const { data: optionRow, error: optionError } = await admin
       .from('product_options')
       .select('stock')

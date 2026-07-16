@@ -8,7 +8,7 @@ import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
 type RawCartRow = CartItem & {
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'active'
+    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'active' | 'fulfillment_mode'
   > | null;
   option:
     | Pick<ProductOption, 'id' | 'product_id' | 'name' | 'price_modifier' | 'stock' | 'color'>
@@ -32,6 +32,7 @@ function toView(row: RawCartRow): CartItemView | null {
       image_url: row.product.image_url,
       category: row.product.category,
       type: row.product.type,
+      fulfillment_mode: row.product.fulfillment_mode,
     },
     option: row.option
       ? {
@@ -53,7 +54,7 @@ export async function GET() {
   const { data, error } = await admin
     .from('cart_items')
     .select(
-      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, sale_price, image_url, category, type, active), option:product_options(id, product_id, name, price_modifier, stock, color)',
+      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, sale_price, image_url, category, type, active, fulfillment_mode), option:product_options(id, product_id, name, price_modifier, stock, color)',
     )
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: true });
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
 
   const { data: productRow, error: productError } = await admin
     .from('products')
-    .select('id, name, type, category, active, is_customizable')
+    .select('id, name, type, category, active, is_customizable, fulfillment_mode')
     .eq('id', product_id)
     .maybeSingle();
 
@@ -183,7 +184,9 @@ export async function POST(request: Request) {
   const existing =
     matchRows.find((r) => r.product_option_id === optionId && (r.customization_text ?? '') === normalizedCustomization) ?? null;
 
-  const cap = Math.min(optionStock ?? 50, 50);
+  const cap = product.fulfillment_mode === 'ready_stock'
+    ? Math.min(optionStock ?? 50, 50)
+    : 50;
   const targetQty = (existing?.quantity ?? 0) + requestedQty;
   const finalQty = Math.max(1, Math.min(cap, targetQty));
 

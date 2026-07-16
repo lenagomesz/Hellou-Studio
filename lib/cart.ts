@@ -9,7 +9,7 @@ export interface CartItemView {
   created_at?: string;
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type'
+    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'fulfillment_mode'
   >;
   option: Pick<
     ProductOption,
@@ -60,6 +60,13 @@ export function clampQuantity(
 ): number {
   const max = Math.min(stock ?? 50, 50);
   return Math.max(1, Math.min(max, Math.floor(quantity)));
+}
+
+export function getCartStockLimit(
+  product: Pick<Product, 'fulfillment_mode'>,
+  option: Pick<ProductOption, 'stock'> | null,
+): number | undefined {
+  return product.fulfillment_mode === 'ready_stock' ? option?.stock : undefined;
 }
 
 export function validateCartProductTypes(items: Array<{ product: { type: string } }>) {
