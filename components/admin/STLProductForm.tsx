@@ -147,7 +147,9 @@ export function STLProductForm({ mode, product }: Props) {
         </div>
       )}
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_460px]">
+        <div className="space-y-6">
+      <section className="rounded-[26px] border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-8">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">01 · Arquivo digital</p>
         <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Arquivo STL</h2>
         <p className="mt-1 text-sm text-gray-500">{mode === 'edit' && product.file_path ? 'O arquivo atual será mantido. Selecione outro somente para substituí-lo.' : 'Envie o arquivo que o cliente receberá após a compra.'}</p>
@@ -171,7 +173,7 @@ export function STLProductForm({ mode, product }: Props) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+      <section className="rounded-[26px] border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-8">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">02 · Galeria</p>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div><h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Imagens do produto</h2><p className="mt-1 text-sm text-gray-500">Mostre o modelo pronto, detalhes e ângulos diferentes. A primeira imagem será a capa.</p></div>
@@ -194,7 +196,7 @@ export function STLProductForm({ mode, product }: Props) {
         )}
       </section>
 
-      <section className="space-y-5 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+      <section className="space-y-5 rounded-[26px] border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-8">
         <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">03 · Informações</p><h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Dados para venda</h2></div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do produto *<input value={name} onChange={(event) => setName(event.target.value)} required className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" /></label>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição<textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} className="mt-1 w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-pink-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" /></label>
@@ -205,18 +207,26 @@ export function STLProductForm({ mode, product }: Props) {
         {canChangeProductStatus && <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" /> Produto ativo e visível na loja</label>}
         <div><p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Tags do produto</p><ProductTagSelect productId={mode === 'edit' ? product.id : undefined} value={tagIds} onChange={setTagIds} /></div>
       </section>
+        </div>
 
-      <ProductLivePreview
-        name={name}
-        description={description}
-        category={category}
-        basePrice={Number(price) || 0}
-        images={allImages.map((image) => image.url)}
-        type="digital"
-        active={active}
-      />
+        <aside className="space-y-4 xl:sticky xl:top-6">
+          <ProductLivePreview
+            name={name}
+            description={description}
+            category={category}
+            basePrice={Number(price) || 0}
+            images={allImages.map((image) => image.url)}
+            type="digital"
+            active={active}
+            compact
+          />
+          <div className="rounded-2xl border border-pink-100 bg-pink-50/70 p-4 text-xs leading-5 text-slate-600 dark:border-pink-900/40 dark:bg-pink-500/10 dark:text-slate-300">
+            O preview mostra imediatamente a capa, o nome, o preço e a categoria que aparecerão para o cliente.
+          </div>
+        </aside>
+      </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="sticky bottom-4 z-20 flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
         <button type="submit" disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-500 px-6 py-3 font-semibold text-white shadow-lg disabled:opacity-50">{loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}{loading ? 'Salvando...' : mode === 'edit' ? 'Salvar alterações' : 'Criar produto STL'}</button>
         <Link href={product ? `/dashboard/products/${product.id}` : '/dashboard/products'} className="rounded-xl border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300">Cancelar</Link>
       </div>

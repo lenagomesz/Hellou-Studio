@@ -19,6 +19,7 @@ type Props = {
   type: 'physical' | 'digital';
   active: boolean;
   options?: PreviewOption[];
+  compact?: boolean;
 };
 
 function formatPrice(value: number) {
@@ -35,6 +36,7 @@ export function ProductLivePreview({
   type,
   active,
   options = [],
+  compact = false,
 }: Props) {
   const categories = useProductCategories();
   const selectedCategory = categories.find((item) => item.slug === category);
@@ -54,8 +56,8 @@ export function ProductLivePreview({
         <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>{active ? 'Visível' : 'Inativo'}</span>
       </div>
 
-      <div className="grid gap-0 bg-white dark:bg-slate-900 md:grid-cols-[1.05fr_0.95fr]">
-        <div className="border-b border-slate-100 p-5 dark:border-slate-800 md:border-b-0 md:border-r">
+      <div className={`grid gap-0 bg-white dark:bg-slate-900 ${compact ? '' : 'md:grid-cols-[1.05fr_0.95fr]'}`}>
+        <div className={`border-b border-slate-100 p-5 dark:border-slate-800 ${compact ? '' : 'md:border-b-0 md:border-r'}`}>
           <div className="aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-slate-800 dark:to-slate-700">
             {images[0] ? (
               // eslint-disable-next-line @next/next/no-img-element

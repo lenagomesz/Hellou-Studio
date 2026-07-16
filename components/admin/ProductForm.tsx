@@ -154,7 +154,8 @@ export function ProductForm(props: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="rounded-[26px] bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 space-y-5 sm:p-8">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_460px]">
+        <div className="rounded-[26px] bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 space-y-5 sm:p-8">
         <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">01 · Identidade</p><h2 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Informações principais</h2></div>
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -415,21 +416,28 @@ export function ProductForm(props: ProductFormProps) {
           />
           <span className="text-sm text-gray-700 dark:text-gray-300">Produto ativo (visível na loja)</span>
         </label>}
-      </div>
+        </div>
 
-      <ProductLivePreview
-        name={name}
-        description={description}
-        category={category}
-        basePrice={Number(basePrice) || 0}
-        salePrice={salePrice ? Number(salePrice) : null}
-        images={images}
-        type="physical"
-        active={active}
-        options={props.mode === 'edit'
-          ? (props.productOptions ?? []).map((option) => ({ id: option.id, name: option.name, priceModifier: option.price_modifier }))
-          : options.filter((option) => option.name.trim()).map((option) => ({ id: option.id, name: option.name, priceModifier: Number(option.priceModifier) || 0 }))}
-      />
+        <aside className="space-y-4 xl:sticky xl:top-6">
+          <ProductLivePreview
+            name={name}
+            description={description}
+            category={category}
+            basePrice={Number(basePrice) || 0}
+            salePrice={salePrice ? Number(salePrice) : null}
+            images={images}
+            type="physical"
+            active={active}
+            compact
+            options={props.mode === 'edit'
+              ? (props.productOptions ?? []).map((option) => ({ id: option.id, name: option.name, priceModifier: option.price_modifier }))
+              : options.filter((option) => option.name.trim()).map((option) => ({ id: option.id, name: option.name, priceModifier: Number(option.priceModifier) || 0 }))}
+          />
+          <div className="rounded-2xl border border-pink-100 bg-pink-50/70 p-4 text-xs leading-5 text-slate-600 dark:border-pink-900/40 dark:bg-pink-500/10 dark:text-slate-300">
+            O preview acompanha nome, preço, capa, categoria e variações em tempo real. Salve para publicar as alterações na loja.
+          </div>
+        </aside>
+      </div>
 
       {error && (
         <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">
@@ -437,7 +445,7 @@ export function ProductForm(props: ProductFormProps) {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"

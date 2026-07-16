@@ -37,13 +37,13 @@ export default async function EditProductPage(
 
   if (product.type === 'digital') {
     return (
-      <div className="max-w-5xl space-y-6">
-        <header className="rounded-[26px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/60 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
+      <div className="w-full space-y-6">
+        <header className="relative overflow-hidden rounded-[28px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/70 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
           <Link href={`/dashboard/products/${product.id}`} className="text-sm text-gray-600 hover:text-gray-900">
             &larr; Voltar para o produto
           </Link>
           <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Produto digital</p>
-          <h1 className="mt-1 text-3xl font-bold">Editar produto STL</h1>
+          <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Editar produto STL</h1>
           <p className="mt-2 text-sm text-slate-600">{product.name}</p>
         </header>
 
@@ -54,22 +54,23 @@ export default async function EditProductPage(
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <header>
+    <div className="w-full space-y-6">
+      <header className="relative overflow-hidden rounded-[28px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/70 to-orange-50 p-6 text-slate-950 shadow-sm sm:p-8">
         <Link
           href={`/dashboard/products/${product.id}`}
-          className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+          className="text-sm text-slate-500 hover:text-pink-600"
         >
           ← Voltar para o produto
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">Editar produto físico</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{product.name}</p>
+        <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Catálogo inteligente</p>
+        <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Editar produto físico</h1>
+        <p className="mt-2 text-sm text-slate-600">{product.name}</p>
       </header>
 
       <ProductTypeTabs active="physical" />
       <ProductForm mode="edit" product={product} productOptions={options} />
 
-      <div className="rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+      <div className="rounded-[26px] bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 sm:p-8">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tamanhos e variações</h2>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           Adicione tamanhos (P, M, G), cores ou outras variações com modificadores de preço e controle de estoque.
