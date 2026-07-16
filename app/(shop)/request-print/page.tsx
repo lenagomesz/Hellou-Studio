@@ -226,8 +226,26 @@ export default function RequestPrintPage() {
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Opção 2: Link Makerworld</h3>
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-                Encontrou algo legal no Makerworld? Cole o link e vou avaliar a licença para você.
+                Encontrou algo legal no{' '}
+                <a
+                  href="https://makerworld.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  MakerWorld
+                </a>
+                ? Cole o link e vou avaliar a licença para você.
               </p>
+
+              <a
+                href="https://makerworld.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-4 inline-flex w-fit items-center rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+              >
+                Acessar o MakerWorld ↗
+              </a>
 
               <label htmlFor="makerworld-link" className="block text-xs font-semibold text-gray-900 dark:text-white mb-2">
                 Link do projeto
@@ -237,7 +255,7 @@ export default function RequestPrintPage() {
                 type="url"
                 value={makerLink}
                 onChange={(e) => setMakerLink(e.target.value)}
-                placeholder="https://www.makerworld.com.br/pt/models/..."
+                placeholder="https://makerworld.com/pt/models/..."
                 disabled={file !== null}
                 className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition mb-3 ${
                   file

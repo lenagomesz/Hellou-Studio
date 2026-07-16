@@ -12,6 +12,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
   escritorio: 'Escritório',
   criaturas: 'Criaturas',
+  decoracao: 'Decoração',
 };
 
 function formatPrice(value: number) {
