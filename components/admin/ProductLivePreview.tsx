@@ -93,7 +93,7 @@ export function ProductLivePreview({
             <div className="mt-6">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Variações</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {options.slice(0, 6).map((option) => <span key={option.id} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">{option.name || 'Variação'}{option.priceModifier !== 0 ? ` · ${option.priceModifier > 0 ? '+' : '−'} ${formatPrice(Math.abs(option.priceModifier))}` : ''}</span>)}
+                {options.slice(0, 6).map((option) => <span key={option.id} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">{option.name || 'Variação'}</span>)}
               </div>
             </div>
           )}

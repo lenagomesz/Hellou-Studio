@@ -188,7 +188,11 @@ export function ProductDetail({
         </div>
         <h1 className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</h1>
         <div className="mt-3 flex items-baseline gap-3">
-          <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">
+          <p
+            key={selectedOptionId ?? 'base-price'}
+            aria-live="polite"
+            className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent"
+          >
             {formatPrice(finalPrice)}
           </p>
           {product.sale_price !== null && product.sale_price < product.base_price && (
@@ -315,25 +319,24 @@ export function ProductDetail({
                         }`}
                       >
                         <span className="block">{option.name}</span>
-                        {option.price_modifier !== 0 ? (
-                          <span className="block text-xs font-normal text-gray-500 dark:text-gray-400">
-                            {option.price_modifier > 0 ? '+' : ''}
-                            {formatPrice(option.price_modifier)}
-                          </span>
-                        ) : null}
                       </button>
                     );
                   });
                 })()}
               </div>
               {selectedOption ? (
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  {requiresReadyStock
-                    ? `${selectedOption.stock} em pronta-entrega`
-                    : product.fulfillment_mode === 'hybrid' && selectedOption.stock > 0
-                      ? `${selectedOption.stock} em pronta-entrega; demais unidades sob demanda`
-                      : 'Produzido sob demanda após o pagamento'}
-                </p>
+                <div className="mt-3 rounded-xl border border-pink-100 bg-pink-50/70 px-3 py-2.5 dark:border-pink-900/60 dark:bg-pink-950/30">
+                  <p className="text-xs font-bold text-pink-700 dark:text-pink-300">
+                    Preço com “{selectedOption.name}”: {formatPrice(finalPrice)}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {requiresReadyStock
+                      ? `${selectedOption.stock} em pronta-entrega`
+                      : product.fulfillment_mode === 'hybrid' && selectedOption.stock > 0
+                        ? `${selectedOption.stock} em pronta-entrega; demais unidades sob demanda`
+                        : 'Produzido sob demanda após o pagamento'}
+                  </p>
+                </div>
               ) : null}
             </div>
 
