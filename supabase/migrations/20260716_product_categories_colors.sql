@@ -22,3 +22,13 @@ WHERE type IS NULL;
 ALTER TABLE public.products
   ALTER COLUMN type SET DEFAULT 'physical';
 
+-- A migração final sempre reafirma a proteção da nova tabela.
+ALTER TABLE public.product_categories ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can read active product categories"
+  ON public.product_categories;
+
+CREATE POLICY "Public can read active product categories"
+  ON public.product_categories
+  FOR SELECT
+  USING (active = true);
