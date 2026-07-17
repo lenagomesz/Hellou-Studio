@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 interface ImageGalleryProps {
   images: string[];
   alt: string;
   activeImage?: string | null;
+  overlay?: ReactNode;
 }
 
-export function ImageGallery({ images, alt, activeImage = null }: ImageGalleryProps) {
+export function ImageGallery({ images, alt, activeImage = null, overlay }: ImageGalleryProps) {
   const normalizedImages = useMemo(
     () => Array.from(new Set(images.map((image) => image.trim()).filter(Boolean))),
     [images],
@@ -55,7 +56,7 @@ export function ImageGallery({ images, alt, activeImage = null }: ImageGalleryPr
 
   return (
     <div>
-      <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
+      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={currentImage}
@@ -63,6 +64,7 @@ export function ImageGallery({ images, alt, activeImage = null }: ImageGalleryPr
           className="h-full w-full object-cover"
           onError={() => markAsFailed(currentImage)}
         />
+        {overlay}
       </div>
 
       {hasMultiple && (

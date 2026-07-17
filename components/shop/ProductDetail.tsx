@@ -81,6 +81,15 @@ export function ProductDetail({
   const hasSelectedOption = options.length === 0 || selectedOption !== null;
   const canAddToCart = !isOwnedDigital && hasSelectedOption && hasRequiredCustomization;
   const isSyncing = status === 'syncing';
+  const tagOverlay = product.tags && product.tags.length > 0 ? (
+    <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
+      {product.tags.slice(0, 3).map((tag) => (
+        <span key={tag.id} className="rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-md ring-1 ring-white/40" style={{ backgroundColor: tag.color }}>
+          {tag.name}
+        </span>
+      ))}
+    </div>
+  ) : null;
 
   const handleAddToCart = async () => {
     if (!canAddToCart) return;
@@ -135,19 +144,11 @@ export function ProductDetail({
       <div className="space-y-6">
         <div className="group relative">
           {galleryImages.length > 0 ? (
-            <ImageGallery images={galleryImages} alt={product.name} activeImage={currentDisplayImage} />
+            <ImageGallery images={galleryImages} alt={product.name} activeImage={currentDisplayImage} overlay={tagOverlay} />
           ) : (
-            <div className="aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 shadow-sm flex h-full w-full items-center justify-center text-7xl text-pink-200">
+            <div className="relative flex aspect-square h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 text-7xl text-pink-200 shadow-sm dark:from-gray-800 dark:to-gray-800">
               ◇
-            </div>
-          )}
-          {product.tags && product.tags.length > 0 && (
-            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
-              {product.tags.slice(0, 3).map((tag) => (
-                <span key={tag.id} className="rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-md ring-1 ring-white/40" style={{ backgroundColor: tag.color }}>
-                  {tag.name}
-                </span>
-              ))}
+              {tagOverlay}
             </div>
           )}
           {/* Badge de frete grátis se aplicável */}
