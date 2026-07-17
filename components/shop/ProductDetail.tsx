@@ -55,6 +55,7 @@ export function ProductDetail({
   );
   const [quantity, setQuantity] = useState(1);
   const [customizationText, setCustomizationText] = useState(() => searchParams.get('customization') ?? '');
+  const [gallerySelectionVersion, setGallerySelectionVersion] = useState(0);
   const selectedOption =
     options.find((o) => o.id === selectedOptionId) ?? null;
 
@@ -144,7 +145,7 @@ export function ProductDetail({
       <div className="space-y-6">
         <div className="group relative">
           {galleryImages.length > 0 ? (
-            <ImageGallery images={galleryImages} alt={product.name} activeImage={currentDisplayImage} overlay={tagOverlay} />
+            <ImageGallery images={galleryImages} alt={product.name} activeImage={currentDisplayImage} activeImageKey={gallerySelectionVersion} overlay={tagOverlay} />
           ) : (
             <div className="relative flex aspect-square h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 text-7xl text-pink-200 shadow-sm dark:from-gray-800 dark:to-gray-800">
               ◇
@@ -230,6 +231,7 @@ export function ProductDetail({
                         const firstInStock = colorOptions.find((option) => !requiresReadyStock || option.stock > 0);
                         if (firstInStock) {
                           setSelectedOptionId(firstInStock.id);
+                          setGallerySelectionVersion((version) => version + 1);
                           setQuantity(1);
                         }
                       }}
@@ -305,6 +307,7 @@ export function ProductDetail({
                             const firstInStock = colorOptions.find((o) => !requiresReadyStock || o.stock > 0);
                             if (firstInStock) {
                               setSelectedOptionId(firstInStock.id);
+                              setGallerySelectionVersion((version) => version + 1);
                               setQuantity(1);
                             }
                           }}
@@ -356,6 +359,7 @@ export function ProductDetail({
                         onClick={() => {
                           if (outOfStock) return;
                           setSelectedOptionId(option.id);
+                          setGallerySelectionVersion((version) => version + 1);
                           setQuantity(1);
                         }}
                         disabled={outOfStock}

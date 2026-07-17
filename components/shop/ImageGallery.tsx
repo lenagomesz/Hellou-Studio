@@ -6,16 +6,18 @@ interface ImageGalleryProps {
   images: string[];
   alt: string;
   activeImage?: string | null;
+  activeImageKey?: string | number;
   overlay?: ReactNode;
 }
 
-export function ImageGallery({ images, alt, activeImage = null, overlay }: ImageGalleryProps) {
+export function ImageGallery({ images, alt, activeImage = null, activeImageKey = 0, overlay }: ImageGalleryProps) {
   const normalizedImages = useMemo(
     () => Array.from(new Set(images.map((image) => image.trim()).filter(Boolean))),
     [images],
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<string[]>([]);
+  const [recentInteraction, setRecentInteraction] = useState(false);
   const availableImages = useMemo(
     () => normalizedImages.filter((image) => !failedImages.includes(image)),
     [failedImages, normalizedImages],
@@ -29,16 +31,20 @@ export function ImageGallery({ images, alt, activeImage = null, overlay }: Image
   useEffect(() => {
     if (!activeImage) return;
     const activeIndex = availableImages.indexOf(activeImage.trim());
-    if (activeIndex >= 0) setCurrentImageIndex(activeIndex);
-  }, [activeImage, availableImages]);
+    if (activeIndex >= 0) {
+      setCurrentImageIndex(activeIndex);
+      if (activeImageKey !== 0) setRecentInteraction(true);
+    }
+  }, [activeImage, activeImageKey, availableImages]);
 
   useEffect(() => {
     if (!hasMultiple) return;
-    const interval = globalThis.setInterval(() => {
+    const timeout = globalThis.setTimeout(() => {
       setCurrentImageIndex((current) => (current + 1) % availableImages.length);
-    }, 6000);
-    return () => globalThis.clearInterval(interval);
-  }, [availableImages.length, hasMultiple]);
+      setRecentInteraction(false);
+    }, recentInteraction ? 12000 : 6000);
+    return () => globalThis.clearTimeout(timeout);
+  }, [activeImage, activeImageKey, availableImages.length, hasMultiple, recentInteraction]);
 
   const currentImage = availableImages[currentImageIndex];
 
@@ -73,7 +79,10 @@ export function ImageGallery({ images, alt, activeImage = null, overlay }: Image
             <button
               key={image}
               type="button"
-              onClick={() => setCurrentImageIndex(index)}
+              onClick={() => {
+                setCurrentImageIndex(index);
+                setRecentInteraction(true);
+              }}
               className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition ${
                 currentImageIndex === index
                   ? 'border-pink-500 ring-2 ring-pink-500/20'
