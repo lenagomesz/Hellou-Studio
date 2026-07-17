@@ -15,8 +15,8 @@ import {
 } from '@/lib/cart';
 import type { ShippingOption } from '@/lib/shipping';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
-import { PaymentForm } from '@/components/shop/PaymentForm';
-import { calculateCheckoutTotals } from '@/lib/checkout-rules';
+import { PaymentForm, type PaymentPricingSummary } from '@/components/shop/PaymentForm';
+import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES } from '@/lib/checkout-rules';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -83,7 +83,12 @@ export default function CartPage() {
   useEffect(() => {
     if (session?.user) {
       fetch('/api/orders').then(r => r.json()).then((orders) => {
-        if (Array.isArray(orders) && orders.length === 0) setIsFirstPurchase(true);
+        if (Array.isArray(orders)) {
+          const hasPurchaseOrActivePayment = orders.some((order: { status?: string }) =>
+            FIRST_PURCHASE_BLOCKING_STATUSES.includes(order.status as typeof FIRST_PURCHASE_BLOCKING_STATUSES[number]),
+          );
+          setIsFirstPurchase(!hasPurchaseOrActivePayment);
+        }
       }).catch(() => {});
       fetch('/api/profile').then(r => r.json()).then((data) => {
         if (data?.cpf) setUserCpf(data.cpf);
@@ -206,7 +211,6 @@ export default function CartPage() {
     shippingCost,
     isFirstPurchase,
     couponDiscountAmount: discountAmount,
-    hasCoupon: Boolean(couponDiscount),
   });
   const firstPurchaseDiscount = checkoutTotals.firstPurchaseDiscount;
   const grandTotal = checkoutTotals.total;
@@ -836,14 +840,14 @@ export default function CartPage() {
                   couponCode={couponDiscount?.code}
                   shippingAddress={paymentShippingAddress}
                   userCpf={userCpf}
-                  onPaymentCompleted={() => {
+                  onPaymentCompleted={(pricing?: PaymentPricingSummary) => {
                     setPaymentSummary({
                       items: [...items],
-                      subtotal: total,
-                      shippingCost,
-                      discountAmount,
-                      firstPurchaseDiscount,
-                      total: grandTotal,
+                      subtotal: pricing?.subtotal ?? total,
+                      shippingCost: pricing?.shipping_cost ?? shippingCost,
+                      discountAmount: pricing?.coupon_discount ?? discountAmount,
+                      firstPurchaseDiscount: pricing?.first_purchase_discount ?? firstPurchaseDiscount,
+                      total: pricing?.total ?? grandTotal,
                       hasOnlyDigitalProducts,
                     });
                     setPaymentCompleted(true);

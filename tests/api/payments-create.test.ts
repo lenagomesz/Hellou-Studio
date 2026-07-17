@@ -189,6 +189,54 @@ describe('POST /api/payments/mercadopago/create', () => {
   });
 
   describe('PIX payment flow', () => {
+    it('aplica primeira compra e cupom juntos também no PIX', async () => {
+      couponsBuilder.maybeSingle = vi.fn().mockResolvedValue({
+        data: { id: 'coupon-pix', code: 'PIX10', discount_type: 'percent', discount_value: 10, min_purchase: 0, max_uses: null, used_count: 0, free_shipping: false, active: true },
+        error: null,
+      });
+      mockPaymentCreate.mockResolvedValue({
+        id: 'mp-pix-coupon',
+        status: 'pending',
+        point_of_interaction: { transaction_data: { qr_code: 'pix', qr_code_base64: 'pix64' } },
+      });
+
+      const response = await POST(makeRequest({ payment_method: 'pix', cpf: '12345678909', coupon_code: 'PIX10' }));
+      const payload = await response.json();
+
+      expect(mockPaymentCreate).toHaveBeenCalledWith({
+        body: expect.objectContaining({ transaction_amount: 58 }),
+        requestOptions: { idempotencyKey: expect.any(String) },
+      });
+      expect(payload.pricing).toEqual(expect.objectContaining({
+        subtotal: 60,
+        shipping_cost: 10,
+        coupon_discount: 6,
+        first_purchase_discount: 6,
+        total: 58,
+        is_first_purchase: true,
+      }));
+    });
+
+    it('não reaplica os 10% quando já existe compra ou pagamento ativo', async () => {
+      ordersBuilder.in = vi.fn().mockResolvedValue({ count: 1, error: null });
+      mockPaymentCreate.mockResolvedValue({
+        id: 'mp-pix-returning',
+        status: 'pending',
+        point_of_interaction: { transaction_data: { qr_code: 'pix', qr_code_base64: 'pix64' } },
+      });
+
+      const response = await POST(makeRequest({ payment_method: 'pix', cpf: '12345678909' }));
+      const payload = await response.json();
+
+      expect(ordersBuilder.in).toHaveBeenCalledWith('status', expect.arrayContaining(['approved', 'awaiting_payment', 'pending']));
+      expect(mockPaymentCreate).toHaveBeenCalledWith({
+        body: expect.objectContaining({ transaction_amount: 70 }),
+        requestOptions: { idempotencyKey: expect.any(String) },
+      });
+      expect(payload.pricing.first_purchase_discount).toBe(0);
+      expect(payload.pricing.is_first_purchase).toBe(false);
+    });
+
     it('cobra o preço promocional exibido no produto', async () => {
       mockCartItems[0].product.sale_price = 20;
       mockPaymentCreate.mockResolvedValue({
@@ -384,10 +432,10 @@ describe('POST /api/payments/mercadopago/create', () => {
         coupon_code: 'SAVE10',
       }));
 
-      // Cupom substitui a primeira compra: R$60 - 10% + R$10 de frete validado.
+      // R$60 - R$6 da primeira compra - R$6 do cupom + R$10 de frete.
       expect(mockPaymentCreate).toHaveBeenCalledWith({
         body: expect.objectContaining({
-          transaction_amount: 64,
+          transaction_amount: 58,
         }),
         requestOptions: { idempotencyKey: expect.any(String) },
       });

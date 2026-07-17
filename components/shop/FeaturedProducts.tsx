@@ -69,7 +69,7 @@ export function FeaturedProductsClient({
           </div>
         </ScrollReveal>
 
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
           {featured.map((product, i) => (
             <ScrollReveal key={product.id} delay={i * 100} direction={i % 2 === 0 ? 'up' : 'scale'}>
               <div className="hover-lift transition-all duration-500">

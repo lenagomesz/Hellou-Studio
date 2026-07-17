@@ -9,7 +9,7 @@ import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestE
 import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import { calculateShipping, sanitizeCep } from '@/lib/shipping';
-import { calculateCheckoutTotals, SUCCESSFUL_ORDER_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
+import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
 import { isMercadoPagoApproved, mapMercadoPagoOrderStatus } from '@/lib/payment-status';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
 import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
@@ -205,12 +205,13 @@ export async function POST(request: Request) {
   }
 
   // Check if first purchase for 10% discount
-  // Apenas uma compra efetivamente aprovada remove o benefício de primeira compra.
+  // Uma compra aprovada ou um pagamento ainda ativo reserva o benefício para
+  // impedir vários PIX/pagamentos simultâneos com desconto de primeira compra.
   const { count: orderCount } = await admin
     .from('orders')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
-    .in('status', [...SUCCESSFUL_ORDER_STATUSES]);
+    .in('status', [...FIRST_PURCHASE_BLOCKING_STATUSES]);
 
   structuredLog('info', 'mercadopago.first_purchase_checked', {
     user_id: user.id,
@@ -251,7 +252,6 @@ export async function POST(request: Request) {
     shippingCost: validatedShipping,
     isFirstPurchase,
     couponDiscountAmount: discountAmount,
-    hasCoupon: Boolean(validCoupon),
   });
   const totalAmount = totals.total;
 
@@ -638,6 +638,14 @@ export async function POST(request: Request) {
       payment_id: mpPaymentId,
       status: mpStatus,
       order_id: order.id,
+      pricing: {
+        subtotal: totals.subtotal,
+        shipping_cost: validatedShipping,
+        coupon_discount: totals.couponDiscount,
+        first_purchase_discount: totals.firstPurchaseDiscount,
+        total: totals.total,
+        is_first_purchase: isFirstPurchase,
+      },
     };
 
     if (payment_method === 'pix' && result.point_of_interaction) {

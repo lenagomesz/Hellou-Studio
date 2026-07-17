@@ -26,6 +26,15 @@ interface CardTokenData {
   identificationNumber: string;
 }
 
+export type PaymentPricingSummary = {
+  subtotal: number;
+  shipping_cost: number;
+  coupon_discount: number;
+  first_purchase_discount: number;
+  total: number;
+  is_first_purchase: boolean;
+};
+
 interface PaymentFormProps {
   grandTotal: number;
   shippingMethod?: 'pac' | 'sedex';
@@ -33,7 +42,7 @@ interface PaymentFormProps {
   couponCode?: string;
   shippingAddress?: Record<string, unknown>;
   userCpf?: string;
-  onPaymentCompleted?: () => void;
+  onPaymentCompleted?: (pricing?: PaymentPricingSummary) => void;
 }
 
 export function PaymentForm({
@@ -197,7 +206,7 @@ export function PaymentForm({
       setPixQrCode(data.pix_qr_code || '');
       setPixQrBase64(data.pix_qr_code_base64 || '');
       setPixOrderId(data.order_id);
-      onPaymentCompleted?.();
+      onPaymentCompleted?.(data.pricing);
       void clearCart();
 
       pollingRef.current = setInterval(async () => {
@@ -293,7 +302,7 @@ export function PaymentForm({
       }
 
       if (data.status === 'approved') {
-        onPaymentCompleted?.();
+        onPaymentCompleted?.(data.pricing);
         void clearCart();
         setCardLoading(false);
         setCardSuccess(data.order_id);
@@ -305,7 +314,7 @@ export function PaymentForm({
         setErrorAndScroll(getRejectMessage(data.status_detail));
         setCardLoading(false);
       } else {
-        onPaymentCompleted?.();
+        onPaymentCompleted?.(data.pricing);
         void clearCart();
         router.push(`/checkout/success?order_id=${data.order_id}&pending=1`);
       }
@@ -385,7 +394,7 @@ export function PaymentForm({
       }
 
       if (data.status === 'approved') {
-        onPaymentCompleted?.();
+        onPaymentCompleted?.(data.pricing);
         void clearCart();
         setCardLoading(false);
         setCardSuccess(data.order_id);
@@ -397,7 +406,7 @@ export function PaymentForm({
         setErrorAndScroll(getRejectMessage(data.status_detail));
         setCardLoading(false);
       } else {
-        onPaymentCompleted?.();
+        onPaymentCompleted?.(data.pricing);
         void clearCart();
         router.push(`/checkout/success?order_id=${data.order_id}&pending=1`);
       }

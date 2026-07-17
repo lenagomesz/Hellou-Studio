@@ -2,19 +2,22 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Coupon } from '@/types/database';
 
 export const SUCCESSFUL_ORDER_STATUSES = ['approved', 'paid', 'processing', 'completed', 'shipped', 'delivered'] as const;
+export const FIRST_PURCHASE_BLOCKING_STATUSES = [...SUCCESSFUL_ORDER_STATUSES, 'awaiting_payment', 'pending'] as const;
 
 export function calculateCheckoutTotals(params: {
   subtotal: number;
   shippingCost: number;
   isFirstPurchase: boolean;
   couponDiscountAmount?: number;
-  hasCoupon: boolean;
 }) {
   const subtotal = Math.max(0, params.subtotal);
-  const couponDiscount = Math.min(Math.max(0, params.couponDiscountAmount ?? 0), subtotal);
-  const firstPurchaseDiscount = params.isFirstPurchase && !params.hasCoupon
+  const firstPurchaseDiscount = params.isFirstPurchase
     ? Math.round(subtotal * 0.1 * 100) / 100
     : 0;
+  const couponDiscount = Math.min(
+    Math.max(0, params.couponDiscountAmount ?? 0),
+    Math.max(0, subtotal - firstPurchaseDiscount),
+  );
   const total = Math.round(Math.max(0, subtotal - couponDiscount - firstPurchaseDiscount + Math.max(0, params.shippingCost)) * 100) / 100;
   return { subtotal, couponDiscount, firstPurchaseDiscount, total };
 }
