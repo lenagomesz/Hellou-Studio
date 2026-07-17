@@ -10,6 +10,7 @@ import {
 } from '@/lib/api';
 import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
+import { parseOptionalPrice } from '@/lib/product-filters';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -19,8 +20,8 @@ export async function GET(request: Request) {
   const page = Math.max(1, Number(searchParams.get('page')) || 1);
   const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 24));
   const type = searchParams.get('type');
-  const minPrice = Number(searchParams.get('min_price'));
-  const maxPrice = Number(searchParams.get('max_price'));
+  const minPrice = parseOptionalPrice(searchParams.get('min_price'));
+  const maxPrice = parseOptionalPrice(searchParams.get('max_price'));
 
   if (category && !isCategory(category)) {
     return badRequest('Categoria inválida');
@@ -51,8 +52,8 @@ export async function GET(request: Request) {
   if (category) query = query.eq('category', category);
   if (search) query = query.ilike('name', `%${search}%`);
   if (type === 'physical' || type === 'digital') query = query.eq('type', type);
-  if (Number.isFinite(minPrice)) query = query.gte('base_price', minPrice);
-  if (Number.isFinite(maxPrice)) query = query.lte('base_price', maxPrice);
+  if (minPrice !== undefined) query = query.gte('base_price', minPrice);
+  if (maxPrice !== undefined) query = query.lte('base_price', maxPrice);
 
   const from = (page - 1) * limit;
   const { data, count, error } = await query.range(from, from + limit - 1);
