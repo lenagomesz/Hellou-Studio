@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Calculator, Package, Printer, DollarSign, Info, RotateCcw } from 'lucide-react';
 import { CatalogAssistant } from '@/components/admin/CatalogAssistant';
+import { MarketAnalysis } from '@/components/admin/MarketAnalysis';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -158,6 +159,15 @@ export default function CalculadoraPage() {
         filamentPricePerKg={form.precoKg}
         hours={form.tempoHoras}
         minutes={form.tempoMinutos}
+        onUseSuggestedPrice={(price) => setPrecoSimulado(String(price))}
+      />
+
+      <MarketAnalysis
+        weightGrams={form.pesoGramas}
+        filamentPricePerKg={form.precoKg}
+        hours={form.tempoHoras}
+        minutes={form.tempoMinutos}
+        paymentFeePercent={form.taxaMP}
         onUseSuggestedPrice={(price) => setPrecoSimulado(String(price))}
       />
 
