@@ -8,6 +8,12 @@ Sentry.init({
   enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
   sendDefaultPii: false,
 
+  // Ignore native WebKit bridge calls injected by iOS browsers/extensions.
+  // The site does not use window.webkit.messageHandlers.
+  ignoreErrors: [
+    /undefined is not an object \(evaluating ['"]window\.webkit\.messageHandlers['"]\)/i,
+  ],
+
   // Ignore errors from extensions and scripts
   beforeSend(event, hint) {
     // Ignore errors from extensions
