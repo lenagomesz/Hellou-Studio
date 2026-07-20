@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Calculator, Package, Printer, DollarSign, Info, RotateCcw } from 'lucide-react';
+import { CatalogAssistant } from '@/components/admin/CatalogAssistant';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -151,6 +152,14 @@ export default function CalculadoraPage() {
           Limpar
         </button>
       </header>
+
+      <CatalogAssistant
+        weightGrams={form.pesoGramas}
+        filamentPricePerKg={form.precoKg}
+        hours={form.tempoHoras}
+        minutes={form.tempoMinutos}
+        onUseSuggestedPrice={(price) => setPrecoSimulado(String(price))}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
         {/* Formulário */}
