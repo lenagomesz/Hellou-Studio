@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     wants_invoice = false,
     idempotency_key,
   } = body as {
-    payment_method: 'pix' | 'credit_card' | 'debit_card';
+    payment_method: 'pix' | 'credit_card';
     token?: string;
     installments?: number;
     issuer_id?: string;
@@ -55,7 +55,10 @@ export async function POST(request: Request) {
   };
 
   if (!payment_method) return badRequest('Método de pagamento não informado');
-  if ((payment_method === 'credit_card' || payment_method === 'debit_card') && !token) {
+  if ((payment_method as string) === 'debit_card') {
+    return badRequest('Pagamento com cartao de debito nao esta disponivel. Selecione PIX ou cartao de credito.');
+  }
+  if (payment_method === 'credit_card' && !token) {
     return badRequest('Token do cartão é obrigatório');
   }
 
@@ -352,7 +355,7 @@ export async function POST(request: Request) {
     if (payment_method === 'pix') {
       paymentBody.payment_method_id = 'pix';
       paymentBody.date_of_expiration = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000).toISOString();
-    } else if (payment_method === 'credit_card' || payment_method === 'debit_card') {
+    } else if (payment_method === 'credit_card') {
       if (!token) {
         return badRequest('Token do cartão é obrigatório');
       }

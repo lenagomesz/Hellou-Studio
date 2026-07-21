@@ -59,11 +59,11 @@ export function PaymentForm({
   const mpRef = useRef<MercadoPagoInstance | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const formTopRef = useRef<HTMLDivElement>(null);
-  const paymentAttemptKeysRef = useRef<Partial<Record<'pix' | 'credit_card' | 'debit_card', string>>>({});
+  const paymentAttemptKeysRef = useRef<Partial<Record<'pix' | 'credit_card', string>>>({});
 
   const [cpf, setCpf] = useState(userCpf ? formatCpf(userCpf) : '');
   const [cpfError, setCpfError] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit' | 'debit'>('pix');
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit'>('pix');
 
   // PIX state
   const [pixLoading, setPixLoading] = useState(false);
@@ -91,7 +91,7 @@ export function PaymentForm({
 
   const [error, setError] = useState('');
 
-  function getPaymentAttemptKey(method: 'pix' | 'credit_card' | 'debit_card') {
+  function getPaymentAttemptKey(method: 'pix' | 'credit_card') {
     const existingKey = paymentAttemptKeysRef.current[method];
     if (existingKey) return existingKey;
 
@@ -100,7 +100,7 @@ export function PaymentForm({
     return key;
   }
 
-  function resetPaymentAttemptKey(method: 'pix' | 'credit_card' | 'debit_card') {
+  function resetPaymentAttemptKey(method: 'pix' | 'credit_card') {
     delete paymentAttemptKeysRef.current[method];
   }
 
@@ -166,7 +166,7 @@ export function PaymentForm({
   function validateCpf(): boolean {
     const digits = cleanCpf(cpf);
     if (!digits || !isValidCpf(digits)) {
-      setCpfError('Informe um CPF válido');
+      setCpfError('Informe um CPF vÃƒÂ¡lido');
       return false;
     }
     setCpfError('');
@@ -225,7 +225,7 @@ export function PaymentForm({
         } catch {}
       }, 5000);
     } catch {
-      setErrorAndScroll('Erro de conexão. Tente novamente.');
+      setErrorAndScroll('Erro de conexÃƒÂ£o. Tente novamente.');
     } finally {
       setPixLoading(false);
     }
@@ -236,20 +236,20 @@ export function PaymentForm({
 
     const digits = cardNumber.replace(/\D/g, '');
     if (digits.length < 13) {
-      setErrorAndScroll('Número do cartão inválido');
+      setErrorAndScroll('NÃƒÂºmero do cartÃƒÂ£o invÃƒÂ¡lido');
       return;
     }
     if (!cardName.trim()) {
-      setErrorAndScroll('Informe o nome no cartão');
+      setErrorAndScroll('Informe o nome no cartÃƒÂ£o');
       return;
     }
     const [expMonth, expYear] = cardExpiry.split('/');
     if (!expMonth || !expYear || expMonth.length !== 2 || expYear.length < 2) {
-      setErrorAndScroll('Data de validade inválida');
+      setErrorAndScroll('Data de validade invÃƒÂ¡lida');
       return;
     }
     if (cardCvv.length < 3) {
-      setErrorAndScroll('CVV inválido');
+      setErrorAndScroll('CVV invÃƒÂ¡lido');
       return;
     }
 
@@ -324,98 +324,6 @@ export function PaymentForm({
     }
   }
 
-  async function handleDebitPayment() {
-    if (!validateCpf()) return;
-
-    const digits = cardNumber.replace(/\D/g, '');
-    if (digits.length < 13) {
-      setErrorAndScroll('Número do cartão inválido');
-      return;
-    }
-    if (!cardName.trim()) {
-      setErrorAndScroll('Informe o nome no cartão');
-      return;
-    }
-    const [expMonth, expYear] = cardExpiry.split('/');
-    if (!expMonth || !expYear || expMonth.length !== 2 || expYear.length < 2) {
-      setErrorAndScroll('Data de validade inválida');
-      return;
-    }
-    if (cardCvv.length < 3) {
-      setErrorAndScroll('CVV inválido');
-      return;
-    }
-
-    setCardLoading(true);
-    setError('');
-
-    const idempotencyKey = getPaymentAttemptKey('debit_card');
-
-    try {
-      if (!mpRef.current) {
-        setErrorAndScroll('Erro ao processar pagamento. Tente novamente.');
-        setCardLoading(false);
-        return;
-      }
-
-      const fullYear = expYear.length === 2 ? `20${expYear}` : expYear;
-      const tokenResult = await mpRef.current.createCardToken({
-        cardNumber: digits,
-        cardholderName: cardName.trim(),
-        cardExpirationMonth: expMonth,
-        cardExpirationYear: fullYear,
-        securityCode: cardCvv,
-        identificationType: 'CPF',
-        identificationNumber: cleanCpf(cpf),
-      });
-
-      const res = await fetch('/api/payments/mercadopago/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
-        body: JSON.stringify({
-          idempotency_key: idempotencyKey,
-          payment_method: 'debit_card',
-          token: tokenResult.id,
-          installments: 1,
-          cpf: cleanCpf(cpf),
-          shipping_method: shippingMethod,
-          shipping_cep: shippingCep,
-          coupon_code: couponCode,
-          shipping_address: shippingAddress,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        if (data.mp_error) resetPaymentAttemptKey('debit_card');
-        setErrorAndScroll(data.error || 'Erro ao processar pagamento');
-        setCardLoading(false);
-        return;
-      }
-
-      if (data.status === 'approved') {
-        onPaymentCompleted?.(data.pricing);
-        void clearCart();
-        setCardLoading(false);
-        setCardSuccess(data.order_id);
-        setTimeout(() => {
-          router.push(`/checkout/success?order_id=${data.order_id}`);
-        }, 3000);
-      } else if (data.status === 'rejected') {
-        resetPaymentAttemptKey('debit_card');
-        setErrorAndScroll(getRejectMessage(data.status_detail));
-        setCardLoading(false);
-      } else {
-        onPaymentCompleted?.(data.pricing);
-        void clearCart();
-        router.push(`/checkout/success?order_id=${data.order_id}&pending=1`);
-      }
-    } catch {
-      setErrorAndScroll('Erro ao processar pagamento. Verifique os dados e tente novamente.');
-      setCardLoading(false);
-    }
-  }
-
   function copyPixCode() {
     navigator.clipboard.writeText(pixQrCode);
     setPixCopied(true);
@@ -455,7 +363,7 @@ export function PaymentForm({
             <div className="flex items-center gap-2 rounded-lg bg-green-50 dark:bg-green-900/20 px-4 py-2">
               <Loader2 className="h-4 w-4 animate-spin text-green-500" />
               <span className="text-xs text-green-600 dark:text-green-400">
-                Redirecionando para confirmação...
+                Redirecionando para confirmaÃƒÂ§ÃƒÂ£o...
               </span>
             </div>
           </div>
@@ -478,7 +386,7 @@ export function PaymentForm({
             <div>
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">Processando pagamento</h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Estamos validando sua transação. Não feche esta página.
+                Estamos validando sua transaÃƒÂ§ÃƒÂ£o. NÃƒÂ£o feche esta pÃƒÂ¡gina.
               </p>
             </div>
             <div className="flex items-center gap-2 rounded-lg bg-gray-50 dark:bg-gray-800 px-4 py-2">
@@ -516,7 +424,7 @@ export function PaymentForm({
 
           {pixQrCode && (
             <div className="space-y-2">
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Código copia e cola:</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">CÃƒÂ³digo copia e cola:</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -538,12 +446,12 @@ export function PaymentForm({
           <div className="mt-4 flex items-center gap-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 px-3 py-2">
             <Loader2 className="h-4 w-4 animate-spin text-yellow-600 dark:text-yellow-400" />
             <p className="text-xs text-yellow-700 dark:text-yellow-300">
-              Aguardando pagamento... O código expira em 30 minutos.
+              Aguardando pagamento... O cÃƒÂ³digo expira em 30 minutos.
             </p>
           </div>
 
           <p className="mt-3 text-[11px] text-gray-400 dark:text-gray-500 text-center">
-            Pode sair desta página — seu pedido ficará como &quot;aguardando pagamento&quot; e será confirmado automaticamente.
+            Pode sair desta pÃƒÂ¡gina Ã¢â‚¬â€ seu pedido ficarÃƒÂ¡ como &quot;aguardando pagamento&quot; e serÃƒÂ¡ confirmado automaticamente.
           </p>
         </div>
       </div>
@@ -572,7 +480,7 @@ export function PaymentForm({
           {!userCpf && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                CPF <span className="text-gray-400 font-normal">(obrigatório)</span>
+                CPF <span className="text-gray-400 font-normal">(obrigatÃƒÂ³rio)</span>
               </label>
               <input
                 type="text"
@@ -614,22 +522,10 @@ export function PaymentForm({
               }`}
             >
               <CreditCard className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Crédito</span>
-              <span className="sm:hidden">Crédito</span>
+              <span className="hidden sm:inline">CrÃƒÂ©dito</span>
+              <span className="sm:hidden">CrÃƒÂ©dito</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('debit')}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition ${
-                paymentMethod === 'debit'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <CreditCard className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Débito</span>
-              <span className="sm:hidden">Débito</span>
-            </button>
+
           </div>
 
           {/* PIX content */}
@@ -640,8 +536,8 @@ export function PaymentForm({
                   <QrCode className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-green-800 dark:text-green-200">Pagamento instantâneo</p>
-                  <p className="text-xs text-green-600 dark:text-green-400">Aprovação imediata, sem taxas adicionais</p>
+                  <p className="text-sm font-medium text-green-800 dark:text-green-200">Pagamento instantÃƒÂ¢neo</p>
+                  <p className="text-xs text-green-600 dark:text-green-400">AprovaÃƒÂ§ÃƒÂ£o imediata, sem taxas adicionais</p>
                 </div>
               </div>
 
@@ -653,12 +549,12 @@ export function PaymentForm({
                 {pixLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Gerando código PIX...
+                    Gerando cÃƒÂ³digo PIX...
                   </>
                 ) : (
                   <>
                     <QrCode className="h-4 w-4" />
-                    Gerar código PIX
+                    Gerar cÃƒÂ³digo PIX
                   </>
                 )}
               </button>
@@ -673,13 +569,13 @@ export function PaymentForm({
                   <CreditCard className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-purple-800 dark:text-purple-200">Cartão de crédito</p>
-                  <p className="text-xs text-purple-600 dark:text-purple-400">Parcele em até 12x com juros</p>
+                  <p className="text-sm font-medium text-purple-800 dark:text-purple-200">CartÃƒÂ£o de crÃƒÂ©dito</p>
+                  <p className="text-xs text-purple-600 dark:text-purple-400">Parcele em atÃƒÂ© 12x com juros</p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Número do cartão</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">NÃƒÂºmero do cartÃƒÂ£o</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -691,10 +587,10 @@ export function PaymentForm({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Nome impresso no cartão</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Nome impresso no cartÃƒÂ£o</label>
                 <input
                   type="text"
-                  placeholder="Como aparece no cartão"
+                  placeholder="Como aparece no cartÃƒÂ£o"
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value.toUpperCase())}
                   className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/30"
@@ -750,7 +646,7 @@ export function PaymentForm({
               )}
 
               {!installmentsLoading && installmentOptions.length === 0 && cardNumber.replace(/\D/g, '').length < 6 && (
-                <p className="text-[11px] text-gray-400">Até 3x sem juros disponível</p>
+                <p className="text-[11px] text-gray-400">AtÃƒÂ© 3x sem juros disponÃƒÂ­vel</p>
               )}
 
               <button
@@ -766,88 +662,7 @@ export function PaymentForm({
                 ) : (
                   <>
                     <CreditCard className="h-4 w-4" />
-                    Pagar com Crédito
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* Debit card content */}
-          {paymentMethod === 'debit' && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 px-4 py-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
-                  <CreditCard className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Débito à vista</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400">Pagamento debitado diretamente da sua conta</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Número do cartão</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0000 0000 0000 0000"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/30"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Nome impresso no cartão</label>
-                <input
-                  type="text"
-                  placeholder="Como aparece no cartão"
-                  value={cardName}
-                  onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/30"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Validade</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="MM/AA"
-                    value={cardExpiry}
-                    onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">CVV</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="000"
-                    value={cardCvv}
-                    onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/30"
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={handleDebitPayment}
-                disabled={cardLoading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-200/40 dark:shadow-none transition hover:shadow-xl hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
-              >
-                {cardLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-4 w-4" />
-                    Pagar com Débito
+                    Pagar com CrÃƒÂ©dito
                   </>
                 )}
               </button>
@@ -877,15 +692,18 @@ export function PaymentForm({
 
 function getRejectMessage(detail?: string): string {
   const messages: Record<string, string> = {
-    cc_rejected_insufficient_amount: 'Saldo insuficiente. Tente outro cartão.',
+    cc_rejected_insufficient_amount: 'Saldo insuficiente. Tente outro cartÃƒÂ£o.',
     cc_rejected_bad_filled_security_code: 'CVV incorreto. Verifique e tente novamente.',
     cc_rejected_bad_filled_date: 'Data de validade incorreta.',
-    cc_rejected_bad_filled_other: 'Dados do cartão incorretos. Verifique e tente novamente.',
-    cc_rejected_high_risk: 'Pagamento recusado por segurança. Tente outro método.',
+    cc_rejected_bad_filled_other: 'Dados do cartÃƒÂ£o incorretos. Verifique e tente novamente.',
+    cc_rejected_high_risk: 'Pagamento recusado por seguranÃƒÂ§a. Tente outro mÃƒÂ©todo.',
     cc_rejected_call_for_authorize: 'Autorize o pagamento junto ao banco emissor.',
-    cc_rejected_card_disabled: 'Cartão desabilitado. Contacte seu banco.',
-    cc_rejected_max_attempts: 'Limite de tentativas. Tente outro cartão.',
+    cc_rejected_card_disabled: 'CartÃƒÂ£o desabilitado. Contacte seu banco.',
+    cc_rejected_max_attempts: 'Limite de tentativas. Tente outro cartÃƒÂ£o.',
     cc_rejected_duplicated_payment: 'Pagamento duplicado detectado.',
   };
-  return messages[detail || ''] || 'Pagamento recusado. Tente outro cartão ou método de pagamento.';
+  return messages[detail || ''] || 'Pagamento recusado. Tente outro cartÃƒÂ£o ou mÃƒÂ©todo de pagamento.';
 }
+
+
+
