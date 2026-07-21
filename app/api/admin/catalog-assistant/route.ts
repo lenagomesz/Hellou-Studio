@@ -138,7 +138,7 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_TEXT_MODEL || 'gpt-5.6-terra',
+        model: process.env.OPENAI_TEXT_MODEL || 'gpt-5.4',
         store: false,
         reasoning: { effort: 'low' },
         safety_identifier: safetyIdentifier,

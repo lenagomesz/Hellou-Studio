@@ -212,7 +212,7 @@ Regras obrigatórias:
       },
       signal: AbortSignal.timeout(150_000),
       body: JSON.stringify({
-        model: process.env.OPENAI_TEXT_MODEL || 'gpt-5.6-terra',
+        model: process.env.OPENAI_TEXT_MODEL || 'gpt-5.4',
         store: false,
         safety_identifier: createHash('sha256').update(auth.user.id).digest('hex'),
         reasoning: { effort: 'low' },
