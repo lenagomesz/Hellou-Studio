@@ -81,6 +81,7 @@ create table if not exists public.product_options (
   price_modifier  numeric(10,2) not null default 0,
   stock           integer not null default 0 check (stock >= 0),
   dimensions      text,
+  sort_order      integer not null default 0,
   created_at      timestamptz not null default now()
 );
 
@@ -140,6 +141,7 @@ create table if not exists public.coupons (
 create index if not exists idx_products_category       on public.products(category) where active = true;
 create index if not exists idx_products_active         on public.products(active);
 create index if not exists idx_product_options_product on public.product_options(product_id);
+create index if not exists idx_product_options_sort_order on public.product_options(product_id, sort_order, created_at);
 create index if not exists idx_cart_items_user         on public.cart_items(user_id);
 create index if not exists idx_orders_user             on public.orders(user_id);
 create index if not exists idx_orders_status           on public.orders(status);

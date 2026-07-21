@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProductOption } from '@/types/database';
-import { Loader2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Loader2 } from 'lucide-react';
 import { getProductColorName, getProductColorValue, PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
@@ -58,7 +58,9 @@ export function OptionsManager({
   basePrice: number;
 }) {
   const router = useRouter();
-  const [options, setOptions] = useState<ProductOption[]>(initialOptions);
+  const [options, setOptions] = useState<ProductOption[]>(() =>
+    [...initialOptions].sort((a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at)),
+  );
   const [name, setName] = useState('');
   const [color, setColor] = useState('');
   const [priceModifier, setPriceModifier] = useState('0');
@@ -74,6 +76,7 @@ export function OptionsManager({
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<ProductOption | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
   const hasSizes = options.some(
     (o) => ['P', 'M', 'G'].includes(o.name.toUpperCase()),
@@ -242,19 +245,50 @@ export function OptionsManager({
     router.refresh();
   }
 
+  async function handleMove(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= options.length || reordering) return;
+
+    const previous = options;
+    const reordered = [...options];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    setOptions(reordered.map((option, optionIndex) => ({ ...option, sort_order: optionIndex * 10 })));
+    setError(null);
+    setReordering(true);
+
+    const res = await fetch('/api/product-options/reorder', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: productId, option_ids: reordered.map((option) => option.id) }),
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setOptions(previous);
+      setError(data.error ?? 'Erro ao salvar a ordem das variações');
+    } else {
+      router.refresh();
+    }
+    setReordering(false);
+  }
+
   return (
     <div className="space-y-4">
       {options.length === 0 ? (
         <p className="text-sm text-gray-600 dark:text-gray-400">Nenhuma variação cadastrada.</p>
       ) : (
         <ul className="divide-y divide-gray-100 dark:divide-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          {options.map((option) => (
+          {options.map((option, index) => (
             <OptionRow
               key={option.id}
               option={option}
               basePrice={basePrice}
               onUpdate={(patch) => handleUpdate(option, patch)}
               onDelete={() => setPendingDelete(option)}
+              onMoveUp={() => handleMove(index, -1)}
+              onMoveDown={() => handleMove(index, 1)}
+              moveUpDisabled={reordering || index === 0}
+              moveDownDisabled={reordering || index === options.length - 1}
             />
           ))}
         </ul>
@@ -459,11 +493,19 @@ function OptionRow({
   basePrice,
   onUpdate,
   onDelete,
+  onMoveUp,
+  onMoveDown,
+  moveUpDisabled,
+  moveDownDisabled,
 }: {
   option: ProductOption;
   basePrice: number;
   onUpdate: (patch: Partial<ProductOption>) => Promise<void> | void;
   onDelete: () => Promise<void> | void;
+  onMoveUp: () => Promise<void> | void;
+  onMoveDown: () => Promise<void> | void;
+  moveUpDisabled: boolean;
+  moveDownDisabled: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(option.name);
@@ -596,11 +638,17 @@ function OptionRow({
           </p>
         </div>
       </div>
-      <div className="flex gap-2 flex-shrink-0">
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <button type="button" onClick={onMoveUp} disabled={moveUpDisabled} aria-label="Mover variação para cima" title="Mover para cima" className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-pink-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-800">
+          <ArrowUp className="h-4 w-4" />
+        </button>
+        <button type="button" onClick={onMoveDown} disabled={moveDownDisabled} aria-label="Mover variação para baixo" title="Mover para baixo" className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-pink-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-800">
+          <ArrowDown className="h-4 w-4" />
+        </button>
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="text-sm font-medium text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
+          className="ml-1 text-sm font-medium text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
         >
           Editar
         </button>

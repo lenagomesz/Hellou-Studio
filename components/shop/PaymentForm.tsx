@@ -37,7 +37,7 @@ export type PaymentPricingSummary = {
 
 interface PaymentFormProps {
   grandTotal: number;
-  shippingMethod?: 'pac' | 'sedex';
+  shippingMethod?: 'pac' | 'sedex' | 'pickup';
   shippingCep?: string;
   couponCode?: string;
   shippingAddress?: Record<string, unknown>;
@@ -704,7 +704,6 @@ function getRejectMessage(detail?: string): string {
   };
   return messages[detail || ''] || 'Pagamento recusado. Tente outro cartão ou método de pagamento.';
 }
-
 
 
 

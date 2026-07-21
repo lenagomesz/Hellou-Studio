@@ -63,7 +63,7 @@ export default function CartPage() {
   const [addressNeighborhood, setAddressNeighborhood] = useState('');
 
   const [couponCode, setCouponCode] = useState('');
-  const [couponDiscount, setCouponDiscount] = useState<{ code: string; discount_amount: number; discount_value: number; description: string; free_shipping?: boolean } | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState<{ code: string; discount_amount: number; discount_value: number; description: string; free_shipping?: boolean; family_pickup?: boolean } | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
 
@@ -125,7 +125,9 @@ export default function CartPage() {
       setShippingAddress(data.address);
       if (data.address.street) setAddressStreet(data.address.street);
       if (data.address.neighborhood) setAddressNeighborhood(data.address.neighborhood);
-      if (data.options.length > 0) setSelectedShipping(data.options[0]);
+      if (couponDiscount?.family_pickup) {
+        setSelectedShipping({ id: 'pickup', name: 'Retirar com a Helena', price: 0, days_min: 0, days_max: 0 });
+      } else if (data.options.length > 0) setSelectedShipping(data.options[0]);
     } catch {
       setShippingError('Erro de conexão. Tente novamente.');
     } finally {
@@ -160,7 +162,11 @@ export default function CartPage() {
         discount_value: data.discount_value ?? 0,
         description: data.description,
         free_shipping: data.free_shipping ?? false,
+        family_pickup: data.family_pickup === true,
       });
+      if (data.family_pickup === true) {
+        setSelectedShipping({ id: 'pickup', name: 'Retirar com a Helena', price: 0, days_min: 0, days_max: 0 });
+      }
     } catch {
       setCouponError('Erro de conexão. Tente novamente.');
     } finally {
@@ -202,7 +208,7 @@ export default function CartPage() {
     );
   }
 
-  const shippingCost = couponDiscount?.free_shipping ? 0 : (selectedShipping?.price ?? 0);
+  const shippingCost = selectedShipping?.id === 'pickup' || couponDiscount?.free_shipping ? 0 : (selectedShipping?.price ?? 0);
   const discountAmount = couponDiscount?.free_shipping && couponDiscount.discount_value === 0
     ? 0
     : (couponDiscount?.discount_amount ?? 0);
@@ -395,7 +401,7 @@ export default function CartPage() {
                         <span className="text-sm font-bold text-green-800 dark:text-green-300">{couponDiscount.code}</span>
                         <p className="text-xs text-green-700 dark:text-green-400">{couponDiscount.description}</p>
                       </div>
-                      <button type="button" onClick={() => { setCouponDiscount(null); setCouponCode(''); }} className="rounded-full p-1.5 text-gray-400 transition hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500">
+                      <button type="button" onClick={() => { setCouponDiscount(null); setCouponCode(''); setSelectedShipping((current) => current?.id === 'pickup' ? (shippingOptions[0] ?? null) : current); }} className="rounded-full p-1.5 text-gray-400 transition hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -581,7 +587,12 @@ export default function CartPage() {
 
             {couponDiscount?.free_shipping && shippingAddress && (
               <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30 p-4">
-                <p className="text-sm font-medium text-green-700 dark:text-green-300">Frete grátis aplicado pelo cupom {couponDiscount.code}</p>
+                {couponDiscount.family_pickup ? (
+                  <label className="flex cursor-pointer items-center gap-3">
+                    <input type="radio" name="shipping" checked={selectedShipping?.id === 'pickup'} onChange={() => setSelectedShipping({ id: 'pickup', name: 'Retirar com a Helena', price: 0, days_min: 0, days_max: 0 })} className="h-4 w-4 text-pink-500 focus:ring-pink-500" />
+                    <span><span className="block text-sm font-bold text-green-800 dark:text-green-200">Retirar com a Helena — grátis</span><span className="mt-0.5 block text-xs text-green-700 dark:text-green-300">Combine diretamente com a Helena o dia e o local da retirada.</span></span>
+                  </label>
+                ) : <p className="text-sm font-medium text-green-700 dark:text-green-300">Frete grátis aplicado pelo cupom {couponDiscount.code}</p>}
               </div>
             )}
           </div>
@@ -629,7 +640,9 @@ export default function CartPage() {
               <div className="flex justify-between text-gray-600 dark:text-gray-400">
                 <dt>Frete</dt>
                 <dd className="font-medium">
-                  {couponDiscount?.free_shipping
+                  {selectedShipping?.id === 'pickup'
+                    ? <span className="text-green-700 dark:text-green-400">Retirada com Helena</span>
+                    : couponDiscount?.free_shipping
                     ? <span className="text-green-700 dark:text-green-400">Grátis</span>
                     : selectedShipping
                       ? formatPrice(selectedShipping.price)
@@ -744,11 +757,11 @@ export default function CartPage() {
                   )}
                   {selectedShipping && (
                     <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                      {selectedShipping.name} · {selectedShipping.days_min}-{selectedShipping.days_max} dias úteis
+                      {selectedShipping.id === 'pickup' ? 'Sem entrega pelos Correios' : `${selectedShipping.name} · ${selectedShipping.days_min}-${selectedShipping.days_max} dias úteis`}
                     </p>
                   )}
                   {couponDiscount?.free_shipping && (
-                    <p className="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400">Frete grátis (cupom)</p>
+                    <p className="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400">{selectedShipping?.id === 'pickup' ? 'Retirada gratuita com a Helena' : 'Frete grátis (cupom)'}</p>
                   )}
                 </div>
               )}
@@ -768,7 +781,7 @@ export default function CartPage() {
                       <span className="text-xs font-bold text-green-800 dark:text-green-300">{couponDiscount.code}</span>
                       <p className="text-xs text-green-700 dark:text-green-400">{couponDiscount.description}</p>
                     </div>
-                    <button type="button" onClick={() => { setCouponDiscount(null); setCouponCode(''); }} className="rounded-full p-1 text-gray-400 transition hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500">
+                    <button type="button" onClick={() => { setCouponDiscount(null); setCouponCode(''); setSelectedShipping((current) => current?.id === 'pickup' ? (shippingOptions[0] ?? null) : current); }} className="rounded-full p-1 text-gray-400 transition hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                       </svg>
@@ -814,7 +827,9 @@ export default function CartPage() {
                     <div className="flex justify-between text-gray-600 dark:text-gray-400">
                       <dt>Frete</dt>
                       <dd className="font-medium">
-                        {couponDiscount?.free_shipping
+                        {selectedShipping?.id === 'pickup'
+                          ? <span className="text-green-700 dark:text-green-400">Retirada com Helena</span>
+                          : couponDiscount?.free_shipping
                           ? <span className="text-green-700 dark:text-green-400">Grátis</span>
                           : checkoutShippingCost > 0
                             ? formatPrice(checkoutShippingCost)

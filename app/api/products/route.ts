@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     active?: boolean;
     fulfillment_mode?: string;
     is_customizable?: boolean;
-    options?: Array<{ name: string; dimensions?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number }>;
+    options?: Array<{ name: string; dimensions?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number }>;
   };
 
   if (active === false) {
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
 
   const validOptions = (options ?? []).filter((option) => option.name?.trim() || option.color?.trim());
   if (validOptions.length > 0) {
-    const { error: optionsError } = await admin.from('product_options').insert(validOptions.map((option) => ({
+    const { error: optionsError } = await admin.from('product_options').insert(validOptions.map((option, index) => ({
       product_id: data.id,
       name: option.name?.trim() || '',
       dimensions: option.dimensions?.trim() || null,
@@ -148,6 +148,7 @@ export async function POST(request: Request) {
       image_url: option.image_url?.trim() || null,
       price_modifier: Number(option.price_modifier ?? 0),
       stock: Math.max(0, Math.trunc(Number(option.stock ?? 0))),
+      sort_order: Number.isInteger(option.sort_order) ? option.sort_order : index * 10,
     })));
     if (optionsError) {
       await admin.from('products').delete().eq('id', data.id);

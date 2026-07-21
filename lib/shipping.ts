@@ -1,7 +1,7 @@
 import { calcularPrecoPrazo } from 'correios-brasil';
 
 export interface ShippingOption {
-  id: 'pac' | 'sedex';
+  id: 'pac' | 'sedex' | 'pickup';
   name: string;
   price: number;
   days_min: number;

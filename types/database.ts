@@ -58,6 +58,7 @@ export interface ProductOption {
   dimensions: string | null;
   color: string | null;
   image_url: string | null;
+  sort_order: number;
   created_at: string;
 }
 
@@ -359,6 +360,7 @@ export interface Database {
           reorder_point?: number;
           standard_order_qty?: number;
           color?: string | null;
+          sort_order?: number;
           created_at?: string;
         };
         Update: {
@@ -370,6 +372,7 @@ export interface Database {
           reorder_point?: number;
           standard_order_qty?: number;
           color?: string | null;
+          sort_order?: number;
           created_at?: string;
         };
         Relationships: [];

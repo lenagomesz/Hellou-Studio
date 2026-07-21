@@ -28,7 +28,12 @@ export async function GET(
   if (error) return serverError('Erro ao buscar produto');
   if (!data) return notFound('Produto não encontrado');
 
-  return NextResponse.json({ product: data as ProductWithOptions });
+  const product = data as ProductWithOptions;
+  product.product_options = [...(product.product_options ?? [])].sort(
+    (a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at),
+  );
+
+  return NextResponse.json({ product });
 }
 
 export async function PATCH(

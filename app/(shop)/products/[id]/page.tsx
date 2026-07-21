@@ -29,6 +29,7 @@ async function loadProductWithOptions(id: string) {
         .from('product_options')
         .select('*')
         .eq('product_id', id)
+        .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true }),
     ]),
     12000,

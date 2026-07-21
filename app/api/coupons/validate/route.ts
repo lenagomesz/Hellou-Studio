@@ -73,6 +73,7 @@ export async function POST(request: Request) {
       discount_value: coupon.discount_value,
       discount_amount: Math.round(discount * 100) / 100,
       free_shipping: coupon.free_shipping,
+      family_pickup: coupon.free_shipping && coupon.code === (process.env.FAMILY_PICKUP_COUPON_CODE || 'RETIRADAHELENA').trim().toUpperCase(),
       description,
     });
   } catch {

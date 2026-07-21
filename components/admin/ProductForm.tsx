@@ -11,7 +11,7 @@ import { ProductTagSelect, replaceProductTags } from '@/components/admin/Product
 import { OptionsManager } from '@/components/admin/OptionsManager';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
-import { CheckCircle2, Loader2, Upload } from 'lucide-react';
+import { ArrowDown, ArrowUp, CheckCircle2, Loader2, Upload } from 'lucide-react';
 
 type ProductFormProps =
   | { mode: 'create'; product?: undefined }
@@ -29,6 +29,14 @@ type DraftOption = {
 
 function createDraftOption(): DraftOption {
   return { id: crypto.randomUUID(), name: '', dimensions: '', color: '', priceModifier: '0', stock: '0', imageUrl: '' };
+}
+
+function moveDraftOption(options: DraftOption[], index: number, direction: -1 | 1) {
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= options.length) return options;
+  const next = [...options];
+  [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+  return next;
 }
 
 export function ProductForm(props: ProductFormProps) {
@@ -114,13 +122,14 @@ export function ProductForm(props: ProductFormProps) {
 
     const normalizedOptions = options
       .filter((option) => option.name.trim() || option.color.trim())
-      .map((option) => ({
+      .map((option, index) => ({
         name: option.name.trim(),
         dimensions: option.dimensions.trim() || null,
         color: option.color || null,
         price_modifier: Number(option.priceModifier || 0),
         stock: Number(option.stock || 0),
         image_url: option.imageUrl || null,
+        sort_order: index * 10,
       }));
     if (normalizedOptions.some((option) => Number.isNaN(option.price_modifier) || Number.isNaN(option.stock) || option.stock < 0 || !Number.isInteger(option.stock))) {
       setError('Revise o preço adicional e o estoque das variações');
@@ -322,9 +331,13 @@ export function ProductForm(props: ProductFormProps) {
             <div className="mt-4 space-y-3">
               {options.map((option, index) => (
                 <div key={option.id} className="rounded-2xl border border-white bg-white/90 p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900/90">
-                  <div className="mb-3 flex items-center justify-between">
+                  <div className="mb-3 flex items-center justify-between gap-3">
                     <span className="text-xs font-bold text-gray-500">Variação {index + 1}</span>
-                    <button type="button" onClick={() => setOptions((current) => current.filter((item) => item.id !== option.id))} className="text-xs font-semibold text-red-500 hover:text-red-700">Remover</button>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => setOptions((current) => moveDraftOption(current, index, -1))} disabled={index === 0} aria-label={`Mover variação ${index + 1} para cima`} title="Mover para cima" className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-pink-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-800"><ArrowUp className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => setOptions((current) => moveDraftOption(current, index, 1))} disabled={index === options.length - 1} aria-label={`Mover variação ${index + 1} para baixo`} title="Mover para baixo" className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-pink-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-800"><ArrowDown className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => setOptions((current) => current.filter((item) => item.id !== option.id))} className="ml-1 text-xs font-semibold text-red-500 hover:text-red-700">Remover</button>
+                    </div>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
                     <label className="lg:col-span-2"><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Nome ou tamanho</span><input value={option.name} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, name: event.target.value } : item))} placeholder="Ex.: P, M, G ou Único" className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>

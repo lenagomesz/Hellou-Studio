@@ -17,7 +17,7 @@ async function getProductDashboard(id: string) {
   const admin = getSupabaseAdmin();
   const [productRes, optionsRes, salesRes] = await Promise.all([
     admin.from('products').select('*').eq('id', id).maybeSingle(),
-    admin.from('product_options').select('*').eq('product_id', id).order('created_at', { ascending: true }),
+    admin.from('product_options').select('*').eq('product_id', id).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
     admin.from('order_items').select('quantity, unit_price, order:orders(status)').eq('product_id', id),
   ]);
   if (!productRes.data) return null;

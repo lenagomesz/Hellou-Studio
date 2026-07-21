@@ -45,6 +45,16 @@ export async function POST(request: Request) {
 
   if (!product) return notFound('Produto não encontrado');
 
+  const { data: lastOption, error: orderError } = await admin
+    .from('product_options')
+    .select('sort_order')
+    .eq('product_id', product_id)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (orderError) return serverError('Erro ao calcular a ordem da variação');
+
   const { data, error } = await admin
     .from('product_options')
     .insert({
@@ -55,6 +65,7 @@ export async function POST(request: Request) {
       dimensions: dimensions?.trim() || null,
       color: color?.trim() || null,
       image_url: image_url?.trim() || null,
+      sort_order: (lastOption?.sort_order ?? -10) + 10,
     })
     .select('*')
     .single();

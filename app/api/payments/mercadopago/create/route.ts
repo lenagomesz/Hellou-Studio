@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     issuer_id?: string;
     cpf?: string;
     shipping_address?: Record<string, unknown>;
-    shipping_method?: 'pac' | 'sedex';
+    shipping_method?: 'pac' | 'sedex' | 'pickup';
     shipping_cep?: string;
     coupon_code?: string;
     wants_invoice?: boolean;
@@ -231,6 +231,11 @@ export async function POST(request: Request) {
   const discountAmount = couponValidation?.valid ? couponValidation.value.discountAmount : 0;
 
   const isDigitalOrder = cartItems.every(item => item.product?.type === 'digital');
+  const familyPickupCode = (process.env.FAMILY_PICKUP_COUPON_CODE || 'RETIRADAHELENA').trim().toUpperCase();
+  const isFamilyPickup = shipping_method === 'pickup';
+  if (isFamilyPickup && (!validCoupon?.free_shipping || validCoupon.code !== familyPickupCode)) {
+    return badRequest('A retirada com Helena exige o código familiar válido.');
+  }
   const hasFreeShipping = isDigitalOrder || subtotal >= 99 || validCoupon?.free_shipping === true;
   let validatedShipping = 0;
 
