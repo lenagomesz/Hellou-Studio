@@ -17,6 +17,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
 type Priority = 'low' | 'normal' | 'high' | 'urgent';
 type ViewFilter = 'all' | 'stock' | 'buy' | 'missing';
@@ -96,6 +97,8 @@ export default function MaterialsPage() {
   const [modal, setModal] = useState<'stock' | 'missing' | 'edit' | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [pendingArchive, setPendingArchive] = useState<Material | null>(null);
+  const [archiving, setArchiving] = useState(false);
 
   const loadMaterials = useCallback(async () => {
     setLoading(true);
@@ -195,10 +198,20 @@ export default function MaterialsPage() {
     if (success) { setMessage(success); window.setTimeout(() => setMessage(''), 3000); }
   }
 
-  async function archiveMaterial(id: string) {
-    if (!window.confirm('Arquivar este filamento? Ele sairá do estoque e da lista de compras.')) return;
-    const response = await fetch('/api/admin/inventory/materials', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    if (response.ok) setMaterials((current) => current.filter((item) => item.id !== id));
+  async function archiveMaterial(material: Material) {
+    setArchiving(true);
+    setError('');
+    const response = await fetch('/api/admin/inventory/materials', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: material.id }) });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok) {
+      setMaterials((current) => current.filter((item) => item.id !== material.id));
+      setPendingArchive(null);
+      setMessage('Filamento arquivado.');
+      window.setTimeout(() => setMessage(''), 3000);
+    } else {
+      setError(data.error ?? 'Erro ao arquivar filamento');
+    }
+    setArchiving(false);
   }
 
   return (
@@ -249,7 +262,7 @@ export default function MaterialsPage() {
         {loading ? <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">{[1,2,3,4,5,6].map((item) => <div key={item} className="h-52 animate-pulse rounded-2xl bg-slate-100" />)}</div> : visibleMaterials.length === 0 ? <div className="p-14 text-center"><Droplets className="mx-auto h-10 w-10 text-slate-300" /><p className="mt-3 font-semibold text-slate-700">Nenhum filamento encontrado</p></div> : <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">{visibleMaterials.map((item) => {
           const buy = amountToBuy(item);
           const percent = item.target_weight_grams > 0 ? Math.min(100, Math.round(item.current_weight_grams / item.target_weight_grams * 100)) : 0;
-          return <article key={item.id} className={`rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-lg ${buy > 0 ? 'border-orange-200' : 'border-slate-100'}`}><div className="flex items-start gap-3"><span className="h-12 w-12 shrink-0 rounded-2xl border-4 border-white shadow-md" style={{ backgroundColor: item.color_hex }} /><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><h3 className="truncate font-bold text-slate-900">{item.color_name}</h3><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${PRIORITY[item.priority].badge}`}>{PRIORITY[item.priority].label}</span></div><p className="truncate text-xs text-slate-500">{item.material_type} · {item.brand || item.name}</p></div><button onClick={() => openEdit(item)} className="rounded-lg p-2 text-slate-400 hover:bg-pink-50 hover:text-pink-600"><Edit3 className="h-4 w-4" /></button><button onClick={() => archiveMaterial(item.id)} className="rounded-lg p-2 text-slate-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-4 w-4" /></button></div><div className="mt-5 flex items-end justify-between"><div><p className="text-2xl font-bold text-slate-950">{formatWeight(item.current_weight_grams)}</p><p className="text-[11px] text-slate-400">meta de {formatWeight(item.target_weight_grams)}</p></div><span className={`text-xs font-bold ${buy > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>{buy > 0 ? `Comprar ${formatWeight(buy)}` : 'Estoque saudável'}</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${buy > 0 ? 'bg-orange-500' : 'bg-gradient-to-r from-pink-500 to-orange-400'}`} style={{ width: `${percent}%` }} /></div><div className="mt-4 grid grid-cols-3 gap-2 text-center"><div className="rounded-xl bg-slate-50 p-2"><p className="text-[10px] uppercase text-slate-400">Repor em</p><p className="text-xs font-bold text-slate-700">{formatWeight(item.reorder_point_grams)}</p></div><div className="rounded-xl bg-slate-50 p-2"><p className="text-[10px] uppercase text-slate-400">Custo/kg</p><p className="text-xs font-bold text-slate-700">{money(item.cost_per_kg)}</p></div><div className="rounded-xl bg-slate-50 p-2"><p className="text-[10px] uppercase text-slate-400">Valor atual</p><p className="text-xs font-bold text-slate-700">{money(item.current_weight_grams / 1000 * item.cost_per_kg)}</p></div></div></article>;
+          return <article key={item.id} className={`rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-lg ${buy > 0 ? 'border-orange-200' : 'border-slate-100'}`}><div className="flex items-start gap-3"><span className="h-12 w-12 shrink-0 rounded-2xl border-4 border-white shadow-md" style={{ backgroundColor: item.color_hex }} /><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><h3 className="truncate font-bold text-slate-900">{item.color_name}</h3><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${PRIORITY[item.priority].badge}`}>{PRIORITY[item.priority].label}</span></div><p className="truncate text-xs text-slate-500">{item.material_type} · {item.brand || item.name}</p></div><button onClick={() => openEdit(item)} className="rounded-lg p-2 text-slate-400 hover:bg-pink-50 hover:text-pink-600"><Edit3 className="h-4 w-4" /></button><button onClick={() => setPendingArchive(item)} aria-label={`Arquivar ${item.color_name}`} className="rounded-lg p-2 text-slate-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-4 w-4" /></button></div><div className="mt-5 flex items-end justify-between"><div><p className="text-2xl font-bold text-slate-950">{formatWeight(item.current_weight_grams)}</p><p className="text-[11px] text-slate-400">meta de {formatWeight(item.target_weight_grams)}</p></div><span className={`text-xs font-bold ${buy > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>{buy > 0 ? `Comprar ${formatWeight(buy)}` : 'Estoque saudável'}</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${buy > 0 ? 'bg-orange-500' : 'bg-gradient-to-r from-pink-500 to-orange-400'}`} style={{ width: `${percent}%` }} /></div><div className="mt-4 grid grid-cols-3 gap-2 text-center"><div className="rounded-xl bg-slate-50 p-2"><p className="text-[10px] uppercase text-slate-400">Repor em</p><p className="text-xs font-bold text-slate-700">{formatWeight(item.reorder_point_grams)}</p></div><div className="rounded-xl bg-slate-50 p-2"><p className="text-[10px] uppercase text-slate-400">Custo/kg</p><p className="text-xs font-bold text-slate-700">{money(item.cost_per_kg)}</p></div><div className="rounded-xl bg-slate-50 p-2"><p className="text-[10px] uppercase text-slate-400">Valor atual</p><p className="text-xs font-bold text-slate-700">{money(item.current_weight_grams / 1000 * item.cost_per_kg)}</p></div></div></article>;
         })}</div>}
       </section>
 
@@ -283,6 +296,7 @@ export default function MaterialsPage() {
 
         <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setModal(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600">Cancelar</button><button disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-bold text-white hover:bg-pink-600 disabled:opacity-50"><Save className="h-4 w-4" />{saving ? 'Salvando...' : modal === 'edit' ? 'Salvar alterações' : modal === 'missing' ? 'Adicionar à lista' : 'Salvar filamento'}</button></div>
       </form></div>}
+      <ConfirmDialog open={Boolean(pendingArchive)} title="Arquivar filamento?" description={`“${pendingArchive?.color_name ?? ''}” sairá do estoque e da lista de compras.`} confirmLabel="Arquivar" busy={archiving} onCancel={() => setPendingArchive(null)} onConfirm={() => pendingArchive ? archiveMaterial(pendingArchive) : undefined} />
     </div>
   );
 }

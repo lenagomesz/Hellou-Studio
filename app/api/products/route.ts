@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     active?: boolean;
     fulfillment_mode?: string;
     is_customizable?: boolean;
-    options?: Array<{ name: string; dimensions?: string | null; color?: string | null; price_modifier?: number; stock?: number }>;
+    options?: Array<{ name: string; dimensions?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number }>;
   };
 
   if (active === false) {
@@ -145,6 +145,7 @@ export async function POST(request: Request) {
       name: option.name?.trim() || '',
       dimensions: option.dimensions?.trim() || null,
       color: option.color?.trim() || null,
+      image_url: option.image_url?.trim() || null,
       price_modifier: Number(option.price_modifier ?? 0),
       stock: Math.max(0, Math.trunc(Number(option.stock ?? 0))),
     })));

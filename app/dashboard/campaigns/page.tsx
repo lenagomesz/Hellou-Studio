@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
 interface Campaign {
   id: string;
@@ -38,27 +39,43 @@ export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [error, setError] = useState('');
+  const [pendingDelete, setPendingDelete] = useState<Campaign | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchCampaigns = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await fetch(`/api/email-marketing/campaigns?status=${filter}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Não foi possível carregar as campanhas.');
       setCampaigns(Array.isArray(data) ? data : []);
-    } catch {
-      setCampaigns([]);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Não foi possível carregar as campanhas.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [filter]);
 
   useEffect(() => {
     fetchCampaigns();
   }, [fetchCampaigns]);
 
-  async function deleteCampaign(id: string) {
-    if (!confirm('Tem certeza que deseja excluir esta campanha?')) return;
-    await fetch(`/api/email-marketing/campaigns/${id}`, { method: 'DELETE' });
-    fetchCampaigns();
+  async function deleteCampaign(campaign: Campaign) {
+    setDeleting(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/email-marketing/campaigns/${campaign.id}`, { method: 'DELETE' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Não foi possível excluir a campanha.');
+      setCampaigns((current) => current.filter((item) => item.id !== campaign.id));
+      setPendingDelete(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Não foi possível excluir a campanha.');
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -78,6 +95,8 @@ export default function CampaignsPage() {
           + Nova campanha
         </Link>
       </div>
+
+      {error && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span>{error}</span><button type="button" onClick={() => void fetchCampaigns()} className="rounded-lg bg-white px-3 py-1.5 font-bold shadow-sm">Tentar novamente</button></div>}
 
       {/* Quick Nav */}
       <div className="flex flex-wrap gap-2">
@@ -170,7 +189,7 @@ export default function CampaignsPage() {
                   )}
                   {campaign.status === 'draft' && (
                     <button
-                      onClick={() => deleteCampaign(campaign.id)}
+                      onClick={() => setPendingDelete(campaign)}
                       className="rounded-lg px-2 py-1.5 text-xs text-red-500 transition hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
                       Excluir
@@ -182,6 +201,7 @@ export default function CampaignsPage() {
           </div>
         )}
       </div>
+      <ConfirmDialog open={Boolean(pendingDelete)} title="Excluir campanha?" description={`A campanha “${pendingDelete?.name ?? ''}” será removida permanentemente.`} confirmLabel="Excluir" busy={deleting} onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete ? deleteCampaign(pendingDelete) : undefined} />
     </div>
   );
 }

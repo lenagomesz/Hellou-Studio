@@ -6,6 +6,25 @@ import type { OrderStatus } from '@/types/database';
 
 const VALID_STATUSES: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'rejected'];
 
+async function getOrderStats() {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin
+    .from('orders')
+    .select('status, total');
+
+  if (error) return null;
+  const rows = data ?? [];
+  const revenueStatuses = new Set<OrderStatus>(['paid', 'processing', 'completed', 'shipped', 'delivered']);
+  return {
+    awaiting: rows.filter((order) => ['awaiting_payment', 'pending', 'paid'].includes(order.status)).length,
+    processing: rows.filter((order) => order.status === 'processing').length,
+    shipped: rows.filter((order) => order.status === 'shipped').length,
+    revenue: Math.round(rows
+      .filter((order) => revenueStatuses.has(order.status as OrderStatus))
+      .reduce((sum, order) => sum + Number(order.total ?? 0), 0) * 100) / 100,
+  };
+}
+
 export async function GET(req: NextRequest) {
   const auth = await requirePermission('orders.manage');
   if (auth.response) return auth.response;
@@ -55,6 +74,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       orders: paginatedRows,
       pagination: { page, limit, total, pages },
+      stats: await getOrderStats(),
     });
   }
 
@@ -75,6 +95,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     orders: rows,
     pagination: { page, limit, total, pages },
+    stats: await getOrderStats(),
   });
 }
 

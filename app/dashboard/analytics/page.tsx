@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { RevenueChart } from '@/components/admin/charts/RevenueChart';
 import { OrdersChart } from '@/components/admin/charts/OrdersChart';
 import { CategoryPieChart } from '@/components/admin/charts/CategoryPieChart';
@@ -23,21 +24,41 @@ export default function AnalyticsPage() {
   const [usersData, setUsersData] = useState<{ data: UserData[]; groupBy: string }>({ data: [], groupBy: 'day' });
   const [topViewedData, setTopViewedData] = useState<TopViewedProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
+  const loadAnalytics = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
-    Promise.all([
-      fetch(`/api/admin/analytics/revenue?period=${period}`).then(r => r.json()),
-      fetch(`/api/admin/analytics/products?period=${period}`).then(r => r.json()),
-      fetch(`/api/admin/analytics/users?period=${period}`).then(r => r.json()),
-      fetch(`/api/admin/analytics/top-viewed?period=${period}`).then(r => r.json()),
-    ]).then(([rev, prod, usr, topViewed]) => {
+    setError('');
+    try {
+      const responses = await Promise.all([
+        fetch(`/api/admin/analytics/revenue?period=${period}`, { signal }),
+        fetch(`/api/admin/analytics/products?period=${period}`, { signal }),
+        fetch(`/api/admin/analytics/users?period=${period}`, { signal }),
+        fetch(`/api/admin/analytics/top-viewed?period=${period}`, { signal }),
+      ]);
+      const payloads = await Promise.all(responses.map(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Não foi possível carregar os indicadores.');
+        return payload;
+      }));
+      const [rev, prod, usr, topViewed] = payloads;
       setRevenueData(rev);
       setProductsData(prod);
       setUsersData(usr);
       setTopViewedData(topViewed.products ?? []);
-    }).finally(() => setLoading(false));
+    } catch (cause) {
+      if (cause instanceof DOMException && cause.name === 'AbortError') return;
+      setError(cause instanceof Error ? cause.message : 'Não foi possível carregar os indicadores.');
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
   }, [period]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadAnalytics(controller.signal);
+    return () => controller.abort();
+  }, [loadAnalytics]);
 
   const handleExport = () => {
     window.open(`/api/admin/analytics/export?period=${period}`, '_blank');
@@ -69,6 +90,30 @@ export default function AnalyticsPage() {
           </button>
         </div>
       </header>
+
+      {error && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <span>{error}</span>
+          <button type="button" onClick={() => void loadAnalytics()} className="rounded-lg bg-white px-3 py-1.5 font-bold shadow-sm hover:bg-red-100">Tentar novamente</button>
+        </div>
+      )}
+
+      <nav aria-label="Análises especializadas" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {[
+          { href: '/dashboard/analytics/traffic', title: 'Tráfego do site', description: 'Visitantes anônimos, origens e páginas mais acessadas', color: 'from-blue-500 to-violet-500' },
+          { href: '/dashboard/analytics/segments', title: 'Segmentos de clientes', description: 'Grupos de comportamento para campanhas e relacionamento', color: 'from-pink-500 to-orange-400' },
+          { href: '/dashboard/analytics/rfm', title: 'RFM e melhores clientes', description: 'Recência, frequência e valor das compras', color: 'from-emerald-500 to-teal-500' },
+          { href: '/dashboard/analytics/churn', title: 'Risco de abandono', description: 'Clientes que podem precisar de reativação', color: 'from-amber-500 to-orange-500' },
+          { href: '/dashboard/analytics/ltv', title: 'Valor do cliente', description: 'LTV atual e potencial de longo prazo', color: 'from-violet-500 to-fuchsia-500' },
+          { href: '/dashboard/analytics/cohorts', title: 'Retenção por coorte', description: 'Acompanhe recorrência ao longo dos meses', color: 'from-slate-600 to-slate-900' },
+        ].map((item) => (
+          <Link key={item.href} href={item.href} className="group overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <span className={`block h-1.5 w-12 rounded-full bg-gradient-to-r ${item.color}`} />
+            <p className="mt-4 text-sm font-bold text-slate-900 group-hover:text-pink-600">{item.title}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">{item.description}</p>
+          </Link>
+        ))}
+      </nav>
 
       {loading ? (
         <div className="grid gap-6 lg:grid-cols-2">

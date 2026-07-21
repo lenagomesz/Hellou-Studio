@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Tag, Plus, Trash2, ToggleLeft, ToggleRight, Percent, DollarSign, Truck, Pencil } from 'lucide-react';
 import type { Coupon } from '@/types/database';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -34,6 +35,8 @@ export default function CouponsPage() {
     bonus_title: '',
     bonus_description: '',
   });
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; code: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function fetchCoupons() {
     setLoading(true);
@@ -89,14 +92,16 @@ export default function CouponsPage() {
     setCoupons(prev => prev.map(c => c.id === id ? { ...c, active: !active } : c));
   }
 
-  async function deleteCoupon(id: string, code: string) {
-    if (!confirm(`Excluir cupom "${code}"?`)) return;
+  async function deleteCoupon(id: string, _code: string) {
+    setDeleting(true);
     await fetch('/api/coupons', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     });
     setCoupons(prev => prev.filter(c => c.id !== id));
+    setPendingDelete(null);
+    setDeleting(false);
     setToast('Cupom excluído');
     setTimeout(() => setToast(''), 3000);
   }
@@ -302,7 +307,7 @@ export default function CouponsPage() {
                   <button onClick={() => toggleCoupon(coupon.id, coupon.active)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 transition dark:hover:bg-gray-800" title={coupon.active ? 'Desativar' : 'Ativar'}>
                     {coupon.active ? <ToggleRight className="h-5 w-5 text-green-600" /> : <ToggleLeft className="h-5 w-5" />}
                   </button>
-                  <button onClick={() => deleteCoupon(coupon.id, coupon.code)} className="rounded-lg p-2 text-red-500 hover:bg-red-50 transition" title="Excluir">
+                  <button onClick={() => setPendingDelete({ id: coupon.id, code: coupon.code })} aria-label={`Excluir cupom ${coupon.code}`} className="rounded-lg p-2 text-red-500 hover:bg-red-50 transition" title="Excluir">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -343,6 +348,7 @@ export default function CouponsPage() {
           ))}
         </div>
       )}
+      <ConfirmDialog open={Boolean(pendingDelete)} title="Excluir cupom?" description={`O cupom “${pendingDelete?.code ?? ''}” será removido permanentemente.`} confirmLabel="Excluir" busy={deleting} onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete ? deleteCoupon(pendingDelete.id, pendingDelete.code) : undefined} />
     </div>
   );
 }

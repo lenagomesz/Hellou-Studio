@@ -39,6 +39,7 @@ As principais:
 |----------|-------------------|
 | `NEXTAUTH_URL` | `https://seudominio.com` (trocar de localhost!) |
 | `NEXTAUTH_SECRET` | Manter o mesmo ou gerar novo com `openssl rand -base64 32` |
+| `ANALYTICS_HASH_SALT` | Segredo longo e aleatório para anonimizar visitantes (opcional; usa `NEXTAUTH_SECRET` como fallback) |
 | `SUPABASE_URL` | URL do projeto Supabase |
 | `SUPABASE_ANON_KEY` | Chave anon do Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Chave service_role (admin) |
@@ -81,6 +82,7 @@ Quando quiser receber pagamentos reais:
 
 - Se o Supabase já é o de produção: ok, nada a fazer
 - Se precisa migrar: rodar `supabase db push` ou aplicar as migrations manualmente
+- Confirmar que `20260720_site_analytics.sql` foi aplicada para habilitar visitantes anônimos e o funil de navegação
 - Rodar seed do admin se necessário: ajustar o script para apontar para prod
 
 ---
@@ -91,6 +93,7 @@ Quando quiser receber pagamentos reais:
 - [ ] Testar adicionar produto ao carrinho e finalizar compra (com cartão de teste se ainda em test mode)
 - [ ] Verificar se imagens dos produtos carregam
 - [ ] Testar painel admin (`/dashboard`)
+- [ ] Aceitar cookies de análise em uma janela anônima e confirmar o acesso em `/dashboard/analytics/traffic`
 - [ ] Verificar se notificações/emails funcionam
 - [ ] Testar formulário de encomenda (upload .stl)
 

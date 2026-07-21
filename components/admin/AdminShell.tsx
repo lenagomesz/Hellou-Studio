@@ -13,12 +13,12 @@ import {
   ExternalLink,
   Search,
   ShieldCheck,
-  ShoppingBag,
   Sparkles,
   X,
 } from 'lucide-react';
 import { SideNav } from '@/components/admin/SideNav';
 import type { AdminAccessLevel } from '@/lib/admin-permissions';
+import { ADMIN_COMMANDS, canAccessAdminItem, getAdminRouteTitle } from '@/components/admin/admin-navigation';
 
 type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -35,45 +35,11 @@ interface AdminNotificationItem {
   created_at: string;
 }
 
-const QUICK_LINKS = [
-  { href: '/dashboard', label: 'Visão geral', description: 'Resumo da operação' },
-  { href: '/dashboard/orders', label: 'Pedidos', description: 'Produção, envio e histórico' },
-  { href: '/dashboard/requests', label: 'Solicitações 3D', description: 'Orçamentos de impressão' },
-  { href: '/dashboard/products', label: 'Produtos', description: 'Catálogo e arquivos STL' },
-  { href: '/dashboard/inventory', label: 'Estoque', description: 'Saldo, previsão e reposição' },
-  { href: '/dashboard/users', label: 'Clientes', description: 'Perfis e relacionamento' },
-  { href: '/dashboard/financeiro', label: 'Financeiro', description: 'Receitas e conciliação' },
-  { href: '/dashboard/analytics', label: 'Analytics', description: 'Indicadores e tendências' },
-  { href: '/dashboard/campaigns', label: 'Campanhas', description: 'Comunicação e automações' },
-  { href: '/dashboard/admin-alerts', label: 'Central de alertas', description: 'Pendências e lembretes' },
-];
-
-const ROUTE_TITLES: Array<[string, string]> = [
-  ['/dashboard/admin-alerts', 'Central de alertas'],
-  ['/dashboard/order-ratings', 'Avaliações'],
-  ['/dashboard/inventory', 'Estoque'],
-  ['/dashboard/campaigns', 'Campanhas'],
-  ['/dashboard/analytics', 'Analytics'],
-  ['/dashboard/financeiro', 'Financeiro'],
-  ['/dashboard/calculadora', 'Calculadora'],
-  ['/dashboard/requests', 'Solicitações 3D'],
-  ['/dashboard/products', 'Produtos'],
-  ['/dashboard/orders', 'Pedidos'],
-  ['/dashboard/users', 'Clientes'],
-  ['/dashboard/coupons', 'Cupons'],
-  ['/dashboard/settings', 'Configurações'],
-  ['/dashboard', 'Visão geral'],
-];
-
 function getNotificationLink(notification: AdminNotificationItem) {
   if (notification.related_print_request_id) return `/dashboard/requests/${notification.related_print_request_id}`;
   if (notification.related_order_id) return `/dashboard/orders/${notification.related_order_id}`;
   if (notification.related_product_id) return `/dashboard/products/${notification.related_product_id}`;
   return '/dashboard/admin-alerts';
-}
-
-function getRouteTitle(pathname: string) {
-  return ROUTE_TITLES.find(([route]) => pathname === route || pathname.startsWith(`${route}/`))?.[1] ?? 'Admin';
 }
 
 function relativeTime(value: string) {
@@ -226,9 +192,9 @@ export function AdminShell({ children, userEmail, accessLevel }: { children: Rea
     setDesktopEnabled(false);
   }
 
-  const filteredLinks = QUICK_LINKS.filter((item) =>
-    `${item.label} ${item.description}`.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')),
-  );
+  const filteredLinks = ADMIN_COMMANDS
+    .filter((item) => canAccessAdminItem(item, accessLevel))
+    .filter((item) => `${item.label} ${item.description} ${item.keywords ?? ''}`.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')));
 
   return (
     <div className="admin-shell force-light min-h-screen bg-[#f5f3ef] text-slate-950 md:flex">
@@ -242,18 +208,19 @@ export function AdminShell({ children, userEmail, accessLevel }: { children: Rea
                 Operação <ChevronRight className="h-3 w-3" />
               </div>
               <p className="truncate text-base font-semibold text-slate-900 dark:text-white">
-                {getRouteTitle(pathname)}
+                {getAdminRouteTitle(pathname)}
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="hidden min-w-56 items-center gap-2 rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-sm text-slate-500 shadow-sm transition hover:border-pink-300 hover:text-slate-800 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 dark:hover:border-pink-500/50 dark:hover:text-white md:flex"
+              aria-label="Buscar no painel"
+              className="flex min-w-0 items-center gap-2 rounded-xl border border-black/10 bg-white/80 p-2.5 text-sm text-slate-500 shadow-sm transition hover:border-pink-300 hover:text-slate-800 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 dark:hover:border-pink-500/50 dark:hover:text-white md:min-w-56 md:px-3 md:py-2"
             >
               <Search className="h-4 w-4" />
-              <span className="flex-1 text-left">Buscar no painel</span>
-              <kbd className="rounded-md border border-black/10 bg-slate-50 px-1.5 py-0.5 text-[10px] dark:border-white/10 dark:bg-white/5">
+              <span className="hidden flex-1 text-left md:block">Buscar no painel</span>
+              <kbd className="hidden rounded-md border border-black/10 bg-slate-50 px-1.5 py-0.5 text-[10px] dark:border-white/10 dark:bg-white/5 md:block">
                 Ctrl K
               </kbd>
             </button>
@@ -262,6 +229,7 @@ export function AdminShell({ children, userEmail, accessLevel }: { children: Rea
               <button
                 type="button"
                 onClick={() => setNotificationOpen((open) => !open)}
+                aria-expanded={notificationOpen}
                 className="relative rounded-xl border border-black/10 bg-white/80 p-2.5 text-slate-600 shadow-sm transition hover:border-pink-300 hover:text-pink-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
                 aria-label={`Alertas${unreadCount ? `: ${unreadCount} não lidos` : ''}`}
               >
@@ -362,7 +330,7 @@ export function AdminShell({ children, userEmail, accessLevel }: { children: Rea
 
       {searchOpen && (
         <div className="fixed inset-0 z-[60] bg-slate-950/55 p-4 pt-[10vh] backdrop-blur-sm" onMouseDown={() => setSearchOpen(false)}>
-          <div className="mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-white/20 bg-white shadow-2xl dark:bg-[#12151d]" onMouseDown={(event) => event.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-label="Buscar no painel administrativo" className="mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-white/20 bg-white shadow-2xl dark:bg-[#12151d]" onMouseDown={(event) => event.stopPropagation()}>
             <div className="flex items-center gap-3 border-b border-black/5 px-4 dark:border-white/10">
               <Search className="h-5 w-5 text-pink-500" />
               <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Digite pedidos, estoque, clientes..." className="h-14 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400" />
@@ -370,13 +338,16 @@ export function AdminShell({ children, userEmail, accessLevel }: { children: Rea
             </div>
             <div className="max-h-[55vh] overflow-y-auto p-2">
               <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Ir para</p>
-              {filteredLinks.map((item) => (
-                <button key={item.href} onClick={() => { router.push(item.href); setSearchOpen(false); setQuery(''); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-white/5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-pink-50 text-pink-600 dark:bg-pink-500/10"><ShoppingBag className="h-4 w-4" /></span>
-                  <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{item.label}</span><span className="block text-xs text-slate-500">{item.description}</span></span>
-                  <Command className="h-4 w-4 text-slate-300" />
-                </button>
-              ))}
+              {filteredLinks.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button key={item.href} onClick={() => { router.push(item.href); setSearchOpen(false); setQuery(''); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-white/5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-pink-50 text-pink-600 dark:bg-pink-500/10"><Icon className="h-4 w-4" /></span>
+                    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{item.label}</span><span className="block text-xs text-slate-500">{item.description}</span></span>
+                    <Command className="h-4 w-4 text-slate-300" />
+                  </button>
+                );
+              })}
               {filteredLinks.length === 0 && <p className="px-4 py-10 text-center text-sm text-slate-500">Nenhuma área encontrada.</p>}
             </div>
           </div>

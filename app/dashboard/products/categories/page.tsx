@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check, Loader2, Plus, Save, Tag, Trash2, X } from 'lucide-react';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import type { ProductCategory, ProductTag } from '@/types/database';
 
 export default function ProductCategoriesPage() {
@@ -15,6 +16,8 @@ export default function ProductCategoriesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [pendingDelete, setPendingDelete] = useState<{ kind: 'category'; item: ProductCategory } | { kind: 'tag'; item: ProductTag } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function loadCategories() {
     const [categoryResponse, tagResponse] = await Promise.all([
@@ -71,14 +74,17 @@ export default function ProductCategoriesPage() {
   }
 
   async function deleteCategory(category: ProductCategory) {
-    if (!window.confirm(`Excluir a categoria “${category.name}”?`)) return;
+    setDeleting(true);
     setError('');
     const response = await fetch(`/api/admin/product-categories/${category.id}`, { method: 'DELETE' });
     if (!response.ok) {
       const data = await response.json().catch(() => ({})) as { error?: string };
+      setDeleting(false);
       return setError(data.error ?? 'Erro ao excluir categoria');
     }
     setCategories((current) => current.filter((item) => item.id !== category.id));
+    setPendingDelete(null);
+    setDeleting(false);
     notify('Categoria excluída');
   }
 
@@ -117,13 +123,16 @@ export default function ProductCategoriesPage() {
   }
 
   async function deleteTag(tag: ProductTag) {
-    if (!window.confirm(`Excluir a tag “${tag.name}”? Ela será removida dos produtos vinculados.`)) return;
+    setDeleting(true);
     const response = await fetch(`/api/admin/products/tags?id=${tag.id}`, { method: 'DELETE' });
     if (!response.ok) {
       const data = await response.json().catch(() => ({})) as { error?: string };
+      setDeleting(false);
       return setError(data.error ?? 'Erro ao excluir tag');
     }
     setTags((current) => current.filter((item) => item.id !== tag.id));
+    setPendingDelete(null);
+    setDeleting(false);
     notify('Tag excluída');
   }
 
@@ -150,7 +159,7 @@ export default function ProductCategoriesPage() {
         <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800"><h2 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white"><Tag className="h-4 w-4 text-pink-500" /> Categorias cadastradas</h2></div>
         {loading ? <div className="grid place-items-center p-12"><Loader2 className="h-6 w-6 animate-spin text-pink-500" /></div> : (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            {categories.map((category) => <CategoryRow key={category.id} category={category} onSave={updateCategory} onDelete={deleteCategory} />)}
+            {categories.map((category) => <CategoryRow key={category.id} category={category} onSave={updateCategory} onDelete={(item) => setPendingDelete({ kind: 'category', item })} />)}
           </div>
         )}
       </section>
@@ -166,16 +175,25 @@ export default function ProductCategoriesPage() {
       <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800"><h2 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white"><Tag className="h-4 w-4 text-violet-500" /> Tags cadastradas</h2><p className="mt-1 text-xs text-gray-500">As cores abaixo aparecem nas etiquetas dos produtos.</p></div>
         <div className="divide-y divide-gray-100 dark:divide-gray-800">
-          {tags.length === 0 ? <p className="p-8 text-center text-sm text-gray-500">Nenhuma tag cadastrada.</p> : tags.map((tag) => <TagRow key={tag.id} tag={tag} onSave={updateTag} onDelete={deleteTag} />)}
+          {tags.length === 0 ? <p className="p-8 text-center text-sm text-gray-500">Nenhuma tag cadastrada.</p> : tags.map((tag) => <TagRow key={tag.id} tag={tag} onSave={updateTag} onDelete={(item) => setPendingDelete({ kind: 'tag', item })} />)}
         </div>
       </section>
         </div>
       </div>
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title={pendingDelete?.kind === 'tag' ? 'Excluir esta tag?' : 'Excluir esta categoria?'}
+        description={pendingDelete?.kind === 'tag' ? `A tag “${pendingDelete.item.name}” será removida dos produtos vinculados.` : `A categoria “${pendingDelete?.item.name ?? ''}” será excluída permanentemente.`}
+        confirmLabel="Excluir"
+        busy={deleting}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => pendingDelete?.kind === 'tag' ? deleteTag(pendingDelete.item) : pendingDelete ? deleteCategory(pendingDelete.item) : undefined}
+      />
     </div>
   );
 }
 
-function CategoryRow({ category, onSave, onDelete }: { category: ProductCategory & { product_count?: number }; onSave: (category: ProductCategory, update: Partial<ProductCategory>) => Promise<void>; onDelete: (category: ProductCategory) => Promise<void> }) {
+function CategoryRow({ category, onSave, onDelete }: { category: ProductCategory & { product_count?: number }; onSave: (category: ProductCategory, update: Partial<ProductCategory>) => Promise<void>; onDelete: (category: ProductCategory) => void | Promise<void> }) {
   const [name, setName] = useState(category.name);
   return (
     <div className="grid gap-3 px-5 py-4 sm:grid-cols-[1fr_auto_auto] sm:items-center">
@@ -189,7 +207,7 @@ function CategoryRow({ category, onSave, onDelete }: { category: ProductCategory
   );
 }
 
-function TagRow({ tag, onSave, onDelete }: { tag: ProductTag & { product_count?: number }; onSave: (tag: ProductTag, update: Pick<ProductTag, 'name' | 'color'>) => Promise<void>; onDelete: (tag: ProductTag) => Promise<void> }) {
+function TagRow({ tag, onSave, onDelete }: { tag: ProductTag & { product_count?: number }; onSave: (tag: ProductTag, update: Pick<ProductTag, 'name' | 'color'>) => Promise<void>; onDelete: (tag: ProductTag) => void | Promise<void> }) {
   const [name, setName] = useState(tag.name);
   const [color, setColor] = useState(tag.color);
   return (

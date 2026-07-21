@@ -285,6 +285,13 @@ html {
   scrollbar-width: none;
 }
 
+/* Shared accessibility and touch defaults. */
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid rgb(236 72 153 / 0.65); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}
+
 /* Admin workspace */
 .admin-shell {
   --admin-accent: #db2777;

@@ -5,83 +5,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
-  AlertCircle,
-  Activity,
-  BarChart3,
-  Box,
-  Calculator,
   ChevronRight,
-  CircleDollarSign,
-  LayoutDashboard,
   LogOut,
-  Mail,
   Menu,
-  Package,
-  Printer,
-  Settings2,
-  Shield,
-  Star,
   Store,
-  Tag,
-  Users,
-  Warehouse,
   X,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import type { AdminAccessLevel } from '@/lib/admin-permissions';
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  exact?: boolean;
-  badgeKey?: 'alerts';
-  ownerOnly?: boolean;
-}
-
-interface NavSection {
-  label: string;
-  items: NavItem[];
-}
-
-const NAV_SECTIONS: NavSection[] = [
-  {
-    label: 'Hoje',
-    items: [
-      { href: '/dashboard', label: 'Visão geral', icon: LayoutDashboard, exact: true },
-      { href: '/dashboard/admin-alerts', label: 'Central de alertas', icon: AlertCircle, badgeKey: 'alerts' },
-    ],
-  },
-  {
-    label: 'Operação',
-    items: [
-      { href: '/dashboard/orders', label: 'Pedidos', icon: Package },
-      { href: '/dashboard/requests', label: 'Solicitações 3D', icon: Printer },
-      { href: '/dashboard/products', label: 'Produtos', icon: Box },
-      { href: '/dashboard/inventory', label: 'Estoque', icon: Warehouse },
-      { href: '/dashboard/users', label: 'Clientes', icon: Users },
-      { href: '/dashboard/order-ratings', label: 'Avaliações', icon: Star },
-    ],
-  },
-  {
-    label: 'Crescimento',
-    items: [
-      { href: '/dashboard/financeiro', label: 'Financeiro', icon: CircleDollarSign, ownerOnly: true },
-      { href: '/dashboard/analytics', label: 'Análises', icon: BarChart3, ownerOnly: true },
-      { href: '/dashboard/campaigns', label: 'Campanhas', icon: Mail, ownerOnly: true },
-      { href: '/dashboard/coupons', label: 'Cupons', icon: Tag, ownerOnly: true },
-      { href: '/dashboard/calculadora', label: 'Calculadora', icon: Calculator, ownerOnly: true },
-    ],
-  },
-  {
-    label: 'Configuração',
-    items: [
-      { href: '/admin/security', label: 'Segurança (2FA)', icon: Shield },
-      { href: '/dashboard/settings/features', label: 'Recursos da loja', icon: Settings2, ownerOnly: true },
-      { href: '/dashboard/settings/health', label: 'Saúde dos serviços', icon: Activity, ownerOnly: true },
-    ],
-  },
-];
+import { ADMIN_NAVIGATION, canAccessAdminItem } from '@/components/admin/admin-navigation';
 
 export function SideNav({ userEmail, alertCount = 0, accessLevel }: { userEmail: string | null; alertCount?: number; accessLevel: AdminAccessLevel }) {
   const pathname = usePathname();
@@ -123,18 +54,19 @@ export function SideNav({ userEmail, alertCount = 0, accessLevel }: { userEmail:
       </div>
 
       <div className={`overflow-hidden transition-all duration-300 ease-in-out md:flex md:h-[calc(100vh-81px)] md:flex-col ${mobileOpen ? 'max-h-[78vh]' : 'max-h-0 md:max-h-none'}`}>
-        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5 [scrollbar-color:#333_transparent] [scrollbar-width:thin]">
-          {NAV_SECTIONS.map((section) => (
+        <nav aria-label="Navegação administrativa" className="flex-1 space-y-6 overflow-y-auto px-3 py-5 [scrollbar-color:#333_transparent] [scrollbar-width:thin]">
+          {ADMIN_NAVIGATION.map((section) => (
             <div key={section.label}>
               <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">{section.label}</p>
               <div className="space-y-1">
-                {section.items.filter((item) => !item.ownerOnly || accessLevel === 'owner').map((item) => {
+                {section.items.filter((item) => canAccessAdminItem(item, accessLevel)).map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href, item.exact);
                   const badgeCount = item.badgeKey === 'alerts' ? alertCount : 0;
                   return (
                     <Link
                       key={item.href}
+                      aria-current={active ? 'page' : undefined}
                       href={item.href}
                       className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${active ? 'bg-white text-slate-950 shadow-lg shadow-black/20' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'}`}
                     >

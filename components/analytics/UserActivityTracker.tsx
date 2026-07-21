@@ -21,7 +21,7 @@ export function UserActivityTracker() {
 
   useEffect(() => {
     if (!analyticsAllowed) return;
-    if (status !== 'authenticated' || !data.user || data.user.role === 'admin') return;
+    if (status === 'loading' || data?.user?.role === 'admin') return;
     if (pathname.startsWith('/dashboard') || pathname.startsWith('/api')) return;
 
     const key = `hellou-activity:${pathname}`;
@@ -29,10 +29,15 @@ export function UserActivityTracker() {
     if (Date.now() - lastTracked < 30_000) return;
     sessionStorage.setItem(key, String(Date.now()));
 
-    void fetch('/api/activity', {
+    const endpoint = status === 'authenticated' && data?.user ? '/api/activity' : '/api/analytics/track';
+    const body = status === 'authenticated' && data?.user
+      ? { eventType: 'page_view', path: pathname }
+      : { path: `${pathname}${window.location.search}`, referrer: document.referrer };
+
+    void fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventType: 'page_view', path: pathname }),
+      body: JSON.stringify(body),
       keepalive: true,
     });
   }, [analyticsAllowed, data, pathname, status]);

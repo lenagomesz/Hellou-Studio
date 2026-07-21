@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import type { ProductOption } from '@/types/database';
 import { Loader2 } from 'lucide-react';
 import { getProductColorName, getProductColorValue, PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
 const COLOR_PALETTE = PRODUCT_COLOR_PALETTE;
 
@@ -70,6 +72,8 @@ export function OptionsManager({
   const [bulkStock, setBulkStock] = useState('10');
   const [bulkPriceModifier, setBulkPriceModifier] = useState('0');
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<ProductOption | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const hasSizes = options.some(
     (o) => ['P', 'M', 'G'].includes(o.name.toUpperCase()),
@@ -224,15 +228,17 @@ export function OptionsManager({
   }
 
   async function handleDelete(option: ProductOption) {
-    if (!confirm(`Excluir variação "${option.name}"?`)) return;
-
+    setDeleting(true);
     const res = await fetch(`/api/product-options/${option.id}`, { method: 'DELETE' });
     if (!res.ok) {
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       setError(data.error ?? 'Erro ao excluir');
+      setDeleting(false);
       return;
     }
     setOptions((prev) => prev.filter((o) => o.id !== option.id));
+    setPendingDelete(null);
+    setDeleting(false);
     router.refresh();
   }
 
@@ -248,7 +254,7 @@ export function OptionsManager({
               option={option}
               basePrice={basePrice}
               onUpdate={(patch) => handleUpdate(option, patch)}
-              onDelete={() => handleDelete(option)}
+              onDelete={() => setPendingDelete(option)}
             />
           ))}
         </ul>
@@ -340,18 +346,7 @@ export function OptionsManager({
                 <label className="block text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">
                   Imagem para {colorName} (opcional)
                 </label>
-                <input
-                  type="url"
-                  value={bulkColors[colorName]?.imageUrl ?? ''}
-                  onChange={(e) => {
-                    setBulkColors((prev) => ({
-                      ...prev,
-                      [colorName]: { selected: true, imageUrl: e.target.value },
-                    }));
-                  }}
-                  placeholder="https://... (URL da imagem)"
-                  className="w-full rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <ImageUploadField compact value={bulkColors[colorName]?.imageUrl ?? ''} onChange={(imageUrl) => setBulkColors((prev) => ({ ...prev, [colorName]: { selected: true, imageUrl } }))} />
               </div>
             ))}
 
@@ -430,14 +425,8 @@ export function OptionsManager({
             placeholder="Ex: 10x10x5 cm"
             className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
-          <input
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="URL da imagem (opcional)"
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
-          />
         </div>
+        <div className="sm:max-w-sm"><ImageUploadField compact label="Foto específica da variação (opcional)" value={imageUrl} onChange={setImageUrl} /></div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Use 5 para acrescentar R$ 5,00. Preço final desta variação: {formatPrice(basePrice + (Number(priceModifier) || 0))}.
         </p>
@@ -460,6 +449,7 @@ export function OptionsManager({
           {error}
         </p>
       )}
+      <ConfirmDialog open={Boolean(pendingDelete)} title="Excluir variação?" description={`A variação “${pendingDelete?.name ?? ''}” será removida permanentemente.`} confirmLabel="Excluir" busy={deleting} onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete ? handleDelete(pendingDelete) : undefined} />
     </div>
   );
 }
@@ -544,14 +534,8 @@ function OptionRow({
             placeholder="Ex: 10x10x5 cm"
             className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
-          <input
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="URL da imagem"
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-          />
         </div>
+        <div className="mt-3 sm:max-w-sm"><ImageUploadField compact label="Foto específica da variação (opcional)" value={imageUrl} onChange={setImageUrl} /></div>
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           Preço final com esta variação: {formatPrice(basePrice + (Number(priceModifier) || 0))}
         </p>

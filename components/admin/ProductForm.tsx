@@ -9,6 +9,8 @@ import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect'
 import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
 import { ProductTagSelect, replaceProductTags } from '@/components/admin/ProductTagSelect';
 import { OptionsManager } from '@/components/admin/OptionsManager';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { CheckCircle2, Loader2, Upload } from 'lucide-react';
 
 type ProductFormProps =
@@ -22,10 +24,11 @@ type DraftOption = {
   color: string;
   priceModifier: string;
   stock: string;
+  imageUrl: string;
 };
 
 function createDraftOption(): DraftOption {
-  return { id: crypto.randomUUID(), name: '', dimensions: '', color: '', priceModifier: '0', stock: '0' };
+  return { id: crypto.randomUUID(), name: '', dimensions: '', color: '', priceModifier: '0', stock: '0', imageUrl: '' };
 }
 
 export function ProductForm(props: ProductFormProps) {
@@ -61,6 +64,7 @@ export function ProductForm(props: ProductFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function uploadImages(files: FileList | File[]) {
     const selected = Array.from(files);
@@ -116,6 +120,7 @@ export function ProductForm(props: ProductFormProps) {
         color: option.color || null,
         price_modifier: Number(option.priceModifier || 0),
         stock: Number(option.stock || 0),
+        image_url: option.imageUrl || null,
       }));
     if (normalizedOptions.some((option) => Number.isNaN(option.price_modifier) || Number.isNaN(option.stock) || option.stock < 0 || !Number.isInteger(option.stock))) {
       setError('Revise o preço adicional e o estoque das variações');
@@ -177,8 +182,6 @@ export function ProductForm(props: ProductFormProps) {
 
   async function handleDelete() {
     if (props.mode !== 'edit') return;
-    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-
     setSubmitting(true);
     const res = await fetch(`/api/products/${props.product.id}`, { method: 'DELETE' });
     if (!res.ok) {
@@ -356,6 +359,14 @@ export function ProductForm(props: ProductFormProps) {
                     <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Adicional (R$)</span><input type="number" step="0.01" value={option.priceModifier} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, priceModifier: event.target.value } : item))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
                     <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Pronta-entrega</span><input type="number" min="0" step="1" value={option.stock} onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, stock: event.target.value } : item))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
                   </div>
+                  <div className="mt-3 sm:max-w-sm">
+                    <ImageUploadField
+                      compact
+                      label="Foto específica desta variação (opcional)"
+                      value={option.imageUrl}
+                      onChange={(imageUrl) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, imageUrl } : item))}
+                    />
+                  </div>
                 </div>
               ))}
               {options.length === 0 && <button type="button" onClick={() => setOptions([createDraftOption()])} className="w-full rounded-xl border border-dashed border-pink-300 p-4 text-sm font-semibold text-pink-600">Adicionar a primeira variação</button>}
@@ -377,8 +388,8 @@ export function ProductForm(props: ProductFormProps) {
             className={`mb-4 flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed p-7 text-center transition ${imageDragOver ? 'border-pink-500 bg-pink-50' : 'border-gray-300 bg-gray-50/60 hover:border-pink-400 hover:bg-pink-50/50 dark:border-gray-700 dark:bg-gray-800/40'} disabled:cursor-not-allowed disabled:opacity-60`}
           >
             {uploadingImages ? <Loader2 className="h-8 w-8 animate-spin text-pink-500" /> : <Upload className="h-8 w-8 text-pink-500" />}
-            <span className="mt-2 text-sm font-bold text-gray-800 dark:text-white">{uploadingImages ? 'Enviando para o Supabase...' : 'Arraste imagens aqui ou clique para escolher'}</span>
-            <span className="mt-1 text-xs text-gray-500">JPG, PNG ou WebP · máximo de 6 imagens · 8 MB cada</span>
+            <span className="mt-2 text-sm font-bold text-gray-800 dark:text-white">{uploadingImages ? 'Enviando imagens...' : 'Arraste imagens aqui ou clique para escolher'}</span>
+            <span className="mt-1 text-xs text-gray-500">JPG, PNG ou WebP · máximo de 6 imagens · 8 MB cada · armazenamento automático</span>
           </button>
           <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => event.target.files && void uploadImages(event.target.files)} className="hidden" />
           {images.length > 0 && (
@@ -545,7 +556,7 @@ export function ProductForm(props: ProductFormProps) {
         {props.mode === 'edit' && (
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={() => setConfirmDelete(true)}
             disabled={submitting}
             className="rounded-lg border border-red-300 dark:border-red-700 px-4 py-2.5 text-sm font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 disabled:opacity-50 transition"
           >
@@ -553,6 +564,7 @@ export function ProductForm(props: ProductFormProps) {
           </button>
         )}
       </div>
+      <ConfirmDialog open={confirmDelete} title="Excluir produto?" description={`“${name}” será removido da loja permanentemente, junto com suas variações.`} confirmLabel="Excluir" busy={submitting} onCancel={() => setConfirmDelete(false)} onConfirm={handleDelete} />
     </form>
   );
 }

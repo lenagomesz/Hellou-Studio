@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search, Download, Edit3, Tags } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { ProductCategorySelect, useProductCategories } from '@/components/admin/ProductCategorySelect';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
 const CATEGORY_COLORS: Record<string, string> = {
   chaveiros: 'bg-pink-100 text-pink-700',
@@ -50,6 +51,8 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ page: 1, limit: 24, total: 0, pages: 0 });
   const [filter, setFilter] = useState<'all' | 'physical' | 'digital'>('all');
+  const [pendingDelete, setPendingDelete] = useState<ProductRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const productCategories = useProductCategories();
   const categoryLabels = Object.fromEntries(productCategories.map((item) => [item.slug, item.name]));
 
@@ -103,17 +106,19 @@ export default function ProductsPage() {
     }
   }
 
-  async function deleteProduct(id: string, name: string) {
-    if (!confirm(`Tem certeza que deseja excluir "${name}"?`)) return;
+  async function deleteProduct(id: string, _name: string) {
+    setDeleting(true);
     const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
     if (res.ok) {
       setProducts(prev => prev.filter(p => p.id !== id));
+      setPendingDelete(null);
       setToast('Produto excluído');
       setTimeout(() => setToast(''), 3000);
     } else {
       const data = await res.json().catch(() => ({})) as { error?: string };
       setError(data.error ?? 'Não foi possível excluir o produto');
     }
+    setDeleting(false);
   }
 
   const activeCount = products.filter(p => p.active).length;
@@ -264,7 +269,7 @@ export default function ProductsPage() {
                     {product.active ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                     {product.active ? 'Desativar' : 'Ativar'}
                   </button>}
-                  {canDeleteProducts && <button onClick={() => deleteProduct(product.id, product.name)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition ml-auto">
+                  {canDeleteProducts && <button onClick={() => setPendingDelete(product)} aria-label={`Excluir ${product.name}`} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition ml-auto">
                     <Trash2 className="h-3 w-3" />
                   </button>}
                 </div>
@@ -277,6 +282,7 @@ export default function ProductsPage() {
       {!loading && pagination.pages > 1 && (
         <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 text-sm shadow-sm"><span className="text-gray-500">Página {pagination.page} de {pagination.pages} · {pagination.total} produtos</span><div className="flex gap-2"><button type="button" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-lg border border-gray-200 px-3 py-2 font-semibold disabled:opacity-40">Anterior</button><button type="button" disabled={page >= pagination.pages} onClick={() => setPage((value) => Math.min(pagination.pages, value + 1))} className="rounded-lg bg-slate-950 px-3 py-2 font-semibold text-white disabled:opacity-40">Próxima</button></div></div>
       )}
+      <ConfirmDialog open={Boolean(pendingDelete)} title="Excluir produto?" description={`“${pendingDelete?.name ?? ''}” será removido permanentemente.`} confirmLabel="Excluir" busy={deleting} onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete ? deleteProduct(pendingDelete.id, pendingDelete.name) : undefined} />
     </div>
   );
 }

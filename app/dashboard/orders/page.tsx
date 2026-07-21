@@ -65,22 +65,30 @@ export default function OrdersListPage() {
   const [toast, setToast] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<{ page: number; limit: number; total: number; pages: number }>({ page: 1, limit: 20, total: 0, pages: 0 });
+  const [stats, setStats] = useState({ awaiting: 0, processing: 0, shipped: 0, revenue: 0 });
+  const [error, setError] = useState('');
 
   const fetchOrders = useCallback(async (currentPage: number) => {
     setLoading(true);
+    setError('');
     const params = new URLSearchParams();
     params.set('page', String(currentPage));
     params.set('limit', '20');
     if (statusFilter) params.set('status', statusFilter);
     if (search) params.set('search', search);
 
-    const res = await fetch(`/api/admin/orders?${params.toString()}`);
-    if (res.ok) {
-      const data = await res.json();
-      setOrders(data.orders);
+    try {
+      const res = await fetch(`/api/admin/orders?${params.toString()}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Não foi possível carregar os pedidos.');
+      setOrders(data.orders ?? []);
       setPagination(data.pagination);
+      if (data.stats) setStats(data.stats);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Não foi possível carregar os pedidos.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [search, statusFilter]);
 
   useEffect(() => {
@@ -110,11 +118,6 @@ export default function OrdersListPage() {
     setUpdatingId(null);
   }
 
-  const pendingCount = orders.filter(o => o.status === 'pending' || o.status === 'paid').length;
-  const processingCount = orders.filter(o => o.status === 'processing').length;
-  const shippedCount = orders.filter(o => o.status === 'shipped').length;
-  const revenue = orders.filter(o => o.status !== 'canceled' && o.status !== 'refunded').reduce((acc, o) => acc + o.total, 0);
-
   return (
     <div className="space-y-6">
       {/* Toast */}
@@ -141,21 +144,28 @@ export default function OrdersListPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-xs font-medium text-gray-500">Aguardando</p>
-          <p className="mt-1 text-2xl font-bold text-yellow-600">{pendingCount}</p>
+          <p className="mt-1 text-2xl font-bold text-yellow-600">{stats.awaiting}</p>
         </div>
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-xs font-medium text-gray-500">Em preparo</p>
-          <p className="mt-1 text-2xl font-bold text-indigo-600">{processingCount}</p>
+          <p className="mt-1 text-2xl font-bold text-indigo-600">{stats.processing}</p>
         </div>
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-xs font-medium text-gray-500">Enviados</p>
-          <p className="mt-1 text-2xl font-bold text-purple-600">{shippedCount}</p>
+          <p className="mt-1 text-2xl font-bold text-purple-600">{stats.shipped}</p>
         </div>
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="text-xs font-medium text-gray-500">Receita</p>
-          <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">{formatPrice(revenue)}</p>
+          <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">{formatPrice(stats.revenue)}</p>
         </div>
       </div>
+
+      {error && (
+        <div role="alert" className="flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <span>{error}</span>
+          <button type="button" onClick={() => void fetchOrders(page)} className="shrink-0 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white">Tentar novamente</button>
+        </div>
+      )}
 
       {/* Filters */}
       <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3">
