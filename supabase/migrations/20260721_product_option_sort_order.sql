@@ -18,3 +18,5 @@ WHERE product_option.id = ranked_options.id;
 
 CREATE INDEX IF NOT EXISTS idx_product_options_sort_order
   ON public.product_options(product_id, sort_order, created_at);
+
+ALTER TABLE public.product_options ENABLE ROW LEVEL SECURITY;
