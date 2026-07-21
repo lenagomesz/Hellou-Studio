@@ -37,7 +37,7 @@ type OpenAIResponse = {
     type?: string;
     content?: Array<{ type?: string; text?: string }>;
   }>;
-  error?: { message?: string; code?: string };
+  error?: { message?: string; code?: string; type?: string };
 };
 
 function asNumber(value: FormDataEntryValue | null) {
@@ -58,15 +58,19 @@ function getOutputText(response: OpenAIResponse) {
 async function openAIError(response: Response) {
   const body = await response.json().catch(() => null) as OpenAIResponse | null;
   const requestId = response.headers.get('x-request-id');
+  const errorCode = body?.error?.code || body?.error?.type;
   console.error('[catalog-assistant] OpenAI error', {
     status: response.status,
-    code: body?.error?.code,
+    code: errorCode,
     requestId,
   });
 
   if (response.status === 401) return 'A chave da OpenAI é inválida ou expirou.';
-  if (response.status === 429) return 'O limite da OpenAI foi atingido. Tente novamente em alguns instantes.';
-  if (body?.error?.code === 'moderation_blocked') return 'A foto ou solicitação foi bloqueada pela moderação de imagem.';
+  if (errorCode === 'insufficient_quota') return 'A conta da OpenAI API está sem créditos. Adicione saldo no painel de Billing e tente novamente após alguns minutos.';
+  if (errorCode === 'billing_hard_limit_reached') return 'O limite mensal de gastos da OpenAI API foi atingido. Aumente o limite no painel de Billing.';
+  if (errorCode === 'rate_limit_exceeded' || response.status === 429) return 'A OpenAI recebeu muitas solicitações em pouco tempo. Aguarde um minuto e tente novamente.';
+  if (errorCode === 'model_not_found') return 'O projeto desta chave não possui acesso ao modelo configurado. Verifique OPENAI_TEXT_MODEL na Vercel.';
+  if (errorCode === 'moderation_blocked') return 'A foto ou solicitação foi bloqueada pela moderação de imagem.';
   return 'A OpenAI não conseguiu concluir a geração. Tente novamente.';
 }
 
