@@ -314,9 +314,9 @@ export function PaymentForm({
         setErrorAndScroll(getRejectMessage(data.status_detail));
         setCardLoading(false);
       } else {
-        onPaymentCompleted?.(data.pricing);
-        void clearCart();
-        router.push(`/checkout/success?order_id=${data.order_id}&pending=1`);
+        resetPaymentAttemptKey('credit_card');
+        setErrorAndScroll('O pagamento ainda não foi aprovado. Aguarde a confirmação do banco ou tente novamente com outro cartão.');
+        setCardLoading(false);
       }
     } catch {
       setErrorAndScroll('Erro ao processar pagamento. Verifique os dados e tente novamente.');
@@ -704,7 +704,6 @@ function getRejectMessage(detail?: string): string {
   };
   return messages[detail || ''] || 'Pagamento recusado. Tente outro cartão ou método de pagamento.';
 }
-
 
 
 
