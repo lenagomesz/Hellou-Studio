@@ -158,7 +158,7 @@ export default async function HomePage() {
   return (
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
       {/* Promo banner */}
-      <div className="bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-4 py-2.5 text-center sm:flex sm:min-h-14 sm:items-center sm:justify-center sm:py-3.5">
+      <div className="home-promo bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-4 py-2.5 text-center sm:flex sm:min-h-14 sm:items-center sm:justify-center sm:py-3.5">
         <p className="text-xs font-medium leading-5 text-white sm:text-sm">
           🚚 <span className="font-semibold">Frete grátis</span> acima de R$99 &nbsp;·&nbsp; 🎉 <span className="font-semibold">10% OFF</span> na sua primeira compra
         </p>
@@ -167,7 +167,7 @@ export default async function HomePage() {
       {/* =========================================== */}
       {/* HERO */}
       {/* =========================================== */}
-      <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden">
+      <section className="home-hero relative min-h-[92vh] flex items-center justify-center overflow-hidden">
         {/* Animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-50/80 via-orange-50 to-amber-50 dark:from-gray-900 dark:via-pink-950/10 dark:to-gray-900" />
         <div className="absolute top-20 right-10 h-72 w-72 rounded-full bg-gradient-to-br from-pink-200/40 to-orange-200/30 dark:from-pink-900/20 dark:to-orange-900/10 blur-3xl animate-float" />
@@ -177,7 +177,7 @@ export default async function HomePage() {
         {/* Grid pattern overlay */}
         <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-        <div className="relative mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
+        <div className="home-hero-content relative mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
           {/* Badge */}
           <div className="animate-fade-in-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-orange-200/60 dark:border-orange-800/40 bg-white/80 dark:bg-gray-900/80 px-4 py-2 text-xs font-semibold text-orange-700 dark:text-orange-400 shadow-sm backdrop-blur-sm">
@@ -191,7 +191,7 @@ export default async function HomePage() {
 
           {/* Title */}
           <h1
-            className="mx-auto mt-8 max-w-4xl text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl lg:text-7xl animate-fade-in-up"
+            className="home-hero-title mx-auto mt-8 max-w-4xl text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl lg:text-7xl animate-fade-in-up"
             style={{ animationDelay: '100ms' }}
           >
             <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
@@ -203,7 +203,7 @@ export default async function HomePage() {
 
           {/* Subtitle */}
           <p
-            className="mx-auto mt-6 max-w-xl text-lg text-gray-600 dark:text-gray-300 leading-relaxed animate-fade-in-up"
+            className="home-hero-description mx-auto mt-6 max-w-xl text-lg text-gray-600 dark:text-gray-300 leading-relaxed animate-fade-in-up"
             style={{ animationDelay: '200ms' }}
           >
             Descubra uma coleção exclusiva de chaveiros, itens de escritório e
@@ -212,7 +212,7 @@ export default async function HomePage() {
 
           {/* CTAs */}
           <div
-            className="mt-10 flex flex-wrap justify-center gap-4 animate-fade-in-up"
+            className="home-hero-actions mt-10 flex flex-wrap justify-center gap-4 animate-fade-in-up"
             style={{ animationDelay: '300ms' }}
           >
             <Link
@@ -236,7 +236,7 @@ export default async function HomePage() {
 
           {/* Trust badges */}
           <div
-            className="mt-14 flex flex-wrap justify-center gap-6 animate-fade-in"
+            className="home-hero-trust mt-14 flex flex-wrap justify-center gap-6 animate-fade-in"
             style={{ animationDelay: '500ms' }}
           >
             {['Atendimento humanizado', 'Bom acabamento', 'Pagamento seguro'].map((text) => (
