@@ -36,6 +36,11 @@ const CATEGORY_PRESENTATION: Record<string, { emoji: string; description: string
     description: 'Personagens adoráveis feitos com carinho.',
     color: 'from-pink-500 to-orange-400',
   },
+  decoracao: {
+    emoji: '🪴',
+    description: 'Explore os produtos da categoria Decoração.',
+    color: 'from-orange-400 to-pink-400',
+  },
 };
 
 const FEATURES = [
