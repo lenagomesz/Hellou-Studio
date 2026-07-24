@@ -48,13 +48,13 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: 'Hellou Studio | Impressão 3D e arquivos STL',
     description: 'Produtos personalizados impressos em 3D, peças feitas sob demanda e arquivos STL prontos para imprimir.',
-    images: [{ url: '/icon', width: 512, height: 512, alt: 'Hellou Studio' }],
+    images: [{ url: '/favicon-512.png', width: 512, height: 512, alt: 'Logo Hellou Studio' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Hellou Studio | Impressão 3D e arquivos STL',
     description: 'Produtos personalizados impressos em 3D, peças feitas sob demanda e arquivos STL prontos para imprimir.',
-    images: ['/icon'],
+    images: ['/favicon-512.png'],
   },
   robots: { index: true, follow: true },
 };
@@ -69,7 +69,7 @@ export default function RootLayout({
     '@type': 'Organization',
     name: SITE_NAME,
     url: SITE_URL,
-    logo: absoluteUrl('/icon'),
+    logo: absoluteUrl('/favicon-512.png'),
     sameAs: ['https://instagram.com/helloustudio_', 'https://www.tiktok.com/@helloustudio_'],
   };
 

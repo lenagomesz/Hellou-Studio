@@ -283,12 +283,12 @@ html {
  */
 @media (min-width: 1024px) and (max-height: 800px) {
   .home-promo {
-    min-height: 44px;
+    min-height: 48px;
     padding-block: 0.625rem;
   }
 
   .home-hero {
-    min-height: calc(100svh - 108px);
+    min-height: calc(100svh - 112px);
   }
 
   .home-hero-content {

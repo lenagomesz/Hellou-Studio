@@ -5,6 +5,7 @@ import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import { FeaturedProductsClient } from '@/components/shop/FeaturedProducts';
 import { HeroCarousel } from '@/components/shop/HeroCarousel';
+import { HomeHeroCarousel } from '@/components/shop/HomeHeroCarousel';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 // import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { Marquee } from '@/components/ui/Marquee';
@@ -158,98 +159,15 @@ export default async function HomePage() {
   return (
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
       {/* Promo banner */}
-      <div className="home-promo bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-4 py-2.5 text-center sm:flex sm:min-h-14 sm:items-center sm:justify-center sm:py-3.5">
-        <p className="text-xs font-medium leading-5 text-white sm:text-sm">
-          🚚 <span className="font-semibold">Frete grátis</span> acima de R$99 &nbsp;·&nbsp; 🎉 <span className="font-semibold">10% OFF</span> na sua primeira compra
+      <div className="home-promo flex min-h-12 items-center justify-center bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-4 py-2.5 text-center sm:min-h-14 sm:py-3">
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-xs font-medium leading-5 text-white sm:text-sm">
+          <span className="whitespace-nowrap">🚚 <strong className="font-semibold">Frete grátis</strong> acima de R$99</span>
+          <span aria-hidden="true" className="hidden text-white/75 sm:inline">·</span>
+          <span className="whitespace-nowrap">🎉 <strong className="font-semibold">10% OFF</strong> na sua primeira compra</span>
         </p>
       </div>
 
-      {/* =========================================== */}
-      {/* HERO */}
-      {/* =========================================== */}
-      <section className="home-hero relative min-h-[92vh] flex items-center justify-center overflow-hidden">
-        {/* Animated background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-50/80 via-orange-50 to-amber-50 dark:from-gray-900 dark:via-pink-950/10 dark:to-gray-900" />
-        <div className="absolute top-20 right-10 h-72 w-72 rounded-full bg-gradient-to-br from-pink-200/40 to-orange-200/30 dark:from-pink-900/20 dark:to-orange-900/10 blur-3xl animate-float" />
-        <div className="absolute bottom-20 left-10 h-56 w-56 rounded-full bg-gradient-to-br from-orange-200/30 to-pink-100/20 dark:from-orange-900/15 dark:to-pink-900/10 blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-gradient-to-br from-orange-100/30 to-pink-100/20 dark:from-pink-900/10 dark:to-orange-900/10 blur-3xl animate-pulse-soft" />
-
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-
-        <div className="home-hero-content relative mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
-          {/* Badge */}
-          <div className="animate-fade-in-up">
-            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200/60 dark:border-orange-800/40 bg-white/80 dark:bg-gray-900/80 px-4 py-2 text-xs font-semibold text-orange-700 dark:text-orange-400 shadow-sm backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-orange-500" />
-              </span>
-              Novidades toda semana
-            </span>
-          </div>
-
-          {/* Title */}
-          <h1
-            className="home-hero-title mx-auto mt-8 max-w-4xl text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl lg:text-7xl animate-fade-in-up"
-            style={{ animationDelay: '100ms' }}
-          >
-            <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
-              Produtos Únicos
-            </span>
-            <br />
-            <span className="text-gray-900 dark:text-white">Fabricados em 3D</span>
-          </h1>
-
-          {/* Subtitle */}
-          <p
-            className="home-hero-description mx-auto mt-6 max-w-xl text-lg text-gray-600 dark:text-gray-300 leading-relaxed animate-fade-in-up"
-            style={{ animationDelay: '200ms' }}
-          >
-            Descubra uma coleção exclusiva de chaveiros, itens de escritório e
-            criaturas fofas, todos impressos sob demanda com a sua cara.
-          </p>
-
-          {/* CTAs */}
-          <div
-            className="home-hero-actions mt-10 flex flex-wrap justify-center gap-4 animate-fade-in-up"
-            style={{ animationDelay: '300ms' }}
-          >
-            <Link
-              href="/products"
-              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-pink-200/30 dark:shadow-none transition-all duration-300 hover:shadow-2xl hover:shadow-orange-200/40 dark:hover:shadow-none hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-              <span className="relative">Explorar Catálogo</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2.5}
-                stroke="currentColor"
-                className="relative h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </Link>
-          </div>
-
-          {/* Trust badges */}
-          <div
-            className="home-hero-trust mt-14 flex flex-wrap justify-center gap-6 animate-fade-in"
-            style={{ animationDelay: '500ms' }}
-          >
-            {['Atendimento humanizado', 'Bom acabamento', 'Pagamento seguro'].map((text) => (
-              <span key={text} className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5 text-green-500">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-                {text}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HomeHeroCarousel />
 
       {/* =========================================== */}
       {/* MARQUEE STRIP */}
