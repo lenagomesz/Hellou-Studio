@@ -16,6 +16,7 @@ import {
 import type { ShippingOption } from '@/lib/shipping';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import { PaymentForm, type PaymentPricingSummary } from '@/components/shop/PaymentForm';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES } from '@/lib/checkout-rules';
 
 function formatPrice(value: number) {
@@ -66,6 +67,9 @@ export default function CartPage() {
   const [couponDiscount, setCouponDiscount] = useState<{ code: string; discount_amount: number; discount_value: number; description: string; free_shipping?: boolean; family_pickup?: boolean } | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const [pickupConfirmationOpen, setPickupConfirmationOpen] = useState(false);
+  const [pickupLoading, setPickupLoading] = useState(false);
+  const [pickupError, setPickupError] = useState('');
 
   const [isFirstPurchase, setIsFirstPurchase] = useState(false);
   const [userCpf, setUserCpf] = useState<string | undefined>(undefined);
@@ -174,6 +178,52 @@ export default function CartPage() {
     }
   }
 
+  function handleSelectDelivery() {
+    if (couponDiscount?.family_pickup) {
+      setCouponDiscount(null);
+      setCouponCode('');
+    }
+    setPickupError('');
+    setSelectedShipping(shippingOptions[0] ?? null);
+  }
+
+  async function confirmFamilyPickup() {
+    setPickupLoading(true);
+    setPickupError('');
+
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: 'RETIRADAHELENA', subtotal: total }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.family_pickup !== true) {
+        setPickupError(data.error || 'A retirada com a Helena está indisponível no momento.');
+        setPickupConfirmationOpen(false);
+        return;
+      }
+
+      setCouponDiscount({
+        code: data.code,
+        discount_amount: data.discount_amount,
+        discount_value: data.discount_value ?? 0,
+        description: data.description,
+        free_shipping: true,
+        family_pickup: true,
+      });
+      setCouponCode('');
+      setSelectedShipping({ id: 'pickup', name: 'Retirar com a Helena', price: 0, days_min: 0, days_max: 0 });
+      setPickupConfirmationOpen(false);
+    } catch {
+      setPickupError('Não foi possível confirmar a retirada. Tente novamente.');
+      setPickupConfirmationOpen(false);
+    } finally {
+      setPickupLoading(false);
+    }
+  }
+
 
   if (isLoading) {
     return (
@@ -233,10 +283,12 @@ export default function CartPage() {
   const pageSubtitle = step === 1
     ? `${items.length} ${itemsLabel}`
     : step === 2
-      ? 'Informe o endereço de entrega'
+      ? selectedShipping?.id === 'pickup'
+        ? 'Retirada combinada diretamente com a dona da loja'
+        : 'Escolha como deseja receber seu pedido'
       : 'Revise e confirme seu pedido';
   const containerClass = step === 3 || step === 1 ? 'max-w-5xl' : 'max-w-3xl';
-  const paymentShippingAddress = hasOnlyDigitalProducts ? undefined : (shippingAddress ? {
+  const paymentShippingAddress = hasOnlyDigitalProducts || selectedShipping?.id === 'pickup' ? undefined : (shippingAddress ? {
     street: addressStreet,
     number: addressNumber,
     complement: addressComplement || undefined,
@@ -434,6 +486,44 @@ export default function CartPage() {
         <div className="space-y-5 animate-fade-in">
 
           <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm space-y-5">
+            <fieldset>
+              <legend className="text-sm font-semibold text-gray-900 dark:text-white">Como você quer receber?</legend>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={handleSelectDelivery}
+                  aria-pressed={selectedShipping?.id !== 'pickup'}
+                  className={`rounded-2xl border p-4 text-left transition ${
+                    selectedShipping?.id !== 'pickup'
+                      ? 'border-pink-400 bg-pink-50/60 shadow-sm dark:bg-pink-950/30'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <span className="block text-sm font-bold text-gray-900 dark:text-white">Entrega no endereço</span>
+                  <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Informe o CEP e escolha uma modalidade de envio.</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPickupConfirmationOpen(true)}
+                  aria-pressed={selectedShipping?.id === 'pickup'}
+                  className={`rounded-2xl border p-4 text-left transition ${
+                    selectedShipping?.id === 'pickup'
+                      ? 'border-green-400 bg-green-50/70 shadow-sm dark:border-green-700 dark:bg-green-950/30'
+                      : 'border-gray-200 hover:border-green-300 hover:bg-green-50/40 dark:border-gray-700 dark:hover:border-green-800 dark:hover:bg-green-950/20'
+                  }`}
+                >
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">Retirada com a Helena</span>
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700 dark:bg-green-900/50 dark:text-green-300">Grátis</span>
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Opção exclusiva para amigos e familiares.</span>
+                </button>
+              </div>
+              {pickupError && <p className="mt-3 text-xs font-medium text-red-600 dark:text-red-400">{pickupError}</p>}
+            </fieldset>
+
+            {selectedShipping?.id !== 'pickup' ? (
+              <>
             {/* CEP */}
             <div>
               <label htmlFor="shipping-cep" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CEP <span className="text-pink-500">*</span></label>
@@ -587,12 +677,14 @@ export default function CartPage() {
 
             {couponDiscount?.free_shipping && shippingAddress && (
               <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30 p-4">
-                {couponDiscount.family_pickup ? (
-                  <label className="flex cursor-pointer items-center gap-3">
-                    <input type="radio" name="shipping" checked={selectedShipping?.id === 'pickup'} onChange={() => setSelectedShipping({ id: 'pickup', name: 'Retirar com a Helena', price: 0, days_min: 0, days_max: 0 })} className="h-4 w-4 text-pink-500 focus:ring-pink-500" />
-                    <span><span className="block text-sm font-bold text-green-800 dark:text-green-200">Retirar com a Helena — grátis</span><span className="mt-0.5 block text-xs text-green-700 dark:text-green-300">Combine diretamente com a Helena o dia e o local da retirada.</span></span>
-                  </label>
-                ) : <p className="text-sm font-medium text-green-700 dark:text-green-300">Frete grátis aplicado pelo cupom {couponDiscount.code}</p>}
+                <p className="text-sm font-medium text-green-700 dark:text-green-300">Frete grátis aplicado pelo cupom {couponDiscount.code}</p>
+              </div>
+            )}
+              </>
+            ) : (
+              <div className="rounded-2xl border border-green-200 bg-green-50/70 p-4 dark:border-green-800 dark:bg-green-950/30">
+                <p className="text-sm font-bold text-green-800 dark:text-green-200">Retirada confirmada — sem cobrança de frete</p>
+                <p className="mt-1 text-xs leading-5 text-green-700 dark:text-green-300">Você não precisa preencher endereço. Após o pagamento, combine diretamente com a Helena o dia e o local da retirada.</p>
               </div>
             )}
           </div>
@@ -671,7 +763,7 @@ export default function CartPage() {
             <button
               type="button"
               onClick={() => setStep(3)}
-              disabled={!shippingAddress || !addressStreet.trim() || !addressNumber.trim() || !addressNeighborhood.trim() || (!selectedShipping && !couponDiscount?.free_shipping)}
+              disabled={selectedShipping?.id !== 'pickup' && (!shippingAddress || !addressStreet.trim() || !addressNumber.trim() || !addressNeighborhood.trim() || (!selectedShipping && !couponDiscount?.free_shipping))}
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/40 dark:shadow-none transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
             >
               Revisar pedido
@@ -681,7 +773,7 @@ export default function CartPage() {
             </button>
           </div>
 
-          {!shippingAddress && (
+          {selectedShipping?.id !== 'pickup' && !shippingAddress && (
             <p className="text-center text-xs text-gray-500">Informe seu CEP para preencher o endereço.</p>
           )}
         </div>
@@ -749,7 +841,7 @@ export default function CartPage() {
                       Alterar
                     </button>
                   </div>
-                  {shippingAddress && (
+                  {selectedShipping?.id !== 'pickup' && shippingAddress && (
                     <div className="space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
                       <p>{addressStreet}, {addressNumber}{addressComplement ? ` - ${addressComplement}` : ''}</p>
                       <p>{addressNeighborhood} — {shippingAddress.city}/{shippingAddress.state}</p>
@@ -892,6 +984,17 @@ export default function CartPage() {
           <ProductRecommendations title="Aproveite e veja também" />
         </div>
       )}
+      <ConfirmDialog
+        open={pickupConfirmationOpen}
+        title="Confirmar retirada com a Helena?"
+        description="Esta opção é destinada a amigos e familiares e não inclui entrega. A retirada será combinada diretamente com a dona da loja. Tem certeza de que deseja continuar?"
+        confirmLabel="Sim, quero retirar"
+        busy={pickupLoading}
+        onCancel={() => {
+          if (!pickupLoading) setPickupConfirmationOpen(false);
+        }}
+        onConfirm={confirmFamilyPickup}
+      />
     </div>
   );
 }

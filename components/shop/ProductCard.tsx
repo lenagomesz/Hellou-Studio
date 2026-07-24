@@ -54,7 +54,7 @@ export function ProductCard({ product, basePath = "/products", category }: { pro
         <h3 className="mt-1 line-clamp-1 text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
           {product.name}
         </h3>
-        <p className="mt-1 min-h-8 line-clamp-2 text-[11px] leading-4 text-gray-400 dark:text-gray-500 sm:min-h-9 sm:text-xs sm:leading-[18px]">
+        <p className="mt-1 min-h-8 line-clamp-2 text-[11px] leading-4 text-gray-400 dark:text-gray-400 sm:min-h-9 sm:text-xs sm:leading-[18px]">
           {product.description || '\u00A0'}
         </p>
         <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
