@@ -30,6 +30,9 @@ type ProductRow = {
   type?: string;
   fulfillment_mode?: string;
   is_customizable?: boolean;
+  sku?: string | null;
+  cost_price?: number | null;
+  weight_grams?: number | null;
   product_options?: Array<{ id: string; name: string; stock: number; price_modifier: number }>;
   tags?: Array<{ id: string; name: string; color: string }>;
 };
@@ -256,8 +259,11 @@ export default function ProductsPage() {
                   <div className="text-right"><p className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(product.sale_price ?? product.base_price)}</p>{product.sale_price != null && <p className="text-[10px] text-gray-400 line-through">{formatPrice(product.base_price)}</p>}</div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+                  {product.sku && <span className="rounded-full bg-violet-50 px-2 py-1 font-mono font-semibold text-violet-700">{product.sku}</span>}
                   <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold text-slate-600">{product.product_options?.length ?? 0} variações</span>
                   <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">{(product.product_options ?? []).reduce((sum, option) => sum + option.stock, 0)} em estoque</span>
+                  {product.cost_price != null && product.base_price > 0 && <span className="rounded-full bg-amber-50 px-2 py-1 font-semibold text-amber-700">{Math.round(((product.base_price - product.cost_price) / product.base_price) * 100)}% margem</span>}
+                  {product.weight_grams && <span className="rounded-full bg-sky-50 px-2 py-1 font-semibold text-sky-700">{product.weight_grams} g</span>}
                   {product.is_customizable && <span className="rounded-full bg-pink-50 px-2 py-1 font-semibold text-pink-700">Personalizável</span>}
                   {product.tags?.slice(0, 2).map((tag) => <span key={tag.id} className="rounded-full px-2 py-1 font-semibold text-white" style={{ backgroundColor: tag.color }}>{tag.name}</span>)}
                 </div>

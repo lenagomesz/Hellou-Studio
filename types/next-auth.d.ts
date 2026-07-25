@@ -6,6 +6,7 @@ declare module 'next-auth' {
       id: string;
       role: 'user' | 'admin';
       accessLevel: 'owner' | 'partner' | null;
+      permissions?: import('@/lib/admin-permissions').AdminPermission[] | null;
     } & DefaultSession['user'];
   }
 
@@ -15,6 +16,7 @@ declare module 'next-auth' {
     name?: string | null;
     role: 'user' | 'admin';
     accessLevel?: 'owner' | 'partner' | null;
+    permissions?: import('@/lib/admin-permissions').AdminPermission[] | null;
   }
 }
 
@@ -23,5 +25,6 @@ declare module 'next-auth/jwt' {
     id: string;
     role: 'user' | 'admin';
     accessLevel: 'owner' | 'partner' | null;
+    permissions?: import('@/lib/admin-permissions').AdminPermission[] | null;
   }
 }

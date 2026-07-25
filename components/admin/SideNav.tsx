@@ -14,7 +14,7 @@ import {
 import type { AdminAccessLevel } from '@/lib/admin-permissions';
 import { ADMIN_NAVIGATION, canAccessAdminItem } from '@/components/admin/admin-navigation';
 
-export function SideNav({ userEmail, alertCount = 0, accessLevel }: { userEmail: string | null; alertCount?: number; accessLevel: AdminAccessLevel }) {
+export function SideNav({ userEmail, alertCount = 0, accessLevel, enabledFeatures }: { userEmail: string | null; alertCount?: number; accessLevel: AdminAccessLevel; enabledFeatures: string[] }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -59,7 +59,7 @@ export function SideNav({ userEmail, alertCount = 0, accessLevel }: { userEmail:
             <div key={section.label}>
               <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">{section.label}</p>
               <div className="space-y-1">
-                {section.items.filter((item) => canAccessAdminItem(item, accessLevel)).map((item) => {
+                {section.items.filter((item) => canAccessAdminItem(item, accessLevel, enabledFeatures)).map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href, item.exact);
                   const badgeCount = item.badgeKey === 'alerts' ? alertCount : 0;

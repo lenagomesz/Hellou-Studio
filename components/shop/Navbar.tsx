@@ -74,6 +74,13 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const whatsappUrl = getWhatsAppUrl(settings);
+  const navigationLinks = settings.navigation.links
+    .filter((link) => link.active)
+    .map((link) => ({
+      ...link,
+      icon: NAV_LINKS.find((defaultLink) => defaultLink.href === link.href)?.icon
+        ?? 'M4.75 12h14.5M12 4.75v14.5',
+    }));
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -202,7 +209,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
             </Link>
 
             <nav className="flex items-center justify-center gap-1 rounded-2xl bg-orange-50/40 p-1 dark:bg-white/[0.03]" aria-label="Navegação principal">
-              {NAV_LINKS.map((link) => {
+              {navigationLinks.map((link) => {
                 const active = isActive(link.href);
                 return (
                   <Link
@@ -340,7 +347,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
               Explorar
             </p>
 
-            {NAV_LINKS.map((link) => {
+            {navigationLinks.map((link) => {
               const active = isActive(link.href);
               return (
                 <Link

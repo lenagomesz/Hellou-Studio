@@ -51,7 +51,7 @@ function relativeTime(value: string) {
   return `${Math.floor(hours / 24)} d`;
 }
 
-export function AdminShell({ children, userEmail, accessLevel }: { children: ReactNode; userEmail: string | null; accessLevel: AdminAccessLevel }) {
+export function AdminShell({ children, userEmail, accessLevel, enabledFeatures }: { children: ReactNode; userEmail: string | null; accessLevel: AdminAccessLevel; enabledFeatures: string[] }) {
   const pathname = usePathname();
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -193,12 +193,12 @@ export function AdminShell({ children, userEmail, accessLevel }: { children: Rea
   }
 
   const filteredLinks = ADMIN_COMMANDS
-    .filter((item) => canAccessAdminItem(item, accessLevel))
+    .filter((item) => canAccessAdminItem(item, accessLevel, enabledFeatures))
     .filter((item) => `${item.label} ${item.description} ${item.keywords ?? ''}`.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')));
 
   return (
     <div className="admin-shell force-light min-h-screen bg-[#f5f3ef] text-slate-950 md:flex">
-      <SideNav userEmail={userEmail} alertCount={unreadCount} accessLevel={accessLevel} />
+      <SideNav userEmail={userEmail} alertCount={unreadCount} accessLevel={accessLevel} enabledFeatures={enabledFeatures} />
 
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f5f3ef]/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#090b10]/88 sm:px-6 lg:px-8">

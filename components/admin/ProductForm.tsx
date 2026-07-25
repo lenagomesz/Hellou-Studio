@@ -54,6 +54,15 @@ export function ProductForm(props: ProductFormProps) {
   const [salePrice, setSalePrice] = useState<string>(
     initial?.sale_price ? String(initial.sale_price) : '',
   );
+  const [sku, setSku] = useState(initial?.sku ?? '');
+  const [costPrice, setCostPrice] = useState(initial?.cost_price != null ? String(initial.cost_price) : '');
+  const [weightGrams, setWeightGrams] = useState(initial?.weight_grams != null ? String(initial.weight_grams) : '');
+  const [lengthCm, setLengthCm] = useState(initial?.length_cm != null ? String(initial.length_cm) : '');
+  const [widthCm, setWidthCm] = useState(initial?.width_cm != null ? String(initial.width_cm) : '');
+  const [heightCm, setHeightCm] = useState(initial?.height_cm != null ? String(initial.height_cm) : '');
+  const [slug, setSlug] = useState(initial?.slug ?? '');
+  const [seoTitle, setSeoTitle] = useState(initial?.seo_title ?? '');
+  const [seoDescription, setSeoDescription] = useState(initial?.seo_description ?? '');
   const [images, setImages] = useState<string[]>(() => {
     const list: string[] = [];
     if (initial?.images && initial.images.length > 0) return initial.images;
@@ -119,6 +128,12 @@ export function ProductForm(props: ProductFormProps) {
       setError('Preço promocional inválido');
       return;
     }
+    const costNumber = costPrice ? Number(costPrice) : null;
+    const logisticsNumbers = [weightGrams, lengthCm, widthCm, heightCm].filter(Boolean).map(Number);
+    if ((costNumber !== null && (!Number.isFinite(costNumber) || costNumber < 0)) || logisticsNumbers.some((value) => !Number.isFinite(value) || value <= 0)) {
+      setError('Custo, peso e dimensões devem ser números maiores que zero');
+      return;
+    }
 
     const normalizedOptions = options
       .filter((option) => option.name.trim() || option.color.trim())
@@ -144,6 +159,15 @@ export function ProductForm(props: ProductFormProps) {
       category,
       base_price: priceNumber,
       sale_price: salePriceNumber,
+      sku: sku.trim() || null,
+      cost_price: costPrice ? Number(costPrice) : null,
+      weight_grams: weightGrams ? Number(weightGrams) : null,
+      length_cm: lengthCm ? Number(lengthCm) : null,
+      width_cm: widthCm ? Number(widthCm) : null,
+      height_cm: heightCm ? Number(heightCm) : null,
+      slug: slug.trim() || null,
+      seo_title: seoTitle.trim() || null,
+      seo_description: seoDescription.trim() || null,
       image_url: images[0] || null,
       images: images.length > 0 ? images : null,
       ...(canChangeProductStatus ? { active } : props.mode === 'create' ? { active: true } : {}),
@@ -314,6 +338,34 @@ export function ProductForm(props: ProductFormProps) {
           </div>
           <div />
         </div>
+
+        <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/40 sm:p-5">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Dados profissionais</p>
+            <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">Custo, logística e identificação</h2>
+            <p className="mt-1 text-xs leading-5 text-gray-500">Esses dados ajudam a calcular margem, frete e organizar o catálogo. Não são exibidos ao cliente.</p>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">SKU</span><input value={sku} maxLength={80} onChange={(event) => setSku(event.target.value.toUpperCase())} placeholder="Ex.: CHV-BALM-ROSA" className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm uppercase dark:border-gray-700 dark:bg-gray-800" /></label>
+            <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Custo unitário (R$)</span><input type="number" min="0" step="0.01" value={costPrice} onChange={(event) => setCostPrice(event.target.value)} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
+            <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Peso embalado (g)</span><input type="number" min="1" step="1" value={weightGrams} onChange={(event) => setWeightGrams(event.target.value)} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
+            <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Comprimento (cm)</span><input type="number" min="0.01" step="0.01" value={lengthCm} onChange={(event) => setLengthCm(event.target.value)} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
+            <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Largura (cm)</span><input type="number" min="0.01" step="0.01" value={widthCm} onChange={(event) => setWidthCm(event.target.value)} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
+            <label><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Altura (cm)</span><input type="number" min="0.01" step="0.01" value={heightCm} onChange={(event) => setHeightCm(event.target.value)} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /></label>
+          </div>
+          {costPrice && basePrice && Number(basePrice) > 0 && (
+            <p className="mt-3 text-xs font-semibold text-emerald-700">Margem bruta estimada: {Math.round(((Number(basePrice) - Number(costPrice)) / Number(basePrice)) * 100)}%</p>
+          )}
+        </section>
+
+        <section className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 dark:border-violet-900/40 dark:bg-violet-950/10 sm:p-5">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600">Descoberta</p><h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">SEO do produto</h2></div>
+          <div className="mt-4 space-y-4">
+            <label className="block"><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Slug da URL</span><input value={slug} maxLength={120} onChange={(event) => setSlug(event.target.value)} placeholder="chaveiro-porta-lip-balm" className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /><span className="mt-1 block text-[11px] text-gray-400">Será preparado para URLs amigáveis; o link atual por ID continua funcionando.</span></label>
+            <label className="block"><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Título para Google</span><input value={seoTitle} maxLength={70} onChange={(event) => setSeoTitle(event.target.value)} placeholder={name || 'Nome do produto'} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /><span className="mt-1 block text-right text-[11px] text-gray-400">{seoTitle.length}/70</span></label>
+            <label className="block"><span className="text-xs font-medium text-gray-600 dark:text-gray-300">Descrição para Google</span><textarea value={seoDescription} maxLength={180} rows={3} onChange={(event) => setSeoDescription(event.target.value)} placeholder={description || 'Descrição resumida do produto'} className="mt-1 w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800" /><span className="mt-1 block text-right text-[11px] text-gray-400">{seoDescription.length}/180</span></label>
+          </div>
+        </section>
 
         {props.mode === 'create' && (
           <section className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50/80 to-orange-50/60 p-4 dark:border-pink-900/40 dark:from-pink-950/20 dark:to-orange-950/10 sm:p-5">

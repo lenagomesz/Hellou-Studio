@@ -10,6 +10,7 @@ export type SessionUser = {
   name?: string | null;
   role: 'user' | 'admin';
   accessLevel?: AdminAccessLevel | null;
+  permissions?: AdminPermission[] | null;
 };
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
@@ -50,7 +51,7 @@ export async function requirePermission(permission: AdminPermission): Promise<
   const result = await requireAdmin();
   if (result.response) return result;
   const accessLevel = normalizeAdminAccessLevel(result.user.accessLevel);
-  if (!hasAdminPermission(accessLevel, permission)) {
+  if (!hasAdminPermission(accessLevel, permission, result.user.permissions)) {
     return {
       response: NextResponse.json(
         { error: 'Seu perfil administrativo não possui permissão para esta ação.' },

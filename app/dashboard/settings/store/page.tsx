@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Logos white-label may come from customer-controlled remote domains. */
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, ExternalLink, ImageIcon, Loader2, Palette, Plus, Save, Search, Share2, ShoppingBag, Store, Trash2, Undo2 } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, CreditCard, ExternalLink, ImageIcon, Loader2, Mail, Menu, Palette, Plus, ReceiptText, Save, Search, Share2, ShoppingBag, Store, Trash2, Truck, Undo2 } from 'lucide-react';
 import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/store-settings-schema';
 
 type Section = keyof StoreSettings;
@@ -14,6 +14,11 @@ const TABS: Array<{ id: Section; label: string; icon: typeof Store }> = [
   { id: 'commerce', label: 'Comercial', icon: ShoppingBag },
   { id: 'seo', label: 'SEO', icon: Search },
   { id: 'home', label: 'Banners da home', icon: ImageIcon },
+  { id: 'shipping', label: 'Frete e retirada', icon: Truck },
+  { id: 'payments', label: 'Pagamentos', icon: CreditCard },
+  { id: 'email', label: 'E-mails', icon: Mail },
+  { id: 'navigation', label: 'Menu da loja', icon: Menu },
+  { id: 'fiscal', label: 'Fiscal', icon: ReceiptText },
 ];
 
 function TextField({
@@ -276,6 +281,69 @@ export default function StoreSettingsPage() {
                 ))}
               </div>
               {settings.home.heroSlides.length < 8 && <button type="button" onClick={() => updateSection('home', { heroSlides: [...settings.home.heroSlides, { id: `slide-${Date.now()}`, badge: 'Novo destaque', accent: 'Sua mensagem', title: 'Título do banner', description: 'Descreva aqui a novidade ou campanha da sua loja.', action: 'Ver mais', href: '/products', trust: ['Atendimento próximo', 'Compra segura', 'Feito com cuidado'], active: true }] })} className="inline-flex items-center gap-2 rounded-xl border border-dashed border-pink-300 px-4 py-3 text-sm font-bold text-pink-700 hover:bg-pink-50"><Plus className="h-4 w-4" /> Adicionar banner</button>}
+            </div>
+          )}
+
+          {activeTab === 'shipping' && (
+            <div className="space-y-5">
+              <div><h2 className="text-lg font-black">Frete e retirada</h2><p className="text-sm text-slate-500">Configure origem, serviços e medidas usadas quando um produto não estiver preenchido.</p></div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField label="CEP de origem" value={settings.shipping.originCep} onChange={(originCep) => updateSection('shipping', { originCep })} />
+                <TextField label="Nome da retirada" value={settings.shipping.pickupName} onChange={(pickupName) => updateSection('shipping', { pickupName })} />
+                <TextField label="Peso padrão (g)" type="number" value={settings.shipping.defaultWeightGrams} onChange={(defaultWeightGrams) => updateSection('shipping', { defaultWeightGrams: Number(defaultWeightGrams) })} />
+                <TextField label="Comprimento padrão (cm)" type="number" value={settings.shipping.defaultLengthCm} onChange={(defaultLengthCm) => updateSection('shipping', { defaultLengthCm: Number(defaultLengthCm) })} />
+                <TextField label="Largura padrão (cm)" type="number" value={settings.shipping.defaultWidthCm} onChange={(defaultWidthCm) => updateSection('shipping', { defaultWidthCm: Number(defaultWidthCm) })} />
+                <TextField label="Altura padrão (cm)" type="number" value={settings.shipping.defaultHeightCm} onChange={(defaultHeightCm) => updateSection('shipping', { defaultHeightCm: Number(defaultHeightCm) })} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[['pacEnabled', 'PAC'], ['sedexEnabled', 'SEDEX'], ['pickupEnabled', 'Retirada']].map(([key, label]) => <label key={key} className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm font-bold"><input type="checkbox" checked={settings.shipping[key as 'pacEnabled' | 'sedexEnabled' | 'pickupEnabled']} onChange={(event) => updateSection('shipping', { [key]: event.target.checked })} className="rounded text-pink-600" />{label}</label>)}
+              </div>
+              <label className="block"><span className="text-xs font-bold text-slate-700">Aviso da retirada</span><textarea rows={4} value={settings.shipping.pickupNotice} onChange={(event) => updateSection('shipping', { pickupNotice: event.target.value })} className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 px-3.5 py-3 text-sm outline-none focus:border-pink-400" /></label>
+            </div>
+          )}
+
+          {activeTab === 'payments' && (
+            <div className="space-y-5">
+              <div><h2 className="text-lg font-black">Pagamentos</h2><p className="text-sm text-slate-500">Controle os meios oferecidos no checkout.</p></div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[['pixEnabled', 'PIX'], ['cardEnabled', 'Cartão'], ['invoiceRequestEnabled', 'Solicitação de nota fiscal']].map(([key, label]) => <label key={key} className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm font-bold"><input type="checkbox" checked={settings.payments[key as 'pixEnabled' | 'cardEnabled' | 'invoiceRequestEnabled']} onChange={(event) => updateSection('payments', { [key]: event.target.checked })} className="rounded text-pink-600" />{label}</label>)}
+              </div>
+              <TextField label="Máximo de parcelas" type="number" value={settings.payments.maxInstallments} onChange={(maxInstallments) => updateSection('payments', { maxInstallments: Number(maxInstallments) })} />
+              <p className="rounded-xl bg-amber-50 p-4 text-xs leading-5 text-amber-800">As credenciais do Mercado Pago continuam protegidas nas variáveis de ambiente. Esta tela controla somente o que aparece ao cliente.</p>
+            </div>
+          )}
+
+          {activeTab === 'email' && (
+            <div className="space-y-5">
+              <div><h2 className="text-lg font-black">Identidade dos e-mails</h2><p className="text-sm text-slate-500">Dados usados nos envios transacionais e campanhas.</p></div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField label="Nome do remetente" value={settings.email.senderName} onChange={(senderName) => updateSection('email', { senderName })} />
+                <TextField label="E-mail do remetente" type="email" value={settings.email.senderEmail} onChange={(senderEmail) => updateSection('email', { senderEmail })} />
+                <TextField label="Responder para" type="email" value={settings.email.replyTo} onChange={(replyTo) => updateSection('email', { replyTo })} />
+              </div>
+              <label className="block"><span className="text-xs font-bold text-slate-700">Texto do rodapé</span><textarea rows={3} value={settings.email.footerText} onChange={(event) => updateSection('email', { footerText: event.target.value })} className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 px-3.5 py-3 text-sm outline-none focus:border-pink-400" /></label>
+            </div>
+          )}
+
+          {activeTab === 'navigation' && (
+            <div className="space-y-5">
+              <div><h2 className="text-lg font-black">Menu principal</h2><p className="text-sm text-slate-500">Edite e ordene os links exibidos no cabeçalho.</p></div>
+              {settings.navigation.links.map((link, index) => <div key={link.id} className="grid gap-3 rounded-2xl border border-slate-200 p-4 sm:grid-cols-[1fr_1.3fr_auto] sm:items-end"><TextField label="Nome" value={link.label} onChange={(label) => updateSection('navigation', { links: settings.navigation.links.map((item, itemIndex) => itemIndex === index ? { ...item, label } : item) })} /><TextField label="Caminho" value={link.href} onChange={(href) => updateSection('navigation', { links: settings.navigation.links.map((item, itemIndex) => itemIndex === index ? { ...item, href } : item) })} /><div className="flex gap-1"><label className="flex items-center gap-2 px-2 text-xs font-bold"><input type="checkbox" checked={link.active} onChange={(event) => updateSection('navigation', { links: settings.navigation.links.map((item, itemIndex) => itemIndex === index ? { ...item, active: event.target.checked } : item) })} />Ativo</label><button type="button" onClick={() => { const links = [...settings.navigation.links]; if (index > 0) [links[index - 1], links[index]] = [links[index], links[index - 1]]; updateSection('navigation', { links }); }} disabled={index === 0} className="rounded-lg border p-2 disabled:opacity-30"><ChevronUp className="h-4 w-4" /></button><button type="button" onClick={() => updateSection('navigation', { links: settings.navigation.links.filter((_, itemIndex) => itemIndex !== index) })} className="rounded-lg border border-red-100 p-2 text-red-500"><Trash2 className="h-4 w-4" /></button></div></div>)}
+              {settings.navigation.links.length < 12 && <button type="button" onClick={() => updateSection('navigation', { links: [...settings.navigation.links, { id: `link-${Date.now()}`, label: 'Novo link', href: '/', active: true }] })} className="inline-flex items-center gap-2 rounded-xl border border-dashed border-pink-300 px-4 py-3 text-sm font-bold text-pink-700"><Plus className="h-4 w-4" />Adicionar link</button>}
+            </div>
+          )}
+
+          {activeTab === 'fiscal' && (
+            <div className="space-y-5">
+              <div><h2 className="text-lg font-black">Dados fiscais</h2><p className="text-sm text-slate-500">Base para emissão manual ou integração futura com um provedor de NF-e/NFS-e.</p></div>
+              <label className="block text-xs font-bold text-slate-700">Modo<select value={settings.fiscal.mode} onChange={(event) => updateSection('fiscal', { mode: event.target.value as 'manual' | 'provider' })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm"><option value="manual">Controle manual</option><option value="provider">Provedor externo</option></select></label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField label="Razão social" value={settings.fiscal.legalName} onChange={(legalName) => updateSection('fiscal', { legalName })} />
+                <TextField label="CPF/CNPJ" value={settings.fiscal.document} onChange={(document) => updateSection('fiscal', { document })} />
+                <TextField label="Inscrição municipal" value={settings.fiscal.municipalRegistration} onChange={(municipalRegistration) => updateSection('fiscal', { municipalRegistration })} />
+                <TextField label="Inscrição estadual" value={settings.fiscal.stateRegistration} onChange={(stateRegistration) => updateSection('fiscal', { stateRegistration })} />
+                {settings.fiscal.mode === 'provider' && <TextField label="Nome do provedor" value={settings.fiscal.provider} onChange={(provider) => updateSection('fiscal', { provider })} hint="As credenciais devem permanecer no ambiente do servidor." />}
+              </div>
             </div>
           )}
         </section>

@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
         const { data, error } = await admin
           .from('users')
           .select(
-            'id, email, name, role, admin_access_level, admin_active, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
+            'id, email, name, role, admin_access_level, admin_permissions, admin_active, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
           )
           .eq('email', credentials.email.toLowerCase().trim())
           .maybeSingle();
@@ -32,6 +32,7 @@ export const authOptions: NextAuthOptions = {
               name: string | null;
               role: 'user' | 'admin';
               admin_access_level?: 'owner' | 'partner' | null;
+              admin_permissions?: import('@/lib/admin-permissions').AdminPermission[] | null;
               admin_active?: boolean;
               password_hash: string;
               two_fa_enabled: boolean;
@@ -102,6 +103,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name ?? null,
           role: user.role,
           accessLevel,
+          permissions: user.admin_permissions ?? null,
         };
       },
     }),
@@ -119,6 +121,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id as string;
         token.role = user.role as 'user' | 'admin';
         token.accessLevel = user.accessLevel ?? null;
+        token.permissions = user.permissions ?? null;
       }
       return token;
     },
@@ -127,6 +130,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as 'user' | 'admin';
         session.user.accessLevel = token.accessLevel ?? null;
+        session.user.permissions = token.permissions ?? null;
       }
       return session;
     },

@@ -44,6 +44,15 @@ export interface Product {
   updated_at: string;
   fulfillment_mode?: 'made_to_order' | 'ready_stock' | 'hybrid';
   is_customizable?: boolean;
+  sku?: string | null;
+  cost_price?: number | null;
+  weight_grams?: number | null;
+  length_cm?: number | null;
+  width_cm?: number | null;
+  height_cm?: number | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  slug?: string | null;
   tags?: ProductTag[];
 }
 
@@ -328,6 +337,15 @@ export interface Database {
           image_url_2?: string | null;
           active?: boolean;
           is_customizable?: boolean;
+          sku?: string | null;
+          cost_price?: number | null;
+          weight_grams?: number | null;
+          length_cm?: number | null;
+          width_cm?: number | null;
+          height_cm?: number | null;
+          seo_title?: string | null;
+          seo_description?: string | null;
+          slug?: string | null;
           file_path?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -343,6 +361,15 @@ export interface Database {
           image_url_2?: string | null;
           active?: boolean;
           is_customizable?: boolean;
+          sku?: string | null;
+          cost_price?: number | null;
+          weight_grams?: number | null;
+          length_cm?: number | null;
+          width_cm?: number | null;
+          height_cm?: number | null;
+          seo_title?: string | null;
+          seo_description?: string | null;
+          slug?: string | null;
           file_path?: string | null;
           created_at?: string;
           updated_at?: string;

@@ -9,6 +9,7 @@ import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendInvoiceRequestE
 import { createNotification } from '@/lib/notifications';
 import { createAdminAlert } from '@/lib/admin-alerts';
 import { calculateShipping, sanitizeCep } from '@/lib/shipping';
+import { getStoreSettings } from '@/lib/store-settings';
 import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES, validateCheckoutCoupon } from '@/lib/checkout-rules';
 import { isMercadoPagoApproved, mapMercadoPagoOrderStatus } from '@/lib/payment-status';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
@@ -130,6 +131,11 @@ export async function POST(request: Request) {
   if (!cartItems || cartItems.length === 0) {
     return badRequest('Carrinho vazio');
   }
+  const storeSettings = await getStoreSettings();
+  if (payment_method === 'pix' && !storeSettings.payments.pixEnabled) return badRequest('O pagamento por PIX está desativado.');
+  if (payment_method === 'credit_card' && !storeSettings.payments.cardEnabled) return badRequest('O pagamento por cartão está desativado.');
+  if (payment_method === 'credit_card' && Number(installments) > storeSettings.payments.maxInstallments) return badRequest('Quantidade de parcelas indisponível.');
+  if (wants_invoice && !storeSettings.payments.invoiceRequestEnabled) return badRequest('A solicitação de nota fiscal está indisponível.');
 
   const unavailableItem = cartItems.find((item) => !item.product || item.product.active === false);
   if (unavailableItem) {
@@ -233,10 +239,13 @@ export async function POST(request: Request) {
   const isDigitalOrder = cartItems.every(item => item.product?.type === 'digital');
   const familyPickupCode = (process.env.FAMILY_PICKUP_COUPON_CODE || 'RETIRADAHELENA').trim().toUpperCase();
   const isFamilyPickup = shipping_method === 'pickup';
+  if (isFamilyPickup && !storeSettings.shipping.pickupEnabled) {
+    return badRequest('A retirada está indisponível no momento.');
+  }
   if (isFamilyPickup && (!validCoupon?.free_shipping || validCoupon.code !== familyPickupCode)) {
     return badRequest('A retirada com Helena exige o código familiar válido.');
   }
-  const hasFreeShipping = isDigitalOrder || subtotal >= 99 || validCoupon?.free_shipping === true;
+  const hasFreeShipping = isDigitalOrder || subtotal >= storeSettings.commerce.freeShippingThreshold || validCoupon?.free_shipping === true;
   let validatedShipping = 0;
 
   if (!hasFreeShipping) {
@@ -245,7 +254,17 @@ export async function POST(request: Request) {
       return badRequest('Selecione uma opção de frete válida');
     }
     try {
-      const shippingResult = await calculateShipping(cep);
+      const shippingPackage = cartItems.reduce((pkg, item) => {
+        if (item.product?.type === 'digital') return pkg;
+        const quantity = Math.max(1, item.quantity);
+        return {
+          weightGrams: pkg.weightGrams + Number(item.product?.weight_grams ?? storeSettings.shipping.defaultWeightGrams) * quantity,
+          lengthCm: Math.max(pkg.lengthCm, Number(item.product?.length_cm ?? storeSettings.shipping.defaultLengthCm)),
+          widthCm: Math.max(pkg.widthCm, Number(item.product?.width_cm ?? storeSettings.shipping.defaultWidthCm)),
+          heightCm: pkg.heightCm + Number(item.product?.height_cm ?? storeSettings.shipping.defaultHeightCm) * quantity,
+        };
+      }, { weightGrams: 0, lengthCm: 0, widthCm: 0, heightCm: 0 });
+      const shippingResult = await calculateShipping(cep, shippingPackage);
       const selectedShipping = shippingResult.options.find((option) => option.id === shipping_method);
       if (!selectedShipping) return badRequest('Opção de frete indisponível para este CEP');
       validatedShipping = selectedShipping.price;

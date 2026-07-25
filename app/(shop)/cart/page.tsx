@@ -18,6 +18,7 @@ import { ProductRecommendations } from '@/components/shop/ProductRecommendations
 import { PaymentForm, type PaymentPricingSummary } from '@/components/shop/PaymentForm';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES } from '@/lib/checkout-rules';
+import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/store-settings-schema';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -76,6 +77,7 @@ export default function CartPage() {
 
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummarySnapshot | null>(null);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
 
   const isLoading = status === 'loading';
   const isSyncing = status === 'syncing';
@@ -100,6 +102,12 @@ export default function CartPage() {
     }
   }, [session]);
 
+  useEffect(() => {
+    fetch('/api/store-settings').then((response) => response.json()).then((data) => {
+      setStoreSettings((current) => ({ ...current, ...data }));
+    }).catch(() => {});
+  }, []);
+
   async function handleCalculateShipping() {
     const digits = shippingCep.replace(/\D/g, '');
     if (digits.length !== 8) {
@@ -118,7 +126,7 @@ export default function CartPage() {
       const res = await fetch('/api/shipping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cep: digits }),
+        body: JSON.stringify({ cep: digits, items: items.filter((item) => item.product?.type !== 'digital').map((item) => ({ product_id: item.product_id, quantity: item.quantity })) }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -130,7 +138,7 @@ export default function CartPage() {
       if (data.address.street) setAddressStreet(data.address.street);
       if (data.address.neighborhood) setAddressNeighborhood(data.address.neighborhood);
       if (couponDiscount?.family_pickup) {
-        setSelectedShipping({ id: 'pickup', name: 'Retirar com a Helena', price: 0, days_min: 0, days_max: 0 });
+        setSelectedShipping({ id: 'pickup', name: storeSettings.shipping.pickupName, price: 0, days_min: 0, days_max: 0 });
       } else if (data.options.length > 0) setSelectedShipping(data.options[0]);
     } catch {
       setShippingError('Erro de conexão. Tente novamente.');
@@ -169,7 +177,7 @@ export default function CartPage() {
         family_pickup: data.family_pickup === true,
       });
       if (data.family_pickup === true) {
-        setSelectedShipping({ id: 'pickup', name: 'Retirar com a Helena', price: 0, days_min: 0, days_max: 0 });
+        setSelectedShipping({ id: 'pickup', name: storeSettings.shipping.pickupName, price: 0, days_min: 0, days_max: 0 });
       }
     } catch {
       setCouponError('Erro de conexão. Tente novamente.');
@@ -200,7 +208,7 @@ export default function CartPage() {
       const data = await res.json();
 
       if (!res.ok || data.family_pickup !== true) {
-        setPickupError(data.error || 'A retirada com a Helena está indisponível no momento.');
+        setPickupError(data.error || 'A retirada está indisponível no momento.');
         setPickupConfirmationOpen(false);
         return;
       }
@@ -214,7 +222,7 @@ export default function CartPage() {
         family_pickup: true,
       });
       setCouponCode('');
-      setSelectedShipping({ id: 'pickup', name: 'Retirar com a Helena', price: 0, days_min: 0, days_max: 0 });
+      setSelectedShipping({ id: 'pickup', name: storeSettings.shipping.pickupName, price: 0, days_min: 0, days_max: 0 });
       setPickupConfirmationOpen(false);
     } catch {
       setPickupError('Não foi possível confirmar a retirada. Tente novamente.');
@@ -502,7 +510,7 @@ export default function CartPage() {
                   <span className="block text-sm font-bold text-gray-900 dark:text-white">Entrega no endereço</span>
                   <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Informe o CEP e escolha uma modalidade de envio.</span>
                 </button>
-                <button
+                {storeSettings.shipping.pickupEnabled && <button
                   type="button"
                   onClick={() => setPickupConfirmationOpen(true)}
                   aria-pressed={selectedShipping?.id === 'pickup'}
@@ -513,11 +521,11 @@ export default function CartPage() {
                   }`}
                 >
                   <span className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">Retirada com a Helena</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{storeSettings.shipping.pickupName}</span>
                     <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700 dark:bg-green-900/50 dark:text-green-300">Grátis</span>
                   </span>
-                  <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Opção exclusiva para amigos e familiares.</span>
-                </button>
+                  <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">{storeSettings.shipping.pickupNotice}</span>
+                </button>}
               </div>
               {pickupError && <p className="mt-3 text-xs font-medium text-red-600 dark:text-red-400">{pickupError}</p>}
             </fieldset>
@@ -947,6 +955,7 @@ export default function CartPage() {
                   couponCode={couponDiscount?.code}
                   shippingAddress={paymentShippingAddress}
                   userCpf={userCpf}
+                  paymentSettings={storeSettings.payments}
                   onPaymentCompleted={(pricing?: PaymentPricingSummary) => {
                     setPaymentSummary({
                       items: [...items],
@@ -986,8 +995,8 @@ export default function CartPage() {
       )}
       <ConfirmDialog
         open={pickupConfirmationOpen}
-        title="Confirmar retirada com a Helena?"
-        description="Esta opção é destinada a amigos e familiares e não inclui entrega. A retirada será combinada diretamente com a dona da loja. Tem certeza de que deseja continuar?"
+        title={`Confirmar ${storeSettings.shipping.pickupName.toLowerCase()}?`}
+        description={`${storeSettings.shipping.pickupNotice} Tem certeza de que deseja continuar?`}
         confirmLabel="Sim, quero retirar"
         busy={pickupLoading}
         onCancel={() => {

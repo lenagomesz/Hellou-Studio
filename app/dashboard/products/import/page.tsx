@@ -189,7 +189,7 @@ export default function ImportPage() {
   }
 
   function downloadTemplate() {
-    const template = 'id,name,category,type,base_price,sale_price,description,active,image_url\n,Produto Exemplo,chaveiros,physical,29.90,24.90,Descrição do produto,true,\n';
+    const template = 'id,name,sku,category,type,base_price,sale_price,cost_price,weight_grams,length_cm,width_cm,height_cm,slug,seo_title,seo_description,description,active,image_url\n,Produto Exemplo,PROD-001,chaveiros,physical,29.90,24.90,10.00,150,12,8,5,produto-exemplo,Produto Exemplo 3D,Descrição para o Google,Descrição do produto,true,\n';
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -293,7 +293,7 @@ export default function ImportPage() {
               Arraste um arquivo CSV ou clique para selecionar
             </p>
             <p className="text-xs text-gray-500">
-              Colunas esperadas: id, name, category, type, base_price, sale_price, description, active
+              Inclui SKU, custo, peso, dimensões e campos de SEO
             </p>
           </div>
         )}

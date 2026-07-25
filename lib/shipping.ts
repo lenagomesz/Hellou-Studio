@@ -1,4 +1,5 @@
 import { calcularPrecoPrazo } from 'correios-brasil';
+import { getStoreSettings } from '@/lib/store-settings';
 
 export interface ShippingOption {
   id: 'pac' | 'sedex' | 'pickup';
@@ -23,11 +24,6 @@ interface ViaCepResponse {
 }
 
 // --- Correios API config ---
-const ORIGIN_CEP = '88304000'; // Itajaí/SC
-const DEFAULT_WEIGHT = '0.3'; // kg
-const DEFAULT_HEIGHT = '10';
-const DEFAULT_WIDTH = '15';
-const DEFAULT_LENGTH = '20';
 const DEFAULT_DIAMETER = '0';
 const API_TIMEOUT_MS = 3000;
 
@@ -91,16 +87,24 @@ function parseCorreiosPrice(value: string): number {
   return parseFloat(value.replace('.', '').replace(',', '.'));
 }
 
-async function fetchCorreiosRates(destCep: string): Promise<ShippingOption[] | null> {
+export interface ShippingPackage {
+  weightGrams: number;
+  lengthCm: number;
+  widthCm: number;
+  heightCm: number;
+}
+
+async function fetchCorreiosRates(destCep: string, shippingPackage: ShippingPackage): Promise<ShippingOption[] | null> {
+  const settings = await getStoreSettings();
   try {
     const args = {
-      sCepOrigem: ORIGIN_CEP,
+      sCepOrigem: settings.shipping.originCep,
       sCepDestino: destCep,
-      nVlPeso: DEFAULT_WEIGHT,
+      nVlPeso: Math.max(0.3, shippingPackage.weightGrams / 1000).toFixed(3),
       nCdFormato: '1',
-      nVlComprimento: DEFAULT_LENGTH,
-      nVlAltura: DEFAULT_HEIGHT,
-      nVlLargura: DEFAULT_WIDTH,
+      nVlComprimento: String(Math.max(16, Math.ceil(shippingPackage.lengthCm))),
+      nVlAltura: String(Math.max(2, Math.ceil(shippingPackage.heightCm))),
+      nVlLargura: String(Math.max(11, Math.ceil(shippingPackage.widthCm))),
       nVlDiametro: DEFAULT_DIAMETER,
       nCdServico: ['04510', '04014'],
     };
@@ -145,9 +149,16 @@ function getFallbackOptions(uf: string): ShippingOption[] {
   ];
 }
 
-export async function calculateShipping(rawCep: string): Promise<ShippingResult> {
+export async function calculateShipping(rawCep: string, packageOverride?: Partial<ShippingPackage>): Promise<ShippingResult> {
   const cep = sanitizeCep(rawCep);
   if (!cep) throw new Error('CEP inválido. Use 8 dígitos.');
+  const settings = await getStoreSettings();
+  const shippingPackage: ShippingPackage = {
+    weightGrams: Math.max(1, packageOverride?.weightGrams ?? settings.shipping.defaultWeightGrams),
+    lengthCm: Math.max(1, packageOverride?.lengthCm ?? settings.shipping.defaultLengthCm),
+    widthCm: Math.max(1, packageOverride?.widthCm ?? settings.shipping.defaultWidthCm),
+    heightCm: Math.max(1, packageOverride?.heightCm ?? settings.shipping.defaultHeightCm),
+  };
 
   const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
     next: { revalidate: 86400 },
@@ -168,13 +179,14 @@ export async function calculateShipping(rawCep: string): Promise<ShippingResult>
       options: [
         { id: 'pac', name: 'PAC', price: 9.90, days_min: 3, days_max: 5 },
         { id: 'sedex', name: 'SEDEX', price: 15.90, days_min: 1, days_max: 2 },
-      ],
+      ].filter((option) => option.id === 'pac' ? settings.shipping.pacEnabled : settings.shipping.sedexEnabled) as ShippingOption[],
       address: { city: data.localidade, state: data.uf, street: data.logradouro, neighborhood: data.bairro },
     };
   }
 
-  const correiosOptions = await fetchCorreiosRates(cep);
-  const options = correiosOptions || getFallbackOptions(uf);
+  const correiosOptions = await fetchCorreiosRates(cep, shippingPackage);
+  const options = (correiosOptions || getFallbackOptions(uf))
+    .filter((option) => option.id === 'pac' ? settings.shipping.pacEnabled : settings.shipping.sedexEnabled);
 
   return {
     options,

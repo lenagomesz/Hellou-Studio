@@ -43,6 +43,7 @@ interface PaymentFormProps {
   shippingAddress?: Record<string, unknown>;
   userCpf?: string;
   onPaymentCompleted?: (pricing?: PaymentPricingSummary) => void;
+  paymentSettings?: { pixEnabled: boolean; cardEnabled: boolean; maxInstallments: number; invoiceRequestEnabled: boolean };
 }
 
 export function PaymentForm({
@@ -53,6 +54,7 @@ export function PaymentForm({
   shippingAddress,
   userCpf,
   onPaymentCompleted,
+  paymentSettings = { pixEnabled: true, cardEnabled: true, maxInstallments: 12, invoiceRequestEnabled: true },
 }: PaymentFormProps) {
   const router = useRouter();
   const { clearCart } = useCart();
@@ -90,6 +92,11 @@ export function PaymentForm({
   const [installmentsLoading, setInstallmentsLoading] = useState(false);
 
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!paymentSettings.pixEnabled && paymentSettings.cardEnabled) setPaymentMethod('credit');
+    if (!paymentSettings.cardEnabled && paymentSettings.pixEnabled) setPaymentMethod('pix');
+  }, [paymentSettings.cardEnabled, paymentSettings.pixEnabled]);
 
   function getPaymentAttemptKey(method: 'pix' | 'credit_card') {
     const existingKey = paymentAttemptKeysRef.current[method];
@@ -500,7 +507,7 @@ export function PaymentForm({
 
           {/* Payment method tabs */}
           <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
-            <button
+            {paymentSettings.pixEnabled && <button
               type="button"
               onClick={() => setPaymentMethod('pix')}
               className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition ${
@@ -511,8 +518,8 @@ export function PaymentForm({
             >
               <QrCode className="h-4 w-4 shrink-0" />
               PIX
-            </button>
-            <button
+            </button>}
+            {paymentSettings.cardEnabled && <button
               type="button"
               onClick={() => setPaymentMethod('credit')}
               className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition ${
@@ -524,7 +531,7 @@ export function PaymentForm({
               <CreditCard className="h-4 w-4 shrink-0" />
               <span className="hidden sm:inline">Crédito</span>
               <span className="sm:hidden">Crédito</span>
-            </button>
+            </button>}
 
           </div>
 
@@ -570,7 +577,7 @@ export function PaymentForm({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-purple-800 dark:text-purple-200">Cartão de crédito</p>
-                  <p className="text-xs text-purple-600 dark:text-purple-400">Parcele em até 12x com juros</p>
+                  <p className="text-xs text-purple-600 dark:text-purple-400">Parcele em até {paymentSettings.maxInstallments}x com juros</p>
                 </div>
               </div>
 
@@ -630,7 +637,7 @@ export function PaymentForm({
                     onChange={(e) => setInstallments(Number(e.target.value))}
                     className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/30"
                   >
-                    {installmentOptions.map((opt) => (
+                    {installmentOptions.filter((opt) => opt.installments <= paymentSettings.maxInstallments).map((opt) => (
                       <option key={opt.installments} value={opt.installments}>
                         {opt.recommended_message}
                       </option>

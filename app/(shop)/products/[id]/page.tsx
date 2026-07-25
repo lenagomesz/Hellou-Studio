@@ -10,6 +10,7 @@ import { getCurrentUser } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
 import { absoluteUrl, plainText, productImages, safeJsonLd } from '@/lib/seo';
 import { attachProductTags } from '@/lib/product-tags';
+import { getStoreSettings } from '@/lib/store-settings';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -92,15 +93,17 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
   if (!result || result.product.category === 'encomenda') return { title: 'Produto não encontrado', robots: { index: false, follow: false } };
 
   const { product } = result;
-  const description = plainText(product.description, `${product.name}, produzido sob demanda pela Hellou Studio.`);
+  const settings = await getStoreSettings();
+  const title = product.seo_title || product.name;
+  const description = plainText(product.seo_description || product.description, `${product.name}, produzido sob demanda pela ${settings.identity.name}.`);
   const images = productImages(product);
   const canonical = `/products/${product.id}`;
   return {
-    title: product.name,
+    title,
     description,
     alternates: { canonical },
-    openGraph: { type: 'website', url: canonical, title: product.name, description, images },
-    twitter: { card: 'summary_large_image', title: product.name, description, images },
+    openGraph: { type: 'website', url: canonical, title, description, images },
+    twitter: { card: 'summary_large_image', title, description, images },
   };
 }
 
@@ -112,6 +115,7 @@ export default async function ProductDetailPage(
   if (!result) notFound();
 
   const { product: rawProduct, options } = result;
+  const storeSettings = await getStoreSettings();
   const product = (await attachProductTags([rawProduct]))[0];
 
   if (product.category === 'encomenda') notFound();
@@ -127,14 +131,14 @@ export default async function ProductDetailPage(
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    description: plainText(product.description, `${product.name}, produzido sob demanda pela Hellou Studio.`, 500),
+    description: plainText(product.seo_description || product.description, `${product.name}, produzido sob demanda pela ${storeSettings.identity.name}.`, 500),
     image: images,
-    sku: product.id,
-    brand: { '@type': 'Brand', name: 'Hellou Studio' },
+    sku: product.sku || product.id,
+    brand: { '@type': 'Brand', name: storeSettings.identity.name },
     offers: {
       '@type': 'Offer',
       url: absoluteUrl(`/products/${product.id}`),
-      priceCurrency: 'BRL',
+      priceCurrency: storeSettings.commerce.currency,
       price: price.toFixed(2),
       availability: 'https://schema.org/InStock',
       itemCondition: 'https://schema.org/NewCondition',

@@ -45,6 +45,11 @@ export function normalizeStoreSettings(input: unknown): StoreSettings {
   const commerce = objectValue(root.commerce);
   const seo = objectValue(root.seo);
   const home = objectValue(root.home);
+  const shipping = objectValue(root.shipping);
+  const payments = objectValue(root.payments);
+  const email = objectValue(root.email);
+  const fiscal = objectValue(root.fiscal);
+  const navigation = objectValue(root.navigation);
   const rawSlides = Array.isArray(home.heroSlides) ? home.heroSlides.slice(0, 8) : DEFAULT_STORE_SETTINGS.home.heroSlides;
 
   return {
@@ -102,6 +107,51 @@ export function normalizeStoreSettings(input: unknown): StoreSettings {
           href: href.startsWith('/') ? href : fallback.href,
           trust: rawTrust.slice(0, 3).map((item, trustIndex) => textValue(item, fallback.trust[trustIndex] ?? 'Compra segura', 80)),
           active: typeof slide.active === 'boolean' ? slide.active : true,
+        };
+      }),
+    },
+    shipping: {
+      originCep: optionalText(shipping.originCep, DEFAULT_STORE_SETTINGS.shipping.originCep, 9).replace(/\D/g, '').slice(0, 8) || DEFAULT_STORE_SETTINGS.shipping.originCep,
+      pacEnabled: typeof shipping.pacEnabled === 'boolean' ? shipping.pacEnabled : DEFAULT_STORE_SETTINGS.shipping.pacEnabled,
+      sedexEnabled: typeof shipping.sedexEnabled === 'boolean' ? shipping.sedexEnabled : DEFAULT_STORE_SETTINGS.shipping.sedexEnabled,
+      pickupEnabled: typeof shipping.pickupEnabled === 'boolean' ? shipping.pickupEnabled : DEFAULT_STORE_SETTINGS.shipping.pickupEnabled,
+      pickupName: textValue(shipping.pickupName, DEFAULT_STORE_SETTINGS.shipping.pickupName, 80),
+      pickupNotice: textValue(shipping.pickupNotice, DEFAULT_STORE_SETTINGS.shipping.pickupNotice, 400),
+      defaultWeightGrams: numberValue(shipping.defaultWeightGrams, DEFAULT_STORE_SETTINGS.shipping.defaultWeightGrams, 1, 30000),
+      defaultLengthCm: numberValue(shipping.defaultLengthCm, DEFAULT_STORE_SETTINGS.shipping.defaultLengthCm, 1, 100),
+      defaultWidthCm: numberValue(shipping.defaultWidthCm, DEFAULT_STORE_SETTINGS.shipping.defaultWidthCm, 1, 100),
+      defaultHeightCm: numberValue(shipping.defaultHeightCm, DEFAULT_STORE_SETTINGS.shipping.defaultHeightCm, 1, 100),
+    },
+    payments: {
+      pixEnabled: typeof payments.pixEnabled === 'boolean' ? payments.pixEnabled : DEFAULT_STORE_SETTINGS.payments.pixEnabled,
+      cardEnabled: typeof payments.cardEnabled === 'boolean' ? payments.cardEnabled : DEFAULT_STORE_SETTINGS.payments.cardEnabled,
+      maxInstallments: numberValue(payments.maxInstallments, DEFAULT_STORE_SETTINGS.payments.maxInstallments, 1, 24),
+      invoiceRequestEnabled: typeof payments.invoiceRequestEnabled === 'boolean' ? payments.invoiceRequestEnabled : DEFAULT_STORE_SETTINGS.payments.invoiceRequestEnabled,
+    },
+    email: {
+      senderName: textValue(email.senderName, DEFAULT_STORE_SETTINGS.email.senderName, 80),
+      senderEmail: optionalText(email.senderEmail, DEFAULT_STORE_SETTINGS.email.senderEmail, 160),
+      replyTo: optionalText(email.replyTo, DEFAULT_STORE_SETTINGS.email.replyTo, 160),
+      footerText: textValue(email.footerText, DEFAULT_STORE_SETTINGS.email.footerText, 300),
+    },
+    fiscal: {
+      mode: fiscal.mode === 'provider' ? 'provider' : 'manual',
+      provider: optionalText(fiscal.provider, DEFAULT_STORE_SETTINGS.fiscal.provider, 80),
+      legalName: optionalText(fiscal.legalName, DEFAULT_STORE_SETTINGS.fiscal.legalName, 160),
+      document: optionalText(fiscal.document, DEFAULT_STORE_SETTINGS.fiscal.document, 30),
+      municipalRegistration: optionalText(fiscal.municipalRegistration, DEFAULT_STORE_SETTINGS.fiscal.municipalRegistration, 40),
+      stateRegistration: optionalText(fiscal.stateRegistration, DEFAULT_STORE_SETTINGS.fiscal.stateRegistration, 40),
+    },
+    navigation: {
+      links: (Array.isArray(navigation.links) ? navigation.links : DEFAULT_STORE_SETTINGS.navigation.links).slice(0, 12).map((rawLink, index) => {
+        const link = objectValue(rawLink);
+        const fallback = DEFAULT_STORE_SETTINGS.navigation.links[index] ?? { id: `link-${index + 1}`, label: 'Link', href: '/', active: true };
+        const href = optionalText(link.href, fallback.href, 300);
+        return {
+          id: optionalText(link.id, fallback.id, 60).replace(/[^a-zA-Z0-9_-]/g, '-') || `link-${index + 1}`,
+          label: textValue(link.label, fallback.label, 40),
+          href: href.startsWith('/') ? href : fallback.href,
+          active: typeof link.active === 'boolean' ? link.active : true,
         };
       }),
     },

@@ -12,6 +12,15 @@ interface CSVRow {
   description?: string;
   active?: string;
   image_url?: string;
+  sku?: string;
+  cost_price?: string;
+  weight_grams?: string;
+  length_cm?: string;
+  width_cm?: string;
+  height_cm?: string;
+  slug?: string;
+  seo_title?: string;
+  seo_description?: string;
 }
 
 function parseCSV(text: string): CSVRow[] {
@@ -87,6 +96,20 @@ function validateRow(row: CSVRow, index: number): { valid: boolean; errors: stri
     }
   }
 
+  for (const [field, label, allowZero] of [
+    ['cost_price', 'Custo', true],
+    ['weight_grams', 'Peso', false],
+    ['length_cm', 'Comprimento', false],
+    ['width_cm', 'Largura', false],
+    ['height_cm', 'Altura', false],
+  ] as const) {
+    const raw = row[field];
+    if (raw?.trim()) {
+      const value = Number(raw);
+      if (!Number.isFinite(value) || (allowZero ? value < 0 : value <= 0)) errors.push(`Linha ${index + 2}: ${label} inválido "${raw}"`);
+    }
+  }
+
   return { valid: errors.length === 0, errors };
 }
 
@@ -156,6 +179,15 @@ export async function POST(request: Request) {
         if (row.description !== undefined) update.description = row.description || null;
         if (row.active !== undefined) update.active = row.active === 'true';
         if (row.image_url !== undefined) update.image_url = row.image_url || null;
+        if (row.sku !== undefined) update.sku = row.sku.trim().toUpperCase() || null;
+        if (row.cost_price !== undefined) update.cost_price = row.cost_price.trim() ? Number(row.cost_price) : null;
+        if (row.weight_grams !== undefined) update.weight_grams = row.weight_grams.trim() ? Math.trunc(Number(row.weight_grams)) : null;
+        if (row.length_cm !== undefined) update.length_cm = row.length_cm.trim() ? Number(row.length_cm) : null;
+        if (row.width_cm !== undefined) update.width_cm = row.width_cm.trim() ? Number(row.width_cm) : null;
+        if (row.height_cm !== undefined) update.height_cm = row.height_cm.trim() ? Number(row.height_cm) : null;
+        if (row.slug !== undefined) update.slug = row.slug.trim() || null;
+        if (row.seo_title !== undefined) update.seo_title = row.seo_title.trim() || null;
+        if (row.seo_description !== undefined) update.seo_description = row.seo_description.trim() || null;
         update.updated_at = new Date().toISOString();
 
         // Check for price change to track history
@@ -214,6 +246,15 @@ export async function POST(request: Request) {
           description: row.description?.trim() || null,
           active: row.active !== 'false',
           image_url: row.image_url?.trim() || null,
+          sku: row.sku?.trim().toUpperCase() || null,
+          cost_price: row.cost_price?.trim() ? Number(row.cost_price) : null,
+          weight_grams: row.weight_grams?.trim() ? Math.trunc(Number(row.weight_grams)) : null,
+          length_cm: row.length_cm?.trim() ? Number(row.length_cm) : null,
+          width_cm: row.width_cm?.trim() ? Number(row.width_cm) : null,
+          height_cm: row.height_cm?.trim() ? Number(row.height_cm) : null,
+          slug: row.slug?.trim() || null,
+          seo_title: row.seo_title?.trim() || null,
+          seo_description: row.seo_description?.trim() || null,
         };
 
         const { error } = await admin.from('products').insert(insert);

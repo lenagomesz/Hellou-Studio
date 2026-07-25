@@ -11,6 +11,7 @@ import {
 import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
 import { parseOptionalPrice } from '@/lib/product-filters';
+import { normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -50,7 +51,10 @@ export async function GET(request: Request) {
   }
 
   if (category) query = query.eq('category', category);
-  if (search) query = query.ilike('name', `%${search}%`);
+  if (search) {
+    const safeSearch = search.replace(/[%_,()]/g, ' ').trim();
+    if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,sku.ilike.%${safeSearch}%`);
+  }
   if (type === 'physical' || type === 'digital') query = query.eq('type', type);
   if (minPrice !== undefined) query = query.gte('base_price', minPrice);
   if (maxPrice !== undefined) query = query.lte('base_price', maxPrice);
@@ -77,7 +81,7 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { name, description, category, base_price, sale_price, image_url, images, active, fulfillment_mode, is_customizable, options } = (body ??
+  const { name, description, category, base_price, sale_price, image_url, images, active, fulfillment_mode, is_customizable, options, ...commercialInput } = (body ??
     {}) as {
     name?: string;
     description?: string | null;
@@ -90,7 +94,7 @@ export async function POST(request: Request) {
     fulfillment_mode?: string;
     is_customizable?: boolean;
     options?: Array<{ name: string; dimensions?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number }>;
-  };
+  } & ProductCommercialInput;
 
   if (active === false) {
     const statusAuth = await requirePermission('products.status.manage');
@@ -108,6 +112,12 @@ export async function POST(request: Request) {
     return badRequest('Preço promocional inválido');
   }
   const fulfillmentMode = ['made_to_order', 'ready_stock', 'hybrid'].includes(fulfillment_mode ?? '') ? fulfillment_mode : 'made_to_order';
+  let commercialFields;
+  try {
+    commercialFields = normalizeProductCommercialFields(commercialInput);
+  } catch (error) {
+    return badRequest(error instanceof Error ? error.message : 'Dados comerciais inválidos');
+  }
 
   const admin = getSupabaseAdmin();
   const { data: productCategory } = await admin
@@ -132,10 +142,12 @@ export async function POST(request: Request) {
       active: active ?? true,
       fulfillment_mode: fulfillmentMode,
       is_customizable: !!is_customizable,
+      ...commercialFields,
     })
     .select('*')
     .single();
 
+  if (error?.code === '23505') return badRequest('SKU ou slug já está sendo usado por outro produto');
   if (error || !data) return serverError('Erro ao criar produto');
 
   const validOptions = (options ?? []).filter((option) => option.name?.trim() || option.color?.trim());

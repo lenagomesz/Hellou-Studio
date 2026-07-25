@@ -9,6 +9,7 @@ import {
   serverError,
 } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
+import { normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
 
 type ProductWithOptions = Product & { product_options: ProductOption[] };
 
@@ -65,13 +66,25 @@ export async function PATCH(
       active?: boolean;
       fulfillment_mode?: string;
       is_customizable?: boolean;
-    };
+    } & ProductCommercialInput;
 
     const update: Record<string, unknown> = {};
 
     if (input.active !== undefined) {
       const statusAuth = await requirePermission('products.status.manage');
       if (statusAuth.response) return statusAuth.response;
+    }
+
+    const commercialKeys: Array<keyof ProductCommercialInput> = ['sku', 'cost_price', 'weight_grams', 'length_cm', 'width_cm', 'height_cm', 'seo_title', 'seo_description', 'slug'];
+    if (commercialKeys.some((key) => input[key] !== undefined)) {
+      try {
+        const normalized = normalizeProductCommercialFields(input);
+        for (const key of commercialKeys) {
+          if (input[key] !== undefined) update[key] = normalized[key];
+        }
+      } catch (error) {
+        return badRequest(error instanceof Error ? error.message : 'Dados comerciais inválidos');
+      }
     }
 
     if (input.name !== undefined) {
@@ -148,7 +161,7 @@ export async function PATCH(
         hint: error.hint,
       });
       return NextResponse.json(
-        { error: `Erro ao atualizar produto: ${error.message}` },
+        { error: error.code === '23505' ? 'SKU ou slug já está sendo usado por outro produto' : `Erro ao atualizar produto: ${error.message}` },
         { status: 400 }
       );
     }

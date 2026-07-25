@@ -14,6 +14,7 @@ import {
   Palette,
   Printer,
   ReceiptText,
+  RefreshCcw,
   Settings2,
   Store,
   Shield,
@@ -37,6 +38,7 @@ export type AdminNavigationItem = {
   badgeKey?: 'alerts';
   permission: AdminPermission;
   keywords?: string;
+  featureKey?: string;
 };
 
 export type AdminNavigationSection = {
@@ -61,14 +63,15 @@ export const ADMIN_NAVIGATION: AdminNavigationSection[] = [
       { href: '/dashboard/inventory', label: 'Estoque', description: 'Materiais, capacidade e reposição', icon: Warehouse, permission: 'inventory.manage', keywords: 'filamento insumos' },
       { href: '/dashboard/users', label: 'Clientes', description: 'Perfis, histórico e relacionamento', icon: Users, permission: 'customers.view', keywords: 'usuários vip' },
       { href: '/dashboard/order-ratings', label: 'Avaliações', description: 'Experiência e satisfação dos clientes', icon: Star, permission: 'reviews.manage', keywords: 'notas feedback nps' },
+      { href: '/dashboard/operations', label: 'Pós-venda e conteúdo', description: 'Trocas, páginas e documentos fiscais', icon: RefreshCcw, permission: 'orders.manage', keywords: 'devolução reembolso fiscal páginas' },
     ],
   },
   {
     label: 'Crescimento',
     items: [
       { href: '/dashboard/financeiro', label: 'Financeiro', description: 'Receitas, ticket e conciliação', icon: CircleDollarSign, permission: 'finance.view', keywords: 'dinheiro faturamento' },
-      { href: '/dashboard/analytics', label: 'Análises', description: 'Tráfego, vendas e comportamento', icon: BarChart3, permission: 'analytics.view', keywords: 'analytics insights métricas acessos' },
-      { href: '/dashboard/campaigns', label: 'Campanhas', description: 'E-mails, públicos e automações', icon: Mail, permission: 'marketing.manage', keywords: 'marketing mensagens' },
+      { href: '/dashboard/analytics', label: 'Análises', description: 'Tráfego, vendas e comportamento', icon: BarChart3, permission: 'analytics.view', keywords: 'analytics insights métricas acessos', featureKey: 'period_comparison' },
+      { href: '/dashboard/campaigns', label: 'Campanhas', description: 'E-mails, públicos e automações', icon: Mail, permission: 'marketing.manage', keywords: 'marketing mensagens', featureKey: 'email_campaigns' },
       { href: '/dashboard/coupons', label: 'Cupons', description: 'Descontos, bônus e promoções', icon: Tag, permission: 'marketing.manage', keywords: 'ofertas códigos' },
       { href: '/dashboard/calculadora', label: 'Calculadora', description: 'Custos, preços e análise de mercado', icon: Calculator, permission: 'settings.manage', keywords: 'margem lucro ia' },
     ],
@@ -88,8 +91,8 @@ const DEEP_COMMANDS: AdminNavigationItem[] = [
   { href: '/dashboard/orders/bulk-actions', label: 'Pedidos em lote', description: 'Atualize vários pedidos de uma vez', icon: ClipboardList, permission: 'orders.status.manage', keywords: 'massa status' },
   { href: '/dashboard/products/new', label: 'Cadastrar produto', description: 'Crie um produto físico com imagens e variações', icon: Palette, permission: 'products.manage', keywords: 'novo adicionar upload' },
   { href: '/dashboard/products/stl', label: 'Cadastrar arquivo STL', description: 'Publique um novo produto digital', icon: FileUp, permission: 'products.manage', keywords: 'novo digital arquivo' },
-  { href: '/dashboard/products/import', label: 'Importar produtos', description: 'Cadastre vários produtos por planilha', icon: FileUp, permission: 'products.manage', keywords: 'csv planilha lote' },
-  { href: '/dashboard/products/bulk-edit', label: 'Editar produtos em lote', description: 'Altere preços, categorias e status', icon: PackageSearch, permission: 'products.manage', keywords: 'massa catálogo' },
+  { href: '/dashboard/products/import', label: 'Importar produtos', description: 'Cadastre vários produtos por planilha', icon: FileUp, permission: 'products.manage', keywords: 'csv planilha lote', featureKey: 'import_csv' },
+  { href: '/dashboard/products/bulk-edit', label: 'Editar produtos em lote', description: 'Altere preços, categorias e status', icon: PackageSearch, permission: 'products.manage', keywords: 'massa catálogo', featureKey: 'bulk_edit' },
   { href: '/dashboard/products/categories', label: 'Categorias e tags', description: 'Organize a descoberta dos produtos', icon: Tags, permission: 'products.manage', keywords: 'etiquetas coleção' },
   { href: '/dashboard/inventory/materials', label: 'Filamentos', description: 'Controle peso, custo, cor e reposição', icon: Warehouse, permission: 'inventory.manage', keywords: 'materiais bobinas' },
   { href: '/dashboard/inventory/costs', label: 'Gastos do estoque', description: 'Registre custos operacionais', icon: ReceiptText, permission: 'inventory.manage', keywords: 'despesas compras' },
@@ -104,8 +107,9 @@ const DEEP_COMMANDS: AdminNavigationItem[] = [
 
 export const ADMIN_COMMANDS = [...ADMIN_NAVIGATION.flatMap((section) => section.items), ...DEEP_COMMANDS];
 
-export function canAccessAdminItem(item: AdminNavigationItem, accessLevel: AdminAccessLevel) {
-  return hasAdminPermission(accessLevel, item.permission);
+export function canAccessAdminItem(item: AdminNavigationItem, accessLevel: AdminAccessLevel, enabledFeatures?: string[]) {
+  return (!item.featureKey || !enabledFeatures?.length || enabledFeatures.includes(item.featureKey))
+    && hasAdminPermission(accessLevel, item.permission);
 }
 
 export function getAdminRouteTitle(pathname: string) {

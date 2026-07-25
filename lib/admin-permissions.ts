@@ -37,9 +37,30 @@ export function normalizeAdminAccessLevel(value: unknown): AdminAccessLevel {
 export function hasAdminPermission(
   level: AdminAccessLevel | null | undefined,
   permission: AdminPermission,
+  customPermissions?: AdminPermission[] | null,
 ) {
-  return normalizeAdminAccessLevel(level) === 'owner' || PARTNER_PERMISSIONS.has(permission);
+  return normalizeAdminAccessLevel(level) === 'owner'
+    || (customPermissions?.length ? customPermissions.includes(permission) : PARTNER_PERMISSIONS.has(permission));
 }
+
+export const ADMIN_PERMISSION_OPTIONS: { key: AdminPermission; label: string }[] = [
+  { key: 'dashboard.view', label: 'Visualizar painel' },
+  { key: 'orders.manage', label: 'Gerenciar pedidos e devoluções' },
+  { key: 'orders.status.manage', label: 'Alterar status de pedidos' },
+  { key: 'requests.manage', label: 'Gerenciar encomendas 3D' },
+  { key: 'products.manage', label: 'Gerenciar catálogo' },
+  { key: 'products.delete', label: 'Excluir produtos' },
+  { key: 'inventory.manage', label: 'Gerenciar estoque' },
+  { key: 'customers.view', label: 'Visualizar clientes' },
+  { key: 'customers.manage', label: 'Editar clientes' },
+  { key: 'reviews.manage', label: 'Moderar avaliações' },
+  { key: 'finance.view', label: 'Visualizar financeiro e fiscal' },
+  { key: 'analytics.view', label: 'Visualizar análises' },
+  { key: 'marketing.manage', label: 'Gerenciar marketing' },
+  { key: 'team.manage', label: 'Gerenciar equipe' },
+  { key: 'audit.view', label: 'Visualizar auditoria' },
+  { key: 'settings.manage', label: 'Alterar configurações e páginas' },
+];
 
 export function isRestrictedAdminPath(pathname: string, level: AdminAccessLevel) {
   if (level === 'owner') return false;
