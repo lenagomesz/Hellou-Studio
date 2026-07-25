@@ -20,17 +20,23 @@ export async function POST(request: Request) {
   const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
   const dataObj = body.data as Record<string, unknown> | undefined;
   const requestUrl = new URL(request.url);
-  const dataId = String(
+  // Mercado Pago signs the data.id query parameter, not the value in the JSON body.
+  // When the query parameter is absent, it must also be omitted from the manifest.
+  const signatureDataId = String(
     requestUrl.searchParams.get('data.id')
       ?? requestUrl.searchParams.get('data_id')
-      ?? dataObj?.id
       ?? '',
   );
+  const dataId = String(signatureDataId || dataObj?.id || '');
 
   if (webhookSecret) {
     const xSignature = request.headers.get('x-signature');
     const xRequestId = request.headers.get('x-request-id');
-    const isValid = verifyWebhookSignature(dataId, xSignature, xRequestId, webhookSecret);
+    if (!xSignature) {
+      structuredLog('warn', 'mercadopago.webhook_unsigned_rejected');
+      return NextResponse.json({ error: 'Assinatura ausente' }, { status: 401 });
+    }
+    const isValid = verifyWebhookSignature(signatureDataId, xSignature, xRequestId, webhookSecret);
     if (!isValid) {
       await captureOperationalError({ fingerprint: 'mercadopago-webhook-invalid-signature', category: 'webhook.rejected', title: 'Webhook do Mercado Pago rejeitado', error: new Error('Assinatura inválida.'), route: '/api/webhooks/mercadopago', severity: 'warning', alert: true });
       return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });

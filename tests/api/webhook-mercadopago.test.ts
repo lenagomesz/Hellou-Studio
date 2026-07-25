@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
+import { createHmac } from 'node:crypto';
 
 // --- Mocks ---
 
@@ -335,6 +336,38 @@ describe('POST /api/webhooks/mercadopago', () => {
         const response = await POST(request);
         expect(response.status).toBe(401);
         expect(mockPaymentGet).not.toHaveBeenCalled();
+      } finally {
+        delete process.env.MERCADO_PAGO_WEBHOOK_SECRET;
+      }
+    });
+
+    it('validates the signed query manifest and accepts legitimate delayed retries', async () => {
+      process.env.MERCADO_PAGO_WEBHOOK_SECRET = 'secret';
+      mockPaymentGet.mockResolvedValue({ status: 'pending' });
+      const timestamp = '1704908010';
+      const requestId = 'request-delayed';
+      const manifest = `request-id:${requestId};ts:${timestamp};`;
+      const signature = createHmac('sha256', 'secret').update(manifest).digest('hex');
+
+      try {
+        const request = new Request('http://localhost/api/webhooks/mercadopago', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-signature': `ts=${timestamp},v1=${signature}`,
+            'x-request-id': requestId,
+          },
+          body: JSON.stringify({
+            type: 'payment',
+            action: 'payment.updated',
+            data: { id: 'pay-delayed' },
+          }),
+        });
+
+        const response = await POST(request);
+
+        expect(response.status).toBe(200);
+        expect(mockPaymentGet).toHaveBeenCalledWith({ id: 'pay-delayed' });
       } finally {
         delete process.env.MERCADO_PAGO_WEBHOOK_SECRET;
       }
