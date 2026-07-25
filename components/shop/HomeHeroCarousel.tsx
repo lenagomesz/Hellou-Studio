@@ -4,47 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
+import type { StoreSettings } from '@/lib/store-settings-schema';
 
-const SLIDES = [
-  {
-    badge: 'Novidades toda semana',
-    accent: 'Produtos Únicos',
-    title: 'Fabricados em 3D',
-    description: 'Descubra uma coleção exclusiva de chaveiros, itens de escritório e criaturas fofas, todos impressos sob demanda com a sua cara.',
-    action: 'Explorar Catálogo',
-    href: '/products',
-    trust: ['Atendimento humanizado', 'Bom acabamento', 'Pagamento seguro'],
-  },
-  {
-    badge: 'Feito especialmente para você',
-    accent: 'Do Seu Jeito',
-    title: 'Em Cada Detalhe',
-    description: 'Escolha cores, tamanhos e acabamentos para criar uma peça que combine com você, com seu espaço ou com aquela pessoa especial.',
-    action: 'Explorar personalizáveis',
-    href: '/products?category=personalizaveis',
-    trust: ['Cores à sua escolha', 'Produção sob demanda', 'Presente com personalidade'],
-  },
-  {
-    badge: 'Arquivos digitais para impressão 3D',
-    accent: 'Sua Próxima Ideia',
-    title: 'Começa Aqui',
-    description: 'Encontre modelos STL originais e prontos para imprimir, criados para quem quer produzir peças bonitas com praticidade.',
-    action: 'Explorar arquivos STL',
-    href: '/stl',
-    trust: ['Download após a compra', 'Modelos exclusivos', 'Prontos para imprimir'],
-  },
-  {
-    badge: 'Transformamos sua ideia em objeto',
-    accent: 'Imagine.',
-    title: 'A Gente Faz em 3D.',
-    description: 'Envie seu arquivo, referência ou ideia. Nós analisamos o projeto e preparamos uma impressão personalizada para você.',
-    action: 'Faça sua encomenda',
-    href: '/request-print',
-    trust: ['Orçamento personalizado', 'Acompanhamento próximo', 'Produção com cuidado'],
-  },
-] as const;
-
-export function HomeHeroCarousel() {
+export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
+  const slides = settings.home.heroSlides.filter((slide) => slide.active);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -52,24 +15,26 @@ export function HomeHeroCarousel() {
   useEffect(() => {
     if (paused) return;
     const interval = window.setInterval(() => {
-      setActive((current) => (current + 1) % SLIDES.length);
-    }, 6000);
+      setActive((current) => (current + 1) % Math.max(1, slides.length));
+    }, settings.home.heroAutoplaySeconds * 1000);
     return () => window.clearInterval(interval);
-  }, [paused]);
+  }, [paused, settings.home.heroAutoplaySeconds, slides.length]);
+
+  if (slides.length === 0) return null;
 
   function showPrevious() {
-    setActive((current) => (current - 1 + SLIDES.length) % SLIDES.length);
+    setActive((current) => (current - 1 + slides.length) % slides.length);
   }
 
   function showNext() {
-    setActive((current) => (current + 1) % SLIDES.length);
+    setActive((current) => (current + 1) % slides.length);
   }
 
   return (
     <section
       className="home-hero relative flex min-h-[92vh] items-center justify-center overflow-hidden"
       aria-roledescription="carrossel"
-      aria-label="Destaques da Hellou Studio"
+      aria-label={`Destaques da ${settings.identity.name}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -99,11 +64,11 @@ export function HomeHeroCarousel() {
         className="relative flex w-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
         style={{ transform: `translateX(-${active * 100}%)` }}
       >
-        {SLIDES.map((slide, index) => (
+        {slides.map((slide, index) => (
           <article
             key={slide.accent}
             className="home-hero-content flex min-w-full items-center justify-center px-12 py-20 text-center sm:px-16"
-            aria-label={`${index + 1} de ${SLIDES.length}`}
+            aria-label={`${index + 1} de ${slides.length}`}
             aria-hidden={index !== active}
           >
             <div className="mx-auto w-full max-w-6xl">
@@ -170,7 +135,7 @@ export function HomeHeroCarousel() {
       </button>
 
       <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2" aria-label="Escolher destaque">
-        {SLIDES.map((slide, index) => (
+        {slides.map((slide, index) => (
           <button
             key={slide.accent}
             type="button"

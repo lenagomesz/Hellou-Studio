@@ -1,21 +1,20 @@
 'use client';
 
 import { useCart } from '@/components/shop/CartContext';
+import { getWhatsAppUrl, type StoreSettings } from '@/lib/store-settings-schema';
 
-const WHATSAPP_MESSAGE =
-  'Olá, Hellou Studio! 👋 Vim pelo site e gostaria de tirar uma dúvida sobre os produtos, arquivos STL ou uma impressão 3D personalizada. Podem me ajudar?';
-
-export const WHATSAPP_URL = `https://wa.me/5547988450461?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
-
-export function WhatsAppButton() {
+export function WhatsAppButton({ settings }: { settings: StoreSettings }) {
   const { count } = useCart();
+  const whatsappUrl = getWhatsAppUrl(settings);
 
   // Esconde apenas quando o botão flutuante do carrinho está visível (mobile)
   const hasFloatingCart = count > 0;
 
+  if (!whatsappUrl) return null;
+
   return (
     <a
-      href={WHATSAPP_URL}
+      href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Fale conosco pelo WhatsApp"

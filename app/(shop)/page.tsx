@@ -161,18 +161,20 @@ function FeaturedSkeleton() {
 
 export default async function HomePage() {
   const catalogCategories = await getCatalogCategories('physical');
+  const { getStoreSettings } = await import('@/lib/store-settings');
+  const storeSettings = await getStoreSettings();
   return (
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
       {/* Promo banner */}
       <div className="home-promo flex min-h-12 items-center justify-center bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-4 py-2.5 text-center sm:min-h-14 sm:py-3">
         <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-xs font-medium leading-5 text-white sm:text-sm">
-          <span className="whitespace-nowrap">🚚 <strong className="font-semibold">Frete grátis</strong> acima de R$99</span>
+          <span className="whitespace-nowrap">🚚 <strong className="font-semibold">Frete grátis</strong> acima de {storeSettings.commerce.freeShippingThreshold.toLocaleString(storeSettings.commerce.locale, { style: 'currency', currency: storeSettings.commerce.currency, maximumFractionDigits: 0 })}</span>
           <span aria-hidden="true" className="hidden text-white/75 sm:inline">·</span>
-          <span className="whitespace-nowrap">🎉 <strong className="font-semibold">10% OFF</strong> na sua primeira compra</span>
+          <span className="whitespace-nowrap">🎉 <strong className="font-semibold">{storeSettings.commerce.firstOrderDiscount}% OFF</strong> na sua primeira compra</span>
         </p>
       </div>
 
-      <HomeHeroCarousel />
+      <HomeHeroCarousel settings={storeSettings} />
 
       {/* =========================================== */}
       {/* MARQUEE STRIP */}

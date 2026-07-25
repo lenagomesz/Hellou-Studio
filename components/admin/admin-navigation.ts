@@ -15,6 +15,7 @@ import {
   Printer,
   ReceiptText,
   Settings2,
+  Store,
   Shield,
   Star,
   Tag,
@@ -75,6 +76,7 @@ export const ADMIN_NAVIGATION: AdminNavigationSection[] = [
   {
     label: 'Configuração',
     items: [
+      { href: '/dashboard/settings/store', label: 'Central da loja', description: 'Marca, tema, contatos e regras comerciais', icon: Store, permission: 'settings.manage', keywords: 'identidade logo cores whatsapp seo frete' },
       { href: '/admin/security', label: 'Segurança (2FA)', description: 'Proteção da conta administrativa', icon: Shield, permission: 'dashboard.view', keywords: 'autenticação senha' },
       { href: '/dashboard/settings/features', label: 'Recursos da loja', description: 'Ative e configure funcionalidades', icon: Settings2, permission: 'settings.manage', keywords: 'configurações funcionalidades' },
       { href: '/dashboard/settings/health', label: 'Saúde dos serviços', description: 'APIs, integrações e disponibilidade', icon: Activity, permission: 'settings.manage', keywords: 'status diagnóstico sentry' },

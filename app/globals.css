@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+:root {
+  --store-primary: #ec4899;
+  --store-secondary: #f97316;
+  --store-accent: #db2777;
+  --store-background: #ffffff;
+  --store-foreground: #211d25;
+  --store-radius: 16px;
+}
+
+.store-gradient-text {
+  background-image: linear-gradient(90deg, var(--store-primary), var(--store-secondary));
+  background-clip: text;
+  color: transparent;
+}
+
 @custom-variant dark (&:where(.dark, .dark *):not(.force-light, .force-light *));
 
 @theme inline {
