@@ -174,8 +174,17 @@ async function loadStoreSettings() {
   }
 }
 
-export const getStoreSettings = unstable_cache(
+const getCachedStoreSettings = unstable_cache(
   loadStoreSettings,
   ['store-settings'],
   { tags: ['store-settings'], revalidate: 300 },
 );
+
+export async function getStoreSettings() {
+  // `unstable_cache` depends on Next's request/cache runtime, which is not
+  // available when route handlers are executed directly by Vitest.
+  if (process.env.NODE_ENV === 'test') {
+    return loadStoreSettings();
+  }
+  return getCachedStoreSettings();
+}
