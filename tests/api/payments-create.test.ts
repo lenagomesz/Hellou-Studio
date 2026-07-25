@@ -24,9 +24,36 @@ vi.mock('@/lib/api', () => ({
   serverError: (msg: string) => new Response(JSON.stringify({ error: msg }), { status: 500 }),
 }));
 
+vi.mock('@/lib/store-settings', () => ({
+  getStoreSettings: vi.fn().mockResolvedValue({
+    commerce: {
+      freeShippingThreshold: 99,
+      firstOrderDiscount: 10,
+    },
+    payments: {
+      pixEnabled: true,
+      cardEnabled: true,
+      maxInstallments: 12,
+      invoiceRequestEnabled: true,
+    },
+    shipping: {
+      pickupEnabled: true,
+      defaultWeightGrams: 300,
+      defaultLengthCm: 20,
+      defaultWidthCm: 15,
+      defaultHeightCm: 10,
+    },
+  }),
+}));
+
 vi.mock('@/lib/email', () => ({
   sendOrderConfirmationEmail: vi.fn().mockResolvedValue(undefined),
   sendAdminNewOrderEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/lib/observability', () => ({
+  structuredLog: vi.fn(),
+  captureOperationalError: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@/lib/cpf', () => ({
