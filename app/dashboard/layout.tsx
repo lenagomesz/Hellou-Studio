@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getCurrentUser } from '@/lib/api';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { getAllFeatureFlags } from '@/lib/feature-flags';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Central administrativa',
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser();
+  if (!user || user.role !== 'admin') redirect('/login?callbackUrl=/dashboard');
   const enabledFeatures = (await getAllFeatureFlags()).filter((flag) => flag.enabled).map((flag) => flag.key);
 
   return (

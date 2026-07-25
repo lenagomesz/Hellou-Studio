@@ -2,6 +2,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { parsePrivacyCookie, PRIVACY_COOKIE_NAME } from '@/lib/privacy';
+import { getAnalyticsSalt } from '@/lib/security-env';
+import { durableRateLimit } from '@/lib/durable-rate-limit';
 import { rateLimit } from '@/lib/rate-limit';
 import { classifyDevice } from '@/lib/site-analytics';
 
@@ -11,7 +13,7 @@ const VISITOR_COOKIE = 'hellou_visitor';
 const SESSION_COOKIE = 'hellou_visit_session';
 
 function hashIdentifier(value: string) {
-  const salt = process.env.ANALYTICS_HASH_SALT || process.env.NEXTAUTH_SECRET || 'hellou-site-analytics';
+  const salt = getAnalyticsSalt();
   return createHash('sha256').update(`${salt}:${value}`).digest('hex');
 }
 
@@ -30,6 +32,10 @@ function externalReferrerHost(raw: unknown, currentHost: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const durableLimit = await durableRateLimit(request, 'analytics-track', { maxRequests: 120, windowMs: 60_000 });
+  if (!durableLimit.success) {
+    return NextResponse.json({ error: 'Limite de eventos atingido.' }, { status: 429 });
+  }
   const consent = parsePrivacyCookie(request.cookies.get(PRIVACY_COOKIE_NAME)?.value);
   if (!consent?.analytics) return new NextResponse(null, { status: 204 });
 

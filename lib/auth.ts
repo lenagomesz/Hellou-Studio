@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { normalizeAdminAccessLevel } from '@/lib/admin-permissions';
+import { getAuthSecret } from '@/lib/security-env';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -20,7 +21,7 @@ export const authOptions: NextAuthOptions = {
         const { data, error } = await admin
           .from('users')
           .select(
-            'id, email, name, role, admin_access_level, admin_permissions, admin_active, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
+            'id, email, name, role, admin_access_level, admin_permissions, admin_active, session_version, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
           )
           .eq('email', credentials.email.toLowerCase().trim())
           .maybeSingle();
@@ -34,6 +35,7 @@ export const authOptions: NextAuthOptions = {
               admin_access_level?: 'owner' | 'partner' | null;
               admin_permissions?: import('@/lib/admin-permissions').AdminPermission[] | null;
               admin_active?: boolean;
+              session_version?: number;
               password_hash: string;
               two_fa_enabled: boolean;
               two_fa_secret?: string;
@@ -104,6 +106,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           accessLevel,
           permissions: user.admin_permissions ?? null,
+          sessionVersion: user.session_version ?? 0,
         };
       },
     }),
@@ -122,10 +125,26 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role as 'user' | 'admin';
         token.accessLevel = user.accessLevel ?? null;
         token.permissions = user.permissions ?? null;
+        token.sessionVersion = user.sessionVersion ?? 0;
+        token.revoked = false;
+      } else if (token.id) {
+        const { data, error } = await getSupabaseAdmin()
+          .from('users')
+          .select('session_version, admin_active')
+          .eq('id', token.id)
+          .maybeSingle();
+        if (!error && (!data
+          || Number(data.session_version ?? 0) !== Number(token.sessionVersion ?? 0)
+          || (token.role === 'admin' && data.admin_active === false))) {
+          token.revoked = true;
+        }
       }
       return token;
     },
     async session({ session, token }) {
+      if (token.revoked) {
+        return { ...session, user: undefined } as unknown as typeof session;
+      }
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as 'user' | 'admin';
@@ -135,5 +154,5 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET || 'dev-secret-change-in-production',
+  secret: getAuthSecret(),
 };

@@ -2,9 +2,14 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/api';
 import type { Coupon } from '@/types/database';
+import { durableRateLimit } from '@/lib/durable-rate-limit';
 
 export async function POST(request: Request) {
   try {
+    const limit = await durableRateLimit(request, 'coupon-validate', { maxRequests: 30, windowMs: 60_000 });
+    if (!limit.success) {
+      return NextResponse.json({ error: 'Muitas tentativas de cupom. Aguarde um minuto.' }, { status: 429 });
+    }
     const body = await request.json();
     const code = typeof body.code === 'string' ? body.code.trim().toUpperCase() : '';
     const subtotal = typeof body.subtotal === 'number' ? body.subtotal : 0;

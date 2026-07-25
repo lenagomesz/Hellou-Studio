@@ -187,7 +187,12 @@ export default function TemplatesPage() {
               </div>
             </div>
             <div className={`mx-auto overflow-auto rounded-lg border border-gray-200 bg-white ${previewDevice === 'mobile' ? 'max-w-sm' : 'max-w-2xl'}`} style={{ maxHeight: '70vh' }}>
-              <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+              <iframe
+                title="Prévia segura do template"
+                sandbox=""
+                srcDoc={previewHtml}
+                className="h-[65vh] w-full border-0 bg-white"
+              />
             </div>
           </div>
         </div>

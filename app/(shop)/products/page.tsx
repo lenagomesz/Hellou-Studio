@@ -29,7 +29,6 @@ async function getProductsRaw(filters: {
 }): Promise<Product[]> {
   console.log('[products/page] getProductsRaw called, filters:', filters);
   console.log('[products/page] SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING');
-  console.log('[products/page] SERVICE_ROLE_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   let admin;
   try {

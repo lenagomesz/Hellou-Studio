@@ -548,3 +548,5 @@ CREATE INDEX IF NOT EXISTS idx_slack_event_configs_webhook ON slack_event_config
 -- COMPLETE!
 -- All tables created. Now refresh your dashboard - errors should be fixed!
 -- ============================================================================
+-- ATENÇÃO: ARQUIVO LEGADO PARA REFERÊNCIA. NÃO EXECUTAR.
+-- Use somente os arquivos em supabase/migrations, em ordem cronológica.

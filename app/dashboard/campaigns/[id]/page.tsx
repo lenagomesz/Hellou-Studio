@@ -164,9 +164,11 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               <p className="text-sm font-medium text-gray-900 dark:text-white">{campaign.subject}</p>
               {campaign.preview_text && <p className="text-xs text-gray-400">{campaign.preview_text}</p>}
             </div>
-            <div
-              className="prose prose-sm max-w-none dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: campaign.body_html }}
+            <iframe
+              title="Prévia segura do e-mail"
+              sandbox=""
+              srcDoc={campaign.body_html}
+              className="h-[520px] w-full rounded-lg border-0 bg-white"
             />
             {campaign.cta_text && campaign.cta_url && (
               <div className="mt-4">

@@ -494,41 +494,10 @@ export default function CartPage() {
         <div className="space-y-5 animate-fade-in">
 
           <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm space-y-5">
-            <fieldset>
-              <legend className="text-sm font-semibold text-gray-900 dark:text-white">Como você quer receber?</legend>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={handleSelectDelivery}
-                  aria-pressed={selectedShipping?.id !== 'pickup'}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    selectedShipping?.id !== 'pickup'
-                      ? 'border-pink-400 bg-pink-50/60 shadow-sm dark:bg-pink-950/30'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="block text-sm font-bold text-gray-900 dark:text-white">Entrega no endereço</span>
-                  <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Informe o CEP e escolha uma modalidade de envio.</span>
-                </button>
-                {storeSettings.shipping.pickupEnabled && <button
-                  type="button"
-                  onClick={() => setPickupConfirmationOpen(true)}
-                  aria-pressed={selectedShipping?.id === 'pickup'}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    selectedShipping?.id === 'pickup'
-                      ? 'border-green-400 bg-green-50/70 shadow-sm dark:border-green-700 dark:bg-green-950/30'
-                      : 'border-gray-200 hover:border-green-300 hover:bg-green-50/40 dark:border-gray-700 dark:hover:border-green-800 dark:hover:bg-green-950/20'
-                  }`}
-                >
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">{storeSettings.shipping.pickupName}</span>
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700 dark:bg-green-900/50 dark:text-green-300">Grátis</span>
-                  </span>
-                  <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">{storeSettings.shipping.pickupNotice}</span>
-                </button>}
-              </div>
-              {pickupError && <p className="mt-3 text-xs font-medium text-red-600 dark:text-red-400">{pickupError}</p>}
-            </fieldset>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Entrega no endereço</h2>
+              <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Informe o CEP e escolha uma modalidade de envio.</p>
+            </div>
 
             {selectedShipping?.id !== 'pickup' ? (
               <>
@@ -694,6 +663,29 @@ export default function CartPage() {
                 <p className="text-sm font-bold text-green-800 dark:text-green-200">Retirada confirmada — sem cobrança de frete</p>
                 <p className="mt-1 text-xs leading-5 text-green-700 dark:text-green-300">Você não precisa preencher endereço. Após o pagamento, combine diretamente com a Helena o dia e o local da retirada.</p>
               </div>
+            )}
+
+            {storeSettings.shipping.pickupEnabled && selectedShipping?.id !== 'pickup' && (
+              <div className="border-t border-gray-100 pt-4 text-center dark:border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setPickupConfirmationOpen(true)}
+                  className="text-xs font-medium text-gray-400 underline decoration-dotted underline-offset-4 transition hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                >
+                  Precisa combinar outra forma de recebimento?
+                </button>
+                {pickupError && <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">{pickupError}</p>}
+              </div>
+            )}
+
+            {selectedShipping?.id === 'pickup' && (
+              <button
+                type="button"
+                onClick={handleSelectDelivery}
+                className="mx-auto block text-xs font-medium text-gray-400 underline decoration-dotted underline-offset-4 transition hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+              >
+                Voltar para entrega no endereço
+              </button>
             )}
           </div>
 

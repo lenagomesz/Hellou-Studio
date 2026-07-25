@@ -67,5 +67,6 @@ export async function PATCH(request: Request) {
 
   if (error) return serverError('Erro ao alterar o acesso');
   if (!data) return badRequest('Só é possível alterar acessos de sócios operacionais');
+  await getSupabaseAdmin().rpc('revoke_user_sessions', { p_user_id: body.id });
   return NextResponse.json({ member: data });
 }

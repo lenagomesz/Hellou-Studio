@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { serverError } from '@/lib/api';
+import { durableRateLimit } from '@/lib/durable-rate-limit';
 
 export async function POST(
-  _request: Request,
+  request: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
+  const limit = await durableRateLimit(request, `product-view:${id}`, { maxRequests: 30, windowMs: 60_000 });
+  if (!limit.success) {
+    return NextResponse.json({ error: 'Limite de visualizações atingido.' }, { status: 429 });
+  }
 
   const admin = getSupabaseAdmin();
 

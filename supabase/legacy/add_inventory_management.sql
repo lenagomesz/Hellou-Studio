@@ -190,3 +190,5 @@ ALTER TABLE public.reorder_tasks      DISABLE ROW LEVEL SECURITY;
 INSERT INTO public.warehouses (name, is_default)
 VALUES ('Estoque Principal', true)
 ON CONFLICT DO NOTHING;
+-- ATENÇÃO: ARQUIVO LEGADO PARA REFERÊNCIA. NÃO EXECUTAR.
+-- Este arquivo contém comandos antigos que desativam RLS.

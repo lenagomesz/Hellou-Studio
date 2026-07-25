@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { calculateShipping, sanitizeCep } from '@/lib/shipping';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { durableRateLimit } from '@/lib/durable-rate-limit';
 
 export async function POST(request: Request) {
   try {
+    const limit = await durableRateLimit(request, 'shipping', { maxRequests: 20, windowMs: 60_000 });
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: 'Muitas consultas de frete. Aguarde um minuto.' },
+        { status: 429, headers: { 'Retry-After': String(Math.max(1, Math.ceil((limit.resetAt - Date.now()) / 1000))) } },
+      );
+    }
     const body = await request.json();
     const rawCep = typeof body.cep === 'string' ? body.cep : '';
     const requestedItems = Array.isArray(body.items) ? body.items.slice(0, 50) as Array<{ product_id?: string; quantity?: number }> : [];

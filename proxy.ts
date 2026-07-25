@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { rateLimit } from '@/lib/rate-limit';
+import { durableRateLimit } from '@/lib/durable-rate-limit';
 import { isRestrictedAdminPath, normalizeAdminAccessLevel } from '@/lib/admin-permissions';
+import { getAuthSecret } from '@/lib/security-env';
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -10,16 +11,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  if (pathname.startsWith('/api/auth/')) {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'anonymous';
-
-    const isForgotPassword = pathname.includes('forgot-password');
-    const maxRequests = isForgotPassword ? 3 : 5;
-
-    const key = `auth:${ip}:${pathname}`;
-    const result = rateLimit(key, { maxRequests, windowMs: 60_000 });
+  const sensitiveAuthRequest = request.method === 'POST' && (
+    pathname.includes('/api/auth/callback/credentials')
+    || pathname === '/api/auth/register'
+    || pathname === '/api/auth/forgot-password'
+    || pathname === '/api/auth/reset-password'
+  );
+  if (sensitiveAuthRequest) {
+    const isPasswordRecovery = pathname.includes('forgot-password') || pathname.includes('reset-password');
+    const result = await durableRateLimit(request, `auth:${pathname}`, {
+      maxRequests: isPasswordRecovery ? 3 : 5,
+      windowMs: 60_000,
+    });
 
     if (!result.success) {
       return NextResponse.json(
@@ -36,7 +39,7 @@ export async function proxy(request: NextRequest) {
 
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: getAuthSecret(),
   });
 
   const isAdminRoute = pathname.startsWith('/dashboard');

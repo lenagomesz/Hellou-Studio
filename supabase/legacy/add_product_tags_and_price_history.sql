@@ -73,3 +73,5 @@ CREATE POLICY "Admin can insert price history" ON product_price_history FOR INSE
 
 -- saved_filters: user owns their filters
 CREATE POLICY "Users can manage own filters" ON saved_filters FOR ALL USING (true);
+-- ATENÇÃO: ARQUIVO LEGADO PARA REFERÊNCIA. NÃO EXECUTAR.
+-- Este arquivo contém políticas antigas permissivas.
