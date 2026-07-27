@@ -40,7 +40,7 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
 
   return (
     <section
-      className="home-hero relative overflow-hidden bg-[#fffaf7] px-3 py-4 dark:bg-gray-950 sm:px-6 sm:py-6 lg:px-10"
+      className="home-hero relative w-full overflow-hidden bg-[#fffaf7] dark:bg-gray-950"
       aria-roledescription="carrossel"
       aria-label={`Destaques da ${settings.identity.name}`}
       onMouseEnter={() => setPaused(true)}
@@ -62,7 +62,7 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
         touchStartX.current = null;
       }}
     >
-      <div className="relative mx-auto aspect-[5/4] w-full max-w-7xl overflow-hidden rounded-[2rem] border border-pink-100 bg-[#fff8f4] shadow-[0_28px_80px_-38px_rgba(190,24,93,0.38)] dark:border-white/10 dark:bg-gray-900 sm:aspect-[16/9] sm:rounded-[2.75rem] lg:aspect-[12/5]">
+      <div className="relative h-[calc(100svh-6rem)] min-h-[640px] w-full overflow-hidden bg-[#fff8f4] dark:bg-gray-900 md:h-[calc(100svh-6.75rem)] md:min-h-[560px]">
         <div
           className="relative flex h-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
           style={{ transform: `translateX(-${active * 100}%)` }}
@@ -70,41 +70,43 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
           {slides.map((slide, index) => (
             <article
               key={slide.id}
-              className="relative flex min-w-full items-start overflow-hidden px-7 pb-20 pt-8 sm:items-center sm:px-12 sm:pb-14 sm:pt-10 lg:px-16"
+              className="relative flex h-full min-w-full items-end overflow-hidden md:items-center"
               aria-label={`${index + 1} de ${slides.length}`}
               aria-hidden={index !== active}
             >
-              <Image
-                src={HERO_IMAGES[slide.id] ?? HERO_IMAGES.catalogo}
-                alt=""
-                fill
-                priority={index === 0}
-                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 96vw, 1280px"
-                className="object-cover object-[64%_center] sm:object-center"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#fffaf7]/96 via-[#fffaf7]/78 to-transparent sm:via-[#fffaf7]/32 lg:via-transparent dark:from-gray-950/94 dark:via-gray-950/38" />
+              <div className="absolute inset-0 overflow-hidden">
+                <Image
+                  src={HERO_IMAGES[slide.id] ?? HERO_IMAGES.catalogo}
+                  alt=""
+                  fill
+                  priority={index === 0}
+                  sizes="100vw"
+                  className="object-cover object-[78%_center] md:object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#fffaf7] via-[#fffaf7]/88 to-transparent dark:from-gray-950 dark:via-gray-950/88 md:from-[#fffaf7]/98 md:via-[#fffaf7]/30 dark:md:from-gray-950/96 dark:md:via-gray-950/35" />
+              </div>
 
-              <div className="relative z-10 w-full max-w-[68%] sm:max-w-[56%] lg:max-w-[48%]">
-                <span className="inline-flex items-center gap-2 rounded-full border border-pink-200/70 bg-white/85 px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.17em] text-pink-700 shadow-sm backdrop-blur-md dark:border-pink-800/60 dark:bg-gray-900/80 dark:text-pink-300 sm:text-xs">
-                  <span className="h-2 w-2 rounded-full bg-gradient-to-br from-pink-500 to-orange-400" />
+              <div className="relative z-10 flex h-full w-[58%] flex-col justify-center px-5 pb-14 pt-10 sm:w-[55%] sm:px-7 md:h-auto md:max-w-[54%] md:px-14 md:pb-14 md:pt-10 lg:max-w-[50%] lg:px-20 xl:px-24">
+                <span className="hidden w-fit max-w-full items-center gap-2 rounded-full border border-pink-200/70 bg-white/85 px-3.5 py-2 text-xs font-black uppercase tracking-[0.14em] text-pink-700 shadow-sm backdrop-blur-md dark:border-pink-800/60 dark:bg-gray-900/80 dark:text-pink-300 md:inline-flex">
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-gradient-to-br from-pink-500 to-orange-400" />
                   {slide.badge}
                 </span>
 
-                <h1 className="mt-5 max-w-[11ch] text-[2.15rem] font-black leading-[0.96] tracking-[-0.05em] text-gray-950 dark:text-white sm:mt-6 sm:text-5xl lg:text-[4rem]">
+                <h1 className="max-w-[9ch] text-[1.7rem] font-black leading-[0.98] tracking-[-0.05em] text-gray-950 dark:text-white sm:text-[2rem] md:mt-6 md:max-w-[11ch] md:text-5xl lg:text-[4rem]">
                   <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">
                     {slide.accent}
                   </span>
                   <span className="block sm:mt-1">{slide.title}</span>
                 </h1>
 
-                <p className="mt-4 hidden max-w-lg text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-200 min-[430px]:block sm:mt-5 sm:text-base lg:text-lg">
+                <p className="mt-5 hidden max-w-lg font-medium leading-relaxed text-gray-600 dark:text-gray-200 md:block md:text-base lg:text-lg">
                   {slide.description}
                 </p>
 
                 <Link
                   href={slide.href as Route}
                   tabIndex={index === active ? 0 : -1}
-                  className="group mt-6 inline-flex min-h-11 items-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 to-orange-400 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-pink-500/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/20 active:translate-y-0 sm:min-h-12 sm:px-6 sm:py-3 sm:text-sm"
+                  className="group mt-4 inline-flex min-h-9 w-fit items-center gap-1 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-1.5 text-[10px] font-black text-white shadow-lg shadow-pink-500/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/20 active:translate-y-0 sm:text-[11px] md:mt-5 md:min-h-12 md:gap-2 md:rounded-2xl md:px-6 md:py-3 md:text-sm"
                 >
                   {slide.action}
                   <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -129,7 +131,7 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
               type="button"
               onClick={showPrevious}
               aria-label="Banner anterior"
-              className="absolute bottom-5 left-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-pink-100 bg-white/90 text-pink-600 shadow-lg backdrop-blur-sm transition hover:scale-105 hover:bg-white dark:border-white/10 dark:bg-gray-900/90 dark:text-pink-300 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2"
+              className="absolute left-5 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-pink-100 bg-white/90 text-pink-600 shadow-lg backdrop-blur-sm transition hover:scale-105 hover:bg-white dark:border-white/10 dark:bg-gray-900/90 dark:text-pink-300 md:flex"
             >
               <ArrowLeft aria-hidden="true" className="h-4 w-4" />
             </button>
@@ -137,12 +139,12 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
               type="button"
               onClick={showNext}
               aria-label="Próximo banner"
-              className="absolute bottom-5 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-pink-100 bg-white/90 text-pink-600 shadow-lg backdrop-blur-sm transition hover:scale-105 hover:bg-white dark:border-white/10 dark:bg-gray-900/90 dark:text-pink-300 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2"
+              className="absolute right-5 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-pink-100 bg-white/90 text-pink-600 shadow-lg backdrop-blur-sm transition hover:scale-105 hover:bg-white dark:border-white/10 dark:bg-gray-900/90 dark:text-pink-300 md:flex"
             >
               <ArrowRight aria-hidden="true" className="h-4 w-4" />
             </button>
 
-            <div className="absolute bottom-9 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 sm:bottom-5" aria-label="Escolher destaque">
+            <div className="absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-5" aria-label="Escolher destaque">
               {slides.map((slide, index) => (
                 <button
                   key={slide.id}
