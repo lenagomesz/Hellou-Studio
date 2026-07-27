@@ -52,8 +52,8 @@ function ResetForm() {
     e.preventDefault();
     setError('');
 
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres.');
+    if (password.length < 8) {
+      setError('A senha deve ter pelo menos 8 caracteres.');
       return;
     }
     if (password !== confirmPassword) {
@@ -97,7 +97,7 @@ function ResetForm() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 required
-                minLength={6}
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="block w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500"
