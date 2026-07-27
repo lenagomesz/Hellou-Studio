@@ -7,7 +7,12 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
 import type { StoreSettings } from '@/lib/store-settings-schema';
 
-const HERO_IMAGE = '/images/home-hero-axolotl-banner.png';
+const HERO_IMAGES: Record<string, string> = {
+  catalogo: '/images/home-hero-catalogo.png',
+  personalizaveis: '/images/home-hero-personalizaveis.png',
+  stl: '/images/home-hero-stl.png',
+  encomenda: '/images/home-hero-encomenda.png',
+};
 
 export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
   const slides = settings.home.heroSlides.filter((slide) => slide.active);
@@ -58,16 +63,6 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
       }}
     >
       <div className="relative mx-auto aspect-[5/4] w-full max-w-7xl overflow-hidden rounded-[2rem] border border-pink-100 bg-[#fff8f4] shadow-[0_28px_80px_-38px_rgba(190,24,93,0.38)] dark:border-white/10 dark:bg-gray-900 sm:aspect-[16/9] sm:rounded-[2.75rem] lg:aspect-[12/5]">
-        <Image
-          src={HERO_IMAGE}
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 96vw, 1280px"
-          className="object-cover object-[64%_center] sm:object-center"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#fffaf7]/95 via-[#fffaf7]/72 to-transparent sm:via-[#fffaf7]/42 lg:via-transparent dark:from-gray-950/92 dark:via-gray-950/58" />
-
         <div
           className="relative flex h-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
           style={{ transform: `translateX(-${active * 100}%)` }}
@@ -75,11 +70,21 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
           {slides.map((slide, index) => (
             <article
               key={slide.id}
-              className="flex min-w-full items-start px-7 pb-20 pt-8 sm:items-center sm:px-12 sm:pb-14 sm:pt-10 lg:px-16"
+              className="relative flex min-w-full items-start overflow-hidden px-7 pb-20 pt-8 sm:items-center sm:px-12 sm:pb-14 sm:pt-10 lg:px-16"
               aria-label={`${index + 1} de ${slides.length}`}
               aria-hidden={index !== active}
             >
-              <div className="w-full max-w-[68%] sm:max-w-[56%] lg:max-w-[48%]">
+              <Image
+                src={HERO_IMAGES[slide.id] ?? HERO_IMAGES.catalogo}
+                alt=""
+                fill
+                priority={index === 0}
+                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 96vw, 1280px"
+                className="object-cover object-[64%_center] sm:object-center"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#fffaf7]/96 via-[#fffaf7]/78 to-transparent sm:via-[#fffaf7]/32 lg:via-transparent dark:from-gray-950/94 dark:via-gray-950/38" />
+
+              <div className="relative z-10 w-full max-w-[68%] sm:max-w-[56%] lg:max-w-[48%]">
                 <span className="inline-flex items-center gap-2 rounded-full border border-pink-200/70 bg-white/85 px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.17em] text-pink-700 shadow-sm backdrop-blur-md dark:border-pink-800/60 dark:bg-gray-900/80 dark:text-pink-300 sm:text-xs">
                   <span className="h-2 w-2 rounded-full bg-gradient-to-br from-pink-500 to-orange-400" />
                   {slide.badge}
