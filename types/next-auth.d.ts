@@ -29,6 +29,7 @@ declare module 'next-auth/jwt' {
     accessLevel: 'owner' | 'partner' | null;
     permissions?: import('@/lib/admin-permissions').AdminPermission[] | null;
     sessionVersion?: number;
+    avatarUrl?: string | null;
     revoked?: boolean;
   }
 }

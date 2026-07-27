@@ -1,6 +1,9 @@
 'use client';
 
+import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 import { useState, useEffect, useCallback } from 'react';
+import { PROFILE_AVATARS, profileAvatarImageUrl } from '@/lib/profile-avatars';
 
 interface ProfileData {
   id: string;
@@ -8,6 +11,7 @@ interface ProfileData {
   email: string;
   phone: string | null;
   cpf: string | null;
+  avatar_url: string | null;
   role: string;
   created_at: string;
 }
@@ -29,9 +33,12 @@ function formatPhone(value: string) {
 }
 
 export default function ProfileEditForm() {
+  const { update: updateSession } = useSession();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const [avatarVersion, setAvatarVersion] = useState(Date.now());
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
@@ -82,6 +89,52 @@ export default function ProfileEditForm() {
     setSaving(false);
   }
 
+  async function selectAvatar(avatarUrl: string | null) {
+    setAvatarSaving(true);
+    setError('');
+    setSuccess(false);
+
+    const res = await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatar_url: avatarUrl }),
+    });
+    const data = await res.json().catch(() => null) as ProfileData | { error?: string } | null;
+
+    if (res.ok && data && 'id' in data) {
+      setProfile(data);
+      setAvatarVersion(Date.now());
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      await updateSession();
+    } else {
+      setError(data && 'error' in data && data.error ? data.error : 'Não foi possível alterar a foto de perfil.');
+    }
+    setAvatarSaving(false);
+  }
+
+  async function uploadAvatar(file: File) {
+    setAvatarSaving(true);
+    setError('');
+    setSuccess(false);
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const res = await fetch('/api/profile/avatar', { method: 'POST', body: formData });
+    const data = await res.json().catch(() => null) as { avatar_url?: string; error?: string } | null;
+
+    if (res.ok && data?.avatar_url) {
+      setProfile((current) => current ? { ...current, avatar_url: data.avatar_url! } : current);
+      setAvatarVersion(Date.now());
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      await updateSession();
+    } else {
+      setError(data?.error || 'Não foi possível enviar a foto.');
+    }
+    setAvatarSaving(false);
+  }
+
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -98,13 +151,28 @@ export default function ProfileEditForm() {
     month: 'long',
     year: 'numeric',
   }).format(new Date(profile.created_at));
+  const avatarImageUrl = profileAvatarImageUrl(profile.avatar_url);
+  const displayedAvatarUrl = profile.avatar_url === 'uploaded'
+    ? `${avatarImageUrl}?v=${avatarVersion}`
+    : avatarImageUrl;
 
   return (
     <div className="space-y-6">
       {/* Profile Header */}
       <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-orange-400 text-xl font-bold text-white shadow-lg shadow-pink-200/40 dark:shadow-pink-900/30">
-          {(profile.name ?? profile.email).charAt(0).toUpperCase()}
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-pink-500 to-orange-400 text-xl font-bold text-white shadow-lg shadow-pink-200/40 dark:shadow-pink-900/30">
+          {displayedAvatarUrl ? (
+            <Image
+              src={displayedAvatarUrl}
+              alt="Foto de perfil"
+              width={64}
+              height={64}
+              unoptimized={profile.avatar_url === 'uploaded'}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            (profile.name ?? profile.email).charAt(0).toUpperCase()
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white truncate">
@@ -116,6 +184,64 @@ export default function ProfileEditForm() {
           </p>
         </div>
       </div>
+
+      <section className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50/70 to-orange-50/50 p-4 dark:border-pink-900/50 dark:from-pink-950/20 dark:to-orange-950/10 sm:p-5">
+        <div>
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white">Foto de perfil</h3>
+          <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+            Continue com sua inicial, escolha um axolote ou envie uma foto sua.
+          </p>
+        </div>
+
+        <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-7">
+          <button
+            type="button"
+            onClick={() => void selectAvatar(null)}
+            disabled={avatarSaving}
+            aria-label="Usar a inicial do nome"
+            aria-pressed={profile.avatar_url === null}
+            className={`flex aspect-square items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-orange-400 text-base font-black text-white shadow-sm transition disabled:opacity-50 ${
+              profile.avatar_url === null ? 'ring-4 ring-pink-300 ring-offset-2 dark:ring-pink-700 dark:ring-offset-gray-900' : 'hover:scale-105'
+            }`}
+          >
+            {(profile.name ?? profile.email).charAt(0).toUpperCase()}
+          </button>
+
+          {PROFILE_AVATARS.map((avatar, index) => (
+            <button
+              key={avatar}
+              type="button"
+              onClick={() => void selectAvatar(avatar)}
+              disabled={avatarSaving}
+              aria-label={`Usar axolote ${index + 1}`}
+              aria-pressed={profile.avatar_url === avatar}
+              className={`aspect-square overflow-hidden rounded-full bg-white shadow-sm transition disabled:opacity-50 dark:bg-gray-800 ${
+                profile.avatar_url === avatar ? 'ring-4 ring-pink-300 ring-offset-2 dark:ring-pink-700 dark:ring-offset-gray-900' : 'hover:scale-105'
+              }`}
+            >
+              <Image src={avatar} alt="" width={96} height={96} className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <label className={`inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-pink-200 bg-white px-4 py-2 text-xs font-bold text-pink-700 shadow-sm transition hover:border-pink-300 hover:bg-pink-50 dark:border-pink-800 dark:bg-gray-900 dark:text-pink-300 dark:hover:bg-gray-800 ${avatarSaving ? 'pointer-events-none opacity-50' : ''}`}>
+            {avatarSaving ? 'Salvando...' : 'Enviar minha foto'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              disabled={avatarSaving}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void uploadAvatar(file);
+                event.currentTarget.value = '';
+              }}
+            />
+          </label>
+          <span className="text-[11px] text-gray-400 dark:text-gray-500">JPG, PNG ou WebP — máximo 4 MB</span>
+        </div>
+      </section>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">

@@ -88,6 +88,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
 
   const userName = session?.user?.name?.trim() || session?.user?.email?.split('@')[0] || 'Minha conta';
   const firstName = userName.split(/\s+/)[0];
+  const avatarImageUrl = session?.user?.image ?? null;
   const initials = userName
     .split(/\s+/)
     .filter(Boolean)
@@ -275,9 +276,13 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
                     aria-label="Abrir menu da conta"
                     aria-expanded={accountMenuOpen}
                   >
-                    <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-gradient-to-br from-pink-500 to-orange-400 px-1 text-[10px] font-black text-white">
-                      {initials || 'US'}
-                    </span>
+                    {avatarImageUrl ? (
+                      <img src={avatarImageUrl} alt="" className="h-8 w-8 rounded-[10px] object-cover" />
+                    ) : (
+                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-gradient-to-br from-pink-500 to-orange-400 px-1 text-[10px] font-black text-white">
+                        {initials || 'US'}
+                      </span>
+                    )}
                     <span className="max-w-24 truncate">{firstName}</span>
                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={`h-3.5 w-3.5 transition ${accountMenuOpen ? 'rotate-180' : ''}`}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
@@ -287,9 +292,13 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
                   {accountMenuOpen && (
                     <div className="absolute right-0 top-[calc(100%+0.65rem)] w-64 overflow-hidden rounded-2xl border border-gray-200 bg-white p-2 shadow-2xl shadow-gray-900/15 dark:border-gray-700 dark:bg-gray-900">
                       <div className="mb-2 flex items-center gap-3 rounded-xl bg-gradient-to-r from-pink-50 to-orange-50 p-3 dark:from-pink-950/40 dark:to-orange-950/20">
-                        <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-orange-400 px-1 text-xs font-black text-white">
-                          {initials || 'US'}
-                        </span>
+                        {avatarImageUrl ? (
+                          <img src={avatarImageUrl} alt="" className="h-10 w-10 rounded-xl object-cover" />
+                        ) : (
+                          <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-orange-400 px-1 text-xs font-black text-white">
+                            {initials || 'US'}
+                          </span>
+                        )}
                         <span className="min-w-0">
                           <strong className="block truncate text-sm text-gray-900 dark:text-white">Olá, {firstName}!</strong>
                           {session.user.email && <span className="block truncate text-[11px] text-gray-500 dark:text-gray-400">{session.user.email}</span>}
@@ -333,9 +342,13 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
           <nav className="flex flex-col gap-1 p-3" aria-label="Menu do celular">
             {session?.user && (
               <div className="mb-1 flex items-center gap-3 rounded-xl border border-pink-100 bg-gradient-to-r from-pink-50 to-orange-50 p-3 dark:border-pink-900/60 dark:from-pink-950/40 dark:to-orange-950/20">
-                <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-orange-400 px-1 text-xs font-black text-white">
-                  {initials || 'US'}
-                </span>
+                {avatarImageUrl ? (
+                  <img src={avatarImageUrl} alt="" className="h-10 w-10 rounded-xl object-cover" />
+                ) : (
+                  <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-orange-400 px-1 text-xs font-black text-white">
+                    {initials || 'US'}
+                  </span>
+                )}
                 <span className="min-w-0">
                   <strong className="block truncate text-sm text-gray-900 dark:text-white">Olá, {firstName}!</strong>
                   {session.user.email && <span className="block truncate text-[11px] text-gray-500 dark:text-gray-400">{session.user.email}</span>}

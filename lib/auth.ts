@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { normalizeAdminAccessLevel } from '@/lib/admin-permissions';
 import { getAuthSecret } from '@/lib/security-env';
+import { profileAvatarImageUrl } from '@/lib/profile-avatars';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -21,7 +22,7 @@ export const authOptions: NextAuthOptions = {
         const { data, error } = await admin
           .from('users')
           .select(
-            'id, email, name, role, admin_access_level, admin_permissions, admin_active, session_version, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
+            'id, email, name, avatar_url, role, admin_access_level, admin_permissions, admin_active, session_version, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
           )
           .eq('email', credentials.email.toLowerCase().trim())
           .maybeSingle();
@@ -31,6 +32,7 @@ export const authOptions: NextAuthOptions = {
               id: string;
               email: string;
               name: string | null;
+              avatar_url?: string | null;
               role: 'user' | 'admin';
               admin_access_level?: 'owner' | 'partner' | null;
               admin_permissions?: import('@/lib/admin-permissions').AdminPermission[] | null;
@@ -103,6 +105,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name ?? null,
+          image: profileAvatarImageUrl(user.avatar_url),
           role: user.role,
           accessLevel,
           permissions: user.admin_permissions ?? null,
@@ -126,17 +129,21 @@ export const authOptions: NextAuthOptions = {
         token.accessLevel = user.accessLevel ?? null;
         token.permissions = user.permissions ?? null;
         token.sessionVersion = user.sessionVersion ?? 0;
+        token.avatarUrl = user.image ?? null;
         token.revoked = false;
       } else if (token.id) {
         const { data, error } = await getSupabaseAdmin()
           .from('users')
-          .select('session_version, admin_active')
+          .select('session_version, admin_active, avatar_url')
           .eq('id', token.id)
           .maybeSingle();
         if (!error && (!data
           || Number(data.session_version ?? 0) !== Number(token.sessionVersion ?? 0)
           || (token.role === 'admin' && data.admin_active === false))) {
           token.revoked = true;
+        }
+        if (!error && data) {
+          token.avatarUrl = profileAvatarImageUrl(data.avatar_url);
         }
       }
       return token;
@@ -150,6 +157,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as 'user' | 'admin';
         session.user.accessLevel = token.accessLevel ?? null;
         session.user.permissions = token.permissions ?? null;
+        session.user.image = token.avatarUrl ?? null;
       }
       return session;
     },
