@@ -167,10 +167,13 @@ export default async function HomePage() {
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
       {/* Promo banner */}
       <div className="home-promo flex min-h-10 items-center justify-center overflow-hidden bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 px-3 py-2 text-center sm:min-h-14 sm:px-4 sm:py-3">
-        <p className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-center text-[10px] font-medium leading-5 text-white min-[360px]:text-[11px] sm:text-sm">
-          <span className="whitespace-nowrap">🚚 <strong className="font-semibold">Frete grátis</strong> acima de {storeSettings.commerce.freeShippingThreshold.toLocaleString(storeSettings.commerce.locale, { style: 'currency', currency: storeSettings.commerce.currency, maximumFractionDigits: 0 })}</span>
+        <p className="w-full whitespace-nowrap text-center text-[10px] font-medium leading-5 text-white min-[360px]:text-[11px] sm:hidden">
+          🚚 <strong className="font-semibold">Frete grátis</strong> +{storeSettings.commerce.freeShippingThreshold.toLocaleString(storeSettings.commerce.locale, { style: 'currency', currency: storeSettings.commerce.currency, maximumFractionDigits: 0 })} <span aria-hidden="true" className="mx-1 text-white/75">·</span> 🎉 <strong className="font-semibold">{storeSettings.commerce.firstOrderDiscount}% OFF</strong> na 1ª compra
+        </p>
+        <p className="hidden w-full items-center justify-center gap-2 whitespace-nowrap text-center text-sm font-medium leading-5 text-white sm:flex">
+          <span>🚚 <strong className="font-semibold">Frete grátis</strong> acima de {storeSettings.commerce.freeShippingThreshold.toLocaleString(storeSettings.commerce.locale, { style: 'currency', currency: storeSettings.commerce.currency, maximumFractionDigits: 0 })}</span>
           <span aria-hidden="true" className="text-white/75">·</span>
-          <span className="whitespace-nowrap">🎉 <strong className="font-semibold">{storeSettings.commerce.firstOrderDiscount}% OFF</strong> na sua primeira compra</span>
+          <span>🎉 <strong className="font-semibold">{storeSettings.commerce.firstOrderDiscount}% OFF</strong> na sua primeira compra</span>
         </p>
       </div>
 
