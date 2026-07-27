@@ -38,7 +38,7 @@ export default function ProfileEditForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [avatarSaving, setAvatarSaving] = useState(false);
-  const [avatarVersion, setAvatarVersion] = useState(Date.now());
+  const [avatarVersion, setAvatarVersion] = useState(0);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
@@ -103,7 +103,7 @@ export default function ProfileEditForm() {
 
     if (res.ok && data && 'id' in data) {
       setProfile(data);
-      setAvatarVersion(Date.now());
+      setAvatarVersion((version) => version + 1);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
       await updateSession();
@@ -125,7 +125,7 @@ export default function ProfileEditForm() {
 
     if (res.ok && data?.avatar_url) {
       setProfile((current) => current ? { ...current, avatar_url: data.avatar_url! } : current);
-      setAvatarVersion(Date.now());
+      setAvatarVersion((version) => version + 1);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
       await updateSession();
