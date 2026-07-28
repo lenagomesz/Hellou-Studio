@@ -4,6 +4,12 @@ import { badRequest, requireUser, serverError } from '@/lib/api';
 import type { CartItemView } from '@/lib/cart';
 import type { CartItem, Product, ProductOption } from '@/types/database';
 import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
+import {
+  countCustomizationLetters,
+  getOptionCharacterCount,
+  normalizeProductCustomizationSections,
+  parseProductCustomizationSelections,
+} from '@/lib/product-customization';
 
 type RawCartRow = CartItem & {
   product: Pick<
@@ -105,7 +111,7 @@ export async function POST(request: Request) {
 
   const { data: productRow, error: productError } = await admin
     .from('products')
-    .select('id, name, type, category, active, is_customizable, fulfillment_mode')
+    .select('id, name, type, category, active, is_customizable, fulfillment_mode, customization_sections')
     .eq('id', product_id)
     .maybeSingle();
 
@@ -154,17 +160,41 @@ export async function POST(request: Request) {
     return badRequest('Preencha a personalização antes de adicionar ao carrinho');
   }
 
+  let automaticLetterCount: number | null = null;
+  try {
+    const sections = normalizeProductCustomizationSections(product.customization_sections);
+    const automaticSection = sections.find((section) => section.autoSelectOptionByCharacterCount);
+    if (automaticSection) {
+      const selections = parseProductCustomizationSelections(sections, normalizedCustomization);
+      automaticLetterCount = countCustomizationLetters(selections[automaticSection.id]?.text ?? '');
+      if (automaticLetterCount < 1) {
+        return badRequest('Digite o nome para calcular a variação e o preço');
+      }
+      if (!optionId) {
+        return badRequest(`Selecione a variação correspondente a ${automaticLetterCount} letras`);
+      }
+    }
+  } catch (error) {
+    return badRequest(error instanceof Error ? error.message : 'Personalização inválida');
+  }
+
   let optionStock: number | null = null;
   if (optionId) {
     const { data: optionRow, error: optionError } = await admin
       .from('product_options')
-      .select('id, product_id, stock')
+      .select('id, product_id, name, stock')
       .eq('id', optionId)
       .maybeSingle();
 
     if (optionError) return serverError('Erro ao validar variação');
     if (!optionRow?.product_id || optionRow.product_id !== product_id) {
       return badRequest('Variação inválida');
+    }
+    if (
+      automaticLetterCount !== null
+      && getOptionCharacterCount(optionRow.name) !== automaticLetterCount
+    ) {
+      return badRequest(`A variação deve corresponder às ${automaticLetterCount} letras informadas`);
     }
     optionStock = optionRow.stock;
   }

@@ -36,6 +36,7 @@ function createSection(): ProductCustomizationSection {
     label: '',
     type: 'color',
     required: true,
+    autoSelectOptionByCharacterCount: false,
     helpText: '',
     placeholder: '',
     colors: createPresetColors(),
@@ -146,6 +147,9 @@ export function CustomizationSectionsEditor({
                       updateSection(sectionIndex, {
                         type,
                         colors: usesColor(type) && section.colors.length === 0 ? createPresetColors() : section.colors,
+                        autoSelectOptionByCharacterCount: usesText(type)
+                          ? section.autoSelectOptionByCharacterCount
+                          : false,
                       });
                     }}
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
@@ -235,19 +239,47 @@ export function CustomizationSectionsEditor({
               )}
 
               {usesText(section.type) && (
-                <label className="mt-4 block">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-                    <Type className="h-4 w-4 text-violet-500" />
-                    Exemplo dentro do campo
-                  </span>
-                  <input
-                    value={section.placeholder}
-                    onChange={(event) => updateSection(sectionIndex, { placeholder: event.target.value })}
-                    maxLength={160}
-                    placeholder="Ex.: HELENA"
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
-                  />
-                </label>
+                <div className="mt-4 space-y-3">
+                  <label className="block">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                      <Type className="h-4 w-4 text-violet-500" />
+                      Exemplo dentro do campo
+                    </span>
+                    <input
+                      value={section.placeholder}
+                      onChange={(event) => updateSection(sectionIndex, { placeholder: event.target.value })}
+                      maxLength={160}
+                      placeholder="Ex.: HELENA"
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                    />
+                  </label>
+
+                  <label className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
+                    <input
+                      type="checkbox"
+                      checked={section.autoSelectOptionByCharacterCount ?? false}
+                      onChange={(event) => {
+                        if (!event.target.checked) {
+                          updateSection(sectionIndex, { autoSelectOptionByCharacterCount: false });
+                          return;
+                        }
+                        onChange(value.map((currentSection, currentIndex) => ({
+                          ...currentSection,
+                          autoSelectOptionByCharacterCount: currentIndex === sectionIndex,
+                        })));
+                      }}
+                      className="mt-0.5 h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    <span>
+                      <span className="block text-xs font-bold text-amber-900 dark:text-amber-200">
+                        Preço automático pela quantidade de letras
+                      </span>
+                      <span className="mt-1 block text-[11px] leading-4 text-amber-800/80 dark:text-amber-300/80">
+                        Seleciona variações chamadas “3 letras”, “4 letras” etc. Apenas uma seção por produto pode controlar o preço.
+                      </span>
+                    </span>
+                  </label>
+                </div>
               )}
             </article>
           ))}

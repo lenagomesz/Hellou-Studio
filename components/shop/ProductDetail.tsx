@@ -11,6 +11,8 @@ import { getProductColorName, getProductColorValue } from '@/lib/product-colors'
 import {
   DEFAULT_CUSTOMIZATION_COPY,
   areRequiredCustomizationSectionsComplete,
+  countCustomizationLetters,
+  findOptionByCharacterCount,
   formatProductCustomizationSelections,
   normalizeProductCustomizationSections,
   parseProductCustomizationSelections,
@@ -75,8 +77,18 @@ export function ProductDetail({
     () => parseProductCustomizationSelections(customizationSections, initialCustomizationText),
   );
   const [gallerySelectionVersion, setGallerySelectionVersion] = useState(0);
-  const selectedOption =
-    options.find((o) => o.id === selectedOptionId) ?? null;
+  const automaticPricingSection = customizationSections.find(
+    (section) => section.autoSelectOptionByCharacterCount,
+  ) ?? null;
+  const automaticLetterCount = automaticPricingSection
+    ? countCustomizationLetters(customizationSelections[automaticPricingSection.id]?.text ?? '')
+    : 0;
+  const automaticPricingOption = automaticPricingSection
+    ? findOptionByCharacterCount(inStockOptions, automaticLetterCount)
+    : null;
+  const selectedOption = automaticPricingSection
+    ? automaticPricingOption
+    : options.find((o) => o.id === selectedOptionId) ?? null;
 
   const finalPrice =
     (product.sale_price ?? product.base_price) + (selectedOption?.price_modifier ?? 0);
@@ -111,7 +123,9 @@ export function ProductDetail({
   const customizationQuestion = product.customization_question?.trim() || DEFAULT_CUSTOMIZATION_COPY.question;
   const customizationHelpText = product.customization_help_text ?? DEFAULT_CUSTOMIZATION_COPY.helpText;
   const customizationPlaceholder = product.customization_placeholder ?? DEFAULT_CUSTOMIZATION_COPY.placeholder;
-  const hasSelectedOption = options.length === 0 || selectedOption !== null;
+  const hasSelectedOption = automaticPricingSection
+    ? selectedOption !== null
+    : options.length === 0 || selectedOption !== null;
   const canAddToCart = !isOwnedDigital && hasSelectedOption && hasRequiredCustomization;
   const isSyncing = status === 'syncing';
   const tagOverlay = product.tags && product.tags.length > 0 ? (
@@ -229,7 +243,7 @@ export function ProductDetail({
         <h1 className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</h1>
         <div className="mt-3 flex items-baseline gap-3">
           <p
-            key={selectedOptionId ?? 'base-price'}
+            key={selectedOption?.id ?? 'base-price'}
             aria-live="polite"
             className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent"
           >
@@ -243,7 +257,7 @@ export function ProductDetail({
           )}
         </div>
 
-        {options.some((option) => option.color) && (() => {
+        {!automaticPricingSection && options.some((option) => option.color) && (() => {
           const colors = Array.from(new Set(options.filter((option) => option.color).map((option) => option.color!)));
           const selectedColor = selectedOption?.color ?? colors[0] ?? null;
           return (
@@ -393,6 +407,24 @@ export function ProductDetail({
                         className="w-full rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 dark:border-pink-900 dark:bg-gray-950 dark:text-white dark:focus:ring-pink-500/10"
                       />
                       <p className="mt-1 text-right text-[11px] text-gray-400">{selection.text?.length ?? 0}/120</p>
+                      {section.autoSelectOptionByCharacterCount && (
+                        <div
+                          aria-live="polite"
+                          className={`mt-2 rounded-lg px-3 py-2 text-xs ${
+                            automaticLetterCount === 0
+                              ? 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                              : automaticPricingOption
+                                ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300'
+                                : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300'
+                          }`}
+                        >
+                          {automaticLetterCount === 0
+                            ? 'Digite o nome para calcular a quantidade de letras e o preço.'
+                            : automaticPricingOption
+                              ? `${automaticLetterCount} ${automaticLetterCount === 1 ? 'letra' : 'letras'} · Variação “${automaticPricingOption.name}” selecionada automaticamente · ${formatPrice(finalPrice)}`
+                              : `Não há uma variação de preço cadastrada para ${automaticLetterCount} ${automaticLetterCount === 1 ? 'letra' : 'letras'}.`}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -408,7 +440,7 @@ export function ProductDetail({
           </div>
         )}
 
-        {options.length > 0 ? (
+        {options.length > 0 && !automaticPricingSection ? (
           <div className="mt-6 space-y-5">
             {/* Color swatches (only if any option has color) */}
             {options.some((o) => o.color) && (() => {
@@ -596,7 +628,11 @@ export function ProductDetail({
               className="w-full rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {!hasSelectedOption
-                ? 'Selecione uma variação'
+                ? automaticPricingSection && automaticLetterCount > 0
+                  ? `Sem preço para ${automaticLetterCount} ${automaticLetterCount === 1 ? 'letra' : 'letras'}`
+                  : automaticPricingSection
+                    ? 'Digite o nome para calcular o preço'
+                    : 'Selecione uma variação'
                 : !hasRequiredCustomization
                   ? 'Preencha a personalização'
                 : isSyncing

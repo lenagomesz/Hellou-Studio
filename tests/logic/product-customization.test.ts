@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_CUSTOMIZATION_COPY,
   areRequiredCustomizationSectionsComplete,
+  countCustomizationLetters,
+  findOptionByCharacterCount,
   formatProductCustomizationSelections,
   normalizeProductCustomizationCopy,
   normalizeProductCustomizationSections,
@@ -53,6 +55,7 @@ describe('product customization copy', () => {
         label: 'Cor da base',
         type: 'color',
         required: true,
+        autoSelectOptionByCharacterCount: false,
         helpText: '',
         placeholder: '',
         colors: [{ id: 'blue', label: 'Azul', value: '#123456' }],
@@ -62,11 +65,27 @@ describe('product customization copy', () => {
         label: 'Nome',
         type: 'text',
         required: true,
+        autoSelectOptionByCharacterCount: false,
         helpText: '',
         placeholder: 'Ex.: Helena',
         colors: [],
       },
     ]);
+  });
+
+  it('counts only letters and selects the matching price variation', () => {
+    expect(countCustomizationLetters('Ana Clara-2')).toBe(8);
+    expect(findOptionByCharacterCount(
+      [{ id: 'five', name: '5 letras' }, { id: 'six', name: '6 letras' }],
+      countCustomizationLetters('Helena'),
+    )).toEqual({ id: 'six', name: '6 letras' });
+  });
+
+  it('allows only one text section to control the option price', () => {
+    expect(() => normalizeProductCustomizationSections([
+      { id: 'first', label: 'Primeiro nome', type: 'text', autoSelectOptionByCharacterCount: true },
+      { id: 'last', label: 'Sobrenome', type: 'text', autoSelectOptionByCharacterCount: true },
+    ])).toThrow('Apenas uma seção');
   });
 
   it('formats, validates and restores the customer selections', () => {

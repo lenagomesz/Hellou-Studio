@@ -23,6 +23,7 @@ export type ProductCustomizationSection = {
   label: string;
   type: ProductCustomizationSectionType;
   required: boolean;
+  autoSelectOptionByCharacterCount: boolean;
   helpText: string;
   placeholder: string;
   colors: ProductCustomizationColor[];
@@ -77,7 +78,7 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
   if (input.length > 10) throw new Error('Cadastre no máximo 10 seções de personalização');
 
   const sectionIds = new Set<string>();
-  return input.map((rawSection, sectionIndex) => {
+  const normalizedSections = input.map((rawSection, sectionIndex) => {
     if (!rawSection || typeof rawSection !== 'object') {
       throw new Error('Revise as seções de personalização');
     }
@@ -135,11 +136,20 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
       label,
       type: type as ProductCustomizationSectionType,
       required: section.required !== false,
+      autoSelectOptionByCharacterCount:
+        (type === 'text' || type === 'color_text')
+        && section.autoSelectOptionByCharacterCount === true,
       helpText,
       placeholder,
       colors,
     };
   });
+
+  if (normalizedSections.filter((section) => section.autoSelectOptionByCharacterCount).length > 1) {
+    throw new Error('Apenas uma seção pode definir o preço pela quantidade de letras');
+  }
+
+  return normalizedSections;
 }
 
 export function formatProductCustomizationSelections(
@@ -199,4 +209,23 @@ export function parseProductCustomizationSelections(
     };
   }
   return selections;
+}
+
+export function countCustomizationLetters(value: string) {
+  return Array.from(value.matchAll(/\p{L}/gu)).length;
+}
+
+export function getOptionCharacterCount(optionName: string) {
+  const match = /(?:^|\D)(\d{1,3})(?:\D|$)/.exec(optionName);
+  if (!match) return null;
+  const count = Number(match[1]);
+  return Number.isInteger(count) && count > 0 ? count : null;
+}
+
+export function findOptionByCharacterCount<T extends { name: string }>(
+  options: T[],
+  characterCount: number,
+) {
+  if (characterCount < 1) return null;
+  return options.find((option) => getOptionCharacterCount(option.name) === characterCount) ?? null;
 }
