@@ -6,6 +6,7 @@ import type {
   ProductCustomizationSection,
   ProductCustomizationSectionType,
 } from '@/lib/product-customization';
+import { PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
 
 function createId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -19,6 +20,16 @@ function createColor(): ProductCustomizationColor {
   };
 }
 
+function createPresetColors(): ProductCustomizationColor[] {
+  return PRODUCT_COLOR_PALETTE
+    .filter((color) => color.hex !== 'transparent')
+    .map((color) => ({
+      id: createId('color'),
+      label: color.name,
+      value: color.hex,
+    }));
+}
+
 function createSection(): ProductCustomizationSection {
   return {
     id: createId('section'),
@@ -27,7 +38,7 @@ function createSection(): ProductCustomizationSection {
     required: true,
     helpText: '',
     placeholder: '',
-    colors: [createColor()],
+    colors: createPresetColors(),
   };
 }
 
@@ -134,7 +145,7 @@ export function CustomizationSectionsEditor({
                       const type = event.target.value as ProductCustomizationSectionType;
                       updateSection(sectionIndex, {
                         type,
-                        colors: usesColor(type) && section.colors.length === 0 ? [createColor()] : section.colors,
+                        colors: usesColor(type) && section.colors.length === 0 ? createPresetColors() : section.colors,
                       });
                     }}
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
@@ -174,14 +185,23 @@ export function CustomizationSectionsEditor({
                       <Palette className="h-4 w-4 text-violet-500" />
                       Cores disponíveis
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => updateSection(sectionIndex, { colors: [...section.colors, createColor()] })}
-                      disabled={section.colors.length >= 20}
-                      className="text-xs font-bold text-violet-600 hover:text-violet-700 disabled:opacity-40"
-                    >
-                      + Adicionar cor
-                    </button>
+                    <div className="flex flex-wrap items-center justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => updateSection(sectionIndex, { colors: createPresetColors() })}
+                        className="text-xs font-bold text-slate-500 hover:text-violet-700 dark:text-slate-400"
+                      >
+                        Restaurar cores padrão
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateSection(sectionIndex, { colors: [...section.colors, createColor()] })}
+                        disabled={section.colors.length >= 20}
+                        className="text-xs font-bold text-violet-600 hover:text-violet-700 disabled:opacity-40"
+                      >
+                        + Adicionar cor
+                      </button>
+                    </div>
                   </div>
                   <div className="mt-3 space-y-2">
                     {section.colors.map((color, colorIndex) => (
