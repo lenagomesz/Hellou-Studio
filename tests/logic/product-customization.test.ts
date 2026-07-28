@@ -102,6 +102,36 @@ describe('product customization copy', () => {
     });
   });
 
+  it('requires and preserves both the ready option and text in a combined section', () => {
+    const sections = normalizeProductCustomizationSections([
+      {
+        id: 'cable-detail',
+        label: 'Cabo',
+        type: 'option_text',
+        required: true,
+        options: [
+          { id: 'lightning', label: 'Lightning' },
+          { id: 'usb-c', label: 'USB-C' },
+        ],
+        placeholder: 'Detalhes adicionais',
+      },
+    ]);
+    const incomplete = { 'cable-detail': { optionId: 'usb-c' } };
+    const complete = { 'cable-detail': { optionId: 'usb-c', text: 'Modelo antigo' } };
+    const formatted = formatProductCustomizationSelections(sections, complete);
+
+    expect(areRequiredCustomizationSectionsComplete(sections, incomplete)).toBe(false);
+    expect(areRequiredCustomizationSectionsComplete(sections, complete)).toBe(true);
+    expect(formatted).toBe('Cabo: Opção: USB-C · Texto: Modelo antigo');
+    expect(parseProductCustomizationSelections(sections, formatted)).toEqual({
+      'cable-detail': {
+        optionId: 'usb-c',
+        optionLabel: 'USB-C',
+        text: 'Modelo antigo',
+      },
+    });
+  });
+
   it('counts only letters and selects the matching price variation', () => {
     expect(countCustomizationLetters('Ana Clara-2')).toBe(8);
     expect(findOptionByCharacterCount(

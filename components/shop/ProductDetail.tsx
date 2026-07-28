@@ -359,8 +359,8 @@ export function ProductDetail({
             {customizationSections.map((section) => {
               const selection = customizationSelections[section.id] ?? {};
               const needsColor = section.type === 'color' || section.type === 'color_text';
-              const needsText = section.type === 'text' || section.type === 'color_text';
-              const needsOption = section.type === 'option';
+              const needsText = section.type === 'text' || section.type === 'color_text' || section.type === 'option_text';
+              const needsOption = section.type === 'option' || section.type === 'option_text';
               return (
                 <div
                   key={section.id}
@@ -439,7 +439,7 @@ export function ProductDetail({
                   )}
 
                   {needsText && (
-                    <div className={needsColor ? 'mt-3' : ''}>
+                    <div className={needsColor || needsOption ? 'mt-3' : ''}>
                       <input
                         value={selection.text ?? ''}
                         onChange={(event) => setCustomizationSelections((current) => ({

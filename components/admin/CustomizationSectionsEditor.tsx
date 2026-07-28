@@ -57,11 +57,11 @@ function usesColor(type: ProductCustomizationSectionType) {
 }
 
 function usesText(type: ProductCustomizationSectionType) {
-  return type === 'text' || type === 'color_text';
+  return type === 'text' || type === 'color_text' || type === 'option_text';
 }
 
 function usesOptions(type: ProductCustomizationSectionType) {
-  return type === 'option';
+  return type === 'option' || type === 'option_text';
 }
 
 export function CustomizationSectionsEditor({
@@ -181,6 +181,7 @@ export function CustomizationSectionsEditor({
                     <option value="text">Somente texto</option>
                     <option value="color_text">Cor + texto</option>
                     <option value="option">Somente opção</option>
+                    <option value="option_text">Opção + texto</option>
                   </select>
                 </label>
               </div>
