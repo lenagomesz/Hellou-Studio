@@ -332,12 +332,19 @@ export function ProductDetail({
               const needsColor = section.type === 'color' || section.type === 'color_text';
               const needsText = section.type === 'text' || section.type === 'color_text';
               return (
-                <fieldset key={section.id} className="rounded-xl border border-pink-100 bg-white/90 p-3.5 dark:border-pink-900/60 dark:bg-gray-900/90">
-                  <legend className="px-1 text-sm font-bold text-gray-900 dark:text-white">
-                    {section.label}
-                    {section.required && <span className="ml-1 text-pink-600">*</span>}
-                  </legend>
-                  {section.helpText && <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">{section.helpText}</p>}
+                <div
+                  key={section.id}
+                  role="group"
+                  aria-labelledby={`customization-section-${section.id}`}
+                  className="rounded-xl border border-pink-100 bg-white/90 p-3.5 dark:border-pink-900/60 dark:bg-gray-900/90 sm:p-4"
+                >
+                  <div className="mb-3">
+                    <h3 id={`customization-section-${section.id}`} className="text-sm font-bold leading-5 text-gray-900 dark:text-white">
+                      {section.label}
+                      {section.required && <span className="ml-1 text-pink-600">*</span>}
+                    </h3>
+                    {section.helpText && <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">{section.helpText}</p>}
+                  </div>
 
                   {needsColor && (
                     <div className="flex flex-wrap gap-2.5">
@@ -388,7 +395,7 @@ export function ProductDetail({
                       <p className="mt-1 text-right text-[11px] text-gray-400">{selection.text?.length ?? 0}/120</p>
                     </div>
                   )}
-                </fieldset>
+                </div>
               );
             })}
 
