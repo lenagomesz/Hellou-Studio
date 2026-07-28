@@ -62,7 +62,7 @@ export function ProductCard({ product, basePath = "/products", category }: { pro
         </p>
         <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
           {hasAdditionalPriceOptions && (
-            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">A partir de</span>
+            <span className="text-[9px] font-semibold uppercase tracking-wide text-pink-500 dark:text-pink-400 sm:text-[10px]">A partir de</span>
           )}
           <p className="text-sm font-semibold text-gray-900 sm:text-base dark:text-white">{formatPrice(currentPrice)}</p>
           {product.sale_price !== null && product.sale_price < product.base_price && (

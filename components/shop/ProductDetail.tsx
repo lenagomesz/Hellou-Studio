@@ -14,6 +14,7 @@ import {
   countCustomizationLetters,
   findOptionByCharacterCount,
   formatProductCustomizationSelections,
+  getOptionCharacterCount,
   normalizeProductCustomizationSections,
   parseProductCustomizationSelections,
   type ProductCustomizationSelection,
@@ -86,6 +87,13 @@ export function ProductDetail({
   const automaticPricingOption = automaticPricingSection
     ? findOptionByCharacterCount(inStockOptions, automaticLetterCount)
     : null;
+  const automaticPricingOptions = automaticPricingSection
+    ? [...inStockOptions]
+        .filter((option) => getOptionCharacterCount(option.name) !== null)
+        .sort((first, second) => (
+          (getOptionCharacterCount(first.name) ?? 0) - (getOptionCharacterCount(second.name) ?? 0)
+        ))
+    : [];
   const selectedOption = automaticPricingSection
     ? automaticPricingOption
     : options.find((o) => o.id === selectedOptionId) ?? null;
@@ -102,17 +110,15 @@ export function ProductDetail({
 
   const currentDisplayImage = selectedOption?.image_url || product.image_url;
 
-  const galleryImages = useMemo(() => {
-    const registeredImages = Array.isArray(product.images) ? product.images : [];
-    return Array.from(
-      new Set(
-        [currentDisplayImage, ...registeredImages, product.image_url_2]
-          .filter((image): image is string => typeof image === 'string')
-          .map((image) => image.trim())
-          .filter(Boolean),
-      ),
-    );
-  }, [currentDisplayImage, product.image_url_2, product.images]);
+  const registeredImages = Array.isArray(product.images) ? product.images : [];
+  const galleryImages = Array.from(
+    new Set(
+      [currentDisplayImage, ...registeredImages, product.image_url_2]
+        .filter((image): image is string => typeof image === 'string')
+        .map((image) => image.trim())
+        .filter(Boolean),
+    ),
+  );
 
   const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, 50) : 50;
   const structuredCustomizationText = formatProductCustomizationSelections(customizationSections, customizationSelections);
@@ -430,9 +436,46 @@ export function ProductDetail({
                           {automaticLetterCount === 0
                             ? 'Digite o nome para calcular a quantidade de letras e o preço.'
                             : automaticPricingOption
-                              ? `${automaticLetterCount} ${automaticLetterCount === 1 ? 'letra' : 'letras'} · Variação “${automaticPricingOption.name}” selecionada automaticamente · ${formatPrice(finalPrice)}`
+                              ? (
+                                  <>
+                                    <span className="font-bold">
+                                      {automaticLetterCount} {automaticLetterCount === 1 ? 'letra' : 'letras'} · {formatPrice(finalPrice)}
+                                    </span>
+                                    <span className="mt-0.5 block">
+                                      {automaticPricingOption.price_modifier > 0
+                                        ? `O valor inclui ${formatPrice(automaticPricingOption.price_modifier)} adicional pela quantidade de letras.`
+                                        : 'Essa quantidade não possui valor adicional.'}
+                                    </span>
+                                  </>
+                                )
                               : `Não há uma variação de preço cadastrada para ${automaticLetterCount} ${automaticLetterCount === 1 ? 'letra' : 'letras'}.`}
                         </div>
+                      )}
+                      {section.autoSelectOptionByCharacterCount && automaticPricingOptions.length > 0 && (
+                        <details className="mt-2 overflow-hidden rounded-lg border border-pink-100 bg-white text-xs dark:border-pink-900/60 dark:bg-gray-950">
+                          <summary className="cursor-pointer px-3 py-2 font-semibold text-pink-700 dark:text-pink-300">
+                            Ver tabela de preços por quantidade
+                          </summary>
+                          <div className="max-h-44 divide-y divide-gray-100 overflow-y-auto border-t border-pink-100 dark:divide-gray-800 dark:border-pink-900/60">
+                            {automaticPricingOptions.map((option) => {
+                              const letterCount = getOptionCharacterCount(option.name);
+                              const optionPrice = (product.sale_price ?? product.base_price) + option.price_modifier;
+                              return (
+                                <div key={option.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                                    {letterCount} {letterCount === 1 ? 'letra' : 'letras'}
+                                  </span>
+                                  <span className="text-right">
+                                    <span className="font-bold text-gray-900 dark:text-white">{formatPrice(optionPrice)}</span>
+                                    {option.price_modifier > 0 && (
+                                      <span className="ml-1 text-[10px] text-pink-500">(+{formatPrice(option.price_modifier)})</span>
+                                    )}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </details>
                       )}
                     </div>
                   )}

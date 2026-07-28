@@ -60,7 +60,7 @@ export function ProductRecommendations({ excludeId, title }: { excludeId?: strin
               <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.name}</p>
               <p className="mt-1 text-sm font-semibold text-pink-600 dark:text-pink-400">
                 {p.product_options?.some((option) => option.price_modifier > 0) && (
-                  <span className="mr-1 text-[10px] font-medium text-gray-500 dark:text-gray-400">A partir de</span>
+                  <span className="mr-1 text-[9px] font-semibold uppercase tracking-wide text-pink-500 dark:text-pink-400">A partir de</span>
                 )}
                 {formatPrice(p.sale_price ?? p.base_price)}
               </p>
