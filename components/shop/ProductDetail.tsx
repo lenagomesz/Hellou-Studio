@@ -597,6 +597,11 @@ export function ProductDetail({
                         ? `${selectedOption.stock} em pronta-entrega; demais unidades sob demanda`
                         : 'Produzido sob demanda após o pagamento'}
                   </p>
+                  {selectedOption.notes && (
+                    <p className="mt-2 whitespace-pre-line text-xs text-gray-600 dark:text-gray-300">
+                      {selectedOption.notes}
+                    </p>
+                  )}
                 </div>
               ) : null}
             </div>}

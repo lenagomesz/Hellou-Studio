@@ -81,6 +81,7 @@ create table if not exists public.product_options (
   price_modifier  numeric(10,2) not null default 0,
   stock           integer not null default 0 check (stock >= 0),
   dimensions      text,
+  notes           text,
   sort_order      integer not null default 0,
   created_at      timestamptz not null default now()
 );

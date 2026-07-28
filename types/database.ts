@@ -72,6 +72,7 @@ export interface ProductOption {
   reorder_point: number;
   standard_order_qty: number;
   dimensions: string | null;
+  notes: string | null;
   color: string | null;
   image_url: string | null;
   sort_order: number;

@@ -115,7 +115,7 @@ export async function POST(request: Request) {
     active?: boolean;
     fulfillment_mode?: string;
     is_customizable?: boolean;
-    options?: Array<{ name: string; dimensions?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number }>;
+    options?: Array<{ name: string; dimensions?: string | null; notes?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number }>;
     customization_sections?: unknown;
   } & ProductCommercialInput & ProductCustomizationCopyInput;
 
@@ -193,6 +193,7 @@ export async function POST(request: Request) {
       product_id: data.id,
       name: option.name?.trim() || '',
       dimensions: option.dimensions?.trim() || null,
+      notes: option.notes?.trim() || null,
       color: option.color?.trim() || null,
       image_url: option.image_url?.trim() || null,
       price_modifier: Number(option.price_modifier ?? 0),

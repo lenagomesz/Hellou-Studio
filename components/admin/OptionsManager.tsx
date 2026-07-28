@@ -66,6 +66,7 @@ export function OptionsManager({
   const [priceModifier, setPriceModifier] = useState('0');
   const [stock, setStock] = useState('0');
   const [dimensions, setDimensions] = useState('');
+  const [notes, setNotes] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -140,6 +141,7 @@ export function OptionsManager({
         price_modifier: modifier,
         stock: stockValue,
         dimensions: dimensions.trim() || undefined,
+        notes: notes.trim() || undefined,
         image_url: imageUrl.trim() || undefined,
       }),
     });
@@ -158,6 +160,7 @@ export function OptionsManager({
     setPriceModifier('0');
     setStock('0');
     setDimensions('');
+    setNotes('');
     setImageUrl('');
     setSubmitting(false);
     router.refresh();
@@ -461,6 +464,14 @@ export function OptionsManager({
           />
         </div>
         <div className="sm:max-w-sm"><ImageUploadField compact label="Foto específica da variação (opcional)" value={imageUrl} onChange={setImageUrl} /></div>
+        <textarea
+          rows={2}
+          maxLength={500}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Observação da variação (opcional)"
+          className="w-full resize-y rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
+        />
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Use 5 para acrescentar R$ 5,00. Preço final desta variação: {formatPrice(basePrice + (Number(priceModifier) || 0))}.
         </p>
@@ -513,6 +524,7 @@ function OptionRow({
   const [priceModifier, setPriceModifier] = useState(String(option.price_modifier));
   const [stock, setStock] = useState(String(option.stock));
   const [dimensions, setDimensions] = useState(option.dimensions ?? '');
+  const [notes, setNotes] = useState(option.notes ?? '');
   const [imageUrl, setImageUrl] = useState(option.image_url ?? '');
   const [saving, setSaving] = useState(false);
 
@@ -525,6 +537,7 @@ function OptionRow({
       price_modifier: Number(priceModifier),
       stock: Number(stock),
       dimensions: dimensions.trim() || null,
+      notes: notes.trim() || null,
       image_url: imageUrl.trim() || null,
     });
     setSaving(false);
@@ -537,6 +550,7 @@ function OptionRow({
     setPriceModifier(String(option.price_modifier));
     setStock(String(option.stock));
     setDimensions(option.dimensions ?? '');
+    setNotes(option.notes ?? '');
     setImageUrl(option.image_url ?? '');
     setEditing(false);
   }
@@ -578,6 +592,14 @@ function OptionRow({
           />
         </div>
         <div className="mt-3 sm:max-w-sm"><ImageUploadField compact label="Foto específica da variação (opcional)" value={imageUrl} onChange={setImageUrl} /></div>
+        <textarea
+          rows={2}
+          maxLength={500}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Observação da variação (opcional)"
+          className="mt-3 w-full resize-y rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
+        />
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           Preço final com esta variação: {formatPrice(basePrice + (Number(priceModifier) || 0))}
         </p>
@@ -636,6 +658,11 @@ function OptionRow({
             Estoque: {option.stock}
             {option.dimensions ? ` · ${option.dimensions}` : ''}
           </p>
+          {option.notes && (
+            <p className="mt-1 whitespace-pre-line text-xs text-gray-500 dark:text-gray-400">
+              Obs.: {option.notes}
+            </p>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">

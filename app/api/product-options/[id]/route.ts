@@ -24,6 +24,7 @@ export async function PATCH(
     price_modifier?: number;
     stock?: number;
     dimensions?: string | null;
+    notes?: string | null;
     color?: string | null;
     image_url?: string | null;
   };
@@ -51,6 +52,9 @@ export async function PATCH(
   }
   if (input.dimensions !== undefined) {
     update.dimensions = input.dimensions?.trim() || null;
+  }
+  if (input.notes !== undefined) {
+    update.notes = input.notes?.trim() || null;
   }
   if (input.color !== undefined) {
     update.color = input.color?.trim() || null;

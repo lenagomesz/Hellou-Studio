@@ -26,6 +26,7 @@ type DraftOption = {
   id: string;
   name: string;
   dimensions: string;
+  notes: string;
   color: string;
   priceModifier: string;
   stock: string;
@@ -33,7 +34,7 @@ type DraftOption = {
 };
 
 function createDraftOption(): DraftOption {
-  return { id: crypto.randomUUID(), name: '', dimensions: '', color: '', priceModifier: '0', stock: '0', imageUrl: '' };
+  return { id: crypto.randomUUID(), name: '', dimensions: '', notes: '', color: '', priceModifier: '0', stock: '0', imageUrl: '' };
 }
 
 function moveDraftOption(options: DraftOption[], index: number, direction: -1 | 1) {
@@ -161,6 +162,7 @@ export function ProductForm(props: ProductFormProps) {
       .map((option, index) => ({
         name: option.name.trim(),
         dimensions: option.dimensions.trim() || null,
+        notes: option.notes.trim() || null,
         color: option.color || null,
         price_modifier: Number(option.priceModifier || 0),
         stock: Number(option.stock || 0),
@@ -522,6 +524,17 @@ export function ProductForm(props: ProductFormProps) {
                       onChange={(imageUrl) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, imageUrl } : item))}
                     />
                   </div>
+                  <label className="mt-3 block">
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Observação <span className="font-normal text-gray-400">(opcional)</span></span>
+                    <textarea
+                      rows={2}
+                      maxLength={500}
+                      value={option.notes}
+                      onChange={(event) => setOptions((current) => current.map((item) => item.id === option.id ? { ...item, notes: event.target.value } : item))}
+                      placeholder="Ex.: acabamento fosco; prazo adicional de 2 dias"
+                      className="mt-1 w-full resize-y rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    />
+                  </label>
                 </div>
               ))}
               {options.length === 0 && <button type="button" onClick={() => setOptions([createDraftOption()])} className="w-full rounded-xl border border-dashed border-pink-300 p-4 text-sm font-semibold text-pink-600">Adicionar a primeira variação</button>}
