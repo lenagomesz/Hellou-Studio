@@ -12,6 +12,7 @@ import { OptionsManager } from '@/components/admin/OptionsManager';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { ArrowDown, ArrowUp, CheckCircle2, Loader2, Upload } from 'lucide-react';
+import { DEFAULT_CUSTOMIZATION_COPY } from '@/lib/product-customization';
 
 type ProductFormProps =
   | { mode: 'create'; product?: undefined }
@@ -76,6 +77,15 @@ export function ProductForm(props: ProductFormProps) {
   const [active, setActive] = useState<boolean>(initial?.active ?? true);
   const [fulfillmentMode, setFulfillmentMode] = useState<'made_to_order' | 'ready_stock' | 'hybrid'>(initial?.fulfillment_mode ?? 'made_to_order');
   const [isCustomizable, setIsCustomizable] = useState(initial?.is_customizable ?? false);
+  const [customizationQuestion, setCustomizationQuestion] = useState(
+    initial?.customization_question ?? DEFAULT_CUSTOMIZATION_COPY.question,
+  );
+  const [customizationHelpText, setCustomizationHelpText] = useState(
+    initial?.customization_help_text ?? DEFAULT_CUSTOMIZATION_COPY.helpText,
+  );
+  const [customizationPlaceholder, setCustomizationPlaceholder] = useState(
+    initial?.customization_placeholder ?? DEFAULT_CUSTOMIZATION_COPY.placeholder,
+  );
   const [options, setOptions] = useState<DraftOption[]>(() => props.mode === 'create' ? [createDraftOption()] : []);
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -116,6 +126,10 @@ export function ProductForm(props: ProductFormProps) {
     const priceNumber = Number(basePrice);
     if (!name.trim()) {
       setError('Nome é obrigatório');
+      return;
+    }
+    if (isCustomizable && !customizationQuestion.trim()) {
+      setError('Escreva a pergunta de personalização exibida ao cliente');
       return;
     }
     if (Number.isNaN(priceNumber) || priceNumber < 0) {
@@ -173,6 +187,9 @@ export function ProductForm(props: ProductFormProps) {
       ...(canChangeProductStatus ? { active } : props.mode === 'create' ? { active: true } : {}),
       fulfillment_mode: fulfillmentMode,
       is_customizable: isCustomizable,
+      customization_question: customizationQuestion.trim() || null,
+      customization_help_text: customizationHelpText.trim(),
+      customization_placeholder: customizationPlaceholder.trim(),
       options: props.mode === 'create' ? normalizedOptions : undefined,
     };
 
@@ -314,6 +331,67 @@ export function ProductForm(props: ProductFormProps) {
             <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Se marcado, o cliente deverá escrever a personalização desejada antes de adicionar o produto ao carrinho.</span>
           </span>
         </label>
+
+        {isCustomizable && (
+          <section className="rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50/80 to-orange-50/60 p-4 dark:border-pink-900/50 dark:from-pink-950/20 dark:to-orange-950/10 sm:p-5">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Texto para o cliente</p>
+              <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">Como pedir a personalização</h2>
+              <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Defina estes textos antes de criar o produto e altere quando quiser na edição.</p>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              <label className="block">
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Pergunta exibida ao cliente *</span>
+                <input
+                  value={customizationQuestion}
+                  onChange={(event) => setCustomizationQuestion(event.target.value)}
+                  maxLength={120}
+                  required
+                  placeholder={DEFAULT_CUSTOMIZATION_COPY.question}
+                  className="mt-1 w-full rounded-lg border border-pink-200 bg-white px-3 py-2 text-sm dark:border-pink-900 dark:bg-gray-900"
+                />
+                <span className="mt-1 block text-right text-[11px] text-gray-400">{customizationQuestion.length}/120</span>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Orientação abaixo da pergunta</span>
+                <textarea
+                  value={customizationHelpText}
+                  onChange={(event) => setCustomizationHelpText(event.target.value)}
+                  maxLength={300}
+                  rows={2}
+                  placeholder={DEFAULT_CUSTOMIZATION_COPY.helpText}
+                  className="mt-1 w-full resize-none rounded-lg border border-pink-200 bg-white px-3 py-2 text-sm dark:border-pink-900 dark:bg-gray-900"
+                />
+                <span className="mt-1 block text-right text-[11px] text-gray-400">{customizationHelpText.length}/300</span>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Exemplo dentro do campo</span>
+                <input
+                  value={customizationPlaceholder}
+                  onChange={(event) => setCustomizationPlaceholder(event.target.value)}
+                  maxLength={180}
+                  placeholder={DEFAULT_CUSTOMIZATION_COPY.placeholder}
+                  className="mt-1 w-full rounded-lg border border-pink-200 bg-white px-3 py-2 text-sm dark:border-pink-900 dark:bg-gray-900"
+                />
+                <span className="mt-1 block text-right text-[11px] text-gray-400">{customizationPlaceholder.length}/180</span>
+              </label>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-pink-100 bg-white p-3 dark:border-pink-900/60 dark:bg-gray-900">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Prévia para o cliente</p>
+              <p className="mt-2 text-sm font-bold text-gray-900 dark:text-white">
+                {customizationQuestion || DEFAULT_CUSTOMIZATION_COPY.question} <span className="text-pink-600">*</span>
+              </p>
+              {customizationHelpText && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{customizationHelpText}</p>}
+              <div className="mt-2 rounded-lg border border-pink-100 px-3 py-2 text-sm text-gray-400 dark:border-pink-900/60">
+                {customizationPlaceholder || 'Campo sem exemplo'}
+              </div>
+            </div>
+          </section>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

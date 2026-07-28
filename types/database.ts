@@ -44,6 +44,9 @@ export interface Product {
   updated_at: string;
   fulfillment_mode?: 'made_to_order' | 'ready_stock' | 'hybrid';
   is_customizable?: boolean;
+  customization_question?: string | null;
+  customization_help_text?: string | null;
+  customization_placeholder?: string | null;
   sku?: string | null;
   cost_price?: number | null;
   weight_grams?: number | null;
@@ -340,6 +343,9 @@ export interface Database {
           image_url_2?: string | null;
           active?: boolean;
           is_customizable?: boolean;
+          customization_question?: string | null;
+          customization_help_text?: string | null;
+          customization_placeholder?: string | null;
           sku?: string | null;
           cost_price?: number | null;
           weight_grams?: number | null;
@@ -364,6 +370,9 @@ export interface Database {
           image_url_2?: string | null;
           active?: boolean;
           is_customizable?: boolean;
+          customization_question?: string | null;
+          customization_help_text?: string | null;
+          customization_placeholder?: string | null;
           sku?: string | null;
           cost_price?: number | null;
           weight_grams?: number | null;

@@ -10,6 +10,10 @@ import {
 } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
 import { normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
+import {
+  normalizeProductCustomizationCopy,
+  type ProductCustomizationCopyInput,
+} from '@/lib/product-customization';
 
 type ProductWithOptions = Product & { product_options: ProductOption[] };
 
@@ -66,7 +70,7 @@ export async function PATCH(
       active?: boolean;
       fulfillment_mode?: string;
       is_customizable?: boolean;
-    } & ProductCommercialInput;
+    } & ProductCommercialInput & ProductCustomizationCopyInput;
 
     const update: Record<string, unknown> = {};
 
@@ -110,6 +114,17 @@ export async function PATCH(
     }
     if (input.is_customizable !== undefined) {
       update.is_customizable = !!input.is_customizable;
+    }
+    if (
+      input.customization_question !== undefined
+      || input.customization_help_text !== undefined
+      || input.customization_placeholder !== undefined
+    ) {
+      try {
+        Object.assign(update, normalizeProductCustomizationCopy(input));
+      } catch (error) {
+        return badRequest(error instanceof Error ? error.message : 'Textos de personalização inválidos');
+      }
     }
     if (input.base_price !== undefined) {
       if (typeof input.base_price !== 'number' || input.base_price < 0) {

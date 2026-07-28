@@ -12,6 +12,10 @@ import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
 import { parseOptionalPrice } from '@/lib/product-filters';
 import { normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
+import {
+  normalizeProductCustomizationCopy,
+  type ProductCustomizationCopyInput,
+} from '@/lib/product-customization';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -81,7 +85,23 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { name, description, category, base_price, sale_price, image_url, images, active, fulfillment_mode, is_customizable, options, ...commercialInput } = (body ??
+  const {
+    name,
+    description,
+    category,
+    base_price,
+    sale_price,
+    image_url,
+    images,
+    active,
+    fulfillment_mode,
+    is_customizable,
+    customization_question,
+    customization_help_text,
+    customization_placeholder,
+    options,
+    ...commercialInput
+  } = (body ??
     {}) as {
     name?: string;
     description?: string | null;
@@ -94,7 +114,7 @@ export async function POST(request: Request) {
     fulfillment_mode?: string;
     is_customizable?: boolean;
     options?: Array<{ name: string; dimensions?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number }>;
-  } & ProductCommercialInput;
+  } & ProductCommercialInput & ProductCustomizationCopyInput;
 
   if (active === false) {
     const statusAuth = await requirePermission('products.status.manage');
@@ -117,6 +137,16 @@ export async function POST(request: Request) {
     commercialFields = normalizeProductCommercialFields(commercialInput);
   } catch (error) {
     return badRequest(error instanceof Error ? error.message : 'Dados comerciais inválidos');
+  }
+  let customizationCopy;
+  try {
+    customizationCopy = normalizeProductCustomizationCopy({
+      customization_question,
+      customization_help_text,
+      customization_placeholder,
+    });
+  } catch (error) {
+    return badRequest(error instanceof Error ? error.message : 'Textos de personalização inválidos');
   }
 
   const admin = getSupabaseAdmin();
@@ -142,6 +172,7 @@ export async function POST(request: Request) {
       active: active ?? true,
       fulfillment_mode: fulfillmentMode,
       is_customizable: !!is_customizable,
+      ...customizationCopy,
       ...commercialFields,
     })
     .select('*')

@@ -8,6 +8,7 @@ import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
+import { DEFAULT_CUSTOMIZATION_COPY } from '@/lib/product-customization';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -79,6 +80,9 @@ export function ProductDetail({
 
   const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, 50) : 50;
   const hasRequiredCustomization = !product.is_customizable || customizationText.trim().length > 0;
+  const customizationQuestion = product.customization_question?.trim() || DEFAULT_CUSTOMIZATION_COPY.question;
+  const customizationHelpText = product.customization_help_text ?? DEFAULT_CUSTOMIZATION_COPY.helpText;
+  const customizationPlaceholder = product.customization_placeholder ?? DEFAULT_CUSTOMIZATION_COPY.placeholder;
   const hasSelectedOption = options.length === 0 || selectedOption !== null;
   const canAddToCart = !isOwnedDigital && hasSelectedOption && hasRequiredCustomization;
   const isSyncing = status === 'syncing';
@@ -264,9 +268,11 @@ export function ProductDetail({
         {product.is_customizable && (
           <div className="mt-6 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50/60 p-4 dark:border-pink-900/60 dark:from-pink-950/30 dark:to-orange-950/20 sm:p-5">
             <label htmlFor="product-customization" className="block text-sm font-bold text-gray-900 dark:text-white">
-              Como você quer personalizar? <span className="text-pink-600">*</span>
+              {customizationQuestion} <span className="text-pink-600">*</span>
             </label>
-            <p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-400">Escreva o nome, frase ou orientação que devemos seguir na produção.</p>
+            {customizationHelpText && (
+              <p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-400">{customizationHelpText}</p>
+            )}
             <textarea
               id="product-customization"
               value={customizationText}
@@ -274,7 +280,7 @@ export function ProductDetail({
               maxLength={500}
               rows={3}
               required
-              placeholder="Ex.: Nome Helena, com a primeira letra maiúscula"
+              placeholder={customizationPlaceholder}
               className="mt-3 w-full resize-none rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 dark:border-pink-900 dark:bg-gray-900 dark:text-white dark:focus:ring-pink-500/10"
             />
             <div className="mt-1.5 flex items-center justify-between gap-3 text-[11px]">
