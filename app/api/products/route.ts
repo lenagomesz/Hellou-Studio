@@ -115,7 +115,7 @@ export async function POST(request: Request) {
     active?: boolean;
     fulfillment_mode?: string;
     is_customizable?: boolean;
-    options?: Array<{ name: string; dimensions?: string | null; notes?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number }>;
+    options?: Array<{ name: string; dimensions?: string | null; notes?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number; active?: boolean }>;
     customization_sections?: unknown;
   } & ProductCommercialInput & ProductCustomizationCopyInput;
 
@@ -199,6 +199,7 @@ export async function POST(request: Request) {
       price_modifier: Number(option.price_modifier ?? 0),
       stock: Math.max(0, Math.trunc(Number(option.stock ?? 0))),
       sort_order: Number.isInteger(option.sort_order) ? option.sort_order : index * 10,
+      active: option.active ?? true,
     })));
     if (optionsError) {
       await admin.from('products').delete().eq('id', data.id);

@@ -184,6 +184,7 @@ export async function POST(request: Request) {
       .from('product_options')
       .select('id, product_id, name, stock')
       .eq('id', optionId)
+      .eq('active', true)
       .maybeSingle();
 
     if (optionError) return serverError('Erro ao validar variação');

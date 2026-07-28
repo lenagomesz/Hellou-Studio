@@ -587,9 +587,11 @@ export function ProductDetail({
               </div>
               {selectedOption ? (
                 <div className="mt-3 rounded-xl border border-pink-100 bg-pink-50/70 px-3 py-2.5 dark:border-pink-900/60 dark:bg-pink-950/30">
-                  <p className="text-xs font-bold text-pink-700 dark:text-pink-300">
-                    {selectedOption.name ? `Preço com “${selectedOption.name}”` : 'Novo preço'}: {formatPrice(finalPrice)}
-                  </p>
+                  {selectedOption.price_modifier !== 0 && (
+                    <p className="text-xs font-bold text-pink-700 dark:text-pink-300">
+                      {selectedOption.name ? `Preço com “${selectedOption.name}”` : 'Novo preço'}: {formatPrice(finalPrice)}
+                    </p>
+                  )}
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {requiresReadyStock
                       ? `${selectedOption.stock} em pronta-entrega`

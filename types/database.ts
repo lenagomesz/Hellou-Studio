@@ -76,6 +76,7 @@ export interface ProductOption {
   color: string | null;
   image_url: string | null;
   sort_order: number;
+  active: boolean;
   created_at: string;
 }
 

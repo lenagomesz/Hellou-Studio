@@ -27,6 +27,7 @@ export async function PATCH(
     notes?: string | null;
     color?: string | null;
     image_url?: string | null;
+    active?: boolean;
   };
 
   const update: Record<string, unknown> = {};
@@ -61,6 +62,12 @@ export async function PATCH(
   }
   if (input.image_url !== undefined) {
     update.image_url = input.image_url?.trim() || null;
+  }
+  if (input.active !== undefined) {
+    if (typeof input.active !== 'boolean') {
+      return badRequest('Status inválido');
+    }
+    update.active = input.active;
   }
 
   if (Object.keys(update).length === 0) {

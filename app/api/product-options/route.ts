@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { product_id, name, price_modifier, stock, dimensions, notes, color, image_url } = (body ?? {}) as {
+  const { product_id, name, price_modifier, stock, dimensions, notes, color, image_url, active } = (body ?? {}) as {
     product_id?: string;
     name?: string;
     price_modifier?: number;
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     notes?: string;
     color?: string;
     image_url?: string;
+    active?: boolean;
   };
 
   if (!product_id) return badRequest('product_id é obrigatório');
@@ -34,6 +35,9 @@ export async function POST(request: Request) {
   const stockValue = stock ?? 0;
   if (typeof stockValue !== 'number' || stockValue < 0 || !Number.isInteger(stockValue)) {
     return badRequest('Estoque inválido');
+  }
+  if (active !== undefined && typeof active !== 'boolean') {
+    return badRequest('Status inválido');
   }
 
   const admin = getSupabaseAdmin();
@@ -67,6 +71,7 @@ export async function POST(request: Request) {
       notes: notes?.trim() || null,
       color: color?.trim() || null,
       image_url: image_url?.trim() || null,
+      active: active ?? true,
       sort_order: (lastOption?.sort_order ?? -10) + 10,
     })
     .select('*')

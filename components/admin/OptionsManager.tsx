@@ -641,6 +641,13 @@ function OptionRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             {option.name && <p className="text-sm font-medium text-gray-900 dark:text-white">{option.name}</p>}
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+              option.active
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+            }`}>
+              {option.active ? 'Ativa' : 'Inativa'}
+            </span>
             {option.color && (
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800" title={getProductColorName(option.color)}>
                 <span
@@ -678,6 +685,17 @@ function OptionRow({
           className="ml-1 text-sm font-medium text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
         >
           Editar
+        </button>
+        <button
+          type="button"
+          onClick={() => onUpdate({ active: !option.active })}
+          className={`text-sm font-medium ${
+            option.active
+              ? 'text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
+              : 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300'
+          }`}
+        >
+          {option.active ? 'Inativar' : 'Ativar'}
         </button>
         <button
           type="button"
