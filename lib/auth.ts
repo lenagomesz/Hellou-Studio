@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         const admin = getSupabaseAdmin();
-        const { data, error } = await admin
+        let queryResult = await admin
           .from('users')
           .select(
             'id, email, name, avatar_url, role, admin_access_level, admin_permissions, admin_active, session_version, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
@@ -27,6 +27,27 @@ export const authOptions: NextAuthOptions = {
           .eq('email', credentials.email.toLowerCase().trim())
           .maybeSingle();
 
+        if (
+          queryResult.error?.code === '42703'
+          && queryResult.error.message.includes('avatar_url')
+        ) {
+          const fallbackResult = await admin
+            .from('users')
+            .select(
+              'id, email, name, role, admin_access_level, admin_permissions, admin_active, session_version, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
+            )
+            .eq('email', credentials.email.toLowerCase().trim())
+            .maybeSingle();
+
+          queryResult = {
+            ...fallbackResult,
+            data: fallbackResult.data
+              ? { ...fallbackResult.data, avatar_url: null }
+              : null,
+          } as typeof queryResult;
+        }
+
+        const { data, error } = queryResult;
         const user = data as
           | {
               id: string;
