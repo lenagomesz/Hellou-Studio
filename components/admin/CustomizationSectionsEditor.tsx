@@ -1,8 +1,9 @@
 'use client';
 
-import { ArrowDown, ArrowUp, Palette, Plus, Trash2, Type } from 'lucide-react';
+import { ArrowDown, ArrowUp, ListChecks, Palette, Plus, Trash2, Type } from 'lucide-react';
 import type {
   ProductCustomizationColor,
+  ProductCustomizationOption,
   ProductCustomizationSection,
   ProductCustomizationSectionType,
 } from '@/lib/product-customization';
@@ -30,6 +31,13 @@ function createPresetColors(): ProductCustomizationColor[] {
     }));
 }
 
+function createOption(): ProductCustomizationOption {
+  return {
+    id: createId('option'),
+    label: 'Nova opção',
+  };
+}
+
 function createSection(): ProductCustomizationSection {
   return {
     id: createId('section'),
@@ -40,6 +48,7 @@ function createSection(): ProductCustomizationSection {
     helpText: '',
     placeholder: '',
     colors: createPresetColors(),
+    options: [],
   };
 }
 
@@ -49,6 +58,10 @@ function usesColor(type: ProductCustomizationSectionType) {
 
 function usesText(type: ProductCustomizationSectionType) {
   return type === 'text' || type === 'color_text';
+}
+
+function usesOptions(type: ProductCustomizationSectionType) {
+  return type === 'option';
 }
 
 export function CustomizationSectionsEditor({
@@ -81,6 +94,15 @@ export function CustomizationSectionsEditor({
     });
   }
 
+  function updateOption(sectionIndex: number, optionIndex: number, patch: Partial<ProductCustomizationOption>) {
+    const section = value[sectionIndex];
+    updateSection(sectionIndex, {
+      options: (section.options ?? []).map((option, currentIndex) => (
+        currentIndex === optionIndex ? { ...option, ...patch } : option
+      )),
+    });
+  }
+
   return (
     <section className="rounded-2xl border border-violet-200 bg-violet-50/60 p-4 dark:border-violet-900/50 dark:bg-violet-950/15 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -88,7 +110,7 @@ export function CustomizationSectionsEditor({
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600">Escolhas combináveis</p>
           <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">Seções de variação personalizada</h2>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-slate-400">
-            Crie escolhas independentes, como cor da base, cor das teclas e nome. Cada seção pode pedir cor, texto ou os dois.
+            Crie escolhas independentes, como cor da base, cor das teclas, nome ou uma lista de opções prontas.
           </p>
         </div>
         <button
@@ -147,6 +169,7 @@ export function CustomizationSectionsEditor({
                       updateSection(sectionIndex, {
                         type,
                         colors: usesColor(type) && section.colors.length === 0 ? createPresetColors() : section.colors,
+                        options: usesOptions(type) && (section.options ?? []).length === 0 ? [createOption()] : (section.options ?? []),
                         autoSelectOptionByCharacterCount: usesText(type)
                           ? section.autoSelectOptionByCharacterCount
                           : false,
@@ -157,6 +180,7 @@ export function CustomizationSectionsEditor({
                     <option value="color">Somente cor</option>
                     <option value="text">Somente texto</option>
                     <option value="color_text">Cor + texto</option>
+                    <option value="option">Somente opção</option>
                   </select>
                 </label>
               </div>
@@ -279,6 +303,46 @@ export function CustomizationSectionsEditor({
                       </span>
                     </span>
                   </label>
+                </div>
+              )}
+
+              {usesOptions(section.type) && (
+                <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-950/60">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <ListChecks className="h-4 w-4 text-violet-500" />
+                      Opções disponíveis
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateSection(sectionIndex, { options: [...(section.options ?? []), createOption()] })}
+                      disabled={(section.options ?? []).length >= 20}
+                      className="text-xs font-bold text-violet-600 hover:text-violet-700 disabled:opacity-40"
+                    >
+                      + Adicionar opção
+                    </button>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {(section.options ?? []).map((option, optionIndex) => (
+                      <div key={option.id} className="flex items-center gap-2">
+                        <input
+                          value={option.label}
+                          onChange={(event) => updateOption(sectionIndex, optionIndex, { label: event.target.value })}
+                          maxLength={50}
+                          placeholder={`Opção ${optionIndex + 1}`}
+                          className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateSection(sectionIndex, { options: (section.options ?? []).filter((_, index) => index !== optionIndex) })}
+                          aria-label={`Excluir opção ${optionIndex + 1}`}
+                          className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </article>

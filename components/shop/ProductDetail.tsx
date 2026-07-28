@@ -360,6 +360,7 @@ export function ProductDetail({
               const selection = customizationSelections[section.id] ?? {};
               const needsColor = section.type === 'color' || section.type === 'color_text';
               const needsText = section.type === 'text' || section.type === 'color_text';
+              const needsOption = section.type === 'option';
               return (
                 <div
                   key={section.id}
@@ -401,6 +402,36 @@ export function ProductDetail({
                           >
                             <span className="h-5 w-5 rounded-full border border-black/10 shadow-inner" style={{ backgroundColor: color.value }} />
                             {color.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {needsOption && (
+                    <div className="flex flex-wrap gap-2.5">
+                      {section.options.map((option) => {
+                        const selected = selection.optionId === option.id;
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() => setCustomizationSelections((current) => ({
+                              ...current,
+                              [section.id]: {
+                                ...current[section.id],
+                                optionId: option.id,
+                                optionLabel: option.label,
+                              },
+                            }))}
+                            className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                              selected
+                                ? 'border-pink-500 bg-pink-50 text-pink-700 ring-2 ring-pink-100 dark:bg-pink-500/10 dark:text-pink-200 dark:ring-pink-500/20'
+                                : 'border-gray-200 bg-white text-gray-700 hover:border-pink-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'
+                            }`}
+                          >
+                            {option.label}
                           </button>
                         );
                       })}

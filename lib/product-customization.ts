@@ -10,12 +10,17 @@ export type ProductCustomizationCopyInput = {
   customization_placeholder?: string | null;
 };
 
-export type ProductCustomizationSectionType = 'color' | 'text' | 'color_text';
+export type ProductCustomizationSectionType = 'color' | 'text' | 'color_text' | 'option';
 
 export type ProductCustomizationColor = {
   id: string;
   label: string;
   value: string;
+};
+
+export type ProductCustomizationOption = {
+  id: string;
+  label: string;
 };
 
 export type ProductCustomizationSection = {
@@ -27,12 +32,15 @@ export type ProductCustomizationSection = {
   helpText: string;
   placeholder: string;
   colors: ProductCustomizationColor[];
+  options: ProductCustomizationOption[];
 };
 
 export type ProductCustomizationSelection = {
   colorId?: string;
   colorLabel?: string;
   colorValue?: string;
+  optionId?: string;
+  optionLabel?: string;
   text?: string;
 };
 
@@ -64,7 +72,7 @@ export function normalizeProductCustomizationCopy(
   return normalized;
 }
 
-const SECTION_TYPES = new Set<ProductCustomizationSectionType>(['color', 'text', 'color_text']);
+const SECTION_TYPES = new Set<ProductCustomizationSectionType>(['color', 'text', 'color_text', 'option']);
 
 function normalizeIdentifier(value: unknown, fallback: string) {
   if (typeof value !== 'string') return fallback;
@@ -131,6 +139,31 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
       throw new Error(`Adicione pelo menos uma cor em "${label}"`);
     }
 
+    const needsOptions = type === 'option';
+    const rawOptions = Array.isArray(section.options) ? section.options : [];
+    if (rawOptions.length > 20) throw new Error(`Cadastre no máximo 20 opções em "${label}"`);
+
+    const optionIds = new Set<string>();
+    const options = needsOptions
+      ? rawOptions.map((rawOption, optionIndex) => {
+          if (!rawOption || typeof rawOption !== 'object') {
+            throw new Error(`Revise as opções de "${label}"`);
+          }
+          const option = rawOption as Record<string, unknown>;
+          const optionId = normalizeIdentifier(option.id, `${id}-option-${optionIndex + 1}`);
+          if (optionIds.has(optionId)) throw new Error(`As opções de "${label}" devem ser únicas`);
+          optionIds.add(optionId);
+          const optionLabel = typeof option.label === 'string' ? option.label.trim() : '';
+          if (!optionLabel) throw new Error(`Preencha as opções de "${label}"`);
+          if (optionLabel.length > 50) throw new Error(`As opções de "${label}" devem ter no máximo 50 caracteres`);
+          return { id: optionId, label: optionLabel };
+        })
+      : [];
+
+    if (needsOptions && options.length === 0) {
+      throw new Error(`Adicione pelo menos uma opção em "${label}"`);
+    }
+
     return {
       id,
       label,
@@ -142,6 +175,7 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
       helpText,
       placeholder,
       colors,
+      options,
     };
   });
 
@@ -167,6 +201,10 @@ export function formatProductCustomizationSelections(
       if ((section.type === 'text' || section.type === 'color_text') && selection.text?.trim()) {
         parts.push(`Texto: ${selection.text.trim()}`);
       }
+      if (section.type === 'option') {
+        const selectedOption = section.options.find((option) => option.id === selection.optionId);
+        if (selectedOption) parts.push(`Opção: ${selectedOption.label}`);
+      }
       return parts.length > 0 ? `${section.label}: ${parts.join(' · ')}` : '';
     })
     .filter(Boolean)
@@ -182,8 +220,10 @@ export function areRequiredCustomizationSectionsComplete(
     const selection = selections[section.id] ?? {};
     const hasColor = Boolean(selection.colorId && section.colors.some((color) => color.id === selection.colorId));
     const hasText = Boolean(selection.text?.trim());
+    const hasOption = Boolean(selection.optionId && section.options.some((option) => option.id === selection.optionId));
     if (section.type === 'color') return hasColor;
     if (section.type === 'text') return hasText;
+    if (section.type === 'option') return hasOption;
     return hasColor && hasText;
   });
 }
@@ -199,13 +239,19 @@ export function parseProductCustomizationSelections(
     const content = line.slice(section.label.length + 2);
     const colorMatch = /(?:^| · )Cor: ([^·]+)/.exec(content);
     const textMatch = /(?:^| · )Texto: (.+)$/.exec(content);
+    const optionMatch = /(?:^| · )Opção: (.+)$/.exec(content);
     const colorLabel = colorMatch?.[1]?.trim();
     const color = colorLabel
       ? section.colors.find((item) => item.label.toLocaleLowerCase('pt-BR') === colorLabel.toLocaleLowerCase('pt-BR'))
       : undefined;
+    const optionLabel = optionMatch?.[1]?.trim();
+    const option = optionLabel
+      ? section.options.find((item) => item.label.toLocaleLowerCase('pt-BR') === optionLabel.toLocaleLowerCase('pt-BR'))
+      : undefined;
     selections[section.id] = {
       ...(color ? { colorId: color.id, colorLabel: color.label, colorValue: color.value } : {}),
       ...(textMatch?.[1] ? { text: textMatch[1].trim() } : {}),
+      ...(option ? { optionId: option.id, optionLabel: option.label } : {}),
     };
   }
   return selections;

@@ -59,6 +59,7 @@ describe('product customization copy', () => {
         helpText: '',
         placeholder: '',
         colors: [{ id: 'blue', label: 'Azul', value: '#123456' }],
+        options: [],
       },
       {
         id: 'name',
@@ -69,8 +70,36 @@ describe('product customization copy', () => {
         helpText: '',
         placeholder: 'Ex.: Helena',
         colors: [],
+        options: [],
       },
     ]);
+  });
+
+  it('normalizes, formats and restores a section with ready options', () => {
+    const sections = normalizeProductCustomizationSections([
+      {
+        id: 'cable',
+        label: 'Modelo do cabo',
+        type: 'option',
+        required: true,
+        options: [
+          { id: 'lightning', label: 'Lightning' },
+          { id: 'usb-c', label: 'USB-C' },
+        ],
+      },
+    ]);
+    const selections = { cable: { optionId: 'lightning' } };
+    const formatted = formatProductCustomizationSelections(sections, selections);
+
+    expect(sections[0].options).toEqual([
+      { id: 'lightning', label: 'Lightning' },
+      { id: 'usb-c', label: 'USB-C' },
+    ]);
+    expect(areRequiredCustomizationSectionsComplete(sections, selections)).toBe(true);
+    expect(formatted).toBe('Modelo do cabo: Opção: Lightning');
+    expect(parseProductCustomizationSelections(sections, formatted)).toEqual({
+      cable: { optionId: 'lightning', optionLabel: 'Lightning' },
+    });
   });
 
   it('counts only letters and selects the matching price variation', () => {
