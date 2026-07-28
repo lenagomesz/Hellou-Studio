@@ -60,6 +60,7 @@ export interface Product {
   seo_description?: string | null;
   slug?: string | null;
   tags?: ProductTag[];
+  product_options?: Array<Pick<ProductOption, 'price_modifier'>>;
 }
 
 export interface ProductOption {

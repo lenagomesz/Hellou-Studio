@@ -21,7 +21,7 @@ async function loadProductWithOptions(id: string) {
     Promise.all([
       admin
         .from('products')
-        .select('*')
+        .select('*, product_options(price_modifier)')
         .eq('id', id)
         .eq('type', 'digital')
         .eq('active', true)

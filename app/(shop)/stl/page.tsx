@@ -17,7 +17,7 @@ async function getSTLProducts(category?: string): Promise<Product[]> {
     const admin = getSupabaseAdmin();
     let query = admin
       .from('products')
-      .select('*')
+      .select('*, product_options(price_modifier)')
       .eq('type', 'digital')
       .eq('active', true);
     if (category) query = query.eq('category', category);

@@ -10,6 +10,7 @@ interface RecommendedProduct {
   sale_price: number | null;
   image_url: string | null;
   category: string;
+  product_options?: Array<{ price_modifier: number }>;
 }
 
 function formatPrice(value: number) {
@@ -57,7 +58,12 @@ export function ProductRecommendations({ excludeId, title }: { excludeId?: strin
             </div>
             <div className="p-3">
               <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.name}</p>
-              <p className="mt-1 text-sm font-semibold text-pink-600 dark:text-pink-400">{formatPrice(p.sale_price ?? p.base_price)}</p>
+              <p className="mt-1 text-sm font-semibold text-pink-600 dark:text-pink-400">
+                {p.product_options?.some((option) => option.price_modifier > 0) && (
+                  <span className="mr-1 text-[10px] font-medium text-gray-500 dark:text-gray-400">A partir de</span>
+                )}
+                {formatPrice(p.sale_price ?? p.base_price)}
+              </p>
             </div>
           </Link>
         ))}

@@ -103,7 +103,7 @@ const getFeaturedProducts = unstable_cache(
 
         let query = admin
           .from('products')
-          .select('*')
+          .select('*, product_options(price_modifier)')
           .eq('active', true);
 
         if (type === 'physical') {

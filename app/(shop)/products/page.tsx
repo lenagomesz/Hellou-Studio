@@ -39,7 +39,7 @@ async function getProductsRaw(filters: {
     return [];
   }
 
-  let query = admin.from('products').select('*').eq('active', true).or('type.eq.physical,type.is.null').neq('category', 'encomenda').not('name', 'ilike', 'Encomenda%');
+  let query = admin.from('products').select('*, product_options(price_modifier)').eq('active', true).or('type.eq.physical,type.is.null').neq('category', 'encomenda').not('name', 'ilike', 'Encomenda%');
 
   if (filters.category) {
     query = query.eq('category', filters.category);

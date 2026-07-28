@@ -21,6 +21,9 @@ function formatPrice(value: number) {
 export function ProductCard({ product, basePath = "/products", category }: { product: Product; basePath?: string; category?: Pick<ProductCategory, 'name' | 'color'> }) {
   const [zoomed, setZoomed] = useState(false);
   const currentPrice = product.sale_price ?? product.base_price;
+  const hasAdditionalPriceOptions = product.product_options?.some(
+    (option) => option.price_modifier > 0,
+  ) ?? false;
 
   useEffect(() => {
     const timer = setInterval(() => setZoomed((z) => !z), 5000);
@@ -58,6 +61,9 @@ export function ProductCard({ product, basePath = "/products", category }: { pro
           {product.description || '\u00A0'}
         </p>
         <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
+          {hasAdditionalPriceOptions && (
+            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">A partir de</span>
+          )}
           <p className="text-sm font-semibold text-gray-900 sm:text-base dark:text-white">{formatPrice(currentPrice)}</p>
           {product.sale_price !== null && product.sale_price < product.base_price && (
             <span className="text-[10px] text-gray-400 line-through sm:text-xs">{formatPrice(product.base_price)}</span>

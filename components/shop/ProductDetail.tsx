@@ -89,6 +89,12 @@ export function ProductDetail({
   const selectedOption = automaticPricingSection
     ? automaticPricingOption
     : options.find((o) => o.id === selectedOptionId) ?? null;
+  const hasAdditionalPriceOptions = options.some((option) => option.price_modifier > 0);
+  const isShowingStartingPrice = hasAdditionalPriceOptions && (
+    automaticPricingSection
+      ? selectedOption === null
+      : (selectedOption?.price_modifier ?? 0) === 0
+  );
 
   const finalPrice =
     (product.sale_price ?? product.base_price) + (selectedOption?.price_modifier ?? 0);
@@ -242,6 +248,9 @@ export function ProductDetail({
         </div>
         <h1 className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</h1>
         <div className="mt-3 flex items-baseline gap-3">
+          {isShowingStartingPrice && (
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 sm:text-sm">A partir de</span>
+          )}
           <p
             key={selectedOption?.id ?? 'base-price'}
             aria-live="polite"

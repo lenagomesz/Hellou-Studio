@@ -63,7 +63,7 @@ function getRelatedProducts(category: string, excludeId: string, productType: st
           const admin = getSupabaseAdmin();
           let query = admin
             .from('products')
-            .select('*')
+            .select('*, product_options(price_modifier)')
             .eq('active', true)
             .eq('category', category)
             .neq('id', excludeId);
