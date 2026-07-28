@@ -8,7 +8,14 @@ import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
-import { DEFAULT_CUSTOMIZATION_COPY } from '@/lib/product-customization';
+import {
+  DEFAULT_CUSTOMIZATION_COPY,
+  areRequiredCustomizationSectionsComplete,
+  formatProductCustomizationSelections,
+  normalizeProductCustomizationSections,
+  parseProductCustomizationSelections,
+  type ProductCustomizationSelection,
+} from '@/lib/product-customization';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -49,13 +56,24 @@ export function ProductDetail({
     () => options.filter((option) => !requiresReadyStock || option.stock > 0),
     [options, requiresReadyStock],
   );
+  const customizationSections = useMemo(() => {
+    try {
+      return normalizeProductCustomizationSections(product.customization_sections);
+    } catch {
+      return [];
+    }
+  }, [product.customization_sections]);
 
   const preselectedOptionId = searchParams.get('option');
+  const initialCustomizationText = searchParams.get('customization') ?? '';
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(() =>
     (preselectedOptionId && options.some(o => o.id === preselectedOptionId)) ? preselectedOptionId : inStockOptions[0]?.id ?? null,
   );
   const [quantity, setQuantity] = useState(1);
-  const [customizationText, setCustomizationText] = useState(() => searchParams.get('customization') ?? '');
+  const [customizationText, setCustomizationText] = useState(initialCustomizationText);
+  const [customizationSelections, setCustomizationSelections] = useState<Record<string, ProductCustomizationSelection>>(
+    () => parseProductCustomizationSelections(customizationSections, initialCustomizationText),
+  );
   const [gallerySelectionVersion, setGallerySelectionVersion] = useState(0);
   const selectedOption =
     options.find((o) => o.id === selectedOptionId) ?? null;
@@ -79,7 +97,17 @@ export function ProductDetail({
   }, [currentDisplayImage, product.image_url_2, product.images]);
 
   const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, 50) : 50;
-  const hasRequiredCustomization = !product.is_customizable || customizationText.trim().length > 0;
+  const structuredCustomizationText = formatProductCustomizationSelections(customizationSections, customizationSelections);
+  const finalCustomizationText = customizationSections.length > 0
+    ? structuredCustomizationText
+    : customizationText.trim();
+  const hasRequiredCustomization = !product.is_customizable || (
+    customizationSections.length > 0
+      ? areRequiredCustomizationSectionsComplete(customizationSections, customizationSelections)
+        && finalCustomizationText.length > 0
+        && finalCustomizationText.length <= 500
+      : customizationText.trim().length > 0
+  );
   const customizationQuestion = product.customization_question?.trim() || DEFAULT_CUSTOMIZATION_COPY.question;
   const customizationHelpText = product.customization_help_text ?? DEFAULT_CUSTOMIZATION_COPY.helpText;
   const customizationPlaceholder = product.customization_placeholder ?? DEFAULT_CUSTOMIZATION_COPY.placeholder;
@@ -130,7 +158,7 @@ export function ProductDetail({
             }
           : null,
         quantity,
-        customization_text: product.is_customizable ? customizationText.trim() : null,
+        customization_text: product.is_customizable ? finalCustomizationText : null,
       });
       if (replaceCartItemId) {
         router.push('/cart');
@@ -265,7 +293,7 @@ export function ProductDetail({
           </p>
         ) : null}
 
-        {product.is_customizable && (
+        {product.is_customizable && customizationSections.length === 0 && (
           <div className="mt-6 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50/60 p-4 dark:border-pink-900/60 dark:from-pink-950/30 dark:to-orange-950/20 sm:p-5">
             <label htmlFor="product-customization" className="block text-sm font-bold text-gray-900 dark:text-white">
               {customizationQuestion} <span className="text-pink-600">*</span>
@@ -286,6 +314,89 @@ export function ProductDetail({
             <div className="mt-1.5 flex items-center justify-between gap-3 text-[11px]">
               <span className={hasRequiredCustomization ? 'text-green-600 dark:text-green-400' : 'text-pink-700 dark:text-pink-300'}>{hasRequiredCustomization ? 'Personalização preenchida' : 'Preenchimento obrigatório para adicionar ao carrinho'}</span>
               <span className="text-gray-400">{customizationText.length}/500</span>
+            </div>
+          </div>
+        )}
+
+        {product.is_customizable && customizationSections.length > 0 && (
+          <div className="mt-6 space-y-4 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50/60 p-4 dark:border-pink-900/60 dark:from-pink-950/30 dark:to-orange-950/20 sm:p-5">
+            <div>
+              <h2 className="text-sm font-bold text-gray-900 dark:text-white">{customizationQuestion}</h2>
+              {customizationHelpText && (
+                <p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-400">{customizationHelpText}</p>
+              )}
+            </div>
+
+            {customizationSections.map((section) => {
+              const selection = customizationSelections[section.id] ?? {};
+              const needsColor = section.type === 'color' || section.type === 'color_text';
+              const needsText = section.type === 'text' || section.type === 'color_text';
+              return (
+                <fieldset key={section.id} className="rounded-xl border border-pink-100 bg-white/90 p-3.5 dark:border-pink-900/60 dark:bg-gray-900/90">
+                  <legend className="px-1 text-sm font-bold text-gray-900 dark:text-white">
+                    {section.label}
+                    {section.required && <span className="ml-1 text-pink-600">*</span>}
+                  </legend>
+                  {section.helpText && <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">{section.helpText}</p>}
+
+                  {needsColor && (
+                    <div className="flex flex-wrap gap-2.5">
+                      {section.colors.map((color) => {
+                        const selected = selection.colorId === color.id;
+                        return (
+                          <button
+                            key={color.id}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() => setCustomizationSelections((current) => ({
+                              ...current,
+                              [section.id]: {
+                                ...current[section.id],
+                                colorId: color.id,
+                                colorLabel: color.label,
+                                colorValue: color.value,
+                              },
+                            }))}
+                            className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                              selected
+                                ? 'border-pink-500 bg-pink-50 text-pink-700 ring-2 ring-pink-100 dark:bg-pink-500/10 dark:text-pink-200 dark:ring-pink-500/20'
+                                : 'border-gray-200 bg-white text-gray-700 hover:border-pink-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'
+                            }`}
+                          >
+                            <span className="h-5 w-5 rounded-full border border-black/10 shadow-inner" style={{ backgroundColor: color.value }} />
+                            {color.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {needsText && (
+                    <div className={needsColor ? 'mt-3' : ''}>
+                      <input
+                        value={selection.text ?? ''}
+                        onChange={(event) => setCustomizationSelections((current) => ({
+                          ...current,
+                          [section.id]: { ...current[section.id], text: event.target.value },
+                        }))}
+                        maxLength={120}
+                        required={section.required}
+                        placeholder={section.placeholder || customizationPlaceholder}
+                        aria-label={section.label}
+                        className="w-full rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 dark:border-pink-900 dark:bg-gray-950 dark:text-white dark:focus:ring-pink-500/10"
+                      />
+                      <p className="mt-1 text-right text-[11px] text-gray-400">{selection.text?.length ?? 0}/120</p>
+                    </div>
+                  )}
+                </fieldset>
+              );
+            })}
+
+            <div className="flex items-center justify-between gap-3 text-[11px]">
+              <span className={hasRequiredCustomization ? 'text-green-600 dark:text-green-400' : 'text-pink-700 dark:text-pink-300'}>
+                {hasRequiredCustomization ? 'Personalização completa' : 'Complete as escolhas obrigatórias'}
+              </span>
+              {finalCustomizationText.length > 500 && <span className="font-semibold text-red-600">Respostas muito longas</span>}
             </div>
           </div>
         )}

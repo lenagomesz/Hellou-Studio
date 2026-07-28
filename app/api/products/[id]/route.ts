@@ -12,6 +12,7 @@ import type { Product, ProductOption } from '@/types/database';
 import { normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
 import {
   normalizeProductCustomizationCopy,
+  normalizeProductCustomizationSections,
   type ProductCustomizationCopyInput,
 } from '@/lib/product-customization';
 
@@ -70,6 +71,7 @@ export async function PATCH(
       active?: boolean;
       fulfillment_mode?: string;
       is_customizable?: boolean;
+      customization_sections?: unknown;
     } & ProductCommercialInput & ProductCustomizationCopyInput;
 
     const update: Record<string, unknown> = {};
@@ -124,6 +126,13 @@ export async function PATCH(
         Object.assign(update, normalizeProductCustomizationCopy(input));
       } catch (error) {
         return badRequest(error instanceof Error ? error.message : 'Textos de personalização inválidos');
+      }
+    }
+    if (input.customization_sections !== undefined) {
+      try {
+        update.customization_sections = normalizeProductCustomizationSections(input.customization_sections);
+      } catch (error) {
+        return badRequest(error instanceof Error ? error.message : 'Seções de personalização inválidas');
       }
     }
     if (input.base_price !== undefined) {

@@ -1053,7 +1053,7 @@ function CartLine({
                 </div>
               )}
               {item.customization_text && (
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-pink-700 dark:text-pink-300">
+                <p className="mt-1 whitespace-pre-line text-xs leading-5 text-pink-700 dark:text-pink-300">
                   <span className="font-semibold">Personalização:</span> {item.customization_text}
                 </p>
               )}

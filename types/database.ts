@@ -1,3 +1,5 @@
+import type { ProductCustomizationSection } from '@/lib/product-customization';
+
 export type Category = string;
 
 export interface ProductCategory {
@@ -47,6 +49,7 @@ export interface Product {
   customization_question?: string | null;
   customization_help_text?: string | null;
   customization_placeholder?: string | null;
+  customization_sections?: ProductCustomizationSection[] | null;
   sku?: string | null;
   cost_price?: number | null;
   weight_grams?: number | null;
@@ -346,6 +349,7 @@ export interface Database {
           customization_question?: string | null;
           customization_help_text?: string | null;
           customization_placeholder?: string | null;
+          customization_sections?: ProductCustomizationSection[] | null;
           sku?: string | null;
           cost_price?: number | null;
           weight_grams?: number | null;
@@ -373,6 +377,7 @@ export interface Database {
           customization_question?: string | null;
           customization_help_text?: string | null;
           customization_placeholder?: string | null;
+          customization_sections?: ProductCustomizationSection[] | null;
           sku?: string | null;
           cost_price?: number | null;
           weight_grams?: number | null;

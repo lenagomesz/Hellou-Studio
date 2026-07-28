@@ -26,6 +26,7 @@ required_columns(table_name, column_name) AS (
     ('products', 'customization_question'),
     ('products', 'customization_help_text'),
     ('products', 'customization_placeholder'),
+    ('products', 'customization_sections'),
     ('products', 'type'),
     ('products', 'file_path'),
     ('product_options', 'ready_stock'),

@@ -14,6 +14,7 @@ import { parseOptionalPrice } from '@/lib/product-filters';
 import { normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
 import {
   normalizeProductCustomizationCopy,
+  normalizeProductCustomizationSections,
   type ProductCustomizationCopyInput,
 } from '@/lib/product-customization';
 
@@ -99,6 +100,7 @@ export async function POST(request: Request) {
     customization_question,
     customization_help_text,
     customization_placeholder,
+    customization_sections,
     options,
     ...commercialInput
   } = (body ??
@@ -114,6 +116,7 @@ export async function POST(request: Request) {
     fulfillment_mode?: string;
     is_customizable?: boolean;
     options?: Array<{ name: string; dimensions?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number }>;
+    customization_sections?: unknown;
   } & ProductCommercialInput & ProductCustomizationCopyInput;
 
   if (active === false) {
@@ -139,12 +142,14 @@ export async function POST(request: Request) {
     return badRequest(error instanceof Error ? error.message : 'Dados comerciais inválidos');
   }
   let customizationCopy;
+  let customizationSections;
   try {
     customizationCopy = normalizeProductCustomizationCopy({
       customization_question,
       customization_help_text,
       customization_placeholder,
     });
+    customizationSections = normalizeProductCustomizationSections(customization_sections);
   } catch (error) {
     return badRequest(error instanceof Error ? error.message : 'Textos de personalização inválidos');
   }
@@ -173,6 +178,7 @@ export async function POST(request: Request) {
       fulfillment_mode: fulfillmentMode,
       is_customizable: !!is_customizable,
       ...customizationCopy,
+      customization_sections: customizationSections,
       ...commercialFields,
     })
     .select('*')

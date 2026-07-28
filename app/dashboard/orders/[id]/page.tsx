@@ -334,7 +334,7 @@ export default function OrderDetailPage() {
                       {item.quantity}x &middot; {formatPrice(item.unit_price)} cada
                     </p>
                     {item.customization_text && (
-                      <div className="mt-2 rounded-xl border border-pink-100 bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:border-pink-900/50 dark:bg-pink-500/10 dark:text-pink-200">
+                      <div className="mt-2 whitespace-pre-line rounded-xl border border-pink-100 bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:border-pink-900/50 dark:bg-pink-500/10 dark:text-pink-200">
                         <span className="font-semibold">Personalização solicitada:</span> {item.customization_text}
                       </div>
                     )}

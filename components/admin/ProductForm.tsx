@@ -10,9 +10,13 @@ import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
 import { ProductTagSelect, replaceProductTags } from '@/components/admin/ProductTagSelect';
 import { OptionsManager } from '@/components/admin/OptionsManager';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
+import { CustomizationSectionsEditor } from '@/components/admin/CustomizationSectionsEditor';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { ArrowDown, ArrowUp, CheckCircle2, Loader2, Upload } from 'lucide-react';
-import { DEFAULT_CUSTOMIZATION_COPY } from '@/lib/product-customization';
+import {
+  DEFAULT_CUSTOMIZATION_COPY,
+  type ProductCustomizationSection,
+} from '@/lib/product-customization';
 
 type ProductFormProps =
   | { mode: 'create'; product?: undefined }
@@ -85,6 +89,9 @@ export function ProductForm(props: ProductFormProps) {
   );
   const [customizationPlaceholder, setCustomizationPlaceholder] = useState(
     initial?.customization_placeholder ?? DEFAULT_CUSTOMIZATION_COPY.placeholder,
+  );
+  const [customizationSections, setCustomizationSections] = useState<ProductCustomizationSection[]>(
+    () => initial?.customization_sections ?? [],
   );
   const [options, setOptions] = useState<DraftOption[]>(() => props.mode === 'create' ? [createDraftOption()] : []);
   const [tagIds, setTagIds] = useState<string[]>([]);
@@ -190,6 +197,7 @@ export function ProductForm(props: ProductFormProps) {
       customization_question: customizationQuestion.trim() || null,
       customization_help_text: customizationHelpText.trim(),
       customization_placeholder: customizationPlaceholder.trim(),
+      customization_sections: customizationSections,
       options: props.mode === 'create' ? normalizedOptions : undefined,
     };
 
@@ -391,6 +399,10 @@ export function ProductForm(props: ProductFormProps) {
               </div>
             </div>
           </section>
+        )}
+
+        {isCustomizable && (
+          <CustomizationSectionsEditor value={customizationSections} onChange={setCustomizationSections} />
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">

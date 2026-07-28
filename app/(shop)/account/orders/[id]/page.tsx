@@ -221,7 +221,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   </p>
                 )}
                 {item.customization_text && (
-                  <div className="mt-2 rounded-xl bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:bg-pink-500/10 dark:text-pink-200">
+                  <div className="mt-2 whitespace-pre-line rounded-xl bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:bg-pink-500/10 dark:text-pink-200">
                     <span className="font-semibold">Personalização:</span> {item.customization_text}
                   </div>
                 )}
