@@ -170,7 +170,7 @@ export default async function HomePage() {
         <p className="w-full whitespace-nowrap text-center text-[10px] font-medium leading-5 text-white min-[360px]:text-[11px] sm:hidden">
           🚚 <strong className="font-semibold">Frete grátis</strong> +{storeSettings.commerce.freeShippingThreshold.toLocaleString(storeSettings.commerce.locale, { style: 'currency', currency: storeSettings.commerce.currency, maximumFractionDigits: 0 })} <span aria-hidden="true" className="mx-1 text-white/75">·</span> 🎉 <strong className="font-semibold">{storeSettings.commerce.firstOrderDiscount}% OFF</strong> na 1ª compra
         </p>
-        <p className="hidden w-full items-center justify-center gap-2 whitespace-nowrap text-center text-sm font-medium leading-5 text-white sm:flex">
+        <p className="hidden shrink-0 items-center gap-2 whitespace-nowrap text-center text-sm font-medium leading-5 text-white sm:inline-flex">
           <span>🚚 <strong className="font-semibold">Frete grátis</strong> acima de {storeSettings.commerce.freeShippingThreshold.toLocaleString(storeSettings.commerce.locale, { style: 'currency', currency: storeSettings.commerce.currency, maximumFractionDigits: 0 })}</span>
           <span aria-hidden="true" className="text-white/75">·</span>
           <span>🎉 <strong className="font-semibold">{storeSettings.commerce.firstOrderDiscount}% OFF</strong> na sua primeira compra</span>
