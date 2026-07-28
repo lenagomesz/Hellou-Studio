@@ -27,14 +27,11 @@ export const authOptions: NextAuthOptions = {
           .eq('email', credentials.email.toLowerCase().trim())
           .maybeSingle();
 
-        if (
-          queryResult.error?.code === '42703'
-          && queryResult.error.message.includes('avatar_url')
-        ) {
+        if (queryResult.error?.code === '42703') {
           const fallbackResult = await admin
             .from('users')
             .select(
-              'id, email, name, role, admin_access_level, admin_permissions, admin_active, session_version, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
+              'id, email, name, role, password_hash',
             )
             .eq('email', credentials.email.toLowerCase().trim())
             .maybeSingle();
@@ -42,7 +39,17 @@ export const authOptions: NextAuthOptions = {
           queryResult = {
             ...fallbackResult,
             data: fallbackResult.data
-              ? { ...fallbackResult.data, avatar_url: null }
+              ? {
+                  ...fallbackResult.data,
+                  avatar_url: null,
+                  admin_access_level: null,
+                  admin_permissions: null,
+                  admin_active: true,
+                  session_version: 0,
+                  two_fa_enabled: false,
+                  two_fa_secret: null,
+                  two_fa_backup_codes: null,
+                }
               : null,
           } as typeof queryResult;
         }
