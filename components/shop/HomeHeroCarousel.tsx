@@ -1,18 +1,10 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import type { StoreSettings } from '@/lib/store-settings-schema';
-
-const HERO_IMAGES: Record<string, string> = {
-  catalogo: '/images/home-hero-catalogo.png',
-  personalizaveis: '/images/home-hero-personalizaveis.png',
-  stl: '/images/home-hero-stl.png',
-  encomenda: '/images/home-hero-encomenda.png',
-};
 
 export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
   const slides = settings.home.heroSlides.filter((slide) => slide.active);
@@ -63,7 +55,7 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
       }}
     >
       <div className="relative h-[calc(100svh-6rem)] min-h-[560px] max-h-[680px] w-full overflow-hidden bg-[#fff8f4] dark:bg-gray-900 md:h-[calc(100svh-6.75rem)] md:min-h-[560px] md:max-h-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_88%_12%,rgba(249,115,22,0.18),transparent_30%),radial-gradient(circle_at_10%_88%,rgba(236,72,153,0.2),transparent_32%),linear-gradient(135deg,#fffaf7,#fff1f5_52%,#fff7ed)] dark:bg-[radial-gradient(circle_at_88%_12%,rgba(249,115,22,0.18),transparent_30%),radial-gradient(circle_at_10%_88%,rgba(236,72,153,0.2),transparent_32%),linear-gradient(135deg,#111827,#1f1722_52%,#21170f)] md:hidden" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_88%_12%,rgba(249,115,22,0.18),transparent_30%),radial-gradient(circle_at_10%_88%,rgba(236,72,153,0.2),transparent_32%),linear-gradient(135deg,#fffaf7,#fff1f5_52%,#fff7ed)] dark:bg-[radial-gradient(circle_at_88%_12%,rgba(249,115,22,0.18),transparent_30%),radial-gradient(circle_at_10%_88%,rgba(236,72,153,0.2),transparent_32%),linear-gradient(135deg,#111827,#1f1722_52%,#21170f)]" />
         <div
           className="relative flex h-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
           style={{ transform: `translateX(-${active * 100}%)` }}
@@ -71,23 +63,11 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
           {slides.map((slide, index) => (
             <article
               key={slide.id}
-              className="relative flex h-full min-w-full items-end overflow-hidden md:items-center"
+              className="relative flex h-full min-w-full items-end overflow-hidden"
               aria-label={`${index + 1} de ${slides.length}`}
               aria-hidden={index !== active}
             >
-              <div className="absolute inset-0 hidden overflow-hidden md:block">
-                <Image
-                  src={HERO_IMAGES[slide.id] ?? HERO_IMAGES.catalogo}
-                  alt=""
-                  fill
-                  priority={index === 0}
-                  sizes="100vw"
-                  className="object-cover object-[78%_center] md:object-center"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#fffaf7] via-[#fffaf7]/88 to-transparent dark:from-gray-950 dark:via-gray-950/88 md:from-[#fffaf7]/98 md:via-[#fffaf7]/30 dark:md:from-gray-950/96 dark:md:via-gray-950/35" />
-              </div>
-
-              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 pb-16 pt-10 text-center sm:px-10 md:h-auto md:max-w-[54%] md:items-start md:px-14 md:pb-14 md:pt-10 md:text-left lg:max-w-[50%] lg:px-20 xl:px-24">
+              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 pb-16 pt-10 text-center sm:px-10">
                 <span className="inline-flex w-fit max-w-full items-center gap-2 rounded-full border border-pink-200/70 bg-white/85 px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-pink-700 shadow-sm backdrop-blur-md dark:border-pink-800/60 dark:bg-gray-900/80 dark:text-pink-300 sm:text-xs">
                   <span className="h-2 w-2 shrink-0 rounded-full bg-gradient-to-br from-pink-500 to-orange-400" />
                   {slide.badge}
@@ -100,7 +80,7 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
                   <span className="block sm:mt-1">{slide.title}</span>
                 </h1>
 
-                <p className="mt-5 max-w-md text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-200 md:max-w-lg md:text-base lg:text-lg">
+                <p className="mt-5 max-w-md text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-200 md:text-base lg:text-lg">
                   {slide.description}
                 </p>
 
@@ -113,14 +93,6 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
                   <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
 
-                <div className="mt-6 hidden gap-2 lg:grid lg:grid-cols-3">
-                  {slide.trust.map((text) => (
-                    <span key={text} className="flex min-h-11 items-center gap-2 rounded-2xl border border-white/70 bg-white/70 px-3 py-2 text-[10px] font-bold leading-tight text-gray-700 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-gray-950/45 dark:text-gray-200">
-                      <CheckCircle2 aria-hidden="true" className="h-4 w-4 shrink-0 text-pink-500" />
-                      {text}
-                    </span>
-                  ))}
-                </div>
               </div>
             </article>
           ))}
@@ -128,23 +100,6 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
 
         {slides.length > 1 && (
           <>
-            <button
-              type="button"
-              onClick={showPrevious}
-              aria-label="Banner anterior"
-              className="absolute left-5 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-pink-100 bg-white/90 text-pink-600 shadow-lg backdrop-blur-sm transition hover:scale-105 hover:bg-white dark:border-white/10 dark:bg-gray-900/90 dark:text-pink-300 md:flex"
-            >
-              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={showNext}
-              aria-label="Próximo banner"
-              className="absolute right-5 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-pink-100 bg-white/90 text-pink-600 shadow-lg backdrop-blur-sm transition hover:scale-105 hover:bg-white dark:border-white/10 dark:bg-gray-900/90 dark:text-pink-300 md:flex"
-            >
-              <ArrowRight aria-hidden="true" className="h-4 w-4" />
-            </button>
-
             <div className="absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-5" aria-label="Escolher destaque">
               {slides.map((slide, index) => (
                 <button
