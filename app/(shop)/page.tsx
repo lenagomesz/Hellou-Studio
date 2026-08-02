@@ -189,7 +189,7 @@ export default async function HomePage() {
             {collections.map((collection, i) => (
               <ScrollReveal key={collection.id} delay={i * 150} direction={i === 0 ? 'left' : i === 2 ? 'right' : 'up'} className="h-full">
                 <Link
-                  href={`/collections/${collection.id}`}
+                  href={`/products?collection=${encodeURIComponent(collection.id)}`}
                   style={{ borderColor: '#EC489944', backgroundImage: 'linear-gradient(135deg, #EC489914, transparent 65%)' }}
                   className={`group relative block h-full overflow-hidden rounded-2xl border bg-white text-center transition-all duration-500 hover-lift dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800 sm:rounded-3xl ${collection.imageOnly && collection.imageUrl ? 'p-0' : 'p-4 sm:p-8'}`}
                 >

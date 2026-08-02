@@ -6,6 +6,7 @@ import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
 import { matchesCatalogSearch } from '@/lib/catalog-search';
+import { getStoreSettings } from '@/lib/store-settings';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,7 @@ async function getProductsRaw(filters: {
   category?: string;
   search?: string;
   sort?: string;
+  productIds?: string[];
 }): Promise<Product[]> {
   console.log('[products/page] getProductsRaw called, filters:', filters);
   console.log('[products/page] SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING');
@@ -40,6 +42,11 @@ async function getProductsRaw(filters: {
   }
 
   let query = admin.from('products').select('*, product_options(price_modifier)').eq('active', true).or('type.eq.physical,type.is.null').neq('category', 'encomenda').not('name', 'ilike', 'Encomenda%');
+
+  if (filters.productIds) {
+    if (filters.productIds.length === 0) return [];
+    query = query.in('id', filters.productIds);
+  }
 
   if (filters.category) {
     query = query.eq('category', filters.category);
@@ -71,6 +78,7 @@ async function getProducts(filters: {
   category?: string;
   search?: string;
   sort?: string;
+  productIds?: string[];
 }): Promise<Product[]> {
   return getProductsRaw(filters);
 }
@@ -81,6 +89,7 @@ export default async function ProductsCatalogPage(
       category?: string | string[];
       search?: string | string[];
       sort?: string | string[];
+      collection?: string | string[];
     }>;
   },
 ) {
@@ -91,10 +100,16 @@ export default async function ProductsCatalogPage(
     typeof searchParams.search === 'string' ? searchParams.search : undefined;
   const sort =
     typeof searchParams.sort === 'string' ? searchParams.sort : undefined;
+  const collectionId =
+    typeof searchParams.collection === 'string' ? searchParams.collection : undefined;
 
-  const categories = await getCatalogCategories('physical');
+  const [categories, storeSettings] = await Promise.all([
+    getCatalogCategories('physical'),
+    getStoreSettings(),
+  ]);
+  const collection = (storeSettings.home.collections ?? []).find((item) => item.id === collectionId && item.active);
   const validCategory = category && categories.some((item) => item.slug === category) ? category : undefined;
-  const products = await getProducts({ category: validCategory, search, sort });
+  const products = await getProducts({ category: validCategory, search, sort, productIds: collection?.productIds });
   const activeCategory = validCategory ?? 'all';
   const categoryTabs = [{ slug: 'all', name: 'Todos' }, ...categories];
 
@@ -112,7 +127,8 @@ export default async function ProductsCatalogPage(
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">Catálogo</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">{collection ? collection.name : 'Catálogo'}</h1>
+        {collection && <p className="mt-1 max-w-2xl text-sm text-gray-600 dark:text-gray-400">{collection.description}</p>}
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           {products.length}{' '}
           {products.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
@@ -120,6 +136,7 @@ export default async function ProductsCatalogPage(
       </header>
 
       <div className="mb-6 flex flex-wrap gap-2">
+        {collection && <Link href="/products" className="rounded-full border border-pink-200 bg-pink-50 px-4 py-1.5 text-sm font-semibold text-pink-700 transition hover:bg-pink-100 dark:border-pink-900 dark:bg-pink-950/30 dark:text-pink-300">← Ver catálogo completo</Link>}
         {categoryTabs.map((cat) => {
           const params = new URLSearchParams();
           if (cat.slug !== 'all') params.set('category', cat.slug);
@@ -152,6 +169,7 @@ export default async function ProductsCatalogPage(
         {validCategory ? (
           <input type="hidden" name="category" value={validCategory} />
         ) : null}
+        {collection ? <input type="hidden" name="collection" value={collection.id} /> : null}
         <div className="relative col-span-2 sm:col-span-1">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-600">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -185,7 +203,7 @@ export default async function ProductsCatalogPage(
 
       {products.length === 0 ? (
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
-          {validCategory || search ? (
+          {validCategory || search || collection ? (
             <>
               <p className="text-gray-600 dark:text-gray-400">
                 Nenhum produto encontrado com esses filtros.
