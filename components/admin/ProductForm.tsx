@@ -345,18 +345,34 @@ export function ProductForm(props: ProductFormProps) {
         </div>
 
         <div className={`rounded-2xl border p-4 transition ${isWholesale ? 'border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-500/10' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50'}`}>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input type="checkbox" checked={isWholesale} onChange={(event) => setIsWholesale(event.target.checked)} className="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
-            <span>
-              <span className="block text-sm font-bold text-gray-900 dark:text-white">Disponível para lojistas?</span>
-              <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">O produto mantém sua categoria normal e também aparece na seção “Para lojistas”.</span>
-            </span>
-          </label>
+          <p className="text-sm font-bold text-gray-900 dark:text-white">Quantidade mínima de venda</p>
+          <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Escolha 1 unidade para venda normal ou uma quantidade maior para exibir o produto também em “Para lojistas”.</p>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {([1, 20, 50, 100] as const).map((quantityOption) => {
+              const selected = quantityOption === 1
+                ? !isWholesale
+                : isWholesale && Number(minimumOrderQuantity) === quantityOption;
+              return (
+                <button
+                  key={quantityOption}
+                  type="button"
+                  onClick={() => {
+                    setIsWholesale(quantityOption > 1);
+                    setMinimumOrderQuantity(String(quantityOption));
+                  }}
+                  className={`rounded-xl border px-3 py-3 text-left transition ${selected ? 'border-orange-500 bg-white text-orange-700 ring-2 ring-orange-500/15 dark:bg-gray-900 dark:text-orange-300' : 'border-gray-200 bg-white/70 text-gray-700 hover:border-orange-300 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-300'}`}
+                >
+                  <span className="block text-sm font-bold">{quantityOption} {quantityOption === 1 ? 'unidade' : 'unidades'}</span>
+                  <span className="mt-0.5 block text-[10px] uppercase tracking-wide text-gray-500">{quantityOption === 1 ? 'Venda normal' : 'Para lojistas'}</span>
+                </button>
+              );
+            })}
+          </div>
           {isWholesale && (
             <label className="mt-4 block max-w-xs">
-              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Pedido mínimo (unidades)</span>
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Ou informe outra quantidade</span>
               <input type="number" min={2} max={999} step={1} required value={minimumOrderQuantity} onChange={(event) => setMinimumOrderQuantity(event.target.value)} className="mt-1 w-full rounded-xl border border-orange-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 dark:border-orange-900 dark:bg-gray-900 dark:text-white" />
-              <span className="mt-1 block text-xs text-gray-500">Exemplo: 10 significa pedido mínimo de 10 unidades.</span>
+              <span className="mt-1 block text-xs text-gray-500">Essa será a quantidade mínima obrigatória no pedido.</span>
             </label>
           )}
         </div>

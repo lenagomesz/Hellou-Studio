@@ -122,6 +122,9 @@ export function ProductDetail({
   );
 
   const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, product.is_wholesale ? 999 : 50) : product.is_wholesale ? 999 : 50;
+  const wholesaleQuantityPresets = product.is_wholesale
+    ? Array.from(new Set([minimumQuantity, 20, 50, 100])).filter((value) => value >= minimumQuantity && value <= maxQuantity)
+    : [];
   const structuredCustomizationText = formatProductCustomizationSelections(customizationSections, customizationSelections);
   const finalCustomizationText = customizationSections.length > 0
     ? structuredCustomizationText
@@ -683,7 +686,21 @@ export function ProductDetail({
           >
             Quantidade
           </label>
-          <div className="mt-2 inline-flex items-center rounded-lg border border-gray-300 dark:border-gray-700">
+          {wholesaleQuantityPresets.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {wholesaleQuantityPresets.map((quantityOption) => (
+                <button
+                  key={quantityOption}
+                  type="button"
+                  onClick={() => setQuantity(quantityOption)}
+                  className={`rounded-full border px-4 py-2 text-xs font-bold transition ${quantity === quantityOption ? 'border-orange-500 bg-orange-500 text-white shadow-sm' : 'border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-400 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-300'}`}
+                >
+                  {quantityOption} unidades
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="mt-3 inline-flex items-center rounded-lg border border-gray-300 dark:border-gray-700">
             <button
               type="button"
               onClick={() => setQuantity((q) => Math.max(minimumQuantity, q - 1))}
