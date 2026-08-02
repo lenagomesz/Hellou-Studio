@@ -64,9 +64,6 @@ export async function generateMetadata(): Promise<Metadata> {
       description: settings.seo.description,
       images: settings.identity.socialImageUrl ? [settings.identity.socialImageUrl] : [],
     },
-    other: {
-      lomadee: '2324685',
-    },
     robots: { index: true, follow: true },
   };
 }
