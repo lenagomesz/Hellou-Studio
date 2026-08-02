@@ -191,7 +191,7 @@ export default async function HomePage() {
                 <Link
                   href={`/products?collection=${encodeURIComponent(collection.id)}`}
                   style={{ borderColor: '#EC489944', backgroundImage: 'linear-gradient(135deg, #EC489914, transparent 65%)' }}
-                  className={`group relative block h-full overflow-hidden rounded-2xl border bg-white text-center transition-all duration-500 hover-lift dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800 sm:rounded-3xl ${collection.imageOnly && collection.imageUrl ? 'p-0' : 'p-4 sm:p-8'}`}
+                  className={`group relative h-full overflow-hidden rounded-2xl border bg-white text-center transition-all duration-500 hover-lift dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800 sm:rounded-3xl ${collection.imageOnly && collection.imageUrl ? 'block p-0' : 'flex items-center justify-center p-4 sm:p-8'}`}
                 >
                   {collection.imageOnly && collection.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
