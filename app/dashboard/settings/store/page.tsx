@@ -14,7 +14,7 @@ const TABS: Array<{ id: Section; label: string; icon: typeof Store }> = [
   { id: 'contact', label: 'Contato e redes', icon: Share2 },
   { id: 'commerce', label: 'Comercial', icon: ShoppingBag },
   { id: 'seo', label: 'SEO', icon: Search },
-  { id: 'home', label: 'Banners da home', icon: ImageIcon },
+  { id: 'home', label: 'Home e coleções', icon: ImageIcon },
   { id: 'shipping', label: 'Frete e retirada', icon: Truck },
   { id: 'payments', label: 'Pagamentos', icon: CreditCard },
   { id: 'email', label: 'E-mails', icon: Mail },
