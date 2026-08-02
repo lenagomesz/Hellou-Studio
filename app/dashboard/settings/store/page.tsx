@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronDown, ChevronUp, CreditCard, ExternalLink, ImageIcon, Loader2, Mail, Menu, Palette, Plus, ReceiptText, Save, Search, Share2, ShoppingBag, Store, Trash2, Truck, Undo2 } from 'lucide-react';
 import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/store-settings-schema';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
 
 type Section = keyof StoreSettings;
 
@@ -71,6 +72,7 @@ export default function StoreSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [migrationRequired, setMigrationRequired] = useState(false);
+  const [availableProducts, setAvailableProducts] = useState<Array<{ id: string; name: string; image_url: string | null }>>([]);
 
   const dirty = useMemo(() => JSON.stringify(settings) !== JSON.stringify(savedSettings), [settings, savedSettings]);
 
@@ -85,6 +87,13 @@ export default function StoreSettingsPage() {
       })
       .catch((error: Error) => setMessage(error.message))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/products?active=true&limit=100', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((data) => setAvailableProducts(data.products ?? []))
+      .catch(() => setAvailableProducts([]));
   }, []);
 
   function updateSection<S extends Section>(section: S, patch: Partial<StoreSettings[S]>) {
@@ -107,6 +116,20 @@ export default function StoreSettingsPage() {
     const heroSlides = [...settings.home.heroSlides];
     [heroSlides[index], heroSlides[target]] = [heroSlides[target], heroSlides[index]];
     updateSection('home', { heroSlides });
+  }
+
+  function updateCollection(index: number, patch: Partial<StoreSettings['home']['collections'][number]>) {
+    updateSection('home', {
+      collections: settings.home.collections.map((collection, collectionIndex) => collectionIndex === index ? { ...collection, ...patch } : collection),
+    });
+  }
+
+  function moveCollection(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= settings.home.collections.length) return;
+    const collections = [...settings.home.collections];
+    [collections[index], collections[target]] = [collections[target], collections[index]];
+    updateSection('home', { collections });
   }
 
   async function save() {
@@ -281,6 +304,39 @@ export default function StoreSettingsPage() {
                 ))}
               </div>
               {settings.home.heroSlides.length < 8 && <button type="button" onClick={() => updateSection('home', { heroSlides: [...settings.home.heroSlides, { id: `slide-${Date.now()}`, badge: 'Novo destaque', accent: 'Sua mensagem', title: 'Título do banner', description: 'Descreva aqui a novidade ou campanha da sua loja.', action: 'Ver mais', href: '/products', trust: ['Atendimento próximo', 'Compra segura', 'Feito com cuidado'], active: true }] })} className="inline-flex items-center gap-2 rounded-xl border border-dashed border-pink-300 px-4 py-3 text-sm font-bold text-pink-700 hover:bg-pink-50"><Plus className="h-4 w-4" /> Adicionar banner</button>}
+
+              <div className="border-t border-slate-200 pt-6">
+                <h2 className="text-lg font-black">Coleções da página inicial</h2>
+                <p className="text-sm text-slate-500">Cadastre, ordene ou oculte as coleções exibidas na seção “Explore nossas coleções”.</p>
+              </div>
+              <div className="space-y-4">
+                {settings.home.collections.map((collection, index) => (
+                  <article key={collection.id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="flex items-center gap-2 text-xs font-bold text-slate-600"><input type="checkbox" checked={collection.active} onChange={(event) => updateCollection(index, { active: event.target.checked })} className="rounded text-pink-600" /> Coleção ativa</label>
+                      <div className="flex gap-1">
+                        <button type="button" onClick={() => moveCollection(index, -1)} disabled={index === 0} aria-label="Mover coleção para cima" className="rounded-lg border border-slate-200 bg-white p-2 disabled:opacity-30"><ChevronUp className="h-4 w-4" /></button>
+                        <button type="button" onClick={() => moveCollection(index, 1)} disabled={index === settings.home.collections.length - 1} aria-label="Mover coleção para baixo" className="rounded-lg border border-slate-200 bg-white p-2 disabled:opacity-30"><ChevronDown className="h-4 w-4" /></button>
+                        <button type="button" onClick={() => updateSection('home', { collections: settings.home.collections.filter((_, collectionIndex) => collectionIndex !== index) })} aria-label="Excluir coleção" className="rounded-lg border border-red-100 bg-white p-2 text-red-500"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    </div>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <TextField label="Nome" value={collection.name} onChange={(name) => updateCollection(index, { name })} maxLength={60} />
+                      <TextField label="Emoji" value={collection.emoji} onChange={(emoji) => updateCollection(index, { emoji })} maxLength={12} />
+                      <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-700">Descrição</span><textarea rows={2} maxLength={180} value={collection.description} onChange={(event) => updateCollection(index, { description: event.target.value })} className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm outline-none focus:border-pink-400" /></label>
+                      <div className="sm:col-span-2"><ImageUploadField value={collection.imageUrl} onChange={(imageUrl) => updateCollection(index, { imageUrl })} label="Imagem da coleção (opcional)" /></div>
+                      <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-xs font-bold text-slate-700 sm:col-span-2"><input type="checkbox" checked={collection.imageOnly} disabled={!collection.imageUrl} onChange={(event) => updateCollection(index, { imageOnly: event.target.checked })} className="rounded text-pink-600" /> Mostrar apenas a imagem no card</label>
+                      <div className="sm:col-span-2">
+                        <p className="mb-2 text-xs font-bold text-slate-700">Produtos vinculados ({collection.productIds.length})</p>
+                        <div className="max-h-64 space-y-1 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2">
+                          {availableProducts.map((product) => <label key={product.id} className="flex cursor-pointer items-center gap-3 rounded-lg p-2 text-sm hover:bg-pink-50"><input type="checkbox" checked={collection.productIds.includes(product.id)} onChange={(event) => updateCollection(index, { productIds: event.target.checked ? [...collection.productIds, product.id] : collection.productIds.filter((id) => id !== product.id) })} className="rounded text-pink-600" />{product.image_url ? <img src={product.image_url} alt="" className="h-9 w-9 rounded-lg object-cover" /> : <span className="h-9 w-9 rounded-lg bg-slate-100" />}<span className="font-medium text-slate-700">{product.name}</span></label>)}
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              {settings.home.collections.length < 12 && <button type="button" onClick={() => updateSection('home', { collections: [...settings.home.collections, { id: `collection-${Date.now()}`, name: 'Nova coleção', description: 'Conheça os produtos desta coleção.', emoji: '✨', imageUrl: '', imageOnly: false, productIds: [], active: true }] })} className="inline-flex items-center gap-2 rounded-xl border border-dashed border-pink-300 px-4 py-3 text-sm font-bold text-pink-700 hover:bg-pink-50"><Plus className="h-4 w-4" /> Adicionar coleção</button>}
             </div>
           )}
 

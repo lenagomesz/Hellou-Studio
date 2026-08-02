@@ -51,6 +51,7 @@ export function normalizeStoreSettings(input: unknown): StoreSettings {
   const fiscal = objectValue(root.fiscal);
   const navigation = objectValue(root.navigation);
   const rawSlides = Array.isArray(home.heroSlides) ? home.heroSlides.slice(0, 8) : DEFAULT_STORE_SETTINGS.home.heroSlides;
+  const rawCollections = Array.isArray(home.collections) ? home.collections.slice(0, 12) : DEFAULT_STORE_SETTINGS.home.collections;
 
   return {
     identity: {
@@ -107,6 +108,30 @@ export function normalizeStoreSettings(input: unknown): StoreSettings {
           href: href.startsWith('/') ? href : fallback.href,
           trust: rawTrust.slice(0, 3).map((item, trustIndex) => textValue(item, fallback.trust[trustIndex] ?? 'Compra segura', 80)),
           active: typeof slide.active === 'boolean' ? slide.active : true,
+        };
+      }),
+      collections: rawCollections.map((rawCollection, index) => {
+        const collection = objectValue(rawCollection);
+        const fallback = DEFAULT_STORE_SETTINGS.home.collections[index] ?? {
+          id: `collection-${index + 1}`,
+          name: 'Nova coleção',
+          description: 'Conheça os produtos desta coleção.',
+          emoji: '✨',
+          imageUrl: '',
+          imageOnly: false,
+          productIds: [],
+          active: true,
+        };
+        const productIds = Array.isArray(collection.productIds) ? collection.productIds : fallback.productIds;
+        return {
+          id: optionalText(collection.id, fallback.id, 60).replace(/[^a-zA-Z0-9_-]/g, '-') || `collection-${index + 1}`,
+          name: textValue(collection.name, fallback.name, 60),
+          description: textValue(collection.description, fallback.description, 180),
+          emoji: textValue(collection.emoji, fallback.emoji, 12),
+          imageUrl: urlValue(collection.imageUrl, fallback.imageUrl),
+          imageOnly: typeof collection.imageOnly === 'boolean' ? collection.imageOnly : fallback.imageOnly,
+          productIds: productIds.slice(0, 100).filter((id): id is string => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id)),
+          active: typeof collection.active === 'boolean' ? collection.active : true,
         };
       }),
     },

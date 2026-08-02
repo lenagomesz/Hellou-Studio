@@ -51,6 +51,16 @@ export interface StoreSettings {
       trust: string[];
       active: boolean;
     }>;
+    collections: Array<{
+      id: string;
+      name: string;
+      description: string;
+      emoji: string;
+      imageUrl: string;
+      imageOnly: boolean;
+      productIds: string[];
+      active: boolean;
+    }>;
   };
   shipping: {
     originCep: string;
@@ -134,6 +144,12 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
       { id: 'personalizaveis', badge: 'Feito especialmente para você', accent: 'Do Seu Jeito', title: 'Em Cada Detalhe', description: 'Escolha cores, tamanhos e acabamentos para criar uma peça que combine com você, com seu espaço ou com aquela pessoa especial.', action: 'Explorar personalizáveis', href: '/products?category=personalizaveis', trust: ['Cores à sua escolha', 'Produção sob demanda', 'Presente com personalidade'], active: true },
       { id: 'stl', badge: 'Arquivos digitais para impressão 3D', accent: 'Sua Próxima Ideia', title: 'Começa Aqui', description: 'Encontre modelos STL originais e prontos para imprimir, criados para quem quer produzir peças bonitas com praticidade.', action: 'Explorar arquivos STL', href: '/stl', trust: ['Download após a compra', 'Modelos exclusivos', 'Prontos para imprimir'], active: true },
       { id: 'encomenda', badge: 'Transformamos sua ideia em objeto', accent: 'Imagine.', title: 'A Gente Faz em 3D.', description: 'Envie seu arquivo, referência ou ideia. Nós analisamos o projeto e preparamos uma impressão personalizada para você.', action: 'Faça sua encomenda', href: '/request-print', trust: ['Orçamento personalizado', 'Acompanhamento próximo', 'Produção com cuidado'], active: true },
+    ],
+    collections: [
+      { id: 'chaveiros', name: 'Chaveiros', description: 'Chaveiros personalizáveis para todos os estilos.', emoji: '🔑', imageUrl: '', imageOnly: false, productIds: [], active: true },
+      { id: 'escritorio', name: 'Escritório', description: 'Organizadores e acessórios 3D para seu desk.', emoji: '🖊️', imageUrl: '', imageOnly: false, productIds: [], active: true },
+      { id: 'criaturas', name: 'Criaturas', description: 'Personagens adoráveis feitos com carinho.', emoji: '🦊', imageUrl: '', imageOnly: false, productIds: [], active: true },
+      { id: 'decoracao', name: 'Decoração', description: 'Peças cheias de personalidade para decorar.', emoji: '🪴', imageUrl: '', imageOnly: false, productIds: [], active: true },
     ],
   },
   shipping: {

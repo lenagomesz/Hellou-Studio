@@ -20,29 +20,6 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
-const CATEGORY_PRESENTATION: Record<string, { emoji: string; description: string; color: string }> = {
-  chaveiros: {
-    emoji: '🔑',
-    description: 'Chaveiros personalizáveis para todos os estilos.',
-    color: 'from-pink-400 to-orange-400',
-  },
-  escritorio: {
-    emoji: '🖊️',
-    description: 'Organizadores e acessórios 3D para seu desk.',
-    color: 'from-orange-400 to-pink-400',
-  },
-  criaturas: {
-    emoji: '🦊',
-    description: 'Personagens adoráveis feitos com carinho.',
-    color: 'from-pink-500 to-orange-400',
-  },
-  decoracao: {
-    emoji: '🪴',
-    description: 'Explore os produtos da categoria Decoração.',
-    color: 'from-orange-400 to-pink-400',
-  },
-};
-
 const FEATURES = [
   {
     emoji: '🎨',
@@ -160,9 +137,9 @@ function FeaturedSkeleton() {
 }
 
 export default async function HomePage() {
-  const catalogCategories = await getCatalogCategories('physical');
   const { getStoreSettings } = await import('@/lib/store-settings');
   const storeSettings = await getStoreSettings();
+  const collections = storeSettings.home.collections.filter((collection) => collection.active);
   return (
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
       {/* Promo banner */}
@@ -194,46 +171,45 @@ export default async function HomePage() {
           <ScrollReveal direction="scale">
             <div className="text-center">
               <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 dark:bg-orange-950/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-orange-600 dark:text-orange-400 ring-1 ring-orange-100 dark:ring-orange-800/50">
-                Categorias
+                Coleções
               </span>
               <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                Explore Nossa{' '}
+                Explore Nossas{' '}
                 <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
-                  Coleção
+                  Coleções
                 </span>
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm text-gray-600 dark:text-gray-400">
-                Cada categoria foi pensada com carinho para atender diferentes estilos e necessidades.
+                Cada coleção foi pensada com carinho para atender diferentes estilos e necessidades.
               </p>
             </div>
           </ScrollReveal>
 
           <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-12 sm:grid-cols-4 sm:gap-6">
-            {catalogCategories.slice(0, 4).map((cat, i) => {
-              const presentation = CATEGORY_PRESENTATION[cat.slug] ?? {
-                emoji: '📦',
-                description: `Explore os produtos da categoria ${cat.name}.`,
-                color: '',
-              };
-              return (
-              <ScrollReveal key={cat.slug} delay={i * 150} direction={i === 0 ? 'left' : i === 2 ? 'right' : 'up'} className="h-full">
+            {collections.map((collection, i) => (
+              <ScrollReveal key={collection.id} delay={i * 150} direction={i === 0 ? 'left' : i === 2 ? 'right' : 'up'} className="h-full">
                 <Link
-                  href={`/products?category=${cat.slug}`}
+                  href={`/collections/${collection.id}`}
                   style={{ borderColor: '#EC489944', backgroundImage: 'linear-gradient(135deg, #EC489914, transparent 65%)' }}
-                  className="group relative block h-full overflow-hidden rounded-2xl border bg-white p-4 text-center transition-all duration-500 hover-lift dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800 sm:rounded-3xl sm:p-8"
+                  className={`group relative block h-full overflow-hidden rounded-2xl border bg-white text-center transition-all duration-500 hover-lift dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800 sm:rounded-3xl ${collection.imageOnly && collection.imageUrl ? 'p-0' : 'p-4 sm:p-8'}`}
                 >
+                  {collection.imageOnly && collection.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={collection.imageUrl} alt={collection.name} className="h-full min-h-48 w-full object-cover sm:min-h-72" />
+                  ) : (
+                  <>
                   <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{ backgroundImage: 'linear-gradient(135deg, #EC489918, transparent)' }} />
                   <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-pink-500 opacity-0 blur-2xl transition-all duration-700 group-hover:right-0 group-hover:top-0 group-hover:opacity-30" />
 
                   <div className="relative">
                     <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-pink-500/10 text-xl shadow-sm transition-all duration-500 group-hover:-rotate-6 group-hover:scale-110 group-hover:shadow-lg sm:h-16 sm:w-16 sm:rounded-2xl sm:text-3xl sm:group-hover:scale-125">
-                      {presentation.emoji}
+                      {collection.emoji}
                     </span>
                     <h3 className="mt-3 text-sm font-bold text-gray-900 transition-colors duration-300 group-hover:text-pink-700 dark:text-white dark:group-hover:text-pink-400 sm:mt-5 sm:text-lg">
-                      {cat.name}
+                      {collection.name}
                     </h3>
                     <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-gray-600 dark:text-gray-400 sm:mt-2 sm:text-sm sm:leading-relaxed">
-                      {presentation.description}
+                      {collection.description}
                     </p>
                     <p className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-pink-600 transition-all duration-300 group-hover:gap-2 sm:mt-5 sm:gap-1.5 sm:text-sm sm:group-hover:gap-3">
                       Ver produtos
@@ -242,18 +218,11 @@ export default async function HomePage() {
                       </svg>
                     </p>
                   </div>
+                  </>
+                  )}
                 </Link>
               </ScrollReveal>
-              );
-            })}
-          </div>
-          <div className="mt-6 flex justify-center sm:mt-8">
-            <Link href="/products" className="group inline-flex items-center gap-2 rounded-full border border-pink-200 bg-white px-5 py-2.5 text-sm font-bold text-pink-600 shadow-sm transition hover:border-pink-300 hover:bg-pink-50 hover:shadow-md dark:border-pink-900/60 dark:bg-gray-900 dark:text-pink-400 dark:hover:bg-pink-950/30">
-              Ver mais categorias
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-4 w-4 transition-transform group-hover:translate-x-1">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </Link>
+            ))}
           </div>
         </div>
       </section>
