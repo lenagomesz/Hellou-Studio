@@ -8,10 +8,11 @@ Sentry.init({
   enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
   sendDefaultPii: false,
 
-  // Ignore native WebKit bridge calls injected by iOS browsers/extensions.
-  // The site does not use window.webkit.messageHandlers.
+  // Ignore native bridge failures injected by in-app browsers. These scripts
+  // belong to the iOS/Android WebView and are not part of the storefront.
   ignoreErrors: [
     /undefined is not an object \(evaluating ['"]window\.webkit\.messageHandlers['"]\)/i,
+    /Error invoking postMessage: Java object is gone/i,
   ],
 
   // Ignore errors from extensions and scripts
@@ -51,6 +52,7 @@ Sentry.init({
     // Browser extensions
     /extensions\//i,
     /^chrome:\/\//i,
+    /^app:\/\/navigation_performance_logger_android/i,
     // Third party scripts
     /google-analytics/i,
   ],

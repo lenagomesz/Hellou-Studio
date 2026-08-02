@@ -127,7 +127,9 @@ export async function POST(request: Request) {
   }
   const product = productRow;
   const minimumQuantity = product.is_wholesale ? Math.max(2, product.minimum_order_quantity ?? 2) : 1;
-  if (requestedQty < minimumQuantity) return badRequest(`O pedido mínimo deste produto é de ${minimumQuantity} unidades`);
+  if (product.is_wholesale && requestedQty !== 1 && requestedQty < minimumQuantity) {
+    return badRequest(`Escolha 1 unidade no varejo ou pelo menos ${minimumQuantity} unidades para lojistas`);
+  }
   if (product.category === 'encomenda') {
     const { data: requestOwner, error: ownerError } = await admin
       .from('print_requests')
@@ -219,13 +221,17 @@ export async function POST(request: Request) {
   const existing =
     matchRows.find((r) => r.product_option_id === optionId && (r.customization_text ?? '') === normalizedCustomization) ?? null;
 
-  const quantityCap = product.is_wholesale ? 999 : 50;
+  const quantityCap = product.is_wholesale ? 1000 : 50;
   const cap = product.fulfillment_mode === 'ready_stock'
     ? Math.min(optionStock ?? quantityCap, quantityCap)
     : quantityCap;
-  if (cap < minimumQuantity) return badRequest('Estoque insuficiente para o pedido mínimo deste produto');
+  if (cap < 1) return badRequest('Produto sem estoque disponível');
   const targetQty = (existing?.quantity ?? 0) + requestedQty;
-  const finalQty = Math.max(minimumQuantity, Math.min(cap, targetQty));
+  if (product.is_wholesale && targetQty > 1 && cap < minimumQuantity) return badRequest('Estoque insuficiente para o pedido mínimo de lojista');
+  const cappedQty = Math.min(cap, targetQty);
+  const finalQty = product.is_wholesale && cappedQty > 1 && cappedQty < minimumQuantity
+    ? minimumQuantity
+    : Math.max(1, cappedQty);
 
   if (existing) {
     const { error: updateError } = await admin

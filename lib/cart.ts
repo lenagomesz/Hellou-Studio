@@ -69,12 +69,32 @@ export function getCartMinimumQuantity(
   return product.is_wholesale ? Math.max(2, product.minimum_order_quantity ?? 2) : 1;
 }
 
+export function isCartQuantityAllowed(
+  product: Pick<Product, 'is_wholesale' | 'minimum_order_quantity'>,
+  quantity: number,
+): boolean {
+  if (!Number.isInteger(quantity) || quantity < 1) return false;
+  if (!product.is_wholesale) return true;
+  return quantity === 1 || quantity >= getCartMinimumQuantity(product);
+}
+
+export function normalizeCartQuantity(
+  quantity: number,
+  stock: number | undefined,
+  product: Pick<Product, 'is_wholesale' | 'minimum_order_quantity'>,
+): number {
+  const max = stock ?? (product.is_wholesale ? 1000 : 50);
+  const normalized = Math.max(1, Math.min(max, Math.floor(quantity)));
+  if (!product.is_wholesale || normalized === 1 || normalized >= getCartMinimumQuantity(product)) return normalized;
+  return getCartMinimumQuantity(product) <= max ? getCartMinimumQuantity(product) : 1;
+}
+
 export function getCartStockLimit(
   product: Pick<Product, 'fulfillment_mode' | 'is_wholesale'>,
   option: Pick<ProductOption, 'stock'> | null,
 ): number | undefined {
   if (product.fulfillment_mode === 'ready_stock') return option?.stock;
-  return product.is_wholesale ? 999 : undefined;
+  return product.is_wholesale ? 1000 : undefined;
 }
 
 export function validateCartProductTypes(items: Array<{ product: { type: string } }>) {

@@ -380,8 +380,8 @@ export default function CartPage() {
                     key={item.id}
                     item={item}
                     disabled={isSyncing}
-                    onIncrease={() => updateQuantity(item.id, item.quantity + 1)}
-                    onDecrease={() => updateQuantity(item.id, Math.max(getCartMinimumQuantity(item.product), item.quantity - 1))}
+                    onIncrease={() => updateQuantity(item.id, item.product.is_wholesale && item.quantity === 1 ? getCartMinimumQuantity(item.product) : item.quantity + 1)}
+                    onDecrease={() => updateQuantity(item.id, item.product.is_wholesale && item.quantity <= getCartMinimumQuantity(item.product) ? 1 : Math.max(1, item.quantity - 1))}
                     onRemove={() => removeItem(item.id)}
                   />
                 ))}
@@ -1060,7 +1060,7 @@ function CartLine({
                 </p>
               )}
               <p className="mt-0.5 text-xs text-gray-400">{formatPrice(unit)} un.</p>
-              {item.product.is_wholesale && <p className="mt-1 text-xs font-semibold text-orange-600 dark:text-orange-400">Pedido mínimo: {minimum} unidades</p>}
+              {item.product.is_wholesale && <p className="mt-1 text-xs font-semibold text-orange-600 dark:text-orange-400">1 un. no varejo ou atacado a partir de {minimum}</p>}
             </div>
             <div className="flex flex-shrink-0 items-center gap-1">
               <Link
@@ -1091,7 +1091,7 @@ function CartLine({
               <button
                 type="button"
                 onClick={onDecrease}
-                disabled={disabled || item.quantity <= minimum}
+                disabled={disabled || item.quantity <= 1}
                 className="flex h-8 w-8 items-center justify-center rounded-l-lg text-gray-600 hover:bg-white hover:text-pink-600 disabled:cursor-not-allowed disabled:opacity-40 transition"
                 aria-label="Diminuir quantidade"
               >

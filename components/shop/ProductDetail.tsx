@@ -73,7 +73,7 @@ export function ProductDetail({
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(() =>
     (preselectedOptionId && options.some(o => o.id === preselectedOptionId)) ? preselectedOptionId : inStockOptions[0]?.id ?? null,
   );
-  const [quantity, setQuantity] = useState(minimumQuantity);
+  const [quantity, setQuantity] = useState(1);
   const [customizationText, setCustomizationText] = useState(initialCustomizationText);
   const [customizationSelections, setCustomizationSelections] = useState<Record<string, ProductCustomizationSelection>>(
     () => parseProductCustomizationSelections(customizationSections, initialCustomizationText),
@@ -121,10 +121,9 @@ export function ProductDetail({
     ),
   );
 
-  const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, product.is_wholesale ? 999 : 50) : product.is_wholesale ? 999 : 50;
-  const wholesaleQuantityPresets = product.is_wholesale
-    ? Array.from(new Set([minimumQuantity, 20, 50, 100])).filter((value) => value >= minimumQuantity && value <= maxQuantity)
-    : [];
+  const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, product.is_wholesale ? 1000 : 50) : product.is_wholesale ? 1000 : 50;
+  const wholesaleQuantityPresets = product.is_wholesale ? [1, 20, 50, 100] : [];
+  const quantityIsAllowed = !product.is_wholesale || quantity === 1 || quantity >= minimumQuantity;
   const structuredCustomizationText = formatProductCustomizationSelections(customizationSections, customizationSelections);
   const finalCustomizationText = customizationSections.length > 0
     ? structuredCustomizationText
@@ -142,7 +141,7 @@ export function ProductDetail({
   const hasSelectedOption = automaticPricingSection
     ? selectedOption !== null
     : options.length === 0 || selectedOption !== null;
-  const canAddToCart = !isOwnedDigital && hasSelectedOption && hasRequiredCustomization;
+  const canAddToCart = !isOwnedDigital && hasSelectedOption && hasRequiredCustomization && quantityIsAllowed && quantity <= maxQuantity;
   const isSyncing = status === 'syncing';
   const tagOverlay = product.tags && product.tags.length > 0 ? (
     <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
@@ -299,7 +298,7 @@ export function ProductDetail({
                         if (firstInStock) {
                           setSelectedOptionId(firstInStock.id);
                           setGallerySelectionVersion((version) => version + 1);
-                          setQuantity(minimumQuantity);
+                          setQuantity(1);
                         }
                       }}
                       className={`relative h-8 w-8 rounded-full border-2 transition-all ${
@@ -553,7 +552,7 @@ export function ProductDetail({
                             if (firstInStock) {
                               setSelectedOptionId(firstInStock.id);
                               setGallerySelectionVersion((version) => version + 1);
-                              setQuantity(minimumQuantity);
+                              setQuantity(1);
                             }
                           }}
                           className={`relative h-8 w-8 rounded-full border-2 transition-all ${
@@ -605,7 +604,7 @@ export function ProductDetail({
                           if (outOfStock) return;
                           setSelectedOptionId(option.id);
                           setGallerySelectionVersion((version) => version + 1);
-                          setQuantity(minimumQuantity);
+                          setQuantity(1);
                         }}
                         disabled={outOfStock}
                         className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
@@ -692,10 +691,11 @@ export function ProductDetail({
                 <button
                   key={quantityOption}
                   type="button"
+                  disabled={(quantityOption !== 1 && quantityOption < minimumQuantity) || quantityOption > maxQuantity}
                   onClick={() => setQuantity(quantityOption)}
-                  className={`rounded-full border px-4 py-2 text-xs font-bold transition ${quantity === quantityOption ? 'border-orange-500 bg-orange-500 text-white shadow-sm' : 'border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-400 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-300'}`}
+                  className={`rounded-full border px-4 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${quantity === quantityOption ? 'border-orange-500 bg-orange-500 text-white shadow-sm' : 'border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-400 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-300'}`}
                 >
-                  {quantityOption} unidades
+                  {quantityOption} {quantityOption === 1 ? 'unidade' : 'unidades'}
                 </button>
               ))}
             </div>
@@ -703,20 +703,27 @@ export function ProductDetail({
           <div className="mt-3 inline-flex items-center rounded-lg border border-gray-300 dark:border-gray-700">
             <button
               type="button"
-              onClick={() => setQuantity((q) => Math.max(minimumQuantity, q - 1))}
-              disabled={quantity <= minimumQuantity}
+              onClick={() => setQuantity((q) => product.is_wholesale && q <= minimumQuantity ? 1 : Math.max(1, q - 1))}
+              disabled={quantity <= 1}
               className="px-3 py-2 text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-300 dark:hover:bg-gray-800"
               aria-label="Diminuir quantidade"
             >
               −
             </button>
-            <span className="min-w-[2.5rem] px-2 text-center text-sm font-medium">
-              {quantity}
-            </span>
+            <input
+              id="quantity"
+              type="number"
+              min={1}
+              max={maxQuantity}
+              value={quantity}
+              onChange={(event) => setQuantity(Math.max(1, Math.min(maxQuantity, Math.floor(Number(event.target.value) || 1))))}
+              className="h-10 w-20 border-x border-gray-300 bg-white px-2 text-center text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              aria-label="Quantidade desejada"
+            />
             <button
               type="button"
               onClick={() =>
-                setQuantity((q) => Math.min(maxQuantity, q + 1))
+                setQuantity((q) => Math.min(maxQuantity, product.is_wholesale && q === 1 ? minimumQuantity : q + 1))
               }
               className="px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               aria-label="Aumentar quantidade"
@@ -725,7 +732,10 @@ export function ProductDetail({
             </button>
           </div>
           {product.is_wholesale && (
-            <p className="mt-2 text-xs font-semibold text-orange-600 dark:text-orange-400">Pedido mínimo para lojistas: {minimumQuantity} unidades.</p>
+            <div className="mt-2 text-xs">
+              <p className="font-semibold text-orange-600 dark:text-orange-400">1 unidade no varejo ou mínimo de {minimumQuantity} unidades para lojistas. Digite até 1000.</p>
+              {!quantityIsAllowed && <p className="mt-1 font-semibold text-red-600 dark:text-red-400">Escolha 1 unidade ou pelo menos {minimumQuantity} unidades.</p>}
+            </div>
           )}
         </div>}
 

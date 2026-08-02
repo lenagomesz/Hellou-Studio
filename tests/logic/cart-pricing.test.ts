@@ -5,6 +5,8 @@ import {
   computeUnitPrice,
   getCartMinimumQuantity,
   getCartStockLimit,
+  isCartQuantityAllowed,
+  normalizeCartQuantity,
   type CartItemView,
 } from '@/lib/cart';
 
@@ -80,7 +82,12 @@ describe('quantidade no carrinho', () => {
     const limit = getCartStockLimit(item.product, item.option);
 
     expect(minimum).toBe(10);
-    expect(limit).toBe(999);
-    expect(clampQuantity(1, limit, minimum)).toBe(10);
+    expect(limit).toBe(1000);
+    expect(isCartQuantityAllowed(item.product, 1)).toBe(true);
+    expect(isCartQuantityAllowed(item.product, 5)).toBe(false);
+    expect(isCartQuantityAllowed(item.product, 20)).toBe(true);
+    expect(normalizeCartQuantity(1, limit, item.product)).toBe(1);
+    expect(normalizeCartQuantity(5, limit, item.product)).toBe(10);
+    expect(normalizeCartQuantity(1200, limit, item.product)).toBe(1000);
   });
 });

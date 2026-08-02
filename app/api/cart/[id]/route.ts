@@ -58,8 +58,10 @@ export async function PATCH(
   if (productError) return serverError('Erro ao validar produto');
   const product = productRow as Pick<Product, 'fulfillment_mode' | 'is_wholesale' | 'minimum_order_quantity'> | null;
   const minimumQuantity = product?.is_wholesale ? Math.max(2, product.minimum_order_quantity ?? 2) : 1;
-  if (Math.floor(quantity) < minimumQuantity) return badRequest(`O pedido mínimo deste produto é de ${minimumQuantity} unidades`);
-  let cap = product?.is_wholesale ? 999 : 50;
+  if (product?.is_wholesale && Math.floor(quantity) !== 1 && Math.floor(quantity) < minimumQuantity) {
+    return badRequest(`Escolha 1 unidade no varejo ou pelo menos ${minimumQuantity} unidades para lojistas`);
+  }
+  let cap = product?.is_wholesale ? 1000 : 50;
 
   if (product?.fulfillment_mode === 'ready_stock' && existing.product_option_id) {
     const { data: optionRow, error: optionError } = await admin
@@ -72,9 +74,9 @@ export async function PATCH(
     if (option) cap = Math.min(option.stock, cap);
   }
 
-  if (cap < minimumQuantity) return badRequest('Estoque insuficiente para o pedido mínimo deste produto');
+  if (product?.is_wholesale && Math.floor(quantity) > 1 && cap < minimumQuantity) return badRequest('Estoque insuficiente para o pedido mínimo de lojista');
 
-  const finalQty = Math.max(minimumQuantity, Math.min(cap, Math.floor(quantity)));
+  const finalQty = Math.max(1, Math.min(cap, Math.floor(quantity)));
 
   const { error: updateError } = await admin
     .from('cart_items')
