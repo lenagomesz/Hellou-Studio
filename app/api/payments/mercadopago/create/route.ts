@@ -145,6 +145,7 @@ export async function POST(request: Request) {
   const invalidCartItem = cartItems.find((item) =>
     !Number.isInteger(item.quantity)
     || item.quantity < 1
+    || (item.product?.is_wholesale && item.quantity < Math.max(2, item.product.minimum_order_quantity ?? 2))
     || (item.product_option_id && (!item.option || item.option.product_id !== item.product_id))
   );
   if (invalidCartItem) {

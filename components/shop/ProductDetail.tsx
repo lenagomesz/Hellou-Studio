@@ -69,10 +69,11 @@ export function ProductDetail({
 
   const preselectedOptionId = searchParams.get('option');
   const initialCustomizationText = searchParams.get('customization') ?? '';
+  const minimumQuantity = product.is_wholesale ? Math.max(2, product.minimum_order_quantity ?? 2) : 1;
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(() =>
     (preselectedOptionId && options.some(o => o.id === preselectedOptionId)) ? preselectedOptionId : inStockOptions[0]?.id ?? null,
   );
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(minimumQuantity);
   const [customizationText, setCustomizationText] = useState(initialCustomizationText);
   const [customizationSelections, setCustomizationSelections] = useState<Record<string, ProductCustomizationSelection>>(
     () => parseProductCustomizationSelections(customizationSections, initialCustomizationText),
@@ -120,7 +121,7 @@ export function ProductDetail({
     ),
   );
 
-  const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, 50) : 50;
+  const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, product.is_wholesale ? 999 : 50) : product.is_wholesale ? 999 : 50;
   const structuredCustomizationText = formatProductCustomizationSelections(customizationSections, customizationSelections);
   const finalCustomizationText = customizationSections.length > 0
     ? structuredCustomizationText
@@ -173,6 +174,8 @@ export function ProductDetail({
           category: product.category,
           type: product.type,
           fulfillment_mode: product.fulfillment_mode,
+          is_wholesale: product.is_wholesale,
+          minimum_order_quantity: product.minimum_order_quantity,
         },
         option: selectedOption
           ? {
@@ -293,7 +296,7 @@ export function ProductDetail({
                         if (firstInStock) {
                           setSelectedOptionId(firstInStock.id);
                           setGallerySelectionVersion((version) => version + 1);
-                          setQuantity(1);
+                          setQuantity(minimumQuantity);
                         }
                       }}
                       className={`relative h-8 w-8 rounded-full border-2 transition-all ${
@@ -547,7 +550,7 @@ export function ProductDetail({
                             if (firstInStock) {
                               setSelectedOptionId(firstInStock.id);
                               setGallerySelectionVersion((version) => version + 1);
-                              setQuantity(1);
+                              setQuantity(minimumQuantity);
                             }
                           }}
                           className={`relative h-8 w-8 rounded-full border-2 transition-all ${
@@ -599,7 +602,7 @@ export function ProductDetail({
                           if (outOfStock) return;
                           setSelectedOptionId(option.id);
                           setGallerySelectionVersion((version) => version + 1);
-                          setQuantity(1);
+                          setQuantity(minimumQuantity);
                         }}
                         disabled={outOfStock}
                         className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
@@ -683,8 +686,9 @@ export function ProductDetail({
           <div className="mt-2 inline-flex items-center rounded-lg border border-gray-300 dark:border-gray-700">
             <button
               type="button"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => setQuantity((q) => Math.max(minimumQuantity, q - 1))}
+              disabled={quantity <= minimumQuantity}
+              className="px-3 py-2 text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-300 dark:hover:bg-gray-800"
               aria-label="Diminuir quantidade"
             >
               −
@@ -703,6 +707,9 @@ export function ProductDetail({
               +
             </button>
           </div>
+          {product.is_wholesale && (
+            <p className="mt-2 text-xs font-semibold text-orange-600 dark:text-orange-400">Pedido mínimo para lojistas: {minimumQuantity} unidades.</p>
+          )}
         </div>}
 
         <div className="mt-8">

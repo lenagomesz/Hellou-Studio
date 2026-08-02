@@ -3,6 +3,7 @@ import {
   clampQuantity,
   computeCartTotal,
   computeUnitPrice,
+  getCartMinimumQuantity,
   getCartStockLimit,
   type CartItemView,
 } from '@/lib/cart';
@@ -68,5 +69,18 @@ describe('quantidade no carrinho', () => {
 
     expect(limit).toBe(3);
     expect(clampQuantity(5, limit)).toBe(3);
+  });
+
+  it('respeita o pedido mínimo de um produto para lojistas', () => {
+    const item = cartItem(null);
+    item.product.is_wholesale = true;
+    item.product.minimum_order_quantity = 10;
+
+    const minimum = getCartMinimumQuantity(item.product);
+    const limit = getCartStockLimit(item.product, item.option);
+
+    expect(minimum).toBe(10);
+    expect(limit).toBe(999);
+    expect(clampQuantity(1, limit, minimum)).toBe(10);
   });
 });

@@ -50,14 +50,16 @@ export async function PATCH(
   if (existingError) return serverError('Erro ao buscar item');
   if (!existing) return notFound('Item não encontrado');
 
-  let cap = 50;
   const { data: productRow, error: productError } = await admin
     .from('products')
-    .select('fulfillment_mode')
+    .select('fulfillment_mode, is_wholesale, minimum_order_quantity')
     .eq('id', existing.product_id)
     .maybeSingle();
   if (productError) return serverError('Erro ao validar produto');
-  const product = productRow as Pick<Product, 'fulfillment_mode'> | null;
+  const product = productRow as Pick<Product, 'fulfillment_mode' | 'is_wholesale' | 'minimum_order_quantity'> | null;
+  const minimumQuantity = product?.is_wholesale ? Math.max(2, product.minimum_order_quantity ?? 2) : 1;
+  if (Math.floor(quantity) < minimumQuantity) return badRequest(`O pedido mínimo deste produto é de ${minimumQuantity} unidades`);
+  let cap = product?.is_wholesale ? 999 : 50;
 
   if (product?.fulfillment_mode === 'ready_stock' && existing.product_option_id) {
     const { data: optionRow, error: optionError } = await admin
@@ -67,10 +69,12 @@ export async function PATCH(
       .maybeSingle();
     if (optionError) return serverError('Erro ao validar variação');
     const option = optionRow as Pick<ProductOption, 'stock'> | null;
-    if (option) cap = Math.min(option.stock, 50);
+    if (option) cap = Math.min(option.stock, cap);
   }
 
-  const finalQty = Math.max(1, Math.min(cap, Math.floor(quantity)));
+  if (cap < minimumQuantity) return badRequest('Estoque insuficiente para o pedido mínimo deste produto');
+
+  const finalQty = Math.max(minimumQuantity, Math.min(cap, Math.floor(quantity)));
 
   const { error: updateError } = await admin
     .from('cart_items')

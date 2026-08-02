@@ -70,6 +70,8 @@ export async function PATCH(
       images?: string[] | null;
       active?: boolean;
       fulfillment_mode?: string;
+      is_wholesale?: boolean;
+      minimum_order_quantity?: number;
       is_customizable?: boolean;
       customization_sections?: unknown;
     } & ProductCommercialInput & ProductCustomizationCopyInput;
@@ -113,6 +115,16 @@ export async function PATCH(
     if (input.fulfillment_mode !== undefined) {
       if (!['made_to_order', 'ready_stock', 'hybrid'].includes(input.fulfillment_mode)) return badRequest('Modo de produção inválido');
       update.fulfillment_mode = input.fulfillment_mode;
+    }
+    if (input.is_wholesale !== undefined) {
+      update.is_wholesale = !!input.is_wholesale;
+      if (!input.is_wholesale) update.minimum_order_quantity = 1;
+    }
+    if (input.minimum_order_quantity !== undefined && input.is_wholesale !== false) {
+      if (!Number.isInteger(input.minimum_order_quantity) || input.minimum_order_quantity < 2 || input.minimum_order_quantity > 999) {
+        return badRequest('Informe uma quantidade mínima entre 2 e 999 unidades');
+      }
+      update.minimum_order_quantity = input.minimum_order_quantity;
     }
     if (input.is_customizable !== undefined) {
       update.is_customizable = !!input.is_customizable;

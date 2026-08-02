@@ -14,7 +14,7 @@ import {
 type RawCartRow = CartItem & {
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'active' | 'fulfillment_mode'
+    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'active' | 'fulfillment_mode' | 'is_wholesale' | 'minimum_order_quantity'
   > | null;
   option:
     | Pick<ProductOption, 'id' | 'product_id' | 'name' | 'price_modifier' | 'stock' | 'color'>
@@ -39,6 +39,8 @@ function toView(row: RawCartRow): CartItemView | null {
       category: row.product.category,
       type: row.product.type,
       fulfillment_mode: row.product.fulfillment_mode,
+      is_wholesale: row.product.is_wholesale,
+      minimum_order_quantity: row.product.minimum_order_quantity,
     },
     option: row.option
       ? {
@@ -60,7 +62,7 @@ export async function GET() {
   const { data, error } = await admin
     .from('cart_items')
     .select(
-      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, sale_price, image_url, category, type, active, fulfillment_mode), option:product_options(id, product_id, name, price_modifier, stock, color)',
+      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, sale_price, image_url, category, type, active, fulfillment_mode, is_wholesale, minimum_order_quantity), option:product_options(id, product_id, name, price_modifier, stock, color)',
     )
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: true });
@@ -111,7 +113,7 @@ export async function POST(request: Request) {
 
   const { data: productRow, error: productError } = await admin
     .from('products')
-    .select('id, name, type, category, active, is_customizable, fulfillment_mode, customization_sections')
+    .select('id, name, type, category, active, is_customizable, fulfillment_mode, customization_sections, is_wholesale, minimum_order_quantity')
     .eq('id', product_id)
     .maybeSingle();
 
@@ -124,6 +126,8 @@ export async function POST(request: Request) {
     return badRequest('Produto indisponível');
   }
   const product = productRow;
+  const minimumQuantity = product.is_wholesale ? Math.max(2, product.minimum_order_quantity ?? 2) : 1;
+  if (requestedQty < minimumQuantity) return badRequest(`O pedido mínimo deste produto é de ${minimumQuantity} unidades`);
   if (product.category === 'encomenda') {
     const { data: requestOwner, error: ownerError } = await admin
       .from('print_requests')
@@ -215,11 +219,13 @@ export async function POST(request: Request) {
   const existing =
     matchRows.find((r) => r.product_option_id === optionId && (r.customization_text ?? '') === normalizedCustomization) ?? null;
 
+  const quantityCap = product.is_wholesale ? 999 : 50;
   const cap = product.fulfillment_mode === 'ready_stock'
-    ? Math.min(optionStock ?? 50, 50)
-    : 50;
+    ? Math.min(optionStock ?? quantityCap, quantityCap)
+    : quantityCap;
+  if (cap < minimumQuantity) return badRequest('Estoque insuficiente para o pedido mínimo deste produto');
   const targetQty = (existing?.quantity ?? 0) + requestedQty;
-  const finalQty = Math.max(1, Math.min(cap, targetQty));
+  const finalQty = Math.max(minimumQuantity, Math.min(cap, targetQty));
 
   if (existing) {
     const { error: updateError } = await admin

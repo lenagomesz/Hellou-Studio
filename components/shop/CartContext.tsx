@@ -16,6 +16,7 @@ import {
   computeCartCount,
   computeCartTotal,
   findExistingItem,
+  getCartMinimumQuantity,
   getCartStockLimit,
   type AddItemInput,
   type CartItemView,
@@ -226,7 +227,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = useCallback(
     async ({ product, option, quantity, customization_text }: AddItemInput) => {
       const stockLimit = getCartStockLimit(product, option);
-      const safeQuantity = clampQuantity(quantity, stockLimit);
+      const minimumQuantity = getCartMinimumQuantity(product);
+      const safeQuantity = clampQuantity(quantity, stockLimit, minimumQuantity);
       const normalizedCustomization = customization_text?.trim() || null;
 
       if (isAuthed) {
@@ -254,6 +256,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           const newQty = clampQuantity(
             existing.quantity + safeQuantity,
             stockLimit,
+            minimumQuantity,
           );
           return prev.map((item) =>
             item.id === existing.id ? { ...item, quantity: newQty } : item,
@@ -281,6 +284,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const safeQuantity = clampQuantity(
         quantity,
         getCartStockLimit(target.product, target.option),
+        getCartMinimumQuantity(target.product),
       );
 
       if (isAuthed) {

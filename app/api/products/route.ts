@@ -96,6 +96,8 @@ export async function POST(request: Request) {
     images,
     active,
     fulfillment_mode,
+    is_wholesale,
+    minimum_order_quantity,
     is_customizable,
     customization_question,
     customization_help_text,
@@ -114,6 +116,8 @@ export async function POST(request: Request) {
     images?: string[] | null;
     active?: boolean;
     fulfillment_mode?: string;
+    is_wholesale?: boolean;
+    minimum_order_quantity?: number;
     is_customizable?: boolean;
     options?: Array<{ name: string; dimensions?: string | null; notes?: string | null; color?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number; active?: boolean }>;
     customization_sections?: unknown;
@@ -135,6 +139,10 @@ export async function POST(request: Request) {
     return badRequest('Preço promocional inválido');
   }
   const fulfillmentMode = ['made_to_order', 'ready_stock', 'hybrid'].includes(fulfillment_mode ?? '') ? fulfillment_mode : 'made_to_order';
+  const minimumOrderQuantity = is_wholesale ? minimum_order_quantity : 1;
+  if (is_wholesale && (!Number.isInteger(minimumOrderQuantity) || Number(minimumOrderQuantity) < 2 || Number(minimumOrderQuantity) > 999)) {
+    return badRequest('Informe uma quantidade mínima entre 2 e 999 unidades');
+  }
   let commercialFields;
   try {
     commercialFields = normalizeProductCommercialFields(commercialInput);
@@ -176,6 +184,8 @@ export async function POST(request: Request) {
       images: images ?? null,
       active: active ?? true,
       fulfillment_mode: fulfillmentMode,
+      is_wholesale: !!is_wholesale,
+      minimum_order_quantity: Number(minimumOrderQuantity),
       is_customizable: !!is_customizable,
       ...customizationCopy,
       customization_sections: customizationSections,

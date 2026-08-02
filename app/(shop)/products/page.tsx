@@ -28,6 +28,7 @@ async function getProductsRaw(filters: {
   search?: string;
   sort?: string;
   productIds?: string[];
+  wholesale?: boolean;
 }): Promise<Product[]> {
   console.log('[products/page] getProductsRaw called, filters:', filters);
   console.log('[products/page] SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING');
@@ -47,6 +48,8 @@ async function getProductsRaw(filters: {
     if (filters.productIds.length === 0) return [];
     query = query.in('id', filters.productIds);
   }
+
+  if (filters.wholesale) query = query.eq('is_wholesale', true);
 
   if (filters.category) {
     query = query.eq('category', filters.category);
@@ -79,6 +82,7 @@ async function getProducts(filters: {
   search?: string;
   sort?: string;
   productIds?: string[];
+  wholesale?: boolean;
 }): Promise<Product[]> {
   return getProductsRaw(filters);
 }
@@ -90,6 +94,7 @@ export default async function ProductsCatalogPage(
       search?: string | string[];
       sort?: string | string[];
       collection?: string | string[];
+      wholesale?: string | string[];
     }>;
   },
 ) {
@@ -102,6 +107,7 @@ export default async function ProductsCatalogPage(
     typeof searchParams.sort === 'string' ? searchParams.sort : undefined;
   const collectionId =
     typeof searchParams.collection === 'string' ? searchParams.collection : undefined;
+  const wholesale = searchParams.wholesale === 'true';
 
   const [categories, storeSettings] = await Promise.all([
     getCatalogCategories('physical'),
@@ -109,7 +115,7 @@ export default async function ProductsCatalogPage(
   ]);
   const collection = (storeSettings.home.collections ?? []).find((item) => item.id === collectionId && item.active);
   const validCategory = category && categories.some((item) => item.slug === category) ? category : undefined;
-  const products = await getProducts({ category: validCategory, search, sort, productIds: collection?.productIds });
+  const products = await getProducts({ category: validCategory, search, sort, productIds: collection?.productIds, wholesale });
   const activeCategory = validCategory ?? 'all';
   const categoryTabs = [{ slug: 'all', name: 'Todos' }, ...categories];
 
@@ -127,8 +133,9 @@ export default async function ProductsCatalogPage(
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">{collection ? collection.name : 'Catálogo'}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">{collection ? collection.name : wholesale ? 'Para lojistas' : 'Catálogo'}</h1>
         {collection && <p className="mt-1 max-w-2xl text-sm text-gray-600 dark:text-gray-400">{collection.description}</p>}
+        {wholesale && <p className="mt-1 max-w-2xl text-sm text-gray-600 dark:text-gray-400">Produtos para comprar em quantidade. O pedido mínimo aparece em cada item.</p>}
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           {products.length}{' '}
           {products.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
@@ -137,11 +144,13 @@ export default async function ProductsCatalogPage(
 
       <div className="mb-6 flex flex-wrap gap-2">
         {collection && <Link href="/products" className="rounded-full border border-pink-200 bg-pink-50 px-4 py-1.5 text-sm font-semibold text-pink-700 transition hover:bg-pink-100 dark:border-pink-900 dark:bg-pink-950/30 dark:text-pink-300">← Ver catálogo completo</Link>}
+        {wholesale && <Link href="/products" className="rounded-full border border-orange-200 bg-orange-50 px-4 py-1.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-300">← Ver catálogo completo</Link>}
         {categoryTabs.map((cat) => {
           const params = new URLSearchParams();
           if (cat.slug !== 'all') params.set('category', cat.slug);
           if (search) params.set('search', search);
           if (sort) params.set('sort', sort);
+          if (wholesale) params.set('wholesale', 'true');
           const href = `/products${params.toString() ? `?${params}` : ''}`;
           const isActive = activeCategory === cat.slug;
           const categoryColor = '#EC4899';
@@ -170,6 +179,7 @@ export default async function ProductsCatalogPage(
           <input type="hidden" name="category" value={validCategory} />
         ) : null}
         {collection ? <input type="hidden" name="collection" value={collection.id} /> : null}
+        {wholesale ? <input type="hidden" name="wholesale" value="true" /> : null}
         <div className="relative col-span-2 sm:col-span-1">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-600">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -203,7 +213,7 @@ export default async function ProductsCatalogPage(
 
       {products.length === 0 ? (
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
-          {validCategory || search || collection ? (
+          {validCategory || search || collection || wholesale ? (
             <>
               <p className="text-gray-600 dark:text-gray-400">
                 Nenhum produto encontrado com esses filtros.

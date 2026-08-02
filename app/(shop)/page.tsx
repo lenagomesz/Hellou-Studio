@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import { FeaturedProductsClient } from '@/components/shop/FeaturedProducts';
+import { ProductCard } from '@/components/shop/ProductCard';
 import { HeroCarousel } from '@/components/shop/HeroCarousel';
 import { HomeHeroCarousel } from '@/components/shop/HomeHeroCarousel';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
@@ -118,6 +119,60 @@ async function FeaturedProducts() {
       digitalProducts={digitalProducts}
       categories={[...physicalCategories, ...digitalCategories].filter((category, index, all) => all.findIndex((item) => item.slug === category.slug) === index)}
     />
+  );
+}
+
+const getWholesaleProducts = unstable_cache(
+  async (): Promise<Product[]> => {
+    try {
+      const { data, error } = await getSupabaseAdmin()
+        .from('products')
+        .select('*, product_options(price_modifier)')
+        .eq('active', true)
+        .eq('is_wholesale', true)
+        .or('type.eq.physical,type.is.null')
+        .neq('category', 'encomenda')
+        .order('created_at', { ascending: false })
+        .limit(4);
+      if (error) return [];
+      return attachProductTags((data ?? []) as Product[]);
+    } catch {
+      return [];
+    }
+  },
+  ['wholesale-products-home'],
+  { revalidate: 60 },
+);
+
+async function WholesaleProducts() {
+  const [products, categories] = await Promise.all([
+    getWholesaleProducts(),
+    getCatalogCategories('physical'),
+  ]);
+  if (products.length === 0) return null;
+
+  return (
+    <section className="bg-gradient-to-br from-orange-50 via-white to-pink-50 py-12 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <ScrollReveal direction="scale">
+          <div className="flex flex-col items-center text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
+            <div>
+              <span className="inline-flex rounded-full bg-orange-100 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-orange-700 dark:bg-orange-950/60 dark:text-orange-300">Atacado</span>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Para lojistas</h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-gray-600 dark:text-gray-400">Produtos selecionados para comprar em quantidade e abastecer sua loja.</p>
+            </div>
+            <Link href="/products?wholesale=true" className="mt-5 inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-orange-600 sm:mt-0">Ver todos <span aria-hidden="true">→</span></Link>
+          </div>
+        </ScrollReveal>
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+          {products.map((product, index) => (
+            <ScrollReveal key={product.id} delay={index * 100} direction="up">
+              <ProductCard product={product} category={categories.find((category) => category.slug === product.category)} />
+            </ScrollReveal>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -243,6 +298,10 @@ export default async function HomePage() {
       {/* =========================================== */}
       <Suspense fallback={<FeaturedSkeleton />}>
         <FeaturedProducts />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <WholesaleProducts />
       </Suspense>
 
       {/* =========================================== */}

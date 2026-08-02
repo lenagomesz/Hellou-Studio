@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     let shippingPackage;
     if (requestedItems.length > 0) {
-      const quantities = new Map(requestedItems.filter((item) => typeof item.product_id === 'string').map((item) => [item.product_id!, Math.max(1, Math.min(50, Math.trunc(Number(item.quantity) || 1)))]));
+        const quantities = new Map(requestedItems.filter((item) => typeof item.product_id === 'string').map((item) => [item.product_id!, Math.max(1, Math.min(999, Math.trunc(Number(item.quantity) || 1)))]));
       const productIds = [...quantities.keys()];
       const { data: products } = await getSupabaseAdmin().from('products').select('id, weight_grams, length_cm, width_cm, height_cm').in('id', productIds).eq('active', true);
       if ((products ?? []).length !== productIds.length) return NextResponse.json({ error: 'O carrinho contém um produto indisponível.' }, { status: 400 });

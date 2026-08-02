@@ -9,7 +9,7 @@ export interface CartItemView {
   created_at?: string;
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'fulfillment_mode'
+    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'fulfillment_mode' | 'is_wholesale' | 'minimum_order_quantity'
   >;
   option: Pick<
     ProductOption,
@@ -57,16 +57,24 @@ export function findExistingItem(
 export function clampQuantity(
   quantity: number,
   stock: number | undefined,
+  minimum = 1,
 ): number {
-  const max = Math.min(stock ?? 50, 50);
-  return Math.max(1, Math.min(max, Math.floor(quantity)));
+  const max = stock ?? 50;
+  return Math.max(minimum, Math.min(max, Math.floor(quantity)));
+}
+
+export function getCartMinimumQuantity(
+  product: Pick<Product, 'is_wholesale' | 'minimum_order_quantity'>,
+): number {
+  return product.is_wholesale ? Math.max(2, product.minimum_order_quantity ?? 2) : 1;
 }
 
 export function getCartStockLimit(
-  product: Pick<Product, 'fulfillment_mode'>,
+  product: Pick<Product, 'fulfillment_mode' | 'is_wholesale'>,
   option: Pick<ProductOption, 'stock'> | null,
 ): number | undefined {
-  return product.fulfillment_mode === 'ready_stock' ? option?.stock : undefined;
+  if (product.fulfillment_mode === 'ready_stock') return option?.stock;
+  return product.is_wholesale ? 999 : undefined;
 }
 
 export function validateCartProductTypes(items: Array<{ product: { type: string } }>) {

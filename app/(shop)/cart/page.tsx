@@ -10,6 +10,7 @@ import { useCart } from '@/components/shop/CartContext';
 import {
   computeItemTotal,
   computeUnitPrice,
+  getCartMinimumQuantity,
   getCartStockLimit,
   type CartItemView,
 } from '@/lib/cart';
@@ -380,7 +381,7 @@ export default function CartPage() {
                     item={item}
                     disabled={isSyncing}
                     onIncrease={() => updateQuantity(item.id, item.quantity + 1)}
-                    onDecrease={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                    onDecrease={() => updateQuantity(item.id, Math.max(getCartMinimumQuantity(item.product), item.quantity - 1))}
                     onRemove={() => removeItem(item.id)}
                   />
                 ))}
@@ -1015,7 +1016,8 @@ function CartLine({
 }>) {
   const unit = computeUnitPrice(item);
   const lineTotal = computeItemTotal(item);
-  const max = Math.min(getCartStockLimit(item.product, item.option) ?? 50, 50);
+  const minimum = getCartMinimumQuantity(item.product);
+  const max = getCartStockLimit(item.product, item.option) ?? 50;
   const atMax = item.quantity >= max;
 
   return (
@@ -1058,6 +1060,7 @@ function CartLine({
                 </p>
               )}
               <p className="mt-0.5 text-xs text-gray-400">{formatPrice(unit)} un.</p>
+              {item.product.is_wholesale && <p className="mt-1 text-xs font-semibold text-orange-600 dark:text-orange-400">Pedido mínimo: {minimum} unidades</p>}
             </div>
             <div className="flex flex-shrink-0 items-center gap-1">
               <Link
@@ -1088,7 +1091,7 @@ function CartLine({
               <button
                 type="button"
                 onClick={onDecrease}
-                disabled={disabled || item.quantity <= 1}
+                disabled={disabled || item.quantity <= minimum}
                 className="flex h-8 w-8 items-center justify-center rounded-l-lg text-gray-600 hover:bg-white hover:text-pink-600 disabled:cursor-not-allowed disabled:opacity-40 transition"
                 aria-label="Diminuir quantidade"
               >

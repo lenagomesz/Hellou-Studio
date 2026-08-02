@@ -81,6 +81,8 @@ export function ProductForm(props: ProductFormProps) {
   const [imageDragOver, setImageDragOver] = useState(false);
   const [active, setActive] = useState<boolean>(initial?.active ?? true);
   const [fulfillmentMode, setFulfillmentMode] = useState<'made_to_order' | 'ready_stock' | 'hybrid'>(initial?.fulfillment_mode ?? 'made_to_order');
+  const [isWholesale, setIsWholesale] = useState(initial?.is_wholesale ?? false);
+  const [minimumOrderQuantity, setMinimumOrderQuantity] = useState(String(initial?.minimum_order_quantity && initial.minimum_order_quantity > 1 ? initial.minimum_order_quantity : 10));
   const [isCustomizable, setIsCustomizable] = useState(initial?.is_customizable ?? false);
   const [customizationQuestion, setCustomizationQuestion] = useState(
     initial?.customization_question ?? DEFAULT_CUSTOMIZATION_COPY.question,
@@ -174,12 +176,20 @@ export function ProductForm(props: ProductFormProps) {
       return;
     }
 
+    const minimumOrderQuantityNumber = Number(minimumOrderQuantity);
+    if (isWholesale && (!Number.isInteger(minimumOrderQuantityNumber) || minimumOrderQuantityNumber < 2 || minimumOrderQuantityNumber > 999)) {
+      setError('Informe uma quantidade mínima entre 2 e 999 unidades');
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
       name: name.trim(),
       description: description.trim() || null,
       category,
+      is_wholesale: isWholesale,
+      minimum_order_quantity: isWholesale ? minimumOrderQuantityNumber : 1,
       base_price: priceNumber,
       sale_price: salePriceNumber,
       sku: sku.trim() || null,
@@ -332,6 +342,23 @@ export function ProductForm(props: ProductFormProps) {
               ['hybrid', 'Híbrido', 'Pronto quando houver, produzir se faltar'],
             ] as const).map(([value, label, detail]) => <button key={value} type="button" onClick={() => setFulfillmentMode(value)} className={`rounded-xl border p-3 text-left transition ${fulfillmentMode === value ? 'border-pink-500 bg-pink-50 ring-2 ring-pink-500/10 dark:bg-pink-500/10' : 'border-gray-200 hover:border-pink-200 dark:border-gray-700'}`}><span className="block text-sm font-bold text-gray-900 dark:text-white">{label}</span><span className="mt-0.5 block text-xs leading-5 text-gray-500">{detail}</span></button>)}
           </div>
+        </div>
+
+        <div className={`rounded-2xl border p-4 transition ${isWholesale ? 'border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-500/10' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50'}`}>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input type="checkbox" checked={isWholesale} onChange={(event) => setIsWholesale(event.target.checked)} className="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+            <span>
+              <span className="block text-sm font-bold text-gray-900 dark:text-white">Disponível para lojistas?</span>
+              <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">O produto mantém sua categoria normal e também aparece na seção “Para lojistas”.</span>
+            </span>
+          </label>
+          {isWholesale && (
+            <label className="mt-4 block max-w-xs">
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Pedido mínimo (unidades)</span>
+              <input type="number" min={2} max={999} step={1} required value={minimumOrderQuantity} onChange={(event) => setMinimumOrderQuantity(event.target.value)} className="mt-1 w-full rounded-xl border border-orange-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 dark:border-orange-900 dark:bg-gray-900 dark:text-white" />
+              <span className="mt-1 block text-xs text-gray-500">Exemplo: 10 significa pedido mínimo de 10 unidades.</span>
+            </label>
+          )}
         </div>
 
         <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${isCustomizable ? 'border-pink-300 bg-pink-50 dark:border-pink-800 dark:bg-pink-500/10' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50'}`}>
