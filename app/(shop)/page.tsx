@@ -139,7 +139,7 @@ function FeaturedSkeleton() {
 export default async function HomePage() {
   const { getStoreSettings } = await import('@/lib/store-settings');
   const storeSettings = await getStoreSettings();
-  const collections = storeSettings.home.collections.filter((collection) => collection.active);
+  const collections = (storeSettings.home.collections ?? []).filter((collection) => collection.active);
   return (
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
       {/* Promo banner */}

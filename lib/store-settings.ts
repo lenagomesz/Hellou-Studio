@@ -201,7 +201,7 @@ async function loadStoreSettings() {
 
 const getCachedStoreSettings = unstable_cache(
   loadStoreSettings,
-  ['store-settings'],
+  ['store-settings-v2'],
   { tags: ['store-settings'], revalidate: 300 },
 );
 

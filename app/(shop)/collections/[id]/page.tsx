@@ -9,7 +9,7 @@ import type { Product } from '@/types/database';
 export default async function CollectionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const settings = await getStoreSettings();
-  const collection = settings.home.collections.find((item) => item.id === id && item.active);
+  const collection = (settings.home.collections ?? []).find((item) => item.id === id && item.active);
   if (!collection) notFound();
 
   let products: Product[] = [];
