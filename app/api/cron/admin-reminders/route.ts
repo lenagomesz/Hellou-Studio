@@ -119,35 +119,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // 4. Product options with stock <= 3
-  {
-    const { data: options } = await admin
-      .from('product_options')
-      .select('id, color, product_id, products(name)')
-      .lte('stock', 3);
-
-    if (options) {
-      for (const option of options) {
-        const relatedProduct = option.products as { name: string } | { name: string }[] | null;
-        const productName = Array.isArray(relatedProduct)
-          ? relatedProduct[0]?.name ?? 'Produto'
-          : relatedProduct?.name ?? 'Produto';
-        const duplicate = await isDuplicate('low_stock', undefined, option.id);
-        if (!duplicate) {
-          const { error } = await admin.from('admin_notifications').insert({
-            type: 'low_stock',
-            title: `Estoque baixo: ${productName} - ${option.color}`,
-            priority: 'high',
-            related_product_id: option.product_id,
-            related_product_option_id: option.id,
-          });
-          if (!error) createdCount++;
-        }
-      }
-    }
-  }
-
-  // 5. Print requests with status='pending' created >2 days ago
+  // 4. Print requests with status='pending' created >2 days ago
   {
     const cutoff = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
     const { data: requests } = await admin

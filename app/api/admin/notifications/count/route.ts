@@ -11,7 +11,8 @@ export async function GET() {
     .from('admin_notifications')
     .select('*', { count: 'exact', head: true })
     .eq('read', false)
-    .eq('archived', false);
+    .eq('archived', false)
+    .neq('type', 'low_stock');
 
   if (error) {
     return NextResponse.json(

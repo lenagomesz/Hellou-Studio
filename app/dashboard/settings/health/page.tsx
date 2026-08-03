@@ -37,7 +37,7 @@ const CRON_DETAILS: Record<string, { label: string; description: string; singula
   },
   'admin-reminders': {
     label: 'Lembretes administrativos',
-    description: 'Avisa sobre pedidos atrasados, encomendas pendentes, envios e produtos com estoque baixo.',
+    description: 'Avisa sobre pedidos atrasados, encomendas pendentes e envios.',
     singular: 'lembrete criado',
     plural: 'lembretes criados',
   },

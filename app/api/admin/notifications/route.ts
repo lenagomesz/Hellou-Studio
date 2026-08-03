@@ -20,6 +20,7 @@ export async function GET(request: Request) {
     .from('admin_notifications')
     .select('*', { count: 'exact' })
     .eq('archived', false)
+    .neq('type', 'low_stock')
     .order('created_at', { ascending: false });
 
   if (unreadOnly) {
@@ -96,6 +97,10 @@ export async function POST(request: Request) {
       { error: 'Tipo é obrigatório' },
       { status: 400 },
     );
+  }
+
+  if (type === 'low_stock') {
+    return NextResponse.json({ error: 'Alertas de estoque baixo estão desativados' }, { status: 400 });
   }
 
   const admin = getSupabaseAdmin();

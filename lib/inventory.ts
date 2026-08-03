@@ -1,7 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type {
   StockMovementReason,
-  StockAlert,
   StockAlertLevel,
   StockOverviewItem,
   StockForecastData,
@@ -80,38 +79,6 @@ export async function recordStockMovement(params: {
     return { success: false, error: 'Failed to record movement' };
   }
 
-  // Check if we need to create an alert
-  const { data: optionFull } = await admin
-    .from('product_options')
-    .select('reorder_point, product_id')
-    .eq('id', params.product_option_id)
-    .single();
-
-  if (optionFull && stockAfter <= optionFull.reorder_point && stockBefore > optionFull.reorder_point) {
-    // Stock just dropped below reorder point - create admin notification
-    const { data: product } = await admin
-      .from('products')
-      .select('name')
-      .eq('id', params.product_id)
-      .single();
-
-    const priority = stockAfter === 0 ? 'urgent' : 'high';
-    const title = stockAfter === 0
-      ? `Estoque zerado: ${product?.name || 'Produto'}`
-      : `Estoque baixo: ${product?.name || 'Produto'}`;
-
-    await admin.from('admin_notifications').insert({
-      type: 'low_stock',
-      title,
-      body: `Estoque atual: ${stockAfter} unidades. Ponto de reposicao: ${optionFull.reorder_point}.`,
-      priority,
-      read: false,
-      archived: false,
-      related_product_id: params.product_id,
-      related_product_option_id: params.product_option_id,
-    });
-  }
-
   return { success: true };
 }
 
@@ -144,40 +111,6 @@ export async function recordSaleMovements(params: {
   }
 
   return { success: errors.length === 0, errors };
-}
-
-// ============================================================================
-// Stock Alerts
-// ============================================================================
-
-export async function getStockAlerts(): Promise<StockAlert[]> {
-  const admin = getSupabaseAdmin();
-
-  const { data: options } = await admin
-    .from('product_options')
-    .select('id, product_id, name, stock, reorder_point, product:products(name)')
-    .order('stock', { ascending: true });
-
-  if (!options) return [];
-
-  return (options as unknown as Array<{
-    id: string;
-    product_id: string;
-    name: string;
-    stock: number;
-    reorder_point: number;
-    product: { name: string } | null;
-  }>)
-    .filter(o => o.stock <= o.reorder_point)
-    .map(o => ({
-      product_id: o.product_id,
-      product_name: o.product?.name || 'Unknown',
-      product_option_id: o.id,
-      option_name: o.name,
-      current_stock: o.stock,
-      reorder_point: o.reorder_point,
-      level: getAlertLevel(o.stock, o.reorder_point),
-    }));
 }
 
 export function getAlertLevel(stock: number, reorderPoint: number): StockAlertLevel {

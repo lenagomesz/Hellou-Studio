@@ -8,7 +8,6 @@ import {
   Package,
   Truck,
   Clock,
-  Archive,
   Printer,
   CheckCircle2,
 } from 'lucide-react';
@@ -22,8 +21,6 @@ function getAlertIcon(type: AdminNotification['type']) {
       return <Truck className="h-5 w-5 text-red-600" />;
     case 'order_overdue':
       return <Clock className="h-5 w-5 text-red-600" />;
-    case 'low_stock':
-      return <Archive className="h-5 w-5 text-red-600" />;
     case 'new_print_request':
       return <Printer className="h-5 w-5 text-red-600" />;
     default:

@@ -51,16 +51,12 @@ async function getInventoryData() {
 
   const activeOptions = options.filter(o => o.product?.active !== false);
 
-  let critical = 0;
-  let low = 0;
   let totalStock = 0;
   let totalValue = 0;
 
   for (const o of activeOptions) {
     totalStock += o.stock;
     totalValue += o.stock * ((o.product?.base_price || 0) + o.price_modifier);
-    if (o.stock === 0) critical++;
-    else if (o.stock <= o.reorder_point) low++;
   }
 
   return {
@@ -68,8 +64,6 @@ async function getInventoryData() {
     summary: {
       total_products: activeOptions.length,
       total_stock_units: totalStock,
-      critical_alerts: critical,
-      low_alerts: low,
       total_stock_value: Math.round(totalValue * 100) / 100,
       total_movements: movementsRes.count ?? 0,
       pending_reorders: reorderRes.count ?? 0,
@@ -83,8 +77,6 @@ export default async function InventoryDashboard() {
     summary: {
       total_products: 0,
       total_stock_units: 0,
-      critical_alerts: 0,
-      low_alerts: 0,
       total_stock_value: 0,
       total_movements: 0,
       pending_reorders: 0,
@@ -140,13 +132,10 @@ export default async function InventoryDashboard() {
           <p className="mt-1 text-xs text-gray-400">Não inclui produção sob demanda</p>
         </div>
 
-        <Link href="/dashboard/inventory?filter=alerts" className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-red-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Alertas</p>
-          <div className="mt-2 flex items-baseline gap-3">
-            <span className="text-2xl font-bold text-red-600">{summary.critical_alerts}</span>
-            <span className="text-sm text-yellow-600">{summary.low_alerts} baixos</span>
-          </div>
-          <p className="mt-1 text-xs text-gray-400">Produtos precisando reposição</p>
+        <Link href="/dashboard/inventory/movements" className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-pink-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Movimentações</p>
+          <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{summary.total_movements}</p>
+          <p className="mt-1 text-xs text-gray-400">Entradas e saídas registradas</p>
         </Link>
 
         <Link href="/dashboard/inventory/reorder-tasks" className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">

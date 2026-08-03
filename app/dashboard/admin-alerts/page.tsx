@@ -7,7 +7,6 @@ import {
   ShoppingCart,
   Clock,
   Truck,
-  AlertTriangle,
   Printer,
   MessageSquare,
   Plus,
@@ -26,7 +25,6 @@ type NotificationType =
   | 'new_order'
   | 'production_reminder'
   | 'shipping_reminder'
-  | 'low_stock'
   | 'new_print_request'
   | 'custom'
   | 'order_overdue';
@@ -62,7 +60,6 @@ const TYPE_OPTIONS: { value: NotificationType | ''; label: string }[] = [
   { value: 'new_order', label: 'Novo pedido' },
   { value: 'production_reminder', label: 'Lembrete de produção' },
   { value: 'shipping_reminder', label: 'Lembrete de envio' },
-  { value: 'low_stock', label: 'Estoque baixo' },
   { value: 'new_print_request', label: 'Nova solicitação de impressão' },
   { value: 'custom', label: 'Personalizado' },
   { value: 'order_overdue', label: 'Pedido atrasado' },
@@ -99,8 +96,6 @@ function getTypeIcon(type: NotificationType) {
       return <Clock className="h-5 w-5 text-indigo-500" />;
     case 'shipping_reminder':
       return <Truck className="h-5 w-5 text-purple-500" />;
-    case 'low_stock':
-      return <AlertTriangle className="h-5 w-5 text-orange-500" />;
     case 'new_print_request':
       return <Printer className="h-5 w-5 text-blue-500" />;
     case 'custom':

@@ -139,11 +139,6 @@ export const RECOMMENDED_SETUP_PATH = [
     description: 'Engaje seus clientes com email marketing',
   },
   {
-    key: 'stock_alerts',
-    title: 'Configurar alertas de estoque',
-    description: 'Nunca fique sem estoque novamente',
-  },
-  {
     key: 'anomaly_detection',
     title: 'Ativar deteccao de anomalias',
     description: 'Seja notificado sobre metricas fora do padrao',
