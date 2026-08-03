@@ -80,7 +80,7 @@ export default function ManualOrdersPage() {
       {(error || message) && <div role={error ? 'alert' : 'status'} className={`rounded-xl p-3 text-sm ${error ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>{error || message}</div>}
 
       <form onSubmit={createOrder} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
-        <div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-50 text-pink-600"><ClipboardPlus className="h-5 w-5" /></span><div><h2 className="font-bold text-slate-900">Nova encomenda externa</h2><p className="text-xs text-slate-500">Primeiro procure uma conta; se não existir, use nome e e-mail normalmente.</p></div></div>
+        <div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-50 text-pink-600"><ClipboardPlus className="h-5 w-5" /></span><div><h2 className="font-bold text-slate-900">Nova encomenda externa</h2><p className="text-xs text-slate-500">Selecione uma conta carregada do banco; se não existir, use nome e e-mail normalmente.</p></div></div>
         <div className="mt-5"><UserAccountPicker selected={selectedUser} onSelect={selectUser} /></div>
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <Field label="Nome do cliente"><input required value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} className={FIELD_CLASS} /></Field>
