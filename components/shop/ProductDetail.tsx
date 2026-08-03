@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
@@ -44,14 +43,12 @@ export function ProductDetail({
   ownedOrderId?: string | null;
 }>) {
   const { addItem, removeItem, status } = useCart();
-  const { status: sessionStatus } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const replaceCartItemId = searchParams.get('replace');
   const [feedback, setFeedback] = useState<'idle' | 'added' | 'error'>('idle');
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [shared, setShared] = useState(false);
-  const isAuthenticated = sessionStatus === 'authenticated';
   const isOwnedDigital = product.type === 'digital' && Boolean(ownedOrderId);
   const requiresReadyStock = product.fulfillment_mode === 'ready_stock';
 
@@ -155,11 +152,6 @@ export function ProductDetail({
 
   const handleAddToCart = async () => {
     if (!canAddToCart) return;
-
-    if (!isAuthenticated) {
-      router.push(`/login?callbackUrl=${encodeURIComponent(globalThis.location?.pathname ?? '/' + (globalThis.location?.search ?? ''))}`);
-      return;
-    }
 
     try {
       setFeedbackMessage('');
