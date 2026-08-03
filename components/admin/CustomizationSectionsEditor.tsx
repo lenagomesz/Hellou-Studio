@@ -340,6 +340,7 @@ export function CustomizationSectionsEditor({
                         </label>
                         <ImageUploadField
                           compact
+                          cropSquare
                           label="Imagem da opção (opcional)"
                           value={option.imageUrl ?? ''}
                           onChange={(imageUrl) => updateOption(sectionIndex, optionIndex, { imageUrl })}

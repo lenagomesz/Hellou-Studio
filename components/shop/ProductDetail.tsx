@@ -359,6 +359,7 @@ export function ProductDetail({
               const needsColor = section.type === 'color' || section.type === 'color_text';
               const needsText = section.type === 'text' || section.type === 'color_text' || section.type === 'option_text';
               const needsOption = section.type === 'option' || section.type === 'option_text';
+              const hasOptionImages = needsOption && section.options.some((option) => option.imageUrl);
               return (
                 <div
                   key={section.id}
@@ -375,7 +376,7 @@ export function ProductDetail({
                   </div>
 
                   {needsColor && (
-                    <div className={section.options.some((option) => option.imageUrl) ? 'grid grid-cols-2 gap-2.5 sm:grid-cols-3' : 'flex flex-wrap gap-2.5'}>
+                    <div className="flex flex-wrap gap-2.5">
                       {section.colors.map((color) => {
                         const selected = selection.colorId === color.id;
                         return (
@@ -407,7 +408,7 @@ export function ProductDetail({
                   )}
 
                   {needsOption && (
-                    <div className="flex flex-wrap gap-2.5">
+                    <div className={hasOptionImages ? 'grid grid-cols-2 gap-2.5 sm:grid-cols-3' : 'flex flex-wrap gap-2.5'}>
                       {section.options.map((option) => {
                         const selected = selection.optionId === option.id;
                         return (
@@ -423,25 +424,29 @@ export function ProductDetail({
                                 optionLabel: option.label,
                               },
                             }))}
-                            className={`overflow-hidden rounded-xl border text-xs font-semibold transition ${option.imageUrl ? 'p-1.5 text-left' : 'px-3 py-2'} ${
+                            className={`overflow-hidden rounded-xl border text-xs font-semibold transition ${hasOptionImages ? 'h-full p-1.5 text-left' : 'px-3 py-2'} ${
                               selected
                                 ? 'border-pink-500 bg-pink-50 text-pink-700 ring-2 ring-pink-100 dark:bg-pink-500/10 dark:text-pink-200 dark:ring-pink-500/20'
                                 : 'border-gray-200 bg-white text-gray-700 hover:border-pink-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'
                             }`}
                           >
-                            {option.imageUrl && (
+                            {hasOptionImages && (
                               <span className="relative mb-2 block aspect-square w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                                <Image
-                                  src={option.imageUrl}
-                                  alt={option.label}
-                                  fill
-                                  unoptimized
-                                  sizes="(max-width: 640px) 42vw, 180px"
-                                  className="object-cover"
-                                />
+                                {option.imageUrl ? (
+                                  <Image
+                                    src={option.imageUrl}
+                                    alt={option.label}
+                                    fill
+                                    unoptimized
+                                    sizes="(max-width: 640px) 42vw, 180px"
+                                    className="object-cover"
+                                  />
+                                ) : (
+                                  <span className="grid h-full place-items-center text-2xl font-bold text-gray-300 dark:text-gray-600">{option.label.charAt(0).toUpperCase()}</span>
+                                )}
                               </span>
                             )}
-                            <span className={option.imageUrl ? 'block px-1 pb-1 text-center' : ''}>{option.label}</span>
+                            <span className={hasOptionImages ? 'block px-1 pb-1 text-center' : ''}>{option.label}</span>
                           </button>
                         );
                       })}
