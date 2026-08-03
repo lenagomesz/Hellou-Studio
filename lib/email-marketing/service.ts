@@ -60,8 +60,18 @@ export async function getCampaign(id: string) {
   return data as EmailCampaign;
 }
 
+function normalizeScheduledAt(value: unknown): string | null {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value !== 'string') throw new Error('Informe uma data de agendamento válida.');
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error('Informe uma data de agendamento válida.');
+  if (date.getTime() <= Date.now()) throw new Error('O agendamento precisa estar no futuro.');
+  return date.toISOString();
+}
+
 export async function createCampaign(input: CreateCampaignInput) {
   const criteria = input.segment_criteria || {};
+  const scheduledAt = normalizeScheduledAt(input.scheduled_at);
   if (input.segment_type === 'category' && !String(criteria.category ?? '').trim()) {
     throw new Error('Selecione uma categoria para a segmentação.');
   }
@@ -81,8 +91,8 @@ export async function createCampaign(input: CreateCampaignInput) {
     template_id: input.template_id || null,
     segment_type: input.segment_type || 'all',
     segment_criteria: criteria,
-    scheduled_at: input.scheduled_at || null,
-    status: input.scheduled_at ? 'scheduled' : 'draft',
+    scheduled_at: scheduledAt,
+    status: scheduledAt ? 'scheduled' : 'draft',
     cta_text: input.cta_text || null,
     cta_url: input.cta_url || null,
     cta_color: input.cta_color || '#ec4899',
@@ -95,10 +105,21 @@ export async function createCampaign(input: CreateCampaignInput) {
   return data as EmailCampaign;
 }
 
-export async function updateCampaign(id: string, updates: Partial<CreateCampaignInput> & { status?: string }) {
+export async function updateCampaign(id: string, updates: Partial<CreateCampaignInput> & { status?: string; scheduled_at?: string | null }) {
   const admin = getSupabaseAdmin();
+  const current = await getCampaign(id);
+  if (current.status === 'sent' || current.status === 'sending') {
+    throw new Error('Uma campanha enviada ou em envio não pode mais ser alterada.');
+  }
+
+  const normalizedUpdates: Record<string, unknown> = { ...updates };
+  if (Object.prototype.hasOwnProperty.call(updates, 'scheduled_at')) {
+    const scheduledAt = normalizeScheduledAt(updates.scheduled_at);
+    normalizedUpdates.scheduled_at = scheduledAt;
+    normalizedUpdates.status = scheduledAt ? 'scheduled' : 'draft';
+  }
   const { data, error } = await admin.from('email_campaigns').update({
-    ...updates,
+    ...normalizedUpdates,
     updated_at: new Date().toISOString(),
   }).eq('id', id).select().single();
   if (error) throw error;

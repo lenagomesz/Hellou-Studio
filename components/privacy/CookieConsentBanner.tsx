@@ -11,6 +11,7 @@ export function CookieConsentBanner() {
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const savedConsentRef = useRef<PrivacyConsent | null>(null);
 
   const openSettings = useCallback(() => {
@@ -36,13 +37,17 @@ export function CookieConsentBanner() {
 
   async function save(nextAnalytics: boolean, nextMarketing: boolean) {
     setSaving(true);
+    setSaveError('');
     try {
       const response = await fetch('/api/privacy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ analytics: nextAnalytics, marketing: nextMarketing }),
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({})) as { error?: string };
+        throw new Error(payload.error || 'Não foi possível salvar suas preferências.');
+      }
       const payload = await response.json() as { consent: PrivacyConsent };
       savedConsentRef.current = payload.consent;
       setConsent(payload.consent);
@@ -50,6 +55,10 @@ export function CookieConsentBanner() {
       setMarketing(payload.consent.marketing);
       setCustomizing(false);
       window.dispatchEvent(new CustomEvent(PRIVACY_CHANGED_EVENT, { detail: payload.consent }));
+    } catch {
+      // Falhas de rede no clique precisam ser tratadas para não virarem
+      // unhandledrejection no Sentry. Mantemos o banner aberto para nova tentativa.
+      setSaveError('Não foi possível salvar agora. Verifique sua conexão e tente novamente.');
     } finally {
       setSaving(false);
     }
@@ -78,6 +87,8 @@ export function CookieConsentBanner() {
                 <Preference label="Personalização" description="Conteúdo e comunicações relevantes." checked={marketing} onChange={setMarketing} />
               </div>
             )}
+
+            {saveError && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 dark:bg-red-950/30 dark:text-red-300">{saveError}</p>}
 
             <div className="mt-3 grid grid-cols-2 gap-1.5 sm:mt-4 sm:flex sm:items-center sm:gap-2">
               <Link href="/terms#privacidade" className="order-4 inline-flex items-center justify-center gap-1 px-1 py-1 text-[10px] font-semibold text-gray-500 hover:text-pink-600 sm:order-1 sm:mr-auto sm:justify-start sm:text-xs dark:text-gray-400"><ShieldCheck className="h-3.5 w-3.5" />Privacidade</Link>

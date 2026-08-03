@@ -3,8 +3,19 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, Loader2, Users } from 'lucide-react';
+import { Eye, Loader2, Monitor, Smartphone, Sparkles, Users } from 'lucide-react';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
+
+const campaignStarters = [
+  { label: 'Lançamento', subject: '{customer_name}, chegou novidade na Hellou Studio ✨', preview: 'Conheça primeiro os novos produtos.', body: '<h1>Uma novidade feita para você</h1><p>Olá {customer_name}! Preparamos um lançamento especial. Venha conhecer todos os detalhes.</p>', cta: 'Conhecer novidades' },
+  { label: 'Oferta', subject: 'Uma condição especial para você, {customer_name}', preview: 'Aproveite por tempo limitado.', body: '<h1>Sua oferta especial chegou</h1><p>Olá {customer_name}! Selecionamos produtos incríveis com uma condição exclusiva por tempo limitado.</p>', cta: 'Aproveitar oferta' },
+  { label: 'Relacionamento', subject: '{customer_name}, sentimos sua falta 💖', preview: 'Veja o que preparamos para o seu retorno.', body: '<h1>Que bom falar com você de novo</h1><p>Olá {customer_name}! Faz um tempinho que não nos vemos. Preparamos novidades que têm tudo a ver com você.</p>', cta: 'Voltar à loja' },
+] as const;
+
+function minimumScheduleValue() {
+  const date = new Date(Date.now() + 60_000);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
 
 export default function NewCampaignPage() {
   const router = useRouter();
@@ -28,6 +39,8 @@ export default function NewCampaignPage() {
   const [audienceCount, setAudienceCount] = useState<number | null>(null);
   const [estimating, setEstimating] = useState(false);
   const [error, setError] = useState('');
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [minimumSchedule] = useState(minimumScheduleValue);
 
   function update(field: string, value: unknown) {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -40,14 +53,19 @@ export default function NewCampaignPage() {
   useEffect(() => {
     const timeout = window.setTimeout(async () => {
       setEstimating(true);
-      const response = await fetch('/api/email-marketing/segments/estimate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ segment_type: form.segment_type, segment_criteria: form.segment_criteria }),
-      });
-      const data = await response.json().catch(() => ({})) as { count?: number };
-      setAudienceCount(response.ok ? data.count ?? 0 : null);
-      setEstimating(false);
+      try {
+        const response = await fetch('/api/email-marketing/segments/estimate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ segment_type: form.segment_type, segment_criteria: form.segment_criteria }),
+        });
+        const data = await response.json().catch(() => ({})) as { count?: number };
+        setAudienceCount(response.ok ? data.count ?? 0 : null);
+      } catch {
+        setAudienceCount(null);
+      } finally {
+        setEstimating(false);
+      }
     }, 350);
     return () => window.clearTimeout(timeout);
   }, [form.segment_criteria, form.segment_type]);
@@ -59,7 +77,7 @@ export default function NewCampaignPage() {
     try {
       const payload = {
         ...form,
-        scheduled_at: form.scheduled_at || undefined,
+        scheduled_at: form.scheduled_at ? new Date(form.scheduled_at).toISOString() : undefined,
         ab_variant_b_subject: form.ab_test_enabled ? form.ab_variant_b_subject : undefined,
         ab_variant_b_body_html: form.ab_test_enabled ? form.ab_variant_b_body_html : undefined,
       };
@@ -75,6 +93,8 @@ export default function NewCampaignPage() {
         const data = await res.json().catch(() => ({})) as { error?: string };
         setError(data.error ?? 'Erro ao criar campanha');
       }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Não foi possível criar a campanha.');
     } finally {
       setSaving(false);
     }
@@ -95,6 +115,17 @@ export default function NewCampaignPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
+        <section className="rounded-2xl border border-pink-100 bg-gradient-to-r from-pink-50 via-white to-orange-50 p-5 dark:border-pink-900/30 dark:from-pink-950/20 dark:via-gray-900 dark:to-orange-950/20">
+          <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-pink-500" /><h2 className="font-bold text-gray-900 dark:text-white">Comece com uma ideia</h2></div>
+          <p className="mt-1 text-sm text-gray-500">Escolha um ponto de partida e personalize cada detalhe da mensagem.</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {campaignStarters.map((starter) => (
+              <button key={starter.label} type="button" onClick={() => setForm((current) => ({ ...current, subject: starter.subject, preview_text: starter.preview, body_html: starter.body, cta_text: starter.cta }))} className="rounded-xl border border-white bg-white/80 px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800/80">
+                <span className="block text-sm font-bold text-gray-900 dark:text-white">{starter.label}</span><span className="mt-1 block text-xs text-gray-500">Preencher sugestão editável</span>
+              </button>
+            ))}
+          </div>
+        </section>
         <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-6">
         {/* Basic Info */}
@@ -218,11 +249,12 @@ export default function NewCampaignPage() {
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Agendamento</label>
               <input
                 type="datetime-local"
+                min={minimumSchedule}
                 value={form.scheduled_at}
                 onChange={e => update('scheduled_at', e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               />
-              <p className="mt-1 text-xs text-gray-400">Deixe vazio para enviar como rascunho</p>
+              <p className="mt-1 text-xs text-gray-400">Deixe vazio para salvar como rascunho. Horário local: Brasília ({Intl.DateTimeFormat().resolvedOptions().timeZone}).</p>
             </div>
           </div>
           {form.segment_type === 'category' && (
@@ -294,9 +326,9 @@ export default function NewCampaignPage() {
           </div>
           <aside className="space-y-4 xl:sticky xl:top-24">
             <div className="overflow-hidden rounded-[26px] border border-gray-200 bg-white shadow-sm">
-              <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4"><Eye className="h-4 w-4 text-pink-500" /><div><p className="text-sm font-bold text-gray-900">Preview do e-mail</p><p className="text-[11px] text-gray-500">Atualizado enquanto você escreve</p></div></div>
+              <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4"><Eye className="h-4 w-4 text-pink-500" /><div><p className="text-sm font-bold text-gray-900">Preview do e-mail</p><p className="text-[11px] text-gray-500">Atualizado enquanto você escreve</p></div><div className="ml-auto flex rounded-lg bg-gray-100 p-1"><button type="button" onClick={() => setPreviewMode('desktop')} aria-label="Visualizar no computador" className={`rounded-md p-1.5 ${previewMode === 'desktop' ? 'bg-white text-pink-600 shadow-sm' : 'text-gray-400'}`}><Monitor className="h-4 w-4" /></button><button type="button" onClick={() => setPreviewMode('mobile')} aria-label="Visualizar no celular" className={`rounded-md p-1.5 ${previewMode === 'mobile' ? 'bg-white text-pink-600 shadow-sm' : 'text-gray-400'}`}><Smartphone className="h-4 w-4" /></button></div></div>
               <div className="border-b border-gray-100 bg-gray-50 px-5 py-3"><p className="truncate text-sm font-semibold text-gray-900">{form.subject.replace('{customer_name}', 'Maria') || 'Assunto da campanha'}</p><p className="truncate text-xs text-gray-500">{form.preview_text || 'Texto de pré-visualização'}</p></div>
-              <iframe title="Preview da campanha" sandbox="" srcDoc={`<!doctype html><html><body style="font-family:Arial,sans-serif;margin:0;padding:24px;color:#1f2937">${(form.body_html || '<p>O conteúdo do e-mail aparecerá aqui.</p>').replaceAll('{customer_name}', 'Maria')}${form.cta_text && form.cta_url ? `<p style="margin-top:24px"><a href="#" style="display:inline-block;background:${form.cta_color};color:white;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold">${form.cta_text}</a></p>` : ''}</body></html>`} className="h-[560px] w-full bg-white" />
+              <div className="bg-gray-100 p-3"><iframe title="Preview da campanha" sandbox="" srcDoc={`<!doctype html><html><body style="font-family:Arial,sans-serif;margin:0;padding:24px;color:#1f2937">${(form.body_html || '<p>O conteúdo do e-mail aparecerá aqui.</p>').replaceAll('{customer_name}', 'Maria')}${form.cta_text && form.cta_url ? `<p style="margin-top:24px"><a href="#" style="display:inline-block;background:${form.cta_color};color:white;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold">${form.cta_text}</a></p>` : ''}</body></html>`} className={`mx-auto h-[560px] bg-white shadow-sm transition-all ${previewMode === 'mobile' ? 'w-[320px] max-w-full rounded-[24px]' : 'w-full rounded-lg'}`} /></div>
             </div>
             <p className="rounded-xl border border-orange-100 bg-orange-50 p-3 text-xs leading-5 text-orange-800">Antes de enviar, confira o público estimado, os links e o conteúdo nas versões desktop e celular.</p>
           </aside>

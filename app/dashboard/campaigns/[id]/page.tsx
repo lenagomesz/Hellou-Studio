@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { CalendarClock, Loader2 } from 'lucide-react';
 
 interface Campaign {
   id: string;
@@ -24,19 +25,65 @@ interface Campaign {
   created_at: string;
 }
 
+function toLocalDateTimeInput(value: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 export default function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [scheduleValue, setScheduleValue] = useState('');
+  const [scheduleEditing, setScheduleEditing] = useState(false);
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [pageError, setPageError] = useState('');
+  const [minimumSchedule] = useState(() => toLocalDateTimeInput(new Date(Date.now() + 60_000).toISOString()));
 
   useEffect(() => {
-    fetch(`/api/email-marketing/campaigns/${id}`)
-      .then(res => res.json())
-      .then(data => setCampaign(data))
-      .finally(() => setLoading(false));
+    const controller = new AbortController();
+    async function loadCampaign() {
+      try {
+        const response = await fetch(`/api/email-marketing/campaigns/${id}`, { signal: controller.signal });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Não foi possível carregar a campanha.');
+        setCampaign(data);
+        setScheduleValue(toLocalDateTimeInput(data.scheduled_at));
+      } catch (cause) {
+        if (cause instanceof DOMException && cause.name === 'AbortError') return;
+        setPageError(cause instanceof Error ? cause.message : 'Não foi possível carregar a campanha.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    void loadCampaign();
+    return () => controller.abort();
   }, [id]);
+
+  async function saveSchedule(scheduledAt: string | null) {
+    setScheduleSaving(true);
+    setPageError('');
+    try {
+      const response = await fetch(`/api/email-marketing/campaigns/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Não foi possível atualizar o agendamento.');
+      setCampaign(data);
+      setScheduleValue(toLocalDateTimeInput(data.scheduled_at));
+      setScheduleEditing(false);
+    } catch (cause) {
+      setPageError(cause instanceof Error ? cause.message : 'Não foi possível atualizar o agendamento.');
+    } finally {
+      setScheduleSaving(false);
+    }
+  }
 
   async function handleSend() {
     if (!confirm('Enviar campanha agora para todos os destinatários do segmento?')) return;
@@ -80,6 +127,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="w-full space-y-6">
+      {pageError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">{pageError}</div>}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -106,8 +154,38 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               {sending ? 'Enviando...' : 'Enviar agora'}
             </button>
           )}
+          {(campaign.status === 'draft' || campaign.status === 'scheduled') && (
+            <button type="button" onClick={() => setScheduleEditing(true)} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:border-pink-200 hover:text-pink-600 dark:border-gray-700 dark:text-gray-200">
+              <CalendarClock className="h-4 w-4" /> Editar agendamento
+            </button>
+          )}
         </div>
       </div>
+
+      {(campaign.status === 'draft' || campaign.status === 'scheduled') && (
+        <section className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm dark:border-blue-900/40 dark:from-blue-950/20 dark:to-gray-900">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300"><CalendarClock className="h-5 w-5" /><h2 className="font-bold">Agendamento da campanha</h2></div>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{campaign.scheduled_at ? `Programada para ${new Date(campaign.scheduled_at).toLocaleString('pt-BR')}` : 'Esta campanha está salva como rascunho.'}</p>
+            </div>
+            {scheduleEditing ? (
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-96">
+                <label htmlFor="campaign-schedule" className="text-xs font-bold uppercase tracking-wide text-gray-500">Nova data e hora</label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input id="campaign-schedule" type="datetime-local" min={minimumSchedule} value={scheduleValue} onChange={(event) => setScheduleValue(event.target.value)} className="rounded-xl border border-blue-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+                  <button type="button" disabled={scheduleSaving || !scheduleValue} onClick={() => void saveSchedule(scheduleValue)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">{scheduleSaving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</button>
+                  <button type="button" disabled={scheduleSaving} onClick={() => { setScheduleEditing(false); setScheduleValue(toLocalDateTimeInput(campaign.scheduled_at)); }} className="rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-white">Cancelar</button>
+                </div>
+                {campaign.scheduled_at && <button type="button" disabled={scheduleSaving} onClick={() => void saveSchedule(null)} className="self-start text-xs font-bold text-red-600 hover:text-red-700">Remover agendamento e voltar para rascunho</button>}
+                <p className="text-xs text-gray-500">Horário local: Brasília ({Intl.DateTimeFormat().resolvedOptions().timeZone}).</p>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setScheduleEditing(true)} className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-blue-700 shadow-sm ring-1 ring-blue-100 hover:ring-blue-200 dark:bg-gray-800 dark:text-blue-300 dark:ring-gray-700">{campaign.scheduled_at ? 'Reagendar' : 'Agendar envio'}</button>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Status card */}
       <div className="grid gap-4 sm:grid-cols-3">
