@@ -235,6 +235,11 @@ export async function sendCampaign(campaignId: string) {
     throw new Error('Campaign already sent or sending');
   }
 
+  const resend = getResend();
+  if (!resend) {
+    throw new Error('O provedor de e-mail não está configurado. Verifique a RESEND_API_KEY antes de enviar.');
+  }
+
   // Update status to sending
   await admin.from('email_campaigns').update({ status: 'sending' }).eq('id', campaignId);
 
@@ -267,7 +272,6 @@ export async function sendCampaign(campaignId: string) {
   await admin.from('campaign_recipients').insert(recipientRecords);
 
   // Send emails
-  const resend = getResend();
   let sentCount = 0;
 
   for (const recipient of recipientRecords) {
@@ -292,44 +296,40 @@ export async function sendCampaign(campaignId: string) {
     const renderedBody = renderTemplate(bodyHtml, variables);
     const renderedSubject = renderTemplate(subject, variables);
 
-    if (resend) {
-      try {
-        const result = await sendTrackedEmail(resend, {
-          from: getFrom(),
-          to: recipient.email,
-          subject: renderedSubject,
-          html: renderedBody,
-          headers: {
-            'List-Unsubscribe': `<${unsubscribeUrl}>`,
-          },
-        }, { emailType: 'campaign', campaignId, metadata: { variant: recipient.variant ?? 'A' } });
+    try {
+      const result = await sendTrackedEmail(resend, {
+        from: getFrom(),
+        to: recipient.email,
+        subject: renderedSubject,
+        html: renderedBody,
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        },
+      }, { emailType: 'campaign', campaignId, metadata: { variant: recipient.variant ?? 'A' } });
 
-        if (!result.error) {
-          sentCount++;
-          await admin.from('campaign_recipients')
-            .update({ status: 'sent', sent_at: new Date().toISOString() })
-            .eq('campaign_id', campaignId)
-            .eq('user_id', recipient.user_id);
-        } else {
-          await admin.from('campaign_recipients')
-            .update({ status: 'bounced', bounced_at: new Date().toISOString() })
-            .eq('campaign_id', campaignId)
-            .eq('user_id', recipient.user_id);
-        }
-      } catch {
+      if (!result.error) {
+        sentCount++;
+        await admin.from('campaign_recipients')
+          .update({ status: 'sent', sent_at: new Date().toISOString() })
+          .eq('campaign_id', campaignId)
+          .eq('user_id', recipient.user_id);
+      } else {
         await admin.from('campaign_recipients')
           .update({ status: 'bounced', bounced_at: new Date().toISOString() })
           .eq('campaign_id', campaignId)
           .eq('user_id', recipient.user_id);
       }
-    } else {
-      // Mock mode: mark all as sent
-      sentCount++;
+    } catch {
       await admin.from('campaign_recipients')
-        .update({ status: 'sent', sent_at: new Date().toISOString() })
+        .update({ status: 'bounced', bounced_at: new Date().toISOString() })
         .eq('campaign_id', campaignId)
         .eq('user_id', recipient.user_id);
     }
+  }
+
+  if (sentCount === 0) {
+    await admin.from('email_campaigns').update({ status: campaign.status }).eq('id', campaignId);
+    throw new Error('Nenhum e-mail foi entregue ao provedor. A campanha não foi marcada como enviada.');
   }
 
   // Log event

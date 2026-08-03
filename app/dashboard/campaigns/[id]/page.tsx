@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CalendarClock, Loader2 } from 'lucide-react';
+import { CalendarClock, Loader2, Pencil, Save, Send, X } from 'lucide-react';
 
 interface Campaign {
   id: string;
@@ -25,6 +25,20 @@ interface Campaign {
   created_at: string;
 }
 
+type CampaignContentForm = Pick<Campaign, 'name' | 'subject' | 'preview_text' | 'body_html' | 'cta_text' | 'cta_url' | 'cta_color'>;
+
+function campaignContentForm(campaign: Campaign): CampaignContentForm {
+  return {
+    name: campaign.name,
+    subject: campaign.subject,
+    preview_text: campaign.preview_text,
+    body_html: campaign.body_html,
+    cta_text: campaign.cta_text,
+    cta_url: campaign.cta_url,
+    cta_color: campaign.cta_color || '#ec4899',
+  };
+}
+
 function toLocalDateTimeInput(value: string | null) {
   if (!value) return '';
   const date = new Date(value);
@@ -42,6 +56,9 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   const [scheduleEditing, setScheduleEditing] = useState(false);
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [pageError, setPageError] = useState('');
+  const [editingContent, setEditingContent] = useState(false);
+  const [contentSaving, setContentSaving] = useState(false);
+  const [contentForm, setContentForm] = useState<CampaignContentForm | null>(null);
   const [minimumSchedule] = useState(() => toLocalDateTimeInput(new Date(Date.now() + 60_000).toISOString()));
 
   useEffect(() => {
@@ -52,6 +69,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Não foi possível carregar a campanha.');
         setCampaign(data);
+        setContentForm(campaignContentForm(data));
         setScheduleValue(toLocalDateTimeInput(data.scheduled_at));
       } catch (cause) {
         if (cause instanceof DOMException && cause.name === 'AbortError') return;
@@ -86,19 +104,50 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   }
 
   async function handleSend() {
-    if (!confirm('Enviar campanha agora para todos os destinatários do segmento?')) return;
+    if (!confirm('Enviar esta campanha agora? O disparo começará imediatamente para todos os destinatários do segmento e não poderá ser desfeito.')) return;
     setSending(true);
+    setPageError('');
     try {
       const res = await fetch(`/api/email-marketing/campaigns/${id}/send`, { method: 'POST' });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        alert(`Campanha enviada! ${data.sent}/${data.total} e-mails enviados.`);
+        alert(data.sent === data.total
+          ? `Campanha enviada! ${data.sent}/${data.total} e-mails entregues ao provedor.`
+          : `Envio concluído parcialmente: ${data.sent}/${data.total} e-mails entregues ao provedor.`);
         router.push(`/dashboard/campaigns/${id}/analytics`);
       } else {
-        alert(`Erro: ${data.error}`);
+        throw new Error(data.error || 'Não foi possível enviar a campanha.');
       }
+    } catch (cause) {
+      setPageError(cause instanceof Error ? cause.message : 'Não foi possível enviar a campanha.');
     } finally {
       setSending(false);
+    }
+  }
+
+  async function saveContent() {
+    if (!contentForm) return;
+    if (!contentForm.name.trim() || !contentForm.subject.trim() || !contentForm.body_html.trim()) {
+      setPageError('Preencha o nome, o assunto e o conteúdo do e-mail.');
+      return;
+    }
+    setContentSaving(true);
+    setPageError('');
+    try {
+      const response = await fetch(`/api/email-marketing/campaigns/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contentForm),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a campanha.');
+      setCampaign(data);
+      setContentForm(campaignContentForm(data));
+      setEditingContent(false);
+    } catch (cause) {
+      setPageError(cause instanceof Error ? cause.message : 'Não foi possível salvar a campanha.');
+    } finally {
+      setContentSaving(false);
     }
   }
 
@@ -125,6 +174,8 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
     return <p className="text-center text-gray-400">Campanha não encontrada.</p>;
   }
 
+  const canEditCampaign = campaign.status !== 'sent' && campaign.status !== 'sending';
+
   return (
     <div className="w-full space-y-6">
       {pageError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">{pageError}</div>}
@@ -145,16 +196,21 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               Ver analytics
             </Link>
           )}
-          {campaign.status === 'draft' && (
+          {canEditCampaign && (
             <button
               onClick={handleSend}
               disabled={sending}
-              className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
             >
-              {sending ? 'Enviando...' : 'Enviar agora'}
+              {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando...</> : <><Send className="h-4 w-4" /> Enviar agora</>}
             </button>
           )}
-          {(campaign.status === 'draft' || campaign.status === 'scheduled') && (
+          {canEditCampaign && (
+            <button type="button" onClick={() => setEditingContent(true)} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:border-pink-200 hover:text-pink-600 dark:border-gray-700 dark:text-gray-200">
+              <Pencil className="h-4 w-4" /> Editar e-mail
+            </button>
+          )}
+          {canEditCampaign && (
             <button type="button" onClick={() => setScheduleEditing(true)} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:border-pink-200 hover:text-pink-600 dark:border-gray-700 dark:text-gray-200">
               <CalendarClock className="h-4 w-4" /> Editar agendamento
             </button>
@@ -162,7 +218,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      {(campaign.status === 'draft' || campaign.status === 'scheduled') && (
+      {canEditCampaign && (
         <section className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm dark:border-blue-900/40 dark:from-blue-950/20 dark:to-gray-900">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -184,6 +240,24 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               <button type="button" onClick={() => setScheduleEditing(true)} className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-blue-700 shadow-sm ring-1 ring-blue-100 hover:ring-blue-200 dark:bg-gray-800 dark:text-blue-300 dark:ring-gray-700">{campaign.scheduled_at ? 'Reagendar' : 'Agendar envio'}</button>
             )}
           </div>
+        </section>
+      )}
+
+      {canEditCampaign && editingContent && contentForm && (
+        <section className="rounded-2xl border border-pink-100 bg-white p-5 shadow-sm dark:border-pink-900/40 dark:bg-gray-900">
+          <div className="flex items-start justify-between gap-4">
+            <div><h2 className="font-bold text-gray-900 dark:text-white">Editar campanha</h2><p className="mt-1 text-sm text-gray-500">Revise o conteúdo e salve antes de enviar.</p></div>
+            <button type="button" aria-label="Fechar edição" onClick={() => { setContentForm(campaignContentForm(campaign)); setEditingContent(false); }} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"><X className="h-4 w-4" /></button>
+          </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Nome da campanha<input required value={contentForm.name} onChange={(event) => setContentForm({ ...contentForm, name: event.target.value })} className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 font-normal text-gray-900 outline-none focus:border-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" /></label>
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Assunto<input required value={contentForm.subject} onChange={(event) => setContentForm({ ...contentForm, subject: event.target.value })} className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 font-normal text-gray-900 outline-none focus:border-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" /></label>
+            <label className="text-sm font-semibold text-gray-700 sm:col-span-2 dark:text-gray-300">Texto de prévia<input value={contentForm.preview_text ?? ''} onChange={(event) => setContentForm({ ...contentForm, preview_text: event.target.value || null })} className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 font-normal text-gray-900 outline-none focus:border-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" /></label>
+            <label className="text-sm font-semibold text-gray-700 sm:col-span-2 dark:text-gray-300">Conteúdo HTML<textarea required rows={12} value={contentForm.body_html} onChange={(event) => setContentForm({ ...contentForm, body_html: event.target.value })} className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 font-mono text-sm font-normal text-gray-900 outline-none focus:border-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" /></label>
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Texto do botão<input value={contentForm.cta_text ?? ''} onChange={(event) => setContentForm({ ...contentForm, cta_text: event.target.value || null })} className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 font-normal text-gray-900 outline-none focus:border-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" /></label>
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Link do botão<input type="url" value={contentForm.cta_url ?? ''} onChange={(event) => setContentForm({ ...contentForm, cta_url: event.target.value || null })} className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 font-normal text-gray-900 outline-none focus:border-pink-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" /></label>
+          </div>
+          <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => { setContentForm(campaignContentForm(campaign)); setEditingContent(false); }} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-500">Cancelar</button><button type="button" disabled={contentSaving} onClick={() => void saveContent()} className="inline-flex items-center gap-2 rounded-xl bg-pink-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">{contentSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar alterações</button></div>
         </section>
       )}
 
