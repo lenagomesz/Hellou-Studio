@@ -151,6 +151,10 @@ export async function getSegmentRecipients(segmentType: SegmentType, criteria: R
   if (error) throw error;
 
   const consentedUsers = (users || []).filter((user) => consentedEmails.has(user.email.toLowerCase()));
+  const manualRecipientUserIds = Array.isArray(criteria.manualRecipientUserIds)
+    ? new Set(criteria.manualRecipientUserIds.filter((id): id is string => typeof id === 'string'))
+    : null;
+  if (manualRecipientUserIds) return consentedUsers.filter((user) => manualRecipientUserIds.has(user.id));
   if (segmentType === 'all') return consentedUsers;
   if (consentedUsers.length === 0) return [];
 
@@ -231,8 +235,8 @@ export async function sendCampaign(campaignId: string) {
   const admin = getSupabaseAdmin();
   const campaign = await getCampaign(campaignId);
 
-  if (campaign.status === 'sent' || campaign.status === 'sending') {
-    throw new Error('Campaign already sent or sending');
+  if (campaign.status === 'sending') {
+    throw new Error('A campanha já está sendo enviada.');
   }
 
   const resend = getResend();
@@ -240,18 +244,25 @@ export async function sendCampaign(campaignId: string) {
     throw new Error('O provedor de e-mail não está configurado. Verifique a RESEND_API_KEY antes de enviar.');
   }
 
-  // Update status to sending
-  await admin.from('email_campaigns').update({ status: 'sending' }).eq('id', campaignId);
-
-  const recipients = await getSegmentRecipients(
+  const resolvedRecipients = await getSegmentRecipients(
     campaign.segment_type,
     campaign.segment_criteria,
   );
 
+  const { data: previouslySent } = await admin
+    .from('campaign_recipients')
+    .select('email')
+    .eq('campaign_id', campaignId)
+    .eq('status', 'sent');
+  const sentEmails = new Set((previouslySent ?? []).map((item) => item.email.toLowerCase()));
+  const recipients = resolvedRecipients.filter((recipient) => !sentEmails.has(recipient.email.toLowerCase()));
+
   if (recipients.length === 0) {
-    await admin.from('email_campaigns').update({ status: 'draft' }).eq('id', campaignId);
-    throw new Error('No recipients found for this segment');
+    throw new Error('Não há novos destinatários selecionados. Quem já recebeu foi excluído automaticamente.');
   }
+
+  // Update status to sending only after confirming that there is work to do.
+  await admin.from('email_campaigns').update({ status: 'sending' }).eq('id', campaignId);
 
   // Create recipient records
   const recipientRecords = recipients.map((user, index) => {
@@ -269,6 +280,11 @@ export async function sendCampaign(campaignId: string) {
     };
   });
 
+  await admin.from('campaign_recipients')
+    .delete()
+    .eq('campaign_id', campaignId)
+    .neq('status', 'sent')
+    .in('email', recipientRecords.map((recipient) => recipient.email));
   await admin.from('campaign_recipients').insert(recipientRecords);
 
   // Send emails
@@ -339,11 +355,16 @@ export async function sendCampaign(campaignId: string) {
     metadata: { total_sent: sentCount, total_recipients: recipients.length },
   });
 
+  const { count: totalRecipientCount } = await admin
+    .from('campaign_recipients')
+    .select('id', { count: 'exact', head: true })
+    .eq('campaign_id', campaignId);
+
   // Update campaign status
   await admin.from('email_campaigns').update({
     status: 'sent',
     sent_at: new Date().toISOString(),
-    total_recipients: recipients.length,
+    total_recipients: totalRecipientCount ?? recipients.length,
   }).eq('id', campaignId);
 
   return { sent: sentCount, total: recipients.length };

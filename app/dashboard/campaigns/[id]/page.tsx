@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CalendarClock, Loader2, Pencil, Save, Send, X } from 'lucide-react';
+import { CalendarClock, Loader2, Pencil, Save, Send, Users, X } from 'lucide-react';
 
 interface Campaign {
   id: string;
@@ -26,6 +26,17 @@ interface Campaign {
 }
 
 type CampaignContentForm = Pick<Campaign, 'name' | 'subject' | 'preview_text' | 'body_html' | 'cta_text' | 'cta_url' | 'cta_color'>;
+
+type RecipientCandidate = {
+  id: string;
+  name: string | null;
+  email: string;
+  eligible: boolean;
+  already_sent: boolean;
+  selected: boolean;
+  status: string | null;
+  sent_at: string | null;
+};
 
 function campaignContentForm(campaign: Campaign): CampaignContentForm {
   return {
@@ -59,6 +70,10 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   const [editingContent, setEditingContent] = useState(false);
   const [contentSaving, setContentSaving] = useState(false);
   const [contentForm, setContentForm] = useState<CampaignContentForm | null>(null);
+  const [recipients, setRecipients] = useState<RecipientCandidate[]>([]);
+  const [selectedRecipientIds, setSelectedRecipientIds] = useState<Set<string>>(new Set());
+  const [recipientsLoading, setRecipientsLoading] = useState(true);
+  const [recipientsSaving, setRecipientsSaving] = useState(false);
   const [minimumSchedule] = useState(() => toLocalDateTimeInput(new Date(Date.now() + 60_000).toISOString()));
 
   useEffect(() => {
@@ -82,6 +97,25 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
     return () => controller.abort();
   }, [id]);
 
+  useEffect(() => {
+    async function loadRecipients() {
+      setRecipientsLoading(true);
+      try {
+        const response = await fetch(`/api/email-marketing/campaigns/${id}/recipients`, { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Não foi possível carregar os destinatários.');
+        const candidates = Array.isArray(data) ? data as RecipientCandidate[] : [];
+        setRecipients(candidates);
+        setSelectedRecipientIds(new Set(candidates.filter((candidate) => candidate.selected).map((candidate) => candidate.id)));
+      } catch (cause) {
+        setPageError(cause instanceof Error ? cause.message : 'Não foi possível carregar os destinatários.');
+      } finally {
+        setRecipientsLoading(false);
+      }
+    }
+    void loadRecipients();
+  }, [id]);
+
   async function saveSchedule(scheduledAt: string | null) {
     setScheduleSaving(true);
     setPageError('');
@@ -103,8 +137,8 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
     }
   }
 
-  async function handleSend() {
-    if (!confirm('Enviar esta campanha agora? O disparo começará imediatamente para todos os destinatários do segmento e não poderá ser desfeito.')) return;
+  async function handleSend(skipConfirmation = false) {
+    if (!skipConfirmation && !confirm('Enviar esta campanha agora? O disparo começará imediatamente para os destinatários selecionados e não poderá ser desfeito.')) return;
     setSending(true);
     setPageError('');
     try {
@@ -122,6 +156,30 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
       setPageError(cause instanceof Error ? cause.message : 'Não foi possível enviar a campanha.');
     } finally {
       setSending(false);
+    }
+  }
+
+  async function sendToSelectedRecipients() {
+    if (selectedRecipientIds.size === 0) {
+      setPageError('Selecione pelo menos um novo destinatário.');
+      return;
+    }
+    if (!confirm(`Enviar agora para ${selectedRecipientIds.size} novo(s) destinatário(s)? Quem já recebeu não receberá novamente.`)) return;
+    setRecipientsSaving(true);
+    setPageError('');
+    try {
+      const response = await fetch(`/api/email-marketing/campaigns/${id}/recipients`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selected_user_ids: [...selectedRecipientIds] }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Não foi possível salvar os destinatários.');
+      await handleSend(true);
+    } catch (cause) {
+      setPageError(cause instanceof Error ? cause.message : 'Não foi possível enviar para os destinatários selecionados.');
+    } finally {
+      setRecipientsSaving(false);
     }
   }
 
@@ -198,7 +256,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           )}
           {canEditCampaign && (
             <button
-              onClick={handleSend}
+              onClick={() => void handleSend()}
               disabled={sending}
               className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
             >
@@ -276,6 +334,26 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           <p className="mt-1 text-lg font-bold capitalize text-gray-900 dark:text-white">{campaign.segment_type}</p>
         </div>
       </div>
+
+      <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div><div className="flex items-center gap-2"><Users className="h-5 w-5 text-pink-500" /><h2 className="font-bold text-gray-900 dark:text-white">Destinatários da campanha</h2></div><p className="mt-1 text-sm text-gray-500">Selecione novos contatos. Quem já recebeu fica automaticamente fora do próximo envio.</p></div>
+          <div className="flex gap-2"><button type="button" onClick={() => setSelectedRecipientIds(new Set(recipients.filter((recipient) => recipient.eligible && !recipient.already_sent).map((recipient) => recipient.id)))} className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 dark:border-gray-700 dark:text-gray-300">Selecionar elegíveis</button><button type="button" onClick={() => setSelectedRecipientIds(new Set())} className="rounded-lg px-3 py-2 text-xs font-bold text-gray-500">Limpar</button></div>
+        </div>
+        {recipientsLoading ? <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-pink-500" /></div> : (
+          <div className="mt-4 max-h-80 overflow-y-auto rounded-xl border border-gray-100 dark:border-gray-800">
+            {recipients.map((recipient) => (
+              <label key={recipient.id} className={`flex items-center gap-3 border-b border-gray-100 px-4 py-3 last:border-0 dark:border-gray-800 ${recipient.eligible && !recipient.already_sent ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50' : 'opacity-60'}`}>
+                <input type="checkbox" disabled={!recipient.eligible || recipient.already_sent} checked={selectedRecipientIds.has(recipient.id)} onChange={(event) => setSelectedRecipientIds((current) => { const next = new Set(current); if (event.target.checked) next.add(recipient.id); else next.delete(recipient.id); return next; })} className="h-4 w-4 accent-pink-500" />
+                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-gray-900 dark:text-white">{recipient.name || 'Cliente'}</span><span className="block truncate text-xs text-gray-500">{recipient.email}</span></span>
+                {recipient.already_sent ? <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700 dark:bg-green-950/40 dark:text-green-300">Já enviado</span> : !recipient.eligible ? <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-500 dark:bg-gray-800">Sem consentimento</span> : <span className="rounded-full bg-pink-50 px-2.5 py-1 text-xs font-bold text-pink-700 dark:bg-pink-950/30 dark:text-pink-300">Disponível</span>}
+              </label>
+            ))}
+            {recipients.length === 0 && <p className="p-6 text-center text-sm text-gray-500">Nenhum usuário encontrado.</p>}
+          </div>
+        )}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-gray-500">{selectedRecipientIds.size} novo(s) destinatário(s) selecionado(s)</p><button type="button" disabled={sending || recipientsSaving || selectedRecipientIds.size === 0} onClick={() => void sendToSelectedRecipients()} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">{sending || recipientsSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Enviar para selecionados</button></div>
+      </section>
 
       {/* A/B Test Results */}
       {campaign.ab_test_enabled && (
