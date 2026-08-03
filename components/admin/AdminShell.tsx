@@ -201,13 +201,13 @@ export function AdminShell({ children, userEmail, accessLevel, enabledFeatures }
       <SideNav userEmail={userEmail} alertCount={unreadCount} accessLevel={accessLevel} enabledFeatures={enabledFeatures} />
 
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f5f3ef]/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#090b10]/88 sm:px-6 lg:px-8">
+        <header className="sticky top-[73px] z-30 border-b border-black/5 bg-[#f5f3ef]/90 px-3 py-2.5 backdrop-blur-xl dark:border-white/10 dark:bg-[#090b10]/88 sm:px-6 sm:py-3 md:top-0 lg:px-8">
           <div className="mx-auto flex max-w-[1600px] items-center gap-3">
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+              <div className="hidden items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:flex">
                 Operação <ChevronRight className="h-3 w-3" />
               </div>
-              <p className="truncate text-base font-semibold text-slate-900 dark:text-white">
+              <p className="truncate text-sm font-semibold text-slate-900 dark:text-white sm:text-base">
                 {getAdminRouteTitle(pathname)}
               </p>
             </div>
@@ -242,7 +242,7 @@ export function AdminShell({ children, userEmail, accessLevel, enabledFeatures }
               </button>
 
               {notificationOpen && (
-                <div className="absolute right-0 top-12 z-40 w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-[#12151d]">
+                <div className="fixed left-3 right-3 top-[132px] z-40 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-[#12151d] sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[390px]">
                   <div className="flex items-start justify-between border-b border-black/5 p-4 dark:border-white/10">
                     <div>
                       <p className="font-semibold">Alertas recentes</p>
@@ -297,7 +297,7 @@ export function AdminShell({ children, userEmail, accessLevel, enabledFeatures }
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
+        <main className="mx-auto min-w-0 w-full max-w-[1600px] p-3 sm:p-6 lg:p-8">
           {permission !== 'granted' && permission !== 'unsupported' && (
             <div className="mb-6 flex flex-col gap-3 overflow-hidden rounded-2xl border border-pink-200 bg-gradient-to-r from-pink-50 via-white to-orange-50 p-4 shadow-sm dark:border-pink-500/20 dark:from-pink-500/10 dark:via-white/[0.03] dark:to-orange-500/10 sm:flex-row sm:items-center">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white shadow-lg shadow-pink-500/20">
@@ -317,7 +317,7 @@ export function AdminShell({ children, userEmail, accessLevel, enabledFeatures }
       </div>
 
       {newAlert && (
-        <Link href={getNotificationLink(newAlert)} className="fixed bottom-5 right-5 z-50 flex w-[min(90vw,380px)] gap-3 rounded-2xl border border-pink-200 bg-white p-4 shadow-2xl shadow-pink-900/15 dark:border-pink-500/30 dark:bg-[#171922]">
+        <Link href={getNotificationLink(newAlert)} className="fixed bottom-3 left-3 right-3 z-50 flex gap-3 rounded-2xl border border-pink-200 bg-white p-4 shadow-2xl shadow-pink-900/15 dark:border-pink-500/30 dark:bg-[#171922] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[380px]">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white"><BellRing className="h-5 w-5" /></span>
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-pink-600"><Sparkles className="h-3 w-3" /> Novo alerta</span>
@@ -329,7 +329,7 @@ export function AdminShell({ children, userEmail, accessLevel, enabledFeatures }
       )}
 
       {searchOpen && (
-        <div className="fixed inset-0 z-[60] bg-slate-950/55 p-4 pt-[10vh] backdrop-blur-sm" onMouseDown={() => setSearchOpen(false)}>
+        <div className="fixed inset-0 z-[60] bg-slate-950/55 p-3 pt-20 backdrop-blur-sm sm:p-4 sm:pt-[10vh]" onMouseDown={() => setSearchOpen(false)}>
           <div role="dialog" aria-modal="true" aria-label="Buscar no painel administrativo" className="mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-white/20 bg-white shadow-2xl dark:bg-[#12151d]" onMouseDown={(event) => event.stopPropagation()}>
             <div className="flex items-center gap-3 border-b border-black/5 px-4 dark:border-white/10">
               <Search className="h-5 w-5 text-pink-500" />

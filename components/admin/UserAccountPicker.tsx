@@ -51,9 +51,9 @@ export function UserAccountPicker({ selected, onSelect }: UserAccountPickerProps
 
   return (
     <div>
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <form onSubmit={handleSearch} className="flex flex-col gap-2 sm:flex-row">
         <div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome ou e-mail de quem já tem conta" className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100" /></div>
-        <button type="submit" disabled={searching} className="rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700 hover:border-pink-300 disabled:opacity-50">{searching ? 'Buscando...' : 'Buscar'}</button>
+        <button type="submit" disabled={searching} className="min-h-11 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700 hover:border-pink-300 disabled:opacity-50">{searching ? 'Buscando...' : 'Buscar'}</button>
       </form>
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
       {results.length > 0 && <div className="mt-2 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-100">{results.map((user) => <button type="button" key={user.id} onClick={() => { onSelect(user); setSearch(''); setResults([]); }} className="flex w-full items-center justify-between gap-3 p-3 text-left hover:bg-pink-50"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{user.name || 'Sem nome'}</span><span className="block truncate text-xs text-slate-500">{user.email}</span></span><span className="text-xs font-bold text-pink-600">Vincular</span></button>)}</div>}

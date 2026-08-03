@@ -20,6 +20,7 @@ import { PaymentForm, type PaymentPricingSummary } from '@/components/shop/Payme
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES } from '@/lib/checkout-rules';
 import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/store-settings-schema';
+import { formatCep, type AddressSearchResult } from '@/lib/address-search';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -32,6 +33,11 @@ const STEPS = [
   { id: 1, label: 'Carrinho' },
   { id: 2, label: 'Entrega' },
   { id: 3, label: 'Pagamento' },
+] as const;
+
+const BRAZILIAN_STATES = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
+  'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
 ] as const;
 
 type PaymentSummarySnapshot = {
@@ -75,6 +81,13 @@ export default function CartPage() {
   const [shippingAddress, setShippingAddress] = useState<{ city: string; state: string; street: string; neighborhood: string } | null>(null);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [shippingError, setShippingError] = useState('');
+  const [addressSearchOpen, setAddressSearchOpen] = useState(false);
+  const [addressSearchState, setAddressSearchState] = useState('');
+  const [addressSearchCity, setAddressSearchCity] = useState('');
+  const [addressSearchStreet, setAddressSearchStreet] = useState('');
+  const [addressSearchResults, setAddressSearchResults] = useState<AddressSearchResult[]>([]);
+  const [addressSearchLoading, setAddressSearchLoading] = useState(false);
+  const [addressSearchError, setAddressSearchError] = useState('');
 
   const [addressStreet, setAddressStreet] = useState('');
   const [addressNumber, setAddressNumber] = useState('');
@@ -149,8 +162,8 @@ export default function CartPage() {
     }).catch(() => {});
   }, []);
 
-  async function handleCalculateShipping() {
-    const digits = shippingCep.replace(/\D/g, '');
+  async function calculateShippingForCep(rawCep: string, selectedAddress?: AddressSearchResult) {
+    const digits = rawCep.replace(/\D/g, '');
     if (digits.length !== 8) {
       setShippingError('Informe um CEP válido com 8 dígitos.');
       return;
@@ -161,6 +174,8 @@ export default function CartPage() {
     setSelectedShipping(null);
     setShippingAddress(null);
     setAddressStreet('');
+    setAddressNumber('');
+    setAddressComplement('');
     setAddressNeighborhood('');
 
     try {
@@ -174,10 +189,18 @@ export default function CartPage() {
         setShippingError(data.error || 'Erro ao calcular frete.');
         return;
       }
+      const resolvedAddress = selectedAddress ? {
+        city: selectedAddress.city || data.address.city,
+        state: selectedAddress.state || data.address.state,
+        street: selectedAddress.street || data.address.street,
+        neighborhood: selectedAddress.neighborhood || data.address.neighborhood,
+      } : data.address;
+      setShippingCep(formatCep(digits));
       setShippingOptions(data.options);
-      setShippingAddress(data.address);
-      if (data.address.street) setAddressStreet(data.address.street);
-      if (data.address.neighborhood) setAddressNeighborhood(data.address.neighborhood);
+      setShippingAddress(resolvedAddress);
+      if (resolvedAddress.street) setAddressStreet(resolvedAddress.street);
+      if (resolvedAddress.neighborhood) setAddressNeighborhood(resolvedAddress.neighborhood);
+      if (selectedAddress?.complement) setAddressComplement(selectedAddress.complement);
       if (couponDiscount?.family_pickup) {
         setSelectedShipping({ id: 'pickup', name: storeSettings.shipping.pickupName, price: 0, days_min: 0, days_max: 0 });
       } else if (data.options.length > 0) setSelectedShipping(data.options[0]);
@@ -186,6 +209,45 @@ export default function CartPage() {
     } finally {
       setShippingLoading(false);
     }
+  }
+
+  async function handleCalculateShipping() {
+    await calculateShippingForCep(shippingCep);
+  }
+
+  async function handleSearchAddress() {
+    setAddressSearchLoading(true);
+    setAddressSearchError('');
+    setAddressSearchResults([]);
+
+    try {
+      const response = await fetch('/api/address-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: addressSearchState, city: addressSearchCity, street: addressSearchStreet }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setAddressSearchError(data.error || 'Não foi possível buscar o CEP.');
+        return;
+      }
+      if (!Array.isArray(data.results) || data.results.length === 0) {
+        setAddressSearchError('Nenhum CEP encontrado. Confira a cidade e tente apenas o nome principal da rua.');
+        return;
+      }
+      setAddressSearchResults(data.results);
+    } catch {
+      setAddressSearchError('Erro de conexão. Tente novamente.');
+    } finally {
+      setAddressSearchLoading(false);
+    }
+  }
+
+  async function handleChooseAddress(result: AddressSearchResult) {
+    setAddressSearchOpen(false);
+    setAddressSearchResults([]);
+    setAddressSearchError('');
+    await calculateShippingForCep(result.cep, result);
   }
 
   async function handleApplyCoupon() {
@@ -574,7 +636,7 @@ export default function CartPage() {
             {/* CEP */}
             <div>
               <label htmlFor="shipping-cep" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CEP <span className="text-pink-500">*</span></label>
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <input
                   id="shipping-cep"
                   type="text"
@@ -586,7 +648,7 @@ export default function CartPage() {
                     if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
                     setShippingCep(v);
                   }}
-                  className="w-40 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent sm:w-40"
                 />
                 <button
                   type="button"
@@ -603,7 +665,108 @@ export default function CartPage() {
                 </button>
               </div>
               {shippingError && <p className="mt-1 text-xs text-red-600">{shippingError}</p>}
+
+              <button
+                type="button"
+                aria-expanded={addressSearchOpen}
+                aria-controls="address-search-panel"
+                onClick={() => {
+                  setAddressSearchOpen((current) => !current);
+                  setAddressSearchError('');
+                }}
+                className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-pink-600 transition hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35m2.1-5.4a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
+                </svg>
+                {addressSearchOpen ? 'Fechar busca por endereço' : 'Não sabe o CEP? Busque pelo endereço'}
+              </button>
             </div>
+
+            {addressSearchOpen && (
+              <div id="address-search-panel" className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50/70 to-orange-50/50 p-4 dark:border-pink-900/60 dark:from-pink-950/25 dark:to-orange-950/20 sm:p-5">
+                <div className="mb-4">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">Encontrar meu CEP</h3>
+                  <p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-400">Digite onde você mora. Pode informar somente o nome principal da rua, sem o número.</p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-[100px_minmax(0,1fr)]">
+                  <div>
+                    <label htmlFor="address-search-state" className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Estado</label>
+                    <select
+                      id="address-search-state"
+                      value={addressSearchState}
+                      onChange={(event) => setAddressSearchState(event.target.value)}
+                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-3 text-sm text-gray-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                    >
+                      <option value="">UF</option>
+                      {BRAZILIAN_STATES.map((state) => <option key={state} value={state}>{state}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="address-search-city" className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Cidade</label>
+                    <input
+                      id="address-search-city"
+                      type="text"
+                      autoComplete="address-level2"
+                      placeholder="Ex: Itajaí"
+                      value={addressSearchCity}
+                      onChange={(event) => setAddressSearchCity(event.target.value)}
+                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <label htmlFor="address-search-street" className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Rua ou avenida</label>
+                  <input
+                    id="address-search-street"
+                    type="text"
+                    autoComplete="address-line1"
+                    placeholder="Ex: Avenida Brasil"
+                    value={addressSearchStreet}
+                    onChange={(event) => setAddressSearchStreet(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !addressSearchLoading) void handleSearchAddress();
+                    }}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSearchAddress}
+                  disabled={addressSearchLoading}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 sm:w-auto"
+                >
+                  {addressSearchLoading ? 'Procurando…' : 'Encontrar CEP'}
+                </button>
+
+                {addressSearchError && <p role="alert" className="mt-3 text-xs font-medium text-red-600 dark:text-red-400">{addressSearchError}</p>}
+
+                {addressSearchResults.length > 0 && (
+                  <div className="mt-4 space-y-2" aria-live="polite">
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Selecione seu endereço:</p>
+                    {addressSearchResults.map((result, index) => (
+                      <button
+                        key={`${result.cep}-${index}`}
+                        type="button"
+                        onClick={() => void handleChooseAddress(result)}
+                        className="flex w-full items-center justify-between gap-3 rounded-xl border border-white bg-white p-3 text-left shadow-sm transition hover:border-pink-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-pink-700"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-gray-900 dark:text-white">{result.street || 'Logradouro não informado'}</span>
+                          <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">
+                            {[result.neighborhood, `${result.city}/${result.state}`].filter(Boolean).join(' · ')}
+                          </span>
+                        </span>
+                        <span className="shrink-0 rounded-full bg-pink-50 px-2.5 py-1 text-xs font-bold text-pink-700 dark:bg-pink-950/50 dark:text-pink-300">{formatCep(result.cep)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Address fields — shown after CEP lookup */}
             {shippingAddress && (

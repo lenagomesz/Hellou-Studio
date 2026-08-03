@@ -22,13 +22,20 @@ export function SideNav({ userEmail, alertCount = 0, accessLevel, enabledFeature
     setMobileOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [mobileOpen]);
+
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   return (
-    <aside className="w-full border-b border-white/10 bg-[#101218] text-white md:sticky md:top-0 md:h-screen md:w-[278px] md:shrink-0 md:border-b-0 md:border-r">
+    <aside className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#101218] text-white md:h-screen md:w-[278px] md:shrink-0 md:border-b-0 md:border-r">
       <div className="flex items-center justify-between border-b border-white/10 p-4 md:px-5 md:py-5">
         <Link href="/dashboard" className="group flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-orange-400 text-sm font-black text-white shadow-lg shadow-pink-950/30">
@@ -48,12 +55,18 @@ export function SideNav({ userEmail, alertCount = 0, accessLevel, enabledFeature
           className="rounded-xl border border-white/10 p-2 text-slate-300 transition hover:bg-white/10 md:hidden"
           aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={mobileOpen}
+          aria-controls="admin-navigation"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      <div className={`overflow-hidden transition-all duration-300 ease-in-out md:flex md:h-[calc(100vh-81px)] md:flex-col ${mobileOpen ? 'max-h-[78vh]' : 'max-h-0 md:max-h-none'}`}>
+      {mobileOpen && <button type="button" aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="fixed inset-x-0 bottom-0 top-[73px] z-40 bg-slate-950/55 backdrop-blur-sm md:hidden" />}
+
+      <div
+        id="admin-navigation"
+        className={`fixed bottom-0 left-0 top-[73px] z-50 flex w-[min(88vw,360px)] flex-col overflow-hidden border-r border-white/10 bg-[#101218] shadow-2xl transition duration-300 ease-out md:static md:h-[calc(100vh-81px)] md:w-auto md:translate-x-0 md:opacity-100 md:shadow-none ${mobileOpen ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-full opacity-0 md:pointer-events-auto'}`}
+      >
         <nav aria-label="Navegação administrativa" className="flex-1 space-y-6 overflow-y-auto px-3 py-5 [scrollbar-color:#333_transparent] [scrollbar-width:thin]">
           {ADMIN_NAVIGATION.map((section) => (
             <div key={section.label}>
