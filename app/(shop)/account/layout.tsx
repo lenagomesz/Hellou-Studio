@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getCurrentUser } from '@/lib/api';
 import { AccountSidebar, AccountMobileNav } from '@/components/shop/AccountNav';
+import { EmailMarketingPreference } from '@/components/shop/EmailMarketingPreference';
 
 export const metadata: Metadata = {
   title: 'Minha conta',
@@ -25,7 +26,7 @@ export default async function AccountLayout({
           userEmail={user.email}
           isAdmin={user.role === 'admin'}
         />
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0"><EmailMarketingPreference compact />{children}</main>
       </div>
     </div>
   );

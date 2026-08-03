@@ -52,11 +52,51 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const auth = await requirePermission('team.manage');
   if (auth.response) return auth.response;
-  const body = await request.json().catch(() => null) as { id?: string; active?: boolean } | null;
-  if (!body?.id || typeof body.active !== 'boolean') return badRequest('Dados inválidos');
-  if (body.id === auth.user.id) return badRequest('Você não pode suspender o próprio acesso');
+  const body = await request.json().catch(() => null) as {
+    id?: string;
+    active?: boolean;
+    role?: 'user' | 'admin';
+  } | null;
+  if (!body?.id) return badRequest('Dados inválidos');
+  if (body.id === auth.user.id) return badRequest('Você não pode alterar o próprio acesso');
 
-  const { data, error } = await getSupabaseAdmin()
+  const admin = getSupabaseAdmin();
+
+  if (body.role) {
+    const { data: target, error: targetError } = await admin
+      .from('users')
+      .select('id, name, email, role, admin_access_level')
+      .eq('id', body.id)
+      .maybeSingle();
+
+    if (targetError) return serverError('Erro ao consultar o usuário');
+    if (!target) return badRequest('Usuário não encontrado');
+    if (target.admin_access_level === 'owner') return badRequest('A administradora principal não pode ser rebaixada');
+
+    const promoting = body.role === 'admin';
+    if (target.role === body.role) return badRequest(promoting ? 'Este usuário já é administrador' : 'Este perfil já é um usuário comum');
+
+    const { data, error } = await admin
+      .from('users')
+      .update(promoting
+        ? { role: 'admin', admin_access_level: 'partner', admin_permissions: null, admin_active: true }
+        : { role: 'user', admin_access_level: null, admin_permissions: null, admin_active: true })
+      .eq('id', body.id)
+      .select('id, name, email, role, admin_access_level, admin_active, last_login_at, created_at')
+      .single();
+
+    if (error) return serverError('Erro ao alterar o tipo de acesso');
+    await admin.rpc('revoke_user_sessions', { p_user_id: body.id });
+
+    const welcomeEmailSent = promoting
+      ? await sendPartnerWelcomeEmail(target.email, target.name || target.email)
+      : false;
+    return NextResponse.json({ member: data, welcome_email_sent: welcomeEmailSent });
+  }
+
+  if (typeof body.active !== 'boolean') return badRequest('Dados inválidos');
+
+  const { data, error } = await admin
     .from('users')
     .update({ admin_active: body.active })
     .eq('id', body.id)
@@ -67,6 +107,6 @@ export async function PATCH(request: Request) {
 
   if (error) return serverError('Erro ao alterar o acesso');
   if (!data) return badRequest('Só é possível alterar acessos de sócios operacionais');
-  await getSupabaseAdmin().rpc('revoke_user_sessions', { p_user_id: body.id });
+  await admin.rpc('revoke_user_sessions', { p_user_id: body.id });
   return NextResponse.json({ member: data });
 }

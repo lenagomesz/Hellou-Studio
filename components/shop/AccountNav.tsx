@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/account/orders', label: 'Meus Pedidos', mobileLabel: 'Pedidos', icon: 'orders' },
   { href: '/account/requests', label: 'Minhas Solicitações', mobileLabel: 'Encomendas', icon: 'requests' },
   { href: '/account/bonus', label: 'Meus Bônus', mobileLabel: 'Bônus', icon: 'bonus' },
+  { href: '/account/preferences', label: 'Preferências', mobileLabel: 'Preferências', icon: 'preferences' },
 ];
 
 function NavIcon({ name, className }: { name: string; className?: string }) {
@@ -31,6 +32,13 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
     return (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={cls}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5v-8.25m18 0V8.625A1.125 1.125 0 0 0 19.875 7.5H4.125A1.125 1.125 0 0 0 3 8.625v2.625m18 0H3m9-3.75V21m0-13.5H9.375A2.625 2.625 0 1 1 12 4.875V7.5Zm0 0h2.625A2.625 2.625 0 1 0 12 4.875V7.5Z" />
+      </svg>
+    );
+  }
+  if (name === 'preferences') {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={cls}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
       </svg>
     );
   }

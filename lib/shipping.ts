@@ -26,7 +26,7 @@ interface ViaCepResponse {
 // --- Correios API config ---
 const DEFAULT_DIAMETER = '0';
 const API_TIMEOUT_MS = 3000;
-export const PROMOTIONAL_PAC_MAX = 19.90;
+export const PROMOTIONAL_PAC_MAX = 15;
 
 // --- Fallback: tabela fixa por região ---
 type Region = 'local' | 'vizinhos' | 'sudeste' | 'centro_oeste' | 'nordeste' | 'norte';
@@ -150,10 +150,7 @@ function getFallbackOptions(uf: string): ShippingOption[] {
   ];
 }
 
-export function applyPromotionalShippingPolicy(uf: string, options: ShippingOption[]): ShippingOption[] {
-  const region = UF_REGION[uf];
-  if (region === 'norte' || region === 'nordeste') return options;
-
+export function applyPromotionalShippingPolicy(_uf: string, options: ShippingOption[]): ShippingOption[] {
   return options.map((option) => option.id === 'pac'
     ? { ...option, price: Math.min(option.price, PROMOTIONAL_PAC_MAX) }
     : option);

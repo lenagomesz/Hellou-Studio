@@ -7,19 +7,12 @@ const options: ShippingOption[] = [
 ];
 
 describe('promotional shipping policy', () => {
-  it.each(['SC', 'PR', 'RS', 'SP', 'RJ', 'MG', 'ES', 'GO', 'MT', 'MS', 'DF'])(
-    'limits PAC to less than R$ 20 for %s',
+  it.each(['SC', 'PR', 'RS', 'SP', 'RJ', 'MG', 'ES', 'GO', 'MT', 'MS', 'DF', 'BA', 'PE', 'CE', 'AM', 'PA', 'TO'])(
+    'limits PAC to R$ 15 for %s',
     (uf) => {
       const result = applyPromotionalShippingPolicy(uf, options);
       expect(result.find((option) => option.id === 'pac')?.price).toBe(PROMOTIONAL_PAC_MAX);
       expect(result.find((option) => option.id === 'sedex')?.price).toBe(38.90);
-    },
-  );
-
-  it.each(['BA', 'PE', 'CE', 'AM', 'PA', 'TO'])(
-    'keeps the calculated price for North and Northeast in %s',
-    (uf) => {
-      expect(applyPromotionalShippingPolicy(uf, options)).toEqual(options);
     },
   );
 

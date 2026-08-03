@@ -138,6 +138,70 @@ function escapeEmailHtml(value: string) {
   })[character] ?? character);
 }
 
+export async function sendAdminNewRegistrationEmail(params: {
+  adminEmail: string;
+  userId: string;
+  customerName: string | null;
+  customerEmail: string;
+  customerPhone: string | null;
+  marketingConsent: boolean;
+}): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) return false;
+
+  const safeName = escapeEmailHtml(params.customerName || 'Não informado');
+  const safeEmail = escapeEmailHtml(params.customerEmail);
+  const safePhone = escapeEmailHtml(params.customerPhone || 'Não informado');
+  const userUrl = buildEmailUrl(getBaseUrl(), `/dashboard/users/${params.userId}`);
+  const registeredAt = new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+    timeZone: 'America/Sao_Paulo',
+  }).format(new Date());
+
+  try {
+    const res = await sendTrackedEmail(resend, {
+      from: getFrom(),
+      to: params.adminEmail,
+      subject: `Novo cadastro na Hellou Studio — ${params.customerName || params.customerEmail}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#ffffff;color:#334155;">
+          <div style="border-radius:18px;background:linear-gradient(135deg,#fff1f7,#fff7ed);padding:28px;border:1px solid #fbcfe8;">
+            <p style="margin:0 0 8px;color:#db2777;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;">Hellou Studio</p>
+            <h1 style="margin:0;color:#0f172a;font-size:25px;line-height:1.2;">Novo cliente cadastrado ✨</h1>
+            <p style="margin:12px 0 0;font-size:14px;color:#64748b;">${registeredAt}</p>
+          </div>
+
+          <div style="margin:24px 0;padding:20px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;font-size:14px;line-height:1.8;">
+            <p style="margin:0;"><strong>Nome:</strong> ${safeName}</p>
+            <p style="margin:0;"><strong>E-mail:</strong> ${safeEmail}</p>
+            <p style="margin:0;"><strong>Telefone:</strong> ${safePhone}</p>
+            <p style="margin:0;"><strong>Marketing:</strong> ${params.marketingConsent ? 'Autorizado' : 'Não autorizado'}</p>
+          </div>
+
+          <a href="${userUrl}" style="display:block;margin:24px 0;padding:14px 20px;border-radius:12px;background:linear-gradient(100deg,#ec4899,#f97316);color:#ffffff;text-align:center;text-decoration:none;font-size:14px;font-weight:800;">Ver cliente no painel</a>
+        </div>
+      `,
+    }, {
+      emailType: 'admin_new_registration',
+      metadata: { userId: params.userId, marketingConsent: params.marketingConsent },
+    });
+
+    if (res.error) {
+      structuredLog('error', 'email.provider_response_error', { emailType: 'admin_new_registration' });
+      return false;
+    }
+    structuredLog('info', 'email.send_completed', {
+      emailType: 'admin_new_registration',
+      providerEmailId: res.data?.id,
+    });
+    return true;
+  } catch (error) {
+    structuredLog('error', 'email.template_exception', { emailType: 'admin_new_registration', error });
+    return false;
+  }
+}
+
 export async function sendPartnerWelcomeEmail(email: string, nome: string): Promise<boolean> {
   const resend = getResend();
   if (!resend) return false;

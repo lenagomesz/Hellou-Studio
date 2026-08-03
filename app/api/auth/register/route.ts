@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { sendWelcomeEmail } from '@/lib/email';
+import { sendAdminNewRegistrationEmail, sendWelcomeEmail } from '@/lib/email';
 import { isValidCpf, cleanCpf } from '@/lib/cpf';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -126,10 +126,19 @@ export async function POST(request: Request) {
     console.error('[register] não foi possível salvar a preferência de marketing:', preferenceError);
   }
 
-  try {
-    await sendWelcomeEmail(created.email, created.name);
-  } catch (err) {
-    console.error('[register] email de boas-vindas falhou:', err);
+  const emailResults = await Promise.allSettled([
+    sendWelcomeEmail(created.email, created.name),
+    sendAdminNewRegistrationEmail({
+      adminEmail: process.env.ADMIN_EMAIL || 'studiohellou@gmail.com',
+      userId: created.id,
+      customerName: created.name,
+      customerEmail: created.email,
+      customerPhone: cleanPhone,
+      marketingConsent: consentGranted,
+    }),
+  ]);
+  for (const result of emailResults) {
+    if (result.status === 'rejected') console.error('[register] envio de e-mail falhou:', result.reason);
   }
 
   return NextResponse.json({ user: created }, { status: 201 });
