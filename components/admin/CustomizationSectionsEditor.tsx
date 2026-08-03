@@ -8,6 +8,7 @@ import type {
   ProductCustomizationSectionType,
 } from '@/lib/product-customization';
 import { PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
 
 function createId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -35,6 +36,7 @@ function createOption(): ProductCustomizationOption {
   return {
     id: createId('option'),
     label: 'Nova opção',
+    imageUrl: '',
   };
 }
 
@@ -325,19 +327,28 @@ export function CustomizationSectionsEditor({
                   </div>
                   <div className="mt-3 space-y-2">
                     {(section.options ?? []).map((option, optionIndex) => (
-                      <div key={option.id} className="flex items-center gap-2">
-                        <input
-                          value={option.label}
-                          onChange={(event) => updateOption(sectionIndex, optionIndex, { label: event.target.value })}
-                          maxLength={50}
-                          placeholder={`Opção ${optionIndex + 1}`}
-                          className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+                      <div key={option.id} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900 sm:grid-cols-[minmax(0,1fr)_minmax(13rem,0.8fr)_auto] sm:items-end">
+                        <label className="block">
+                          <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400">Nome da opção *</span>
+                          <input
+                            value={option.label}
+                            onChange={(event) => updateOption(sectionIndex, optionIndex, { label: event.target.value })}
+                            maxLength={50}
+                            placeholder={`Opção ${optionIndex + 1}`}
+                            className="mt-1 min-w-0 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                          />
+                        </label>
+                        <ImageUploadField
+                          compact
+                          label="Imagem da opção (opcional)"
+                          value={option.imageUrl ?? ''}
+                          onChange={(imageUrl) => updateOption(sectionIndex, optionIndex, { imageUrl })}
                         />
                         <button
                           type="button"
                           onClick={() => updateSection(sectionIndex, { options: (section.options ?? []).filter((_, index) => index !== optionIndex) })}
                           aria-label={`Excluir opção ${optionIndex + 1}`}
-                          className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                          className="justify-self-end rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 sm:mb-1"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

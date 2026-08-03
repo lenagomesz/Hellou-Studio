@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
@@ -374,7 +375,7 @@ export function ProductDetail({
                   </div>
 
                   {needsColor && (
-                    <div className="flex flex-wrap gap-2.5">
+                    <div className={section.options.some((option) => option.imageUrl) ? 'grid grid-cols-2 gap-2.5 sm:grid-cols-3' : 'flex flex-wrap gap-2.5'}>
                       {section.colors.map((color) => {
                         const selected = selection.colorId === color.id;
                         return (
@@ -422,13 +423,25 @@ export function ProductDetail({
                                 optionLabel: option.label,
                               },
                             }))}
-                            className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                            className={`overflow-hidden rounded-xl border text-xs font-semibold transition ${option.imageUrl ? 'p-1.5 text-left' : 'px-3 py-2'} ${
                               selected
                                 ? 'border-pink-500 bg-pink-50 text-pink-700 ring-2 ring-pink-100 dark:bg-pink-500/10 dark:text-pink-200 dark:ring-pink-500/20'
                                 : 'border-gray-200 bg-white text-gray-700 hover:border-pink-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'
                             }`}
                           >
-                            {option.label}
+                            {option.imageUrl && (
+                              <span className="relative mb-2 block aspect-square w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                                <Image
+                                  src={option.imageUrl}
+                                  alt={option.label}
+                                  fill
+                                  unoptimized
+                                  sizes="(max-width: 640px) 42vw, 180px"
+                                  className="object-cover"
+                                />
+                              </span>
+                            )}
+                            <span className={option.imageUrl ? 'block px-1 pb-1 text-center' : ''}>{option.label}</span>
                           </button>
                         );
                       })}

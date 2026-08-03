@@ -21,6 +21,7 @@ export type ProductCustomizationColor = {
 export type ProductCustomizationOption = {
   id: string;
   label: string;
+  imageUrl?: string;
 };
 
 export type ProductCustomizationSection = {
@@ -154,9 +155,17 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
           if (optionIds.has(optionId)) throw new Error(`As opções de "${label}" devem ser únicas`);
           optionIds.add(optionId);
           const optionLabel = typeof option.label === 'string' ? option.label.trim() : '';
+          const imageUrl = typeof option.imageUrl === 'string' ? option.imageUrl.trim() : '';
           if (!optionLabel) throw new Error(`Preencha as opções de "${label}"`);
           if (optionLabel.length > 50) throw new Error(`As opções de "${label}" devem ter no máximo 50 caracteres`);
-          return { id: optionId, label: optionLabel };
+          if (imageUrl.length > 2048 || (imageUrl && !imageUrl.startsWith('/') && !/^https:\/\//i.test(imageUrl))) {
+            throw new Error(`A imagem da opção em "${label}" é inválida`);
+          }
+          return {
+            id: optionId,
+            label: optionLabel,
+            ...(imageUrl ? { imageUrl } : {}),
+          };
         })
       : [];
 

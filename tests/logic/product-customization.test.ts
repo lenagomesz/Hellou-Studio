@@ -83,7 +83,7 @@ describe('product customization copy', () => {
         type: 'option',
         required: true,
         options: [
-          { id: 'lightning', label: 'Lightning' },
+          { id: 'lightning', label: 'Lightning', imageUrl: ' /api/product-images/options/lightning.webp ' },
           { id: 'usb-c', label: 'USB-C' },
         ],
       },
@@ -92,7 +92,7 @@ describe('product customization copy', () => {
     const formatted = formatProductCustomizationSelections(sections, selections);
 
     expect(sections[0].options).toEqual([
-      { id: 'lightning', label: 'Lightning' },
+      { id: 'lightning', label: 'Lightning', imageUrl: '/api/product-images/options/lightning.webp' },
       { id: 'usb-c', label: 'USB-C' },
     ]);
     expect(areRequiredCustomizationSectionsComplete(sections, selections)).toBe(true);
