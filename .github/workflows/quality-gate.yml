@@ -19,7 +19,9 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
-      NEXTAUTH_SECRET: ${{ secrets.E2E_NEXTAUTH_SECRET }}
+      # O build avalia os módulos de autenticação e exige um valor mesmo
+      # quando o E2E real está desativado. Este fallback existe somente no CI.
+      NEXTAUTH_SECRET: ${{ secrets.E2E_NEXTAUTH_SECRET || 'ci-build-only-secret-not-for-runtime' }}
       NEXTAUTH_URL: http://127.0.0.1:3000
       NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
       NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY: ${{ secrets.E2E_MP_PUBLIC_KEY }}
