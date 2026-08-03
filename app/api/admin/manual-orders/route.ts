@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     if (!data) return badRequest('Usuário selecionado não foi encontrado');
     linkedUser = data;
   } else {
-    const { data } = await admin.from('users').select('id, email, name').eq('email', customerEmail).maybeSingle();
+    const { data } = await admin.from('users').select('id, email, name').ilike('email', customerEmail).maybeSingle();
     linkedUser = data;
   }
 

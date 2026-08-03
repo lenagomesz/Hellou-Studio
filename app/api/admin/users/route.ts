@@ -8,7 +8,11 @@ export async function GET(req: NextRequest) {
   if (auth.response) return auth.response;
 
   const rawSearch = req.nextUrl.searchParams.get('search') ?? '';
-  const search = sanitizeSearchInput(rawSearch);
+  const trimmedSearch = rawSearch.trim();
+  const isExactEmailSearch = trimmedSearch.includes('@');
+  const search = isExactEmailSearch
+    ? trimmedSearch.toLowerCase().slice(0, 254)
+    : sanitizeSearchInput(trimmedSearch).slice(0, 100);
   const page = Math.max(1, Number(req.nextUrl.searchParams.get('page')) || 1);
   const limit = Math.min(100, Math.max(1, Number(req.nextUrl.searchParams.get('limit')) || 25));
   const admin = getSupabaseAdmin();
@@ -18,8 +22,10 @@ export async function GET(req: NextRequest) {
     .select('id, email, name, role, is_vip, created_at', { count: 'exact' })
     .order('created_at', { ascending: false });
 
-  if (search.trim()) {
-    query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%`);
+  if (search) {
+    query = isExactEmailSearch
+      ? query.ilike('email', search)
+      : query.or(`email.ilike.%${search}%,name.ilike.%${search}%`);
   }
 
   const from = (page - 1) * limit;

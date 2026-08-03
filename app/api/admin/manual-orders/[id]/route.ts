@@ -74,7 +74,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!data) return badRequest('Usuário selecionado não foi encontrado');
     linkedUser = data;
   } else if (input.user_id === null) {
-    const { data } = await admin.from('users').select('id, email, name').eq('email', customerEmail).maybeSingle();
+    const { data } = await admin.from('users').select('id, email, name').ilike('email', customerEmail).maybeSingle();
     linkedUser = data;
   } else if (current.user_id) {
     const { data } = await admin.from('users').select('id, email, name').eq('id', current.user_id).maybeSingle();

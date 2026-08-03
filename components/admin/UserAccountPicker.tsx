@@ -20,19 +20,23 @@ export function UserAccountPicker({ selected, onSelect }: UserAccountPickerProps
   const [results, setResults] = useState<AccountOption[]>([]);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
 
   async function handleSearch(event: React.FormEvent) {
     event.preventDefault();
     if (search.trim().length < 2) return setError('Digite ao menos 2 caracteres.');
     setSearching(true);
     setError('');
+    setHasSearched(false);
+    setResults([]);
     const params = new URLSearchParams({ search: search.trim(), page: '1', limit: '10' });
     const response = await fetch(`/api/admin/users?${params}`, { cache: 'no-store' });
     const result = await response.json().catch(() => ({}));
     setSearching(false);
+    setHasSearched(true);
     if (!response.ok) return setError(result.error ?? 'Erro ao buscar cliente');
     const users = (result.users ?? result) as AccountOption[];
-    setResults(users.filter((user) => user.role === 'user'));
+    setResults(users);
   }
 
   if (selected) {
@@ -53,7 +57,7 @@ export function UserAccountPicker({ selected, onSelect }: UserAccountPickerProps
       </form>
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
       {results.length > 0 && <div className="mt-2 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-100">{results.map((user) => <button type="button" key={user.id} onClick={() => { onSelect(user); setSearch(''); setResults([]); }} className="flex w-full items-center justify-between gap-3 p-3 text-left hover:bg-pink-50"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{user.name || 'Sem nome'}</span><span className="block truncate text-xs text-slate-500">{user.email}</span></span><span className="text-xs font-bold text-pink-600">Vincular</span></button>)}</div>}
-      {!searching && search.length >= 2 && results.length === 0 && !error && <p className="mt-2 text-xs text-slate-500">Se não encontrar, preencha o e-mail abaixo como cliente sem conta.</p>}
+      {hasSearched && !searching && results.length === 0 && !error && <p className="mt-2 text-xs text-slate-500">Nenhuma conta encontrada. Confira o e-mail ou preencha os dados abaixo como cliente sem conta.</p>}
     </div>
   );
 }
