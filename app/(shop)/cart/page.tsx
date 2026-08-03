@@ -44,6 +44,22 @@ type PaymentSummarySnapshot = {
   hasOnlyDigitalProducts: boolean;
 };
 
+const CHECKOUT_DRAFT_KEY = 'hellou_checkout_delivery_draft';
+
+type DeliveryDraft = {
+  expiresAt: number;
+  shippingCep: string;
+  shippingOptions: ShippingOption[];
+  selectedShipping: ShippingOption | null;
+  shippingAddress: { city: string; state: string; street: string; neighborhood: string } | null;
+  addressStreet: string;
+  addressNumber: string;
+  addressComplement: string;
+  addressNeighborhood: string;
+  couponCode: string;
+  couponDiscount: { code: string; discount_amount: number; discount_value: number; description: string; free_shipping?: boolean; family_pickup?: boolean } | null;
+};
+
 export default function CartPage() {
   const { items, total, status, updateQuantity, removeItem } = useCart();
   const { data: session } = useSession();
@@ -100,6 +116,30 @@ export default function CartPage() {
       fetch('/api/profile').then(r => r.json()).then((data) => {
         if (data?.cpf) setUserCpf(data.cpf);
       }).catch(() => {});
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    try {
+      const raw = window.sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as DeliveryDraft;
+      window.sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+      if (!draft || draft.expiresAt < Date.now() || (!draft.shippingAddress && draft.selectedShipping?.id !== 'pickup')) return;
+      setShippingCep(draft.shippingCep);
+      setShippingOptions(Array.isArray(draft.shippingOptions) ? draft.shippingOptions : []);
+      setSelectedShipping(draft.selectedShipping);
+      setShippingAddress(draft.shippingAddress);
+      setAddressStreet(draft.addressStreet || draft.shippingAddress?.street || '');
+      setAddressNumber(draft.addressNumber || '');
+      setAddressComplement(draft.addressComplement || '');
+      setAddressNeighborhood(draft.addressNeighborhood || draft.shippingAddress?.neighborhood || '');
+      setCouponCode(draft.couponCode || '');
+      setCouponDiscount(draft.couponDiscount || null);
+      setStep(3);
+    } catch {
+      window.sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
     }
   }, [session]);
 
@@ -231,6 +271,29 @@ export default function CartPage() {
     } finally {
       setPickupLoading(false);
     }
+  }
+
+  function handleReviewOrder() {
+    if (session) {
+      setStep(3);
+      return;
+    }
+
+    const draft: DeliveryDraft = {
+      expiresAt: Date.now() + 30 * 60_000,
+      shippingCep,
+      shippingOptions,
+      selectedShipping,
+      shippingAddress,
+      addressStreet,
+      addressNumber,
+      addressComplement,
+      addressNeighborhood,
+      couponCode,
+      couponDiscount,
+    };
+    window.sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(draft));
+    router.push('/login?callbackUrl=/cart');
   }
 
 
@@ -439,7 +502,7 @@ export default function CartPage() {
                   type="button"
                   disabled={total < 0.01}
                   onClick={() => {
-                    if (!session) {
+                    if (hasOnlyDigitalProducts && !session) {
                       router.push('/login?callbackUrl=/cart');
                       return;
                     }
@@ -746,10 +809,10 @@ export default function CartPage() {
                 <dd className="font-medium">
                   {selectedShipping?.id === 'pickup'
                     ? <span className="text-green-700 dark:text-green-400">Retirada com Helena</span>
-                    : couponDiscount?.free_shipping
+                    : couponDiscount?.free_shipping || hasThresholdFreeShipping
                     ? <span className="text-green-700 dark:text-green-400">Grátis</span>
                     : selectedShipping
-                      ? formatPrice(selectedShipping.price)
+                      ? formatPrice(shippingCost)
                       : '—'}
                 </dd>
               </div>
@@ -774,16 +837,18 @@ export default function CartPage() {
             </button>
             <button
               type="button"
-              onClick={() => setStep(3)}
+              onClick={handleReviewOrder}
               disabled={selectedShipping?.id !== 'pickup' && (!shippingAddress || !addressStreet.trim() || !addressNumber.trim() || !addressNeighborhood.trim() || (!selectedShipping && !couponDiscount?.free_shipping))}
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/40 dark:shadow-none transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
             >
-              Revisar pedido
+              {session ? 'Revisar pedido' : 'Entrar e revisar pedido'}
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
             </button>
           </div>
+
+          {!session && <p className="text-center text-xs text-gray-500">O login será solicitado somente agora, depois da escolha do frete. Seus dados de entrega serão mantidos.</p>}
 
           {selectedShipping?.id !== 'pickup' && !shippingAddress && (
             <p className="text-center text-xs text-gray-500">Informe seu CEP para preencher o endereço.</p>
