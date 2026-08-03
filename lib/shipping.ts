@@ -26,6 +26,7 @@ interface ViaCepResponse {
 // --- Correios API config ---
 const DEFAULT_DIAMETER = '0';
 const API_TIMEOUT_MS = 3000;
+export const PROMOTIONAL_PAC_MAX = 19.90;
 
 // --- Fallback: tabela fixa por região ---
 type Region = 'local' | 'vizinhos' | 'sudeste' | 'centro_oeste' | 'nordeste' | 'norte';
@@ -149,6 +150,15 @@ function getFallbackOptions(uf: string): ShippingOption[] {
   ];
 }
 
+export function applyPromotionalShippingPolicy(uf: string, options: ShippingOption[]): ShippingOption[] {
+  const region = UF_REGION[uf];
+  if (region === 'norte' || region === 'nordeste') return options;
+
+  return options.map((option) => option.id === 'pac'
+    ? { ...option, price: Math.min(option.price, PROMOTIONAL_PAC_MAX) }
+    : option);
+}
+
 export async function calculateShipping(rawCep: string, packageOverride?: Partial<ShippingPackage>): Promise<ShippingResult> {
   const cep = sanitizeCep(rawCep);
   if (!cep) throw new Error('CEP inválido. Use 8 dígitos.');
@@ -176,16 +186,16 @@ export async function calculateShipping(rawCep: string, packageOverride?: Partia
   // Santa Catarina: frete fixo PAC R$ 9,90 e SEDEX R$ 15,90
   if (uf === 'SC') {
     return {
-      options: [
+      options: applyPromotionalShippingPolicy(uf, [
         { id: 'pac', name: 'PAC', price: 9.90, days_min: 3, days_max: 5 },
         { id: 'sedex', name: 'SEDEX', price: 15.90, days_min: 1, days_max: 2 },
-      ].filter((option) => option.id === 'pac' ? settings.shipping.pacEnabled : settings.shipping.sedexEnabled) as ShippingOption[],
+      ]).filter((option) => option.id === 'pac' ? settings.shipping.pacEnabled : settings.shipping.sedexEnabled) as ShippingOption[],
       address: { city: data.localidade, state: data.uf, street: data.logradouro, neighborhood: data.bairro },
     };
   }
 
   const correiosOptions = await fetchCorreiosRates(cep, shippingPackage);
-  const options = (correiosOptions || getFallbackOptions(uf))
+  const options = applyPromotionalShippingPolicy(uf, correiosOptions || getFallbackOptions(uf))
     .filter((option) => option.id === 'pac' ? settings.shipping.pacEnabled : settings.shipping.sedexEnabled);
 
   return {

@@ -267,7 +267,8 @@ export default function CartPage() {
     );
   }
 
-  const shippingCost = selectedShipping?.id === 'pickup' || couponDiscount?.free_shipping ? 0 : (selectedShipping?.price ?? 0);
+  const hasThresholdFreeShipping = !hasOnlyDigitalProducts && total >= storeSettings.commerce.freeShippingThreshold;
+  const shippingCost = selectedShipping?.id === 'pickup' || couponDiscount?.free_shipping || hasThresholdFreeShipping ? 0 : (selectedShipping?.price ?? 0);
   const discountAmount = couponDiscount?.free_shipping && couponDiscount.discount_value === 0
     ? 0
     : (couponDiscount?.discount_amount ?? 0);
@@ -388,9 +389,14 @@ export default function CartPage() {
               </ul>
 
               {/* Frete grátis banner — below products */}
-              {total >= 0.01 && total < 99 && (
+              {total >= 0.01 && total < storeSettings.commerce.freeShippingThreshold && (
                 <div className="rounded-lg bg-orange-50 dark:bg-orange-950/30 px-3 py-2">
-                  <p className="text-xs text-orange-700 dark:text-orange-300">Falta <span className="font-semibold">{formatPrice(99 - total)}</span> para frete grátis! 🚚</p>
+                  <p className="text-xs text-orange-700 dark:text-orange-300">Falta <span className="font-semibold">{formatPrice(storeSettings.commerce.freeShippingThreshold - total)}</span> para frete grátis! 🚚</p>
+                </div>
+              )}
+              {hasThresholdFreeShipping && (
+                <div className="rounded-lg bg-green-50 px-3 py-2 dark:bg-green-950/30">
+                  <p className="text-xs font-semibold text-green-700 dark:text-green-300">Você ganhou frete grátis! 🎉</p>
                 </div>
               )}
             </div>
@@ -647,7 +653,7 @@ export default function CartPage() {
                         <p className="text-xs text-gray-500 dark:text-gray-400">{opt.days_min}-{opt.days_max} dias úteis</p>
                       </div>
                     </div>
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(opt.price)}</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{hasThresholdFreeShipping ? <span className="text-green-700 dark:text-green-400">Grátis</span> : formatPrice(opt.price)}</span>
                   </label>
                 ))}
               </div>
@@ -656,6 +662,11 @@ export default function CartPage() {
             {couponDiscount?.free_shipping && shippingAddress && (
               <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30 p-4">
                 <p className="text-sm font-medium text-green-700 dark:text-green-300">Frete grátis aplicado pelo cupom {couponDiscount.code}</p>
+              </div>
+            )}
+            {hasThresholdFreeShipping && shippingAddress && !couponDiscount?.free_shipping && (
+              <div className="rounded-xl border border-green-200 bg-green-50/50 p-4 dark:border-green-800 dark:bg-green-950/30">
+                <p className="text-sm font-medium text-green-700 dark:text-green-300">Frete grátis aplicado porque seu pedido atingiu {formatPrice(storeSettings.commerce.freeShippingThreshold)}.</p>
               </div>
             )}
               </>
@@ -853,8 +864,8 @@ export default function CartPage() {
                       {selectedShipping.id === 'pickup' ? 'Sem entrega pelos Correios' : `${selectedShipping.name} · ${selectedShipping.days_min}-${selectedShipping.days_max} dias úteis`}
                     </p>
                   )}
-                  {couponDiscount?.free_shipping && (
-                    <p className="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400">{selectedShipping?.id === 'pickup' ? 'Retirada gratuita com a Helena' : 'Frete grátis (cupom)'}</p>
+                  {(couponDiscount?.free_shipping || hasThresholdFreeShipping) && (
+                    <p className="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400">{selectedShipping?.id === 'pickup' ? 'Retirada gratuita com a Helena' : hasThresholdFreeShipping ? 'Frete grátis pelo valor do pedido' : 'Frete grátis (cupom)'}</p>
                   )}
                 </div>
               )}
@@ -922,7 +933,7 @@ export default function CartPage() {
                       <dd className="font-medium">
                         {selectedShipping?.id === 'pickup'
                           ? <span className="text-green-700 dark:text-green-400">Retirada com Helena</span>
-                          : couponDiscount?.free_shipping
+                          : couponDiscount?.free_shipping || hasThresholdFreeShipping
                           ? <span className="text-green-700 dark:text-green-400">Grátis</span>
                           : checkoutShippingCost > 0
                             ? formatPrice(checkoutShippingCost)
