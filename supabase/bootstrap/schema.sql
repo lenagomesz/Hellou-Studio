@@ -110,6 +110,26 @@ create table if not exists public.orders (
   updated_at               timestamptz not null default now()
 );
 
+-- manual_orders (vendas presenciais e encomendas feitas fora do checkout)
+create table if not exists public.manual_orders (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid references public.users(id) on delete set null,
+  customer_name   text not null,
+  customer_email  text not null,
+  customer_phone  text,
+  title           text not null,
+  description     text,
+  quantity        integer not null default 1 check (quantity > 0),
+  total           numeric(10,2) not null default 0 check (total >= 0),
+  payment_status  text not null default 'pending' check (payment_status in ('pending', 'paid')),
+  status          text not null default 'pending' check (status in ('pending', 'confirmed', 'in_production', 'ready', 'delivered', 'canceled')),
+  internal_notes  text,
+  invite_sent_at  timestamptz,
+  created_by      uuid references public.users(id) on delete set null,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
 -- order_items (snapshot to preserve historical pricing/details)
 create table if not exists public.order_items (
   id                 uuid primary key default gen_random_uuid(),
@@ -148,6 +168,9 @@ create index if not exists idx_cart_items_user         on public.cart_items(user
 create index if not exists idx_orders_user             on public.orders(user_id);
 create index if not exists idx_orders_status           on public.orders(status);
 create index if not exists idx_orders_stripe_session   on public.orders(stripe_session_id);
+create index if not exists manual_orders_user_idx      on public.manual_orders(user_id);
+create index if not exists manual_orders_email_idx     on public.manual_orders(lower(customer_email));
+create index if not exists manual_orders_status_idx    on public.manual_orders(status, payment_status, created_at desc);
 create index if not exists idx_order_items_order       on public.order_items(order_id);
 
 -- ============================================================================
@@ -175,6 +198,11 @@ create trigger trg_orders_updated_at
   before update on public.orders
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_manual_orders_updated_at on public.manual_orders;
+create trigger trg_manual_orders_updated_at
+  before update on public.manual_orders
+  for each row execute function public.set_updated_at();
+
 -- ============================================================================
 -- RLS
 -- All access goes through Next.js API routes using the service-role key.
@@ -185,6 +213,7 @@ alter table public.products        disable row level security;
 alter table public.product_options disable row level security;
 alter table public.cart_items      disable row level security;
 alter table public.orders          disable row level security;
+alter table public.manual_orders   disable row level security;
 alter table public.order_items     disable row level security;
 alter table public.coupons         disable row level security;
 

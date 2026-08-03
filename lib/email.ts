@@ -254,6 +254,53 @@ export async function sendPartnerWelcomeEmail(email: string, nome: string): Prom
   }
 }
 
+export async function sendManualOrderInviteEmail(params: {
+  email: string;
+  customerName: string;
+  orderTitle: string;
+  manualOrderId: string;
+}): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) return false;
+
+  const safeName = escapeEmailHtml(params.customerName);
+  const safeTitle = escapeEmailHtml(params.orderTitle);
+  const registerUrl = buildEmailUrl(getBaseUrl(), `/register?email=${encodeURIComponent(params.email)}`);
+
+  try {
+    const res = await sendTrackedEmail(resend, {
+      from: getFrom(),
+      to: params.email,
+      subject: 'Sua encomenda foi registrada na Hellou Studio ✨',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#ffffff;color:#334155;">
+          <div style="border-radius:18px;background:linear-gradient(135deg,#fff1f7,#fff7ed);padding:28px;border:1px solid #fbcfe8;">
+            <p style="margin:0 0 8px;color:#db2777;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;">Hellou Studio</p>
+            <h1 style="margin:0;color:#0f172a;font-size:25px;line-height:1.25;">Olá, ${safeName}! Sua encomenda foi registrada.</h1>
+          </div>
+          <p style="margin:24px 0 0;font-size:15px;line-height:1.7;">Registramos sua encomenda <strong>${safeTitle}</strong>, combinada diretamente com a nossa equipe.</p>
+          <p style="margin:14px 0;font-size:14px;line-height:1.7;color:#64748b;">Você pode criar uma conta usando este mesmo e-mail para manter seus dados vinculados à Hellou Studio. A encomenda continuará registrada mesmo que você não crie a conta.</p>
+          <a href="${registerUrl}" style="display:block;margin:26px 0;padding:14px 20px;border-radius:12px;background:linear-gradient(100deg,#ec4899,#f97316);color:#ffffff;text-align:center;text-decoration:none;font-size:14px;font-weight:800;">Criar minha conta</a>
+          <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">Se você já possui uma conta com este e-mail, não precisa fazer um novo cadastro.</p>
+        </div>
+      `,
+    }, {
+      emailType: 'manual_order_invite',
+      metadata: { manualOrderId: params.manualOrderId },
+    });
+
+    if (res.error) return false;
+    structuredLog('info', 'email.send_completed', {
+      emailType: 'manual_order_invite',
+      providerEmailId: res.data?.id,
+    });
+    return true;
+  } catch (error) {
+    structuredLog('error', 'email.template_exception', { emailType: 'manual_order_invite', error });
+    return false;
+  }
+}
+
 export async function sendPasswordResetEmail(email: string, nome: string | null, token: string) {
   const resend = getResend();
   if (!resend) return;

@@ -177,6 +177,28 @@ export interface PrintRequest {
   updated_at: string;
 }
 
+export type ManualOrderStatus = 'pending' | 'confirmed' | 'in_production' | 'ready' | 'delivered' | 'canceled';
+export type ManualOrderPaymentStatus = 'pending' | 'paid';
+
+export interface ManualOrder {
+  id: string;
+  user_id: string | null;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
+  title: string;
+  description: string | null;
+  quantity: number;
+  total: number;
+  payment_status: ManualOrderPaymentStatus;
+  status: ManualOrderStatus;
+  internal_notes: string | null;
+  invite_sent_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type NotificationType = 'order_status' | 'print_request_status' | 'announcement';
 
 export interface Notification {

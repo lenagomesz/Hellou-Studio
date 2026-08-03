@@ -6,6 +6,7 @@ import {
   Calculator,
   CircleDollarSign,
   ClipboardList,
+  ClipboardPlus,
   FileUp,
   LayoutDashboard,
   Mail,
@@ -59,6 +60,7 @@ export const ADMIN_NAVIGATION: AdminNavigationSection[] = [
     items: [
       { href: '/dashboard/orders', label: 'Pedidos', description: 'Produção, pagamentos, envio e histórico', icon: Package, permission: 'orders.manage', keywords: 'vendas clientes rastreio' },
       { href: '/dashboard/requests', label: 'Solicitações 3D', description: 'Orçamentos de impressão personalizada', icon: Printer, permission: 'requests.manage', keywords: 'encomendas stl orçamento' },
+      { href: '/dashboard/manual-orders', label: 'Vincular encomendas', description: 'Registre vendas presenciais e externas', icon: ClipboardPlus, permission: 'requests.manage', keywords: 'encomendas externas presencial pagamento cliente vínculo' },
       { href: '/dashboard/products', label: 'Produtos', description: 'Catálogo, variações e arquivos STL', icon: Box, permission: 'products.manage', keywords: 'cadastro imagens preço' },
       { href: '/dashboard/inventory', label: 'Estoque', description: 'Materiais, capacidade e reposição', icon: Warehouse, permission: 'inventory.manage', keywords: 'filamento insumos' },
       { href: '/dashboard/users', label: 'Clientes', description: 'Perfis, histórico e relacionamento', icon: Users, permission: 'customers.view', keywords: 'usuários vip' },

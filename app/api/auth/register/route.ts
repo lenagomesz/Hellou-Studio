@@ -126,6 +126,15 @@ export async function POST(request: Request) {
     console.error('[register] não foi possível salvar a preferência de marketing:', preferenceError);
   }
 
+  const { error: manualOrderLinkError } = await admin
+    .from('manual_orders')
+    .update({ user_id: created.id })
+    .is('user_id', null)
+    .eq('customer_email', normalizedEmail);
+  if (manualOrderLinkError && manualOrderLinkError.code !== '42P01') {
+    console.error('[register] não foi possível vincular encomendas externas:', manualOrderLinkError);
+  }
+
   const emailResults = await Promise.allSettled([
     sendWelcomeEmail(created.email, created.name),
     sendAdminNewRegistrationEmail({
