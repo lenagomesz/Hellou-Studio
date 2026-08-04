@@ -27,7 +27,7 @@ export function verifyWebhookSignature(
   if (!/^\d+$/.test(ts)) return false;
 
   const manifestParts: string[] = [];
-  if (dataId) manifestParts.push(`id:${dataId.toLowerCase()}`);
+  if (dataId) manifestParts.push(`id:${dataId}`);
   if (xRequestId) manifestParts.push(`request-id:${xRequestId}`);
   manifestParts.push(`ts:${ts}`);
   const manifest = `${manifestParts.join(';')};`;
