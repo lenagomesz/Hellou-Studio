@@ -4,7 +4,7 @@ import { createContext, useContext, useReducer, ReactNode, useMemo } from 'react
 import type { ProductEditorState, DraftVariation } from './types/editor-state';
 
 export type ProductEditorAction =
-  | { type: 'SET_FIELD'; field: keyof ProductEditorState; value: any }
+  | { type: 'SET_FIELD'; field: keyof ProductEditorState; value: unknown }
   | { type: 'SET_ERROR'; field: string; message: string }
   | { type: 'CLEAR_ERROR'; field: string }
   | { type: 'SET_WARNING'; field: string; message: string }
@@ -86,7 +86,11 @@ function editorReducer(
     }
 
     case 'SET_DRAFT_SAVED':
-      return { ...state, isDraft: true, draftSavedAt: action.timestamp };
+      return {
+        ...state,
+        isDraft: true,
+        draftSavedAt: action.timestamp.toISOString(),
+      };
 
     case 'SET_SUBMITTING':
       return { ...state, isSubmitting: action.isSubmitting };
@@ -102,13 +106,15 @@ function editorReducer(
   }
 }
 
+interface ProductEditorProviderProps {
+  readonly initialState: ProductEditorState;
+  readonly children: ReactNode;
+}
+
 export function ProductEditorProvider({
   initialState,
   children,
-}: {
-  initialState: ProductEditorState;
-  children: ReactNode;
-}) {
+}: ProductEditorProviderProps) {
   const [state, dispatch] = useReducer(editorReducer, initialState);
 
   const value = useMemo(() => ({ state, dispatch }), [state]);

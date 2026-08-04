@@ -1,25 +1,27 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import type { ProductEditorState } from './types/editor-state';
 import { ProductEditorProvider } from './ProductEditorContext';
 import { VariationsSection } from './sections/VariationsSection';
 import { createInitialEditorState } from './types/editor-state';
+import type { Product } from '@/types/database';
 
 type ProductEditorProps =
   | { mode: 'create'; product?: undefined }
-  | { mode: 'edit'; product: any };
+  | { mode: 'edit'; product: Product };
 
-function ProductEditorContent({ mode }: { mode: 'create' | 'edit' }) {
+interface ProductEditorContentProps {
+  readonly mode: 'create' | 'edit';
+}
+
+function ProductEditorContent({ mode }: ProductEditorContentProps) {
   const router = useRouter();
-  const { data: session } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
 
