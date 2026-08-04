@@ -19,15 +19,17 @@ describe('CollapsibleSection', () => {
     expect(screen.getByText('Configure settings')).toBeInTheDocument();
   });
 
-  it('toggles content visibility', () => {
-    const { rerender } = render(
+  it('hides content when closed', () => {
+    render(
       <CollapsibleSection title="Settings" isOpen={false}>
         <div>Content</div>
       </CollapsibleSection>,
     );
     expect(screen.queryByText('Content')).not.toBeInTheDocument();
+  });
 
-    rerender(
+  it('shows content when open', () => {
+    render(
       <CollapsibleSection title="Settings" isOpen={true}>
         <div>Content</div>
       </CollapsibleSection>,
@@ -74,13 +76,15 @@ describe('ValidationFeedback', () => {
     expect(screen.getByText('This is an error')).toBeInTheDocument();
   });
 
-  it('renders different levels', () => {
-    const { rerender } = render(
+  it('renders warning level', () => {
+    render(
       <ValidationFeedback level="warning" message="This is a warning" />,
     );
     expect(screen.getByText('This is a warning')).toBeInTheDocument();
+  });
 
-    rerender(
+  it('renders success level', () => {
+    render(
       <ValidationFeedback level="success" message="This is success" />,
     );
     expect(screen.getByText('This is success')).toBeInTheDocument();

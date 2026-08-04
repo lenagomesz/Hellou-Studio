@@ -91,7 +91,10 @@ function ProductEditorContent({ mode }: ProductEditorContentProps) {
 }
 
 export function ProductEditor(props: ProductEditorProps) {
-  const initialState = createInitialEditorState(props.mode, props.product);
+  const initialState = createInitialEditorState(
+    props.mode,
+    props.mode === 'edit' ? (props.product as unknown) : undefined,
+  );
 
   return (
     <ProductEditorProvider initialState={initialState}>
