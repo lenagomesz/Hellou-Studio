@@ -91,9 +91,13 @@ function ProductEditorContent({ mode }: ProductEditorContentProps) {
 }
 
 export function ProductEditor(props: ProductEditorProps) {
+  const productData =
+    props.mode === 'edit' && props.product
+      ? { productId: props.product.id, name: props.product.name }
+      : undefined;
   const initialState = createInitialEditorState(
     props.mode,
-    props.mode === 'edit' ? (props.product as unknown) : undefined,
+    productData as Partial<Record<string, unknown>> | undefined,
   );
 
   return (
