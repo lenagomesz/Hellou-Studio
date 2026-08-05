@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useProductEditor } from '../hooks/useProductEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
