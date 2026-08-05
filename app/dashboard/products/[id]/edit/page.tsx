@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProductEditor } from '@/components/admin/ProductEditor/ProductEditor';
 import { STLProductForm } from '@/components/admin/STLProductForm';
 import Link from 'next/link';
-import type { Product } from '@/types/database';
+import type { Product, ProductOption } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,7 @@ async function getProductOptions(productId: string) {
     .eq('product_id', productId)
     .order('sort_order')
     .order('created_at');
-  return (data || []) as any[];
+  return (data || []) as ProductOption[];
 }
 
 export default async function EditProductPage(

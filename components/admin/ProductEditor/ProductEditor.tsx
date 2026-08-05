@@ -57,8 +57,8 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
 
     // Normalize variations
     const normalizedVariations = state.variations
-      .filter((v: any) => v.name.trim() || v.color?.trim())
-      .map((v: any, idx: number) => ({
+      .filter((v) => v.name.trim() || v.color?.trim())
+      .map((v, idx: number) => ({
         name: v.name.trim(),
         dimensions: v.dimensions?.trim() || null,
         notes: v.notes?.trim() || null,
@@ -72,7 +72,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
     const salePrice = state.salePrice && state.salePrice > 0 ? state.salePrice : null;
     const costPrice = state.costPrice && state.costPrice > 0 ? state.costPrice : null;
 
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       name: state.name.trim(),
       description: state.description.trim() || null,
       category: state.category,
@@ -209,8 +209,8 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
                     priceModifier: opt.price_modifier,
                   }))
                 : state.variations
-                    .filter((v: any) => v.name.trim() || v.color?.trim())
-                    .map((v: any) => ({
+                    .filter((v) => v.name.trim() || v.color?.trim())
+                    .map((v) => ({
                       id: v.id,
                       name: v.name,
                       color: v.color || null,
@@ -302,7 +302,7 @@ export function ProductEditor(props: ProductEditorProps) {
           salePrice: props.product.sale_price,
           costPrice: props.product.cost_price || null,
           sku: props.product.sku || '',
-          fulfillmentMode: (props.product.fulfillment_mode as any) || 'made_to_order',
+          fulfillmentMode: (props.product.fulfillment_mode as 'made_to_order' | 'ready_stock' | 'hybrid') || 'made_to_order',
           isWholesale: props.product.is_wholesale,
           minimumOrderQuantity: props.product.minimum_order_quantity || 1,
           isCustomizable: props.product.is_customizable,

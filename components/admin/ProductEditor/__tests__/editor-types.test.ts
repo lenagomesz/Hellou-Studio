@@ -46,7 +46,7 @@ describe('ProductEditor types', () => {
     it('has default fulfillment settings', () => {
       const state = createInitialEditorState('create');
 
-      expect(state.fulfillmentMode).toBe('ship');
+      expect(state.fulfillmentMode).toBe('made_to_order');
       expect(state.weightGrams).toBe(0);
       expect(state.lengthCm).toBe(0);
       expect(state.widthCm).toBe(0);
