@@ -13,6 +13,17 @@ async function getProduct(id: string) {
   return data as Product | null;
 }
 
+async function getProductOptions(productId: string) {
+  const admin = getSupabaseAdmin();
+  const { data } = await admin
+    .from('product_options')
+    .select('*')
+    .eq('product_id', productId)
+    .order('sort_order')
+    .order('created_at');
+  return (data || []) as any[];
+}
+
 export default async function EditProductPage(
   props: { params: Promise<{ id: string }> },
 ) {
@@ -36,5 +47,6 @@ export default async function EditProductPage(
     );
   }
 
-  return <ProductEditor mode="edit" product={product} />;
+  const productOptions = await getProductOptions(id);
+  return <ProductEditor mode="edit" product={product} productOptions={productOptions} />;
 }

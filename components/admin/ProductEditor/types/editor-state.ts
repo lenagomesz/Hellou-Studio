@@ -71,7 +71,7 @@ export interface ProductEditorState {
   images: string[];
 
   // Inventory / Fulfillment
-  fulfillmentMode: 'ship' | 'pickup' | 'digital';
+  fulfillmentMode: 'made_to_order' | 'ready_stock' | 'hybrid';
   weightGrams: number;
   lengthCm: number;
   widthCm: number;
@@ -147,7 +147,7 @@ export function createInitialEditorState(
 
     images: [],
 
-    fulfillmentMode: 'ship',
+    fulfillmentMode: 'made_to_order',
     weightGrams: 0,
     lengthCm: 0,
     widthCm: 0,

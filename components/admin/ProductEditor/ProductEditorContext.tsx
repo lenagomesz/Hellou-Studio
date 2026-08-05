@@ -13,6 +13,11 @@ export type ProductEditorAction =
   | { type: 'UPDATE_VARIATION'; id: string; patch: Partial<DraftVariation> }
   | { type: 'DELETE_VARIATION'; id: string }
   | { type: 'MOVE_VARIATION'; id: string; direction: -1 | 1 }
+  | { type: 'SET_IMAGES'; images: string[] }
+  | { type: 'ADD_IMAGE'; url: string }
+  | { type: 'REMOVE_IMAGE'; index: number }
+  | { type: 'MOVE_IMAGE'; fromIndex: number; toIndex: number }
+  | { type: 'SET_TAGS'; tags: string[] }
   | { type: 'SET_DRAFT_SAVED'; timestamp: Date }
   | { type: 'SET_SUBMITTING'; isSubmitting: boolean }
   | { type: 'SET_SUBMIT_ERROR'; error: string | null }
@@ -84,6 +89,30 @@ function editorReducer(
       [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
       return { ...state, variations: next };
     }
+
+    case 'SET_IMAGES':
+      return { ...state, images: action.images };
+
+    case 'ADD_IMAGE':
+      if (state.images.length >= 6 || state.images.includes(action.url)) return state;
+      return { ...state, images: [...state.images, action.url] };
+
+    case 'REMOVE_IMAGE':
+      return {
+        ...state,
+        images: state.images.filter((_, i) => i !== action.index),
+      };
+
+    case 'MOVE_IMAGE': {
+      const { fromIndex, toIndex } = action;
+      if (fromIndex === toIndex || fromIndex < 0 || fromIndex >= state.images.length || toIndex < 0 || toIndex >= state.images.length) return state;
+      const next = [...state.images];
+      [next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]];
+      return { ...state, images: next };
+    }
+
+    case 'SET_TAGS':
+      return { ...state, tags: action.tags };
 
     case 'SET_DRAFT_SAVED':
       return {
