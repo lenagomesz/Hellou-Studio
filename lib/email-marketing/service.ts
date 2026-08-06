@@ -6,6 +6,7 @@ import { sendTrackedEmail } from '@/lib/email-delivery';
 import { structuredLog } from '@/lib/observability';
 import { normalizeEmailBaseUrl } from '@/lib/email-links';
 import { calculateRFMScore } from '@/lib/customer-analytics';
+import { isRevenueOrderStatus } from '@/lib/order-analytics';
 import type {
   EmailCampaign,
   CampaignAnalytics,
@@ -165,7 +166,7 @@ export async function getSegmentRecipients(segmentType: SegmentType, criteria: R
     .in('user_id', userIds);
   if (ordersError) throw ordersError;
 
-  const validOrders = (orders || []).filter((order) => order.status !== 'canceled' && order.status !== 'refunded');
+  const validOrders = (orders || []).filter((order) => isRevenueOrderStatus(order.status));
   const ordersByUser = new Map<string, typeof validOrders>();
   for (const order of validOrders) {
     const current = ordersByUser.get(order.user_id) ?? [];

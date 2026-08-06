@@ -3,6 +3,7 @@ import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { subDays } from 'date-fns';
 import { getStoreMonthBounds } from '@/lib/store-time';
+import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 
 export async function GET() {
   const auth = await requirePermission('analytics.view');
@@ -16,7 +17,7 @@ export async function GET() {
     admin
       .from('orders')
       .select('total, created_at, status')
-      .in('status', ['paid', 'processing', 'shipped', 'delivered']),
+      .in('status', [...REVENUE_ORDER_STATUSES]),
     admin
       .from('users')
       .select('created_at')

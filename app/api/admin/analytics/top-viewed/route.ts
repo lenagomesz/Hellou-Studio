@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { subDays, subMonths } from 'date-fns';
+import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 
 function getStart(period: string): Date {
   const now = new Date();
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
     .from('order_items')
     .select('product_id, quantity, unit_price, order:orders!inner(created_at, status)')
     .in('product_id', topProductIds)
-    .in('order.status', ['paid', 'processing', 'shipped', 'delivered'])
+    .in('order.status', [...REVENUE_ORDER_STATUSES])
     .gte('order.created_at', start.toISOString());
 
   // Aggregate revenue and units sold per product

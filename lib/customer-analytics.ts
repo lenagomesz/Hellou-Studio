@@ -3,6 +3,8 @@
  * Provides RFM scoring, LTV calculation, Churn risk detection, and Segmentation
  */
 
+import { isRevenueOrderStatus } from '@/lib/order-analytics';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -76,10 +78,7 @@ export function calculateRFMScore(
   orders: OrderData[],
   allCustomerMetrics?: { maxRecency: number; maxFrequency: number; maxMonetary: number },
 ): RFMScore {
-  // Filter valid orders (exclude canceled/refunded)
-  const validOrders = orders.filter(
-    o => o.status !== 'canceled' && o.status !== 'refunded'
-  );
+  const validOrders = orders.filter((order) => isRevenueOrderStatus(order.status));
 
   if (validOrders.length === 0) {
     return { recency: 0, frequency: 0, monetary: 0, score: 0, segment: 'lost' };
@@ -283,10 +282,7 @@ export function buildCohortData(
   users: CohortUser[],
   orders: CohortOrder[],
 ): CohortData[] {
-  // Filter valid orders
-  const validOrders = orders.filter(
-    o => o.status !== 'canceled' && o.status !== 'refunded'
-  );
+  const validOrders = orders.filter((order) => isRevenueOrderStatus(order.status));
 
   // Group users by registration month (cohort)
   const cohorts = new Map<string, Set<string>>();

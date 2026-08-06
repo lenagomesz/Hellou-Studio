@@ -9,6 +9,7 @@ import { AdvancedAnalyticsDashboard } from '@/components/admin/analytics/Advance
 import { ArrowUpRight, BarChart3, Box, ClipboardCheck, PackageCheck, Truck } from 'lucide-react';
 import { getCurrentUser } from '@/lib/api';
 import { getStoreDateKey, getStoreMonthBounds } from '@/lib/store-time';
+import { REVENUE_ORDER_STATUSES, summarizeRevenueOrders } from '@/lib/order-analytics';
 
 type OrderRow = Order & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
 type RequestRow = PrintRequest & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
@@ -38,7 +39,6 @@ const getDashboardData = unstable_cache(
 
         const [
           activeRes,
-          ordersRes,
           paidOrdersRes,
           processingOrdersRes,
           shippedOrdersRes,
@@ -51,7 +51,6 @@ const getDashboardData = unstable_cache(
           urgentAlertsRes,
         ] = await Promise.all([
           admin.from('products').select('*', { count: 'exact', head: true }).eq('active', true).neq('category', 'encomenda'),
-          admin.from('orders').select('*', { count: 'exact', head: true }),
           admin.from('orders').select('*, user:users(id, email, name)').eq('status', 'paid').order('created_at', { ascending: true }).limit(10),
           admin.from('orders').select('*, user:users(id, email, name)').eq('status', 'processing').order('created_at', { ascending: true }).limit(10),
           admin.from('orders').select('*, user:users(id, email, name)').eq('status', 'shipped').order('created_at', { ascending: false }).limit(10),
@@ -59,17 +58,16 @@ const getDashboardData = unstable_cache(
           admin.from('users').select('created_at', { count: 'exact' }).eq('role', 'user'),
           admin.from('users').select('id, email, name, created_at').order('created_at', { ascending: false }).limit(5),
           admin.from('print_requests').select('*, user:users(id, email, name)').eq('status', 'pending').order('created_at', { ascending: false }).limit(10),
-          admin.from('orders').select('total, created_at, status').in('status', ['paid', 'processing', 'shipped', 'delivered']),
-          admin.from('orders').select('total, created_at').in('status', ['paid', 'processing', 'shipped', 'delivered']).gte('created_at', thirtyDaysAgo.toISOString()).order('created_at', { ascending: true }),
+          admin.from('orders').select('total, created_at, status').in('status', [...REVENUE_ORDER_STATUSES]),
+          admin.from('orders').select('total, created_at').in('status', [...REVENUE_ORDER_STATUSES]).gte('created_at', thirtyDaysAgo.toISOString()).order('created_at', { ascending: true }),
           admin.from('admin_notifications').select('*').eq('priority', 'urgent').eq('read', false).eq('archived', false).neq('type', 'low_stock').order('created_at', { ascending: false }).limit(3),
         ]);
 
         const allOrders = revenueRes.data ?? [];
-        const totalRevenue = allOrders.reduce((sum, o) => sum + (o.total ?? 0), 0);
+        const { totalRevenue, totalOrders, averageTicket: avgTicket } = summarizeRevenueOrders(allOrders);
         const thisMonthRevenue = allOrders.filter(o => new Date(o.created_at) >= thisMonthStart).reduce((sum, o) => sum + (o.total ?? 0), 0);
         const lastMonthRevenue = allOrders.filter(o => { const d = new Date(o.created_at); return d >= lastMonthStart && d < thisMonthStart; }).reduce((sum, o) => sum + (o.total ?? 0), 0);
 
-        const totalOrders = ordersRes.count ?? 0;
         const thisMonthOrders = allOrders.filter(o => new Date(o.created_at) >= thisMonthStart).length;
         const lastMonthOrders = allOrders.filter(o => { const d = new Date(o.created_at); return d >= lastMonthStart && d < thisMonthStart; }).length;
 
@@ -77,8 +75,6 @@ const getDashboardData = unstable_cache(
         const totalUsers = usersRes.count ?? 0;
         const newUsersThisMonth = users.filter(u => new Date(u.created_at) >= thisMonthStart).length;
         const newUsersLastMonth = users.filter(u => { const d = new Date(u.created_at); return d >= lastMonthStart && d < thisMonthStart; }).length;
-
-        const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
         function growthPercent(current: number, previous: number): number {
           if (previous === 0) return current > 0 ? 100 : 0;
@@ -140,7 +136,7 @@ const getDashboardData = unstable_cache(
       recentUsers: [] as Pick<User, 'id' | 'email' | 'name' | 'created_at'>[],
       urgentAlerts: [] as AdminNotification[],
     })),
-  ['dashboard-overview-v2'],
+  ['dashboard-overview-v3'],
   { revalidate: 15 },
 );
 

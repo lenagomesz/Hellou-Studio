@@ -7,6 +7,7 @@ import {
   getStoreDateKey,
   getStoreMonthBounds,
 } from '@/lib/store-time';
+import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 
 export async function GET(_req: NextRequest) {
   const auth = await requirePermission('analytics.view');
@@ -21,7 +22,7 @@ export async function GET(_req: NextRequest) {
     admin
       .from('orders')
       .select('total, created_at, status')
-      .in('status', ['paid', 'processing', 'shipped', 'delivered']),
+      .in('status', [...REVENUE_ORDER_STATUSES]),
     admin
       .from('users')
       .select('created_at')

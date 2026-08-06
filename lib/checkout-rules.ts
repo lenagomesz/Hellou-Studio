@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Coupon } from '@/types/database';
+import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 
-export const SUCCESSFUL_ORDER_STATUSES = ['approved', 'paid', 'processing', 'completed', 'shipped', 'delivered'] as const;
+export const SUCCESSFUL_ORDER_STATUSES = REVENUE_ORDER_STATUSES;
 export const FIRST_PURCHASE_BLOCKING_STATUSES = [...SUCCESSFUL_ORDER_STATUSES, 'awaiting_payment', 'pending'] as const;
 
 export function calculateCheckoutTotals(params: {

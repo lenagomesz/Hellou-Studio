@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requirePermission, serverError } from '@/lib/api';
 import { sanitizeSearchInput } from '@/lib/security';
+import { isRevenueOrderStatus } from '@/lib/order-analytics';
 
 export async function GET(req: NextRequest) {
   const auth = await requirePermission('customers.view');
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
     : { data: [] };
   const metrics = new Map<string, { total_orders: number; total_spent: number; last_order_at: string | null }>();
   for (const order of orders ?? []) {
-    if (order.status === 'canceled' || order.status === 'refunded') continue;
+    if (!isRevenueOrderStatus(order.status)) continue;
     const current = metrics.get(order.user_id) ?? { total_orders: 0, total_spent: 0, last_order_at: null };
     current.total_orders += 1;
     current.total_spent += Number(order.total);

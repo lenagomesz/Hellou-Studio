@@ -2,6 +2,7 @@ import { type NextRequest } from 'next/server';
 import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { subDays, subMonths, format } from 'date-fns';
+import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 
 function getStart(period: string): Date {
   const now = new Date();
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await admin
     .from('orders')
     .select('id, total, status, created_at, shipping_address, user:users(email, name), items:order_items(quantity, unit_price, product_snapshot)')
-    .in('status', ['paid', 'processing', 'shipped', 'delivered'])
+    .in('status', [...REVENUE_ORDER_STATUSES])
     .gte('created_at', start.toISOString())
     .order('created_at', { ascending: false });
 

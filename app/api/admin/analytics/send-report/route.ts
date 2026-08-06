@@ -3,6 +3,7 @@ import { requirePermission, badRequest, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendTrackedEmail } from '@/lib/email-delivery';
 import { formatStoreDateTime, getStoreMonthBounds } from '@/lib/store-time';
+import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 
 export async function POST(req: NextRequest) {
   const auth = await requirePermission('analytics.view');
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
   const { data: orders } = await admin
     .from('orders')
     .select('total, created_at, status')
-    .in('status', ['paid', 'processing', 'shipped', 'delivered']);
+    .in('status', [...REVENUE_ORDER_STATUSES]);
 
   if (!orders) return serverError('Erro ao buscar dados');
 

@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { OptionsManager } from '@/components/admin/OptionsManager';
 import { attachProductTags } from '@/lib/product-tags';
 import type { Product, ProductCategory, ProductOption } from '@/types/database';
+import { isRevenueOrderStatus } from '@/lib/order-analytics';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ async function getProductDashboard(id: string) {
   const { data: category } = await admin.from('product_categories').select('*').eq('slug', product.category).maybeSingle();
   const validSales = (salesRes.data ?? []).filter((item) => {
     const relation = Array.isArray(item.order) ? item.order[0] : item.order;
-    return relation?.status !== 'canceled' && relation?.status !== 'refunded';
+    return isRevenueOrderStatus(relation?.status);
   });
 
   return {

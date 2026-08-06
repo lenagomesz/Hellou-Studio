@@ -13,6 +13,7 @@ import {
   addDays,
   differenceInDays,
 } from 'date-fns';
+import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -92,13 +93,11 @@ async function computeAnalytics() {
   const { start: todayStart, endExclusive: tomorrowStart } = getStoreDayBounds(now);
 
   // Fetch all orders from the last ~44 days (covers anomaly window + historical)
-  const validStatuses = ['paid', 'processing', 'shipped', 'delivered'];
-
   const [ordersResult, usersResult, productsResult, todayOrdersResult] = await Promise.all([
     admin
       .from('orders')
       .select('id, total, created_at, status')
-      .in('status', validStatuses)
+      .in('status', [...REVENUE_ORDER_STATUSES])
       .gte('created_at', lastMonthStart.toISOString())
       .order('created_at', { ascending: true }),
     admin
@@ -111,7 +110,7 @@ async function computeAnalytics() {
     admin
       .from('orders')
       .select('id, total, created_at')
-      .in('status', validStatuses)
+      .in('status', [...REVENUE_ORDER_STATUSES])
       .gte('created_at', todayStart.toISOString())
       .lt('created_at', tomorrowStart.toISOString()),
   ]);
@@ -125,7 +124,7 @@ async function computeAnalytics() {
   const olderOrdersResult = await admin
     .from('orders')
     .select('id, total, created_at, status')
-    .in('status', validStatuses)
+    .in('status', [...REVENUE_ORDER_STATUSES])
     .gte('created_at', fortyFourDaysAgo.toISOString())
     .lt('created_at', lastMonthStart.toISOString())
     .order('created_at', { ascending: true });

@@ -3,6 +3,7 @@ import { requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getStoreDateGroupKey } from '@/lib/store-time';
 import { subDays, subMonths } from 'date-fns';
+import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 
 function getDateRange(period: string) {
   const now = new Date();
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await admin
     .from('orders')
     .select('total, created_at, status')
-    .in('status', ['paid', 'processing', 'shipped', 'delivered'])
+    .in('status', [...REVENUE_ORDER_STATUSES])
     .gte('created_at', start.toISOString())
     .order('created_at', { ascending: true });
 

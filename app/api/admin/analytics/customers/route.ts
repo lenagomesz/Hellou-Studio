@@ -7,6 +7,7 @@ import {
   calculateChurnRisk,
   type CustomerMetrics,
 } from '@/lib/customer-analytics';
+import { isRevenueOrderStatus } from '@/lib/order-analytics';
 
 export async function GET(req: NextRequest) {
   const auth = await requirePermission('analytics.view');
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
 
   const userIds = users.map(u => u.id);
 
-  // Fetch all orders for these users (excluding canceled/refunded for calculations)
+  // Fetch all orders for these users; only confirmed revenue is used below.
   const { data: allOrders, error: ordersError } = await admin
     .from('orders')
     .select('id, user_id, status, total, created_at')
@@ -50,7 +51,8 @@ export async function GET(req: NextRequest) {
   if (ordersError) return serverError('Erro ao buscar pedidos');
 
   // Fetch order items for category preferences
-  const orderIds = (allOrders ?? []).map(o => o.id);
+  const revenueOrders = (allOrders ?? []).filter((order) => isRevenueOrderStatus(order.status));
+  const orderIds = revenueOrders.map(o => o.id);
   let orderItems: Array<{ order_id: string; product_id: string; quantity: number }> = [];
   if (orderIds.length > 0) {
     const { data: items } = await admin
@@ -75,7 +77,7 @@ export async function GET(req: NextRequest) {
 
   // Group orders by user
   const ordersByUser = new Map<string, typeof allOrders>();
-  for (const order of (allOrders ?? [])) {
+  for (const order of revenueOrders) {
     if (!ordersByUser.has(order.user_id)) ordersByUser.set(order.user_id, []);
     ordersByUser.get(order.user_id)!.push(order);
   }
@@ -86,9 +88,8 @@ export async function GET(req: NextRequest) {
   let maxMonetary = 1;
 
   for (const [, orders] of ordersByUser) {
-    const valid = orders!.filter(o => o.status !== 'canceled' && o.status !== 'refunded');
-    if (valid.length > maxFrequency) maxFrequency = valid.length;
-    const total = valid.reduce((sum, o) => sum + o.total, 0);
+    if (orders!.length > maxFrequency) maxFrequency = orders!.length;
+    const total = orders!.reduce((sum, o) => sum + o.total, 0);
     if (total > maxMonetary) maxMonetary = total;
   }
 
@@ -96,8 +97,7 @@ export async function GET(req: NextRequest) {
   const customers: CustomerMetrics[] = [];
 
   for (const user of users) {
-    const userOrders = ordersByUser.get(user.id) ?? [];
-    const validOrders = userOrders.filter(o => o.status !== 'canceled' && o.status !== 'refunded');
+    const validOrders = ordersByUser.get(user.id) ?? [];
 
     const totalOrders = validOrders.length;
     const totalSpent = validOrders.reduce((sum, o) => sum + o.total, 0);

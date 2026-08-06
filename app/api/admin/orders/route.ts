@@ -3,6 +3,7 @@ import { badRequest, requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendOrderStatusEmail } from '@/lib/email';
 import type { OrderStatus } from '@/types/database';
+import { isRevenueOrderStatus } from '@/lib/order-analytics';
 
 const VALID_STATUSES: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'canceled', 'rejected'];
 
@@ -14,13 +15,12 @@ async function getOrderStats() {
 
   if (error) return null;
   const rows = data ?? [];
-  const revenueStatuses = new Set<OrderStatus>(['paid', 'processing', 'completed', 'shipped', 'delivered']);
   return {
     awaiting: rows.filter((order) => ['awaiting_payment', 'pending', 'paid'].includes(order.status)).length,
     processing: rows.filter((order) => order.status === 'processing').length,
     shipped: rows.filter((order) => order.status === 'shipped').length,
     revenue: Math.round(rows
-      .filter((order) => revenueStatuses.has(order.status as OrderStatus))
+      .filter((order) => isRevenueOrderStatus(order.status))
       .reduce((sum, order) => sum + Number(order.total ?? 0), 0) * 100) / 100,
   };
 }

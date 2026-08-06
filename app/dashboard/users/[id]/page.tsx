@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import type { OrderStatus } from '@/types/database';
 import type { CustomerMetrics } from '@/lib/customer-analytics';
+import { isRevenueOrderStatus } from '@/lib/order-analytics';
 import {
   SEGMENT_LABELS,
   SEGMENT_BG_CLASSES,
@@ -168,7 +169,7 @@ export default function UserDetailPage() {
     );
   }
 
-  const totalSpent = orders.reduce((sum, o) => o.status !== 'canceled' && o.status !== 'refunded' ? sum + o.total : sum, 0);
+  const totalSpent = orders.reduce((sum, order) => isRevenueOrderStatus(order.status) ? sum + order.total : sum, 0);
   const completedOrders = orders.filter(o => o.status === 'delivered').length;
 
   return (

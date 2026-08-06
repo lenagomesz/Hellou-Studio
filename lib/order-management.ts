@@ -6,6 +6,7 @@ import { sendOrderStatusEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { getStoreDayBounds } from '@/lib/store-time';
 import type { OrderStatus } from '@/types/database';
+import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 
 const STATUS_LABELS: Record<string, string> = {
   awaiting_payment: 'Aguardando Pagamento',
@@ -526,7 +527,7 @@ export async function getOrderQuickStats() {
     .select('total')
     .gte('created_at', todayStart.toISOString())
     .lt('created_at', tomorrowStart.toISOString())
-    .not('status', 'in', '("canceled","refunded")');
+    .in('status', [...REVENUE_ORDER_STATUSES]);
 
   const todayRevenue = (todayOrders ?? []).reduce((acc: number, o: { total: number }) => acc + o.total, 0);
 
