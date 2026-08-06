@@ -70,6 +70,13 @@ const UF_REGION: Record<string, Region> = {
   TO: 'norte',
 };
 
+const PROMOTIONAL_PAC_REGIONS = new Set<Region>([
+  'local',
+  'vizinhos',
+  'sudeste',
+  'centro_oeste',
+]);
+
 export function sanitizeCep(raw: string): string | null {
   const digits = raw.replace(/\D/g, '');
   if (digits.length !== 8) return null;
@@ -150,7 +157,14 @@ function getFallbackOptions(uf: string): ShippingOption[] {
   ];
 }
 
-export function applyPromotionalShippingPolicy(_uf: string, options: ShippingOption[]): ShippingOption[] {
+export function hasPromotionalPacCap(uf: string): boolean {
+  const region = UF_REGION[uf.trim().toUpperCase()];
+  return Boolean(region && PROMOTIONAL_PAC_REGIONS.has(region));
+}
+
+export function applyPromotionalShippingPolicy(uf: string, options: ShippingOption[]): ShippingOption[] {
+  if (!hasPromotionalPacCap(uf)) return options;
+
   return options.map((option) => option.id === 'pac'
     ? { ...option, price: Math.min(option.price, PROMOTIONAL_PAC_MAX) }
     : option);
@@ -192,6 +206,9 @@ export async function calculateShipping(rawCep: string, packageOverride?: Partia
   }
 
   const correiosOptions = await fetchCorreiosRates(cep, shippingPackage);
+  if (!correiosOptions && !hasPromotionalPacCap(uf)) {
+    throw new Error('Não foi possível consultar o valor real do frete para este CEP. Tente novamente em instantes.');
+  }
   const options = applyPromotionalShippingPolicy(uf, correiosOptions || getFallbackOptions(uf))
     .filter((option) => option.id === 'pac' ? settings.shipping.pacEnabled : settings.shipping.sedexEnabled);
 
