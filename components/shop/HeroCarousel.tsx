@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 
 const SLIDES = [
   {
@@ -14,7 +15,7 @@ const SLIDES = [
     id: 2,
     emoji: '⚡',
     title: 'Impressão Rápida',
-    description: 'Produção em até 3 dias úteis com tecnologia FDM/SLA.',
+    description: `Produção em ${DEFAULT_PRODUCTION_LEAD_TIME} com tecnologia FDM/SLA.`,
     gradient: 'from-orange-400 via-pink-500 to-pink-400',
   },
   {

@@ -8,6 +8,7 @@ import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
+import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 import {
   DEFAULT_CUSTOMIZATION_COPY,
   areRequiredCustomizationSectionsComplete,
@@ -226,7 +227,7 @@ export function ProductDetail({
               </div>
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950/50 text-[10px]">⏱️</span>
-                <span>Prazo de produção: 3 a 5 dias úteis + frete</span>
+                <span>Prazo de produção: {DEFAULT_PRODUCTION_LEAD_TIME} + frete</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/50 text-[10px]">♻️</span>
@@ -799,7 +800,7 @@ export function ProductDetail({
               <p className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Sobre este produto</p>
               <div className="space-y-2.5 text-xs text-gray-600 dark:text-gray-300">
                 <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-pink-100 text-[10px] dark:bg-pink-950/50">🖨️</span><span>Impresso em 3D sob demanda após a confirmação do pedido</span></div>
-                <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-[10px] dark:bg-orange-950/50">⏱️</span><span>Prazo de produção: 3 a 5 dias úteis + frete</span></div>
+                <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-[10px] dark:bg-orange-950/50">⏱️</span><span>Prazo de produção: {DEFAULT_PRODUCTION_LEAD_TIME} + frete</span></div>
                 <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-[10px] dark:bg-green-950/50">♻️</span><span>Material PLA biodegradável de alta qualidade</span></div>
                 <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[10px] dark:bg-blue-950/50">🚚</span><span>Frete grátis acima de R$ 99</span></div>
               </div>

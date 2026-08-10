@@ -53,7 +53,16 @@ export default function TermsPage() {
             causados por transportadoras ou fatores externos.
           </p>
 
-          <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">1.6 Trocas e Devoluções</h3>
+          <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">1.6 Comunicações sobre pedidos</h3>
+          <p className="mt-2">
+            Ao criar uma conta ou realizar um pedido, você concorda em receber no email cadastrado
+            as comunicações necessárias para a execução da compra, incluindo confirmação e situação
+            do pagamento, produção, eventuais atrasos, envio, rastreamento, entrega e atendimento
+            relacionado ao pedido. Essas mensagens são transacionais e podem ser enviadas mesmo que
+            você não autorize o recebimento de marketing.
+          </p>
+
+          <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">1.7 Trocas e Devoluções</h3>
           <p className="mt-2">
             De acordo com o Código de Defesa do Consumidor, o cliente tem direito de desistir da
             compra em até 7 (sete) dias corridos após o recebimento do produto. O produto deve ser
@@ -61,14 +70,14 @@ export default function TermsPage() {
             feitos sob encomenda, não será possível a devolução, exceto em caso de defeito.
           </p>
 
-          <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">1.7 Propriedade Intelectual</h3>
+          <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">1.8 Propriedade Intelectual</h3>
           <p className="mt-2">
             Todo o conteúdo do site (imagens, textos, logotipos, designs de produtos) é de
             propriedade da Hellou Studio e está protegido por leis de propriedade intelectual.
             É proibida a reprodução sem autorização prévia.
           </p>
 
-          <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">1.8 Uso Adequado</h3>
+          <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">1.9 Uso Adequado</h3>
           <p className="mt-2">
             O usuário se compromete a não utilizar o site para fins ilegais, não tentar acessar
             áreas restritas do sistema e não realizar ações que possam prejudicar o funcionamento
@@ -95,11 +104,15 @@ export default function TermsPage() {
           <p className="mt-2">Seus dados são utilizados para:</p>
           <ul className="mt-2 list-disc pl-5 space-y-1">
             <li>Processar e entregar pedidos</li>
-            <li>Comunicar atualizações sobre seus pedidos via email ou WhatsApp</li>
+            <li>Enviar comunicações transacionais necessárias sobre pagamento, produção, atrasos, envio, rastreamento, entrega e suporte dos pedidos</li>
             <li>Enviar promoções e novidades (apenas com seu consentimento)</li>
             <li>Melhorar a experiência de uso do site</li>
             <li>Cumprir obrigações legais</li>
           </ul>
+          <p className="mt-2">
+            O cancelamento ou a recusa das comunicações de marketing não impede o envio de mensagens
+            estritamente necessárias para executar e acompanhar uma compra feita por você.
+          </p>
 
           <h3 className="mt-4 font-semibold text-gray-800 dark:text-gray-200">2.3 Compartilhamento de Dados</h3>
           <p className="mt-2">

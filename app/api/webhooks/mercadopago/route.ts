@@ -8,6 +8,7 @@ import { verifyWebhookSignature } from '@/lib/security';
 import { hasDigitalItems, hasPhysicalItems } from '@/lib/order-helpers';
 import { isMercadoPagoApproved, mapMercadoPagoOrderStatus } from '@/lib/payment-status';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
+import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
@@ -249,10 +250,10 @@ export async function POST(request: Request) {
           notifBody = 'Acesse sua conta para fazer download do arquivo';
         } else if (!hasDigital && hasPhysical) {
           notifTitle = '🎉 Pedido aprovado!';
-          notifBody = 'Sua peça será impressa em até 3 dias úteis';
+          notifBody = `Sua peça será impressa em ${DEFAULT_PRODUCTION_LEAD_TIME}`;
         } else {
           notifTitle = '📦 Arquivo pronto + Pedido em produção!';
-          notifBody = 'Seu arquivo está disponível. A peça será impressa em até 3 dias úteis.';
+          notifBody = `Seu arquivo está disponível. A peça será impressa em ${DEFAULT_PRODUCTION_LEAD_TIME}.`;
         }
 
         await createNotification(

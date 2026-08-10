@@ -642,19 +642,14 @@ export default function OrderDetailPage() {
           <div className="rounded-[22px] border border-dashed border-gray-300 bg-white p-5 shadow-sm dark:border-white/15 dark:bg-white/[0.04]">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-gray-700">Etiqueta de envio</h2>
-              <button
-                type="button"
-                onClick={() => {
-                  const remetente = `REMETENTE:\nhelloustudio\nRua São Paulo, 250\nBairro São Judas\nItajaí - SC\nCEP: 88303-330`;
-                  const dest = shipping
-                    ? `DESTINATÁRIO:\n${order.user?.name ?? ''}\n${String(shipping.street ?? '')}${shipping.number ? ', ' + String(shipping.number) : ''}${shipping.complement ? ' - ' + String(shipping.complement) : ''}\n${String(shipping.neighborhood ?? '')}\n${String(shipping.city ?? '')} - ${String(shipping.state ?? '')}\nCEP: ${String(shipping.cep ?? '')}`
-                    : `DESTINATÁRIO:\n${order.user?.name ?? ''}\n(endereço não informado)`;
-                  navigator.clipboard.writeText(`${remetente}\n\n${dest}`);
-                }}
-                className="text-[11px] font-medium text-pink-600 hover:text-pink-700 transition"
+              <Link
+                href={`/dashboard/orders/${order.id}/shipping-label`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] font-medium text-pink-600 transition hover:text-pink-700"
               >
-                Copiar tudo
-              </button>
+                Copiar tudo / imprimir
+              </Link>
             </div>
             <div className="space-y-3 text-xs">
             <div className="rounded-lg bg-gray-50 p-3 border border-gray-100 dark:border-white/10 dark:bg-white/5">

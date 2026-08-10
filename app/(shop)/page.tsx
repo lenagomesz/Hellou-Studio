@@ -14,6 +14,7 @@ import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
+import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 
 export const metadata: Metadata = {
   title: { absolute: 'Hellou Studio' },
@@ -44,7 +45,7 @@ const FEATURES = [
     emoji: '🚀',
     title: 'Envio Rápido',
     description:
-      'Produção em até 3 dias úteis e envio com rastreamento.',
+      `Produção em ${DEFAULT_PRODUCTION_LEAD_TIME} e envio com rastreamento.`,
   },
 ];
 
@@ -52,7 +53,7 @@ const FEATURES = [
 //   { value: '500+', label: 'Produtos criados' },
 //   { value: '2000+', label: 'Clientes felizes' },
 //   { value: '98%', label: 'Avaliações positivas' },
-//   { value: '3 dias', label: 'Prazo de produção' },
+//   { value: '5 dias', label: 'Prazo de produção' },
 // ];
 
 const MARQUEE_ITEMS = [

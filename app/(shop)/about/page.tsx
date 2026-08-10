@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 
 function seededRandom(seed: number) {
   const x = Math.sin(seed + 1) * 10000;
@@ -298,7 +299,7 @@ export default function AboutPage() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Perguntas frequentes</h2>
             <div className="space-y-4">
               {[
-                { q: 'Quanto tempo demora pra fazer meu pedido?', a: 'Peças do catálogo saem em 1 a 3 dias úteis. Encomendas personalizadas dependem da complexidade, mas geralmente de 3 a 7 dias.' },
+                { q: 'Quanto tempo demora pra fazer meu pedido?', a: `Peças do catálogo são produzidas em ${DEFAULT_PRODUCTION_LEAD_TIME}. Encomendas personalizadas dependem da complexidade, mas geralmente de 3 a 7 dias.` },
                 { q: 'Posso escolher a cor?', a: 'Sim! Cada produto tem opções de cor disponíveis. Pra encomendas, é só me dizer qual cor você prefere.' },
                 { q: 'A peça é resistente?', a: 'Sim, PLA é bem resistente pra uso normal. Só não deixa no sol forte por muito tempo porque pode amolecer.' },
                 { q: 'O que é um arquivo .stl?', a: 'É o formato padrão de modelos 3D pra impressão. Se você já tem um modelo pronto, é só enviar. Se não tem, me descreve a ideia que eu vejo o que dá pra fazer.' },

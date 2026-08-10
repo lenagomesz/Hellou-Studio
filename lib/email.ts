@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { sendTrackedEmail } from '@/lib/email-delivery';
 import { structuredLog } from '@/lib/observability';
 import { buildEmailUrl, normalizeEmailBaseUrl } from '@/lib/email-links';
+import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 
 let cached: Resend | null = null;
 let warned = false;
@@ -91,7 +92,7 @@ export async function sendWelcomeEmail(email: string, nome: string | null) {
                   🚀
                 </div>
                 <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Entrega rápida</p>
-                <p style="margin: 0; font-size: 13px; color: #888;">Produção em até 3 dias úteis</p>
+                <p style="margin: 0; font-size: 13px; color: #888;">Produção em ${DEFAULT_PRODUCTION_LEAD_TIME}</p>
               </div>
               <div style="position: relative;">
                 <div style="position: absolute; left: -32px; top: 0px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #F3E8FF; color: #9333EA; font-weight: 600; font-size: 12px;">
@@ -614,7 +615,7 @@ export async function sendOrderConfirmationEmail(params: {
                 <div style="margin-bottom: 24px; position: relative;">
                   <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px; font-family: &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;, sans-serif; mso-line-height-rule: exactly;">🖨️</div>
                   <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Produção</p>
-                  <p style="margin: 0; font-size: 13px; color: #888;">Sua peça será impressa em até 3 dias úteis.</p>
+                  <p style="margin: 0; font-size: 13px; color: #888;">Sua peça será impressa em ${DEFAULT_PRODUCTION_LEAD_TIME}.</p>
                 </div>
                 <div style="margin-bottom: 24px; position: relative;">
                   <div style="position: absolute; left: -32px; top: 0; display: block; width: 24px; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; text-align: center; border-radius: 50%; background-color: #e5e7eb; color: #666; font-weight: 600; font-size: 12px; font-family: &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;, sans-serif; mso-line-height-rule: exactly;">📦</div>

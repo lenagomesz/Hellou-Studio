@@ -387,7 +387,8 @@ export default function RegisterPage() {
                 />
                 <label htmlFor="terms" className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                   Aceito os{' '}
-                  <Link href="/terms" className="text-pink-600 dark:text-pink-400 hover:underline font-medium">termos de uso e política de privacidade</Link>
+                  <Link href="/terms" className="text-pink-600 dark:text-pink-400 hover:underline font-medium">termos de uso e política de privacidade</Link>,
+                  incluindo o envio de comunicações necessárias sobre meus pedidos.
                 </label>
               </div>
 
@@ -402,7 +403,7 @@ export default function RegisterPage() {
                 />
                 <label htmlFor="marketingConsent" className="cursor-pointer text-xs leading-relaxed text-gray-600 dark:text-gray-300">
                   <span className="font-semibold text-gray-800 dark:text-gray-100">Enviar promoções e novidades</span>
-                  <span className="block text-[11px] text-gray-500 dark:text-gray-400">Apenas com seu consentimento. Você poderá cancelar quando quiser.</span>
+                  <span className="block text-[11px] text-gray-500 dark:text-gray-400">Opcional e separado dos e-mails necessários sobre pedidos. Você poderá cancelar quando quiser.</span>
                 </label>
               </div>
 

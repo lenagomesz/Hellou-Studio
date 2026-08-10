@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ClearCartOnMount } from '@/components/shop/ClearCartOnMount';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { isDigitalOnly, hasDigitalItems, hasPhysicalItems, type OrderItemWithProduct } from '@/lib/order-helpers';
+import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,7 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
   const descriptionByType = {
     digital: 'Acesse sua conta para fazer download do seu arquivo STL.',
     physical: 'Já estamos preparando sua peça com muito carinho.',
-    hybrid: 'Seu arquivo STL está disponível. A peça será impressa em até 3 dias úteis.',
+    hybrid: `Seu arquivo STL está disponível. A peça será impressa em ${DEFAULT_PRODUCTION_LEAD_TIME}.`,
   };
 
   const cardsByType = {
@@ -52,12 +53,12 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
     ],
     physical: [
       { step: '✓', title: 'Pagamento recebido', desc: 'Seu pagamento foi processado com sucesso.', done: true },
-      { step: '🖨️', title: 'Produção iniciada', desc: 'Sua peça será impressa em até 3 dias úteis.', done: false },
+      { step: '🖨️', title: 'Produção iniciada', desc: `Sua peça será impressa em ${DEFAULT_PRODUCTION_LEAD_TIME}.`, done: false },
       { step: '📦', title: 'Envio', desc: 'Você receberá o código de rastreamento por email.', done: false },
     ],
     hybrid: [
       { step: '✓', title: 'Pagamento recebido', desc: 'Seu pagamento foi processado com sucesso.', done: true },
-      { step: '🖨️', title: 'Produção iniciada', desc: 'Sua peça será impressa em até 3 dias úteis.', done: false },
+      { step: '🖨️', title: 'Produção iniciada', desc: `Sua peça será impressa em ${DEFAULT_PRODUCTION_LEAD_TIME}.`, done: false },
       { step: '📦', title: 'Envio', desc: 'Você receberá o código de rastreamento por email.', done: false },
     ],
   };
