@@ -366,7 +366,7 @@ export default function ImportPage() {
       {results && (
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Resultado da importação</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-xl bg-green-50 p-4 text-center dark:bg-green-900/20">
               <CheckCircle2 className="mx-auto h-8 w-8 text-green-600" />
               <p className="mt-2 text-2xl font-bold text-green-700">{results.created}</p>

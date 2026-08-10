@@ -297,7 +297,7 @@ export function AdminShell({ children, userEmail, accessLevel, enabledFeatures }
           </div>
         </header>
 
-        <main className="mx-auto min-w-0 w-full max-w-[1600px] p-3 sm:p-6 lg:p-8">
+        <main className="mx-auto min-w-0 w-full max-w-[1600px] p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-6 lg:p-8">
           {permission !== 'granted' && permission !== 'unsupported' && (
             <div className="mb-6 flex flex-col gap-3 overflow-hidden rounded-2xl border border-pink-200 bg-gradient-to-r from-pink-50 via-white to-orange-50 p-4 shadow-sm dark:border-pink-500/20 dark:from-pink-500/10 dark:via-white/[0.03] dark:to-orange-500/10 sm:flex-row sm:items-center">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white shadow-lg shadow-pink-500/20">
@@ -317,7 +317,7 @@ export function AdminShell({ children, userEmail, accessLevel, enabledFeatures }
       </div>
 
       {newAlert && (
-        <Link href={getNotificationLink(newAlert)} className="fixed bottom-3 left-3 right-3 z-50 flex gap-3 rounded-2xl border border-pink-200 bg-white p-4 shadow-2xl shadow-pink-900/15 dark:border-pink-500/30 dark:bg-[#171922] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[380px]">
+        <Link href={getNotificationLink(newAlert)} className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 flex gap-3 rounded-2xl border border-pink-200 bg-white p-4 shadow-2xl shadow-pink-900/15 dark:border-pink-500/30 dark:bg-[#171922] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[380px]">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white"><BellRing className="h-5 w-5" /></span>
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-pink-600"><Sparkles className="h-3 w-3" /> Novo alerta</span>

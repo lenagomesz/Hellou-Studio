@@ -122,7 +122,7 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6">
       {toast && (
-        <div className="fixed top-4 right-4 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">
+        <div className="fixed left-3 right-3 top-3 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-lg sm:left-auto sm:right-4 sm:top-4">
           {toast}
         </div>
       )}
@@ -134,32 +134,32 @@ export default function ProductsPage() {
             {pagination.total} produtos encontrados · {activeCount} ativos nesta página
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
           <a
             href="/api/admin/products/export"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 sm:px-4 sm:text-sm"
           >
             <Download className="h-4 w-4" /> Exportar CSV
           </a>
-          <Link href="/dashboard/products/bulk-edit" className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+          <Link href="/dashboard/products/bulk-edit" className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 sm:px-4 sm:text-sm">
             <Edit3 className="h-4 w-4" /> Edição em massa
           </Link>
-          <Link href="/dashboard/products/categories" className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+          <Link href="/dashboard/products/categories" className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 sm:px-4 sm:text-sm">
             <Tags className="h-4 w-4" /> Categorias
           </Link>
-          <Link href="/dashboard/products/new" className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition">
+          <Link href="/dashboard/products/new" className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-2.5 text-xs font-medium text-white transition hover:opacity-90 sm:px-4 sm:text-sm">
             <Plus className="h-4 w-4" /> Novo produto
           </Link>
         </div>
       </header>
 
-      <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative w-full min-w-0 flex-1 sm:min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome..." className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
         </div>
-        <ProductCategorySelect value={category} onChange={(value) => { setCategory(value); setPage(1); }} allowEmpty emptyLabel="Todas as categorias" className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
-        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+        <ProductCategorySelect value={category} onChange={(value) => { setCategory(value); setPage(1); }} allowEmpty emptyLabel="Todas as categorias" className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:w-auto" />
+        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:w-auto">
           <option value="">Todos</option>
           <option value="active">Ativos</option>
           <option value="inactive">Inativos</option>
@@ -171,7 +171,7 @@ export default function ProductsPage() {
           value={minPrice}
           onChange={(e) => { setMinPrice(e.target.value); setPage(1); }}
           placeholder="Preço min"
-          className="w-28 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:w-28"
         />
         <input
           type="number"
@@ -180,27 +180,27 @@ export default function ProductsPage() {
           value={maxPrice}
           onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }}
           placeholder="Preço max"
-          className="w-28 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:w-28"
         />
-        <button type="submit" className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800">Buscar</button>
+        <button type="submit" className="w-full rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 sm:w-auto">Buscar</button>
       </form>
 
-      <div className="flex gap-2 mb-4">
+      <div className="mb-4 grid grid-cols-3 gap-2">
         <button
           onClick={() => { setFilter('all'); setPage(1); }}
-          className={`px-4 py-2 rounded font-medium transition ${filter === 'all' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+          className={`rounded px-2 py-2 text-xs font-medium transition sm:px-4 sm:text-sm ${filter === 'all' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
         >
           Todos
         </button>
         <button
           onClick={() => { setFilter('physical'); setPage(1); }}
-          className={`px-4 py-2 rounded font-medium transition ${filter === 'physical' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+          className={`rounded px-2 py-2 text-xs font-medium transition sm:px-4 sm:text-sm ${filter === 'physical' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
         >
           Produtos físicos
         </button>
         <button
           onClick={() => { setFilter('digital'); setPage(1); }}
-          className={`px-4 py-2 rounded font-medium transition ${filter === 'digital' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+          className={`rounded px-2 py-2 text-xs font-medium transition sm:px-4 sm:text-sm ${filter === 'digital' ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
         >
           Arquivos STL
         </button>
@@ -313,7 +313,7 @@ export default function ProductsPage() {
       )}
       {error && <div role="alert" className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Fechar erro">×</button></div>}
       {!loading && pagination.pages > 1 && (
-        <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 text-sm shadow-sm"><span className="text-gray-500">Página {pagination.page} de {pagination.pages} · {pagination.total} produtos</span><div className="flex gap-2"><button type="button" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-lg border border-gray-200 px-3 py-2 font-semibold disabled:opacity-40">Anterior</button><button type="button" disabled={page >= pagination.pages} onClick={() => setPage((value) => Math.min(pagination.pages, value + 1))} className="rounded-lg bg-slate-950 px-3 py-2 font-semibold text-white disabled:opacity-40">Próxima</button></div></div>
+        <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between"><span className="text-gray-500">Página {pagination.page} de {pagination.pages} · {pagination.total} produtos</span><div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"><button type="button" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-lg border border-gray-200 px-3 py-2 font-semibold disabled:opacity-40">Anterior</button><button type="button" disabled={page >= pagination.pages} onClick={() => setPage((value) => Math.min(pagination.pages, value + 1))} className="rounded-lg bg-slate-950 px-3 py-2 font-semibold text-white disabled:opacity-40">Próxima</button></div></div>
       )}
       <ConfirmDialog open={Boolean(pendingDelete)} title="Excluir produto?" description={`“${pendingDelete?.name ?? ''}” será removido permanentemente.`} confirmLabel="Excluir" busy={deleting} onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete ? deleteProduct(pendingDelete.id, pendingDelete.name) : undefined} />
     </div>

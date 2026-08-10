@@ -119,7 +119,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       <UserManagementTabs />
       {toast && (
-        <div className="fixed top-4 right-4 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">
+        <div className="fixed left-3 right-3 top-3 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-lg sm:left-auto sm:right-4 sm:top-4">
           {toast}
         </div>
       )}
@@ -133,8 +133,8 @@ export default function UsersPage() {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-3">
-        <form onSubmit={handleSearch} className="flex gap-3 flex-1 min-w-[200px]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <form onSubmit={handleSearch} className="flex min-w-0 flex-1 flex-col gap-3 sm:min-w-[200px] sm:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por email ou nome..." className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
@@ -143,7 +143,7 @@ export default function UsersPage() {
         </form>
         <button
           onClick={() => setVipFilter(!vipFilter)}
-          className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
             vipFilter
               ? 'bg-amber-100 text-amber-700 border border-amber-300'
               : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300'
@@ -157,7 +157,33 @@ export default function UsersPage() {
       {loading ? (
         <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />)}</div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
+        <>
+        <div className="grid gap-3 md:hidden">
+          {displayUsers.map((user) => (
+            <article key={user.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+              <Link href={`/dashboard/users/${user.id}`} className="flex min-w-0 items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-sm font-bold text-pink-600">{(user.name ?? user.email).charAt(0).toUpperCase()}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1 truncate text-sm font-bold text-gray-900">{user.name || 'Sem nome'}{user.is_vip && <Star className="h-3.5 w-3.5 shrink-0 fill-amber-500 text-amber-500" />}</span>
+                  <span className="block truncate text-xs text-gray-500">{user.email}</span>
+                </span>
+                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'}`}>{user.role === 'admin' ? 'Admin' : 'Usuário'}</span>
+              </Link>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Compras</p><p className="mt-1 text-sm font-black text-slate-900">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(user.total_spent)}</p><p className="text-[11px] text-slate-500">{user.total_orders} pedido(s)</p></div>
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cadastro</p><p className="mt-1 text-sm font-bold text-slate-800">{timeAgo(user.created_at)}</p>{user.last_order_at && <p className="text-[11px] text-slate-500">Última compra {timeAgo(user.last_order_at).toLowerCase()}</p>}</div>
+              </div>
+              {user.role !== 'admin' && (
+                <div className="mt-3 grid grid-cols-3 gap-2 border-t border-gray-100 pt-3">
+                  <button type="button" onClick={() => toggleVip(user)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-amber-100 text-xs font-bold text-amber-600"><Star className={`h-4 w-4 ${user.is_vip ? 'fill-amber-500' : ''}`} /> VIP</button>
+                  {canDeleteCustomers && <button type="button" onClick={() => banUser(user)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-orange-100 text-xs font-bold text-orange-600"><Ban className="h-4 w-4" /> Banir</button>}
+                  {canDeleteCustomers && <button type="button" onClick={() => deleteUser(user)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-red-100 text-xs font-bold text-red-600"><Trash2 className="h-4 w-4" /> Excluir</button>}
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800 md:block">
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-gray-100 dark:border-gray-800">
@@ -226,9 +252,10 @@ export default function UsersPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
       {error && <div role="alert" className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Fechar erro">×</button></div>}
-      {!loading && pagination.pages > 1 && <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 text-sm"><span className="text-gray-500">Página {pagination.page} de {pagination.pages}</span><div className="flex gap-2"><button disabled={page <= 1} onClick={() => { const next = Math.max(1, page - 1); setPage(next); void fetchUsers(search, next); }} className="rounded-lg border px-3 py-2 disabled:opacity-40">Anterior</button><button disabled={page >= pagination.pages} onClick={() => { const next = Math.min(pagination.pages, page + 1); setPage(next); void fetchUsers(search, next); }} className="rounded-lg bg-slate-950 px-3 py-2 text-white disabled:opacity-40">Próxima</button></div></div>}
+      {!loading && pagination.pages > 1 && <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 text-sm sm:flex-row sm:items-center sm:justify-between"><span className="text-gray-500">Página {pagination.page} de {pagination.pages}</span><div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"><button disabled={page <= 1} onClick={() => { const next = Math.max(1, page - 1); setPage(next); void fetchUsers(search, next); }} className="rounded-lg border px-3 py-2 disabled:opacity-40">Anterior</button><button disabled={page >= pagination.pages} onClick={() => { const next = Math.min(pagination.pages, page + 1); setPage(next); void fetchUsers(search, next); }} className="rounded-lg bg-slate-950 px-3 py-2 text-white disabled:opacity-40">Próxima</button></div></div>}
     </div>
   );
 }

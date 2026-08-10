@@ -64,7 +64,7 @@ export default function RealTimeWidgets({ initialData }: RealTimeWidgetsProps) {
     }).format(value);
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {/* Pedidos Hoje */}
       <div
         className={`rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 transition-colors ${

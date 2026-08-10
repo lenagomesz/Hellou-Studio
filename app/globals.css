@@ -420,6 +420,10 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 }
 
 @media (max-width: 767px) {
+  .admin-shell main {
+    overflow-x: clip;
+  }
+
   .admin-shell main :where(input, select, textarea) {
     min-height: 44px;
     font-size: 16px;
@@ -432,6 +436,16 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 
   .admin-content :where(table) {
     min-width: 680px;
+  }
+
+  .admin-content :where(.overflow-x-auto) {
+    max-width: 100%;
+    scroll-padding-inline: 0.75rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-content :where(button, a) {
+    touch-action: manipulation;
   }
 
   .admin-content :where(section, article, form, header) {

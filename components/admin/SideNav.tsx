@@ -65,7 +65,7 @@ export function SideNav({ userEmail, alertCount = 0, accessLevel, enabledFeature
 
       <div
         id="admin-navigation"
-        className={`fixed bottom-0 left-0 top-[73px] z-50 flex w-[min(88vw,360px)] flex-col overflow-hidden border-r border-white/10 bg-[#101218] shadow-2xl transition duration-300 ease-out md:static md:h-[calc(100vh-81px)] md:w-auto md:translate-x-0 md:opacity-100 md:shadow-none ${mobileOpen ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-full opacity-0 md:pointer-events-auto'}`}
+        className={`fixed bottom-0 left-0 top-[73px] z-50 flex w-[min(88vw,360px)] flex-col overflow-hidden border-r border-white/10 bg-[#101218] pb-[env(safe-area-inset-bottom)] shadow-2xl transition duration-300 ease-out md:static md:h-[calc(100dvh-81px)] md:w-auto md:translate-x-0 md:pb-0 md:opacity-100 md:shadow-none ${mobileOpen ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-full opacity-0 md:pointer-events-auto'}`}
       >
         <nav aria-label="Navegação administrativa" className="flex-1 space-y-6 overflow-y-auto px-3 py-5 [scrollbar-color:#333_transparent] [scrollbar-width:thin]">
           {ADMIN_NAVIGATION.map((section) => (
@@ -81,7 +81,7 @@ export function SideNav({ userEmail, alertCount = 0, accessLevel, enabledFeature
                       key={item.href}
                       aria-current={active ? 'page' : undefined}
                       href={item.href}
-                      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${active ? 'bg-white text-slate-950 shadow-lg shadow-black/20' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'}`}
+                      className={`group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${active ? 'bg-white text-slate-950 shadow-lg shadow-black/20' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'}`}
                     >
                       <Icon className={`h-[17px] w-[17px] shrink-0 ${active ? 'text-pink-600' : 'text-slate-500 transition group-hover:text-pink-400'}`} />
                       <span className="min-w-0 flex-1 truncate">{item.label}</span>
