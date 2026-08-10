@@ -1,11 +1,22 @@
 export type ShippingAddressInput = Record<string, unknown> | null;
 
-export const STORE_SENDER_ADDRESS = {
-  name: 'helloustudio',
-  streetLine: 'Rua São Paulo, 250',
-  neighborhood: 'Bairro São Judas',
-  cityState: 'Itajaí - SC',
+export const STORE_SENDER_POSTAL_ADDRESS = {
+  name: 'Helena Soares Gomes',
+  street: 'Rua São Paulo',
+  number: '250',
+  neighborhood: 'São Judas',
+  city: 'Itajaí',
+  state: 'SC',
   cep: '88303-330',
+  country: 'BR',
+} as const;
+
+export const STORE_SENDER_ADDRESS = {
+  name: STORE_SENDER_POSTAL_ADDRESS.name,
+  streetLine: `${STORE_SENDER_POSTAL_ADDRESS.street}, ${STORE_SENDER_POSTAL_ADDRESS.number}`,
+  neighborhood: `Bairro ${STORE_SENDER_POSTAL_ADDRESS.neighborhood}`,
+  cityState: `${STORE_SENDER_POSTAL_ADDRESS.city} - ${STORE_SENDER_POSTAL_ADDRESS.state}`,
+  cep: STORE_SENDER_POSTAL_ADDRESS.cep,
 } as const;
 
 function text(value: unknown) {

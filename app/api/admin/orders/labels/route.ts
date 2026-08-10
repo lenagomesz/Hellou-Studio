@@ -2,17 +2,9 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { requireAdmin, badRequest } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { createTimelineEvent } from '@/lib/order-management';
+import { STORE_SENDER_POSTAL_ADDRESS } from '@/lib/shipping-label';
 
-const SENDER_ADDRESS = {
-  name: 'helloustudio',
-  street: 'Rua Sao Paulo',
-  number: '250',
-  neighborhood: 'Sao Judas',
-  city: 'Itajai',
-  state: 'SC',
-  cep: '88303-330',
-  country: 'BR',
-};
+const SENDER_ADDRESS = STORE_SENDER_POSTAL_ADDRESS;
 
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin();

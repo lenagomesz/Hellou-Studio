@@ -654,7 +654,7 @@ export default function OrderDetailPage() {
             <div className="space-y-3 text-xs">
             <div className="rounded-lg bg-gray-50 p-3 border border-gray-100 dark:border-white/10 dark:bg-white/5">
                 <p className="font-semibold text-gray-700 mb-1">REMETENTE:</p>
-                <p className="text-gray-600">helloustudio</p>
+                <p className="text-gray-600">Helena Soares Gomes</p>
                 <p className="text-gray-600">Rua São Paulo, 250</p>
                 <p className="text-gray-600">Bairro São Judas</p>
                 <p className="text-gray-600">Itajaí - SC</p>

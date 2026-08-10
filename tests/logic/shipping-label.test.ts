@@ -34,7 +34,7 @@ describe('etiqueta de remetente e destinatário', () => {
   it('gera um texto compartilhável com remetente e destinatário', () => {
     const result = buildShippingLabelText(null, 'maria@example.com', address);
 
-    expect(result).toContain('REMETENTE:\nhelloustudio');
+    expect(result).toContain('REMETENTE:\nHelena Soares Gomes');
     expect(result).toContain('CEP: 88303-330');
     expect(result).toContain('DESTINATÁRIO:\nmaria@example.com');
     expect(result).toContain('Rua das Flores, 42\nApto 3\nCentro\nSão Paulo - SP\nCEP: 01001-000');
