@@ -10,6 +10,7 @@ export function CollapsibleSection({
   description,
   icon: Icon,
   isOpen: controlledIsOpen,
+  defaultOpen = false,
   onOpenChange,
   validationStatus = 'idle',
   error,
@@ -20,13 +21,14 @@ export function CollapsibleSection({
   description?: string;
   icon?: React.ComponentType<{ className?: string }>;
   isOpen?: boolean;
+  defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   validationStatus?: ValidationStatus;
   error?: string;
   warning?: string;
   children: ReactNode;
 }) {
-  const [isOpenLocal, setIsOpenLocal] = useState(false);
+  const [isOpenLocal, setIsOpenLocal] = useState(defaultOpen);
   const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : isOpenLocal;
   const setIsOpen = onOpenChange || setIsOpenLocal;
 

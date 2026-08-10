@@ -17,7 +17,10 @@ export function BasicInfoSection() {
     <>
       <CollapsibleSection
         title="01 · Identidade"
-        description="Informações principais"
+        description={state.isCustomizable
+          ? `Informações principais e personalização · ${state.customizationSections.length} seção(ões)`
+          : 'Informações principais e personalização'}
+        defaultOpen={state.mode === 'edit' || state.isCustomizable}
         validationStatus={state.errors.name ? 'error' : state.name ? 'valid' : 'idle'}
       >
         <div className="space-y-4">
@@ -234,10 +237,12 @@ export function BasicInfoSection() {
           )}
 
           {state.isCustomizable && (
-            <CustomizationSectionsEditor
-              value={state.customizationSections}
-              onChange={(sections) => handleSetField('customizationSections', sections)}
-            />
+            <div id="personalizacao-produto" className="scroll-mt-24">
+              <CustomizationSectionsEditor
+                value={state.customizationSections}
+                onChange={(sections) => handleSetField('customizationSections', sections)}
+              />
+            </div>
           )}
         </div>
       </CollapsibleSection>

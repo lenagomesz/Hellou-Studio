@@ -172,7 +172,24 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
           <BasicInfoSection />
           <PricingSection />
           <ImagesSection />
-          <VariationsSection />
+          {mode === 'create' ? (
+            <VariationsSection />
+          ) : (
+            <section className="scroll-mt-24 rounded-2xl border border-violet-200 bg-violet-50/40 p-4 dark:border-violet-900/50 dark:bg-violet-950/10 sm:p-5" id="variacoes-produto">
+              <div className="mb-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600">Variações cadastradas</p>
+                <h2 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">Cores, modelos, tamanhos e imagens</h2>
+                <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                  As opções existentes aparecem abaixo. Clique em “Editar” para trocar nome, cor, imagem, preço ou estoque.
+                </p>
+              </div>
+              <OptionsManager
+                productId={product!.id}
+                initialOptions={productOptions ?? []}
+                basePrice={state.salePrice || state.basePrice || 0}
+              />
+            </section>
+          )}
           <SEOSection />
           <TagsSection />
 
@@ -223,23 +240,6 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
           </div>
         </aside>
       </div>
-
-      {mode === 'edit' && (
-        <section className="rounded-[26px] border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">02 · Variações</p>
-          <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Tamanhos, cores e adicionais</h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            O nome é opcional quando uma cor for escolhida. Nesse caso, o cliente verá somente a bolinha da cor.
-          </p>
-          <div className="mt-5">
-            <OptionsManager
-              productId={product!.id}
-              initialOptions={productOptions ?? []}
-              basePrice={state.salePrice || state.basePrice || 0}
-            />
-          </div>
-        </section>
-      )}
 
       {error && (
         <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">
@@ -305,7 +305,7 @@ export function ProductEditor(props: ProductEditorProps) {
           fulfillmentMode: (props.product.fulfillment_mode as 'made_to_order' | 'ready_stock' | 'hybrid') || 'made_to_order',
           isWholesale: props.product.is_wholesale,
           minimumOrderQuantity: props.product.minimum_order_quantity || 1,
-          isCustomizable: props.product.is_customizable,
+          isCustomizable: props.product.is_customizable || (props.product.customization_sections?.length ?? 0) > 0,
           customizationQuestion: props.product.customization_question || '',
           customizationHelpText: props.product.customization_help_text || '',
           customizationPlaceholder: props.product.customization_placeholder || '',

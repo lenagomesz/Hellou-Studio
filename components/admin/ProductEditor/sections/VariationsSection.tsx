@@ -85,6 +85,7 @@ export function VariationsSection() {
 
                 <div className="flex gap-1">
                   <button
+                    type="button"
                     onClick={() => handleMoveVariation(variation.id, -1)}
                     disabled={idx === 0}
                     className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
@@ -92,6 +93,7 @@ export function VariationsSection() {
                     <ArrowUp className="h-4 w-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleMoveVariation(variation.id, 1)}
                     disabled={idx === state.variations.length - 1}
                     className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
@@ -99,6 +101,7 @@ export function VariationsSection() {
                     <ArrowDown className="h-4 w-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleDeleteVariation(variation.id)}
                     className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
                   >
@@ -143,12 +146,14 @@ export function VariationsSection() {
 
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={handleAddVariation}
                 className="flex-1 rounded bg-pink-600 text-white py-2 text-sm font-medium hover:bg-pink-700"
               >
                 Salvar
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setShowForm(false);
                   setFormName('');
@@ -166,6 +171,7 @@ export function VariationsSection() {
 
         {!showForm && (
           <button
+            type="button"
             onClick={() => setShowForm(true)}
             className="w-full flex items-center justify-center gap-2 rounded border border-dashed border-gray-300 dark:border-gray-600 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-gray-900"
           >

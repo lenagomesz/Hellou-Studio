@@ -216,6 +216,7 @@ export function OptionsManager({
   }
 
   async function handleUpdate(option: ProductOption, patch: Partial<ProductOption>) {
+    setError(null);
     const res = await fetch(`/api/product-options/${option.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -225,12 +226,13 @@ export function OptionsManager({
     if (!res.ok) {
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       setError(data.error ?? 'Erro ao atualizar');
-      return;
+      return false;
     }
 
     const data = (await res.json()) as { option: ProductOption };
     setOptions((prev) => prev.map((o) => (o.id === option.id ? data.option : o)));
     router.refresh();
+    return true;
   }
 
   async function handleDelete(option: ProductOption) {
@@ -511,7 +513,7 @@ function OptionRow({
 }: {
   option: ProductOption;
   basePrice: number;
-  onUpdate: (patch: Partial<ProductOption>) => Promise<void> | void;
+  onUpdate: (patch: Partial<ProductOption>) => Promise<boolean> | boolean;
   onDelete: () => Promise<void> | void;
   onMoveUp: () => Promise<void> | void;
   onMoveDown: () => Promise<void> | void;
@@ -530,18 +532,21 @@ function OptionRow({
 
   async function save() {
     if (!name.trim() && !color.trim()) return;
+    const modifier = Number(priceModifier);
+    const stockValue = Number(stock);
+    if (!Number.isFinite(modifier) || !Number.isInteger(stockValue) || stockValue < 0) return;
     setSaving(true);
-    await onUpdate({
+    const saved = await onUpdate({
       name: name.trim(),
       color: color.trim() || null,
-      price_modifier: Number(priceModifier),
-      stock: Number(stock),
+      price_modifier: modifier,
+      stock: stockValue,
       dimensions: dimensions.trim() || null,
       notes: notes.trim() || null,
       image_url: imageUrl.trim() || null,
     });
     setSaving(false);
-    setEditing(false);
+    if (saved) setEditing(false);
   }
 
   function cancel() {
@@ -630,7 +635,7 @@ function OptionRow({
   }
 
   return (
-    <li className="flex items-center justify-between gap-4 p-3">
+    <li className="flex flex-col gap-4 p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1 flex gap-3 items-start">
         {option.image_url && (
           <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
@@ -672,7 +677,7 @@ function OptionRow({
           )}
         </div>
       </div>
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="flex w-full flex-wrap items-center gap-2 border-t border-gray-100 pt-3 sm:w-auto sm:flex-shrink-0 sm:border-0 sm:pt-0 dark:border-gray-700">
         <button type="button" onClick={onMoveUp} disabled={moveUpDisabled} aria-label="Mover variação para cima" title="Mover para cima" className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-pink-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-800">
           <ArrowUp className="h-4 w-4" />
         </button>
