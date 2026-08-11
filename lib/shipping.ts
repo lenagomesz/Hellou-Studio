@@ -14,6 +14,13 @@ export interface ShippingResult {
   address: { city: string; state: string; street: string; neighborhood: string };
 }
 
+export interface ShippingPackage {
+  weightGrams: number;
+  lengthCm: number;
+  widthCm: number;
+  heightCm: number;
+}
+
 interface ViaCepResponse {
   cep: string;
   logradouro: string;
@@ -21,66 +28,6 @@ interface ViaCepResponse {
   localidade: string;
   uf: string;
   erro?: boolean;
-}
-
-// --- Correios API config ---
-const DEFAULT_DIAMETER = '0';
-const API_TIMEOUT_MS = 3000;
-export const PROMOTIONAL_PAC_MAX = 15;
-
-// --- Fallback: tabela fixa por região ---
-type Region = 'local' | 'vizinhos' | 'sudeste' | 'centro_oeste' | 'nordeste' | 'norte';
-
-const RATES: Record<Region, { pac: number; sedex: number; pac_min: number; pac_max: number; sedex_min: number; sedex_max: number }> = {
-  local:        { pac: 14.90, sedex: 22.90, pac_min: 3,  pac_max: 5,  sedex_min: 1, sedex_max: 2 },
-  vizinhos:     { pac: 17.90, sedex: 26.90, pac_min: 4,  pac_max: 6,  sedex_min: 2, sedex_max: 3 },
-  sudeste:      { pac: 22.90, sedex: 32.90, pac_min: 5,  pac_max: 8,  sedex_min: 3, sedex_max: 4 },
-  centro_oeste: { pac: 26.90, sedex: 36.90, pac_min: 7,  pac_max: 10, sedex_min: 4, sedex_max: 5 },
-  nordeste:     { pac: 29.90, sedex: 42.90, pac_min: 8,  pac_max: 12, sedex_min: 5, sedex_max: 7 },
-  norte:        { pac: 34.90, sedex: 48.90, pac_min: 10, pac_max: 15, sedex_min: 6, sedex_max: 8 },
-};
-
-const UF_REGION: Record<string, Region> = {
-  SC: 'local',
-  PR: 'vizinhos',
-  RS: 'vizinhos',
-  SP: 'sudeste',
-  RJ: 'sudeste',
-  MG: 'sudeste',
-  ES: 'sudeste',
-  GO: 'centro_oeste',
-  MT: 'centro_oeste',
-  MS: 'centro_oeste',
-  DF: 'centro_oeste',
-  BA: 'nordeste',
-  SE: 'nordeste',
-  AL: 'nordeste',
-  PE: 'nordeste',
-  PB: 'nordeste',
-  RN: 'nordeste',
-  CE: 'nordeste',
-  PI: 'nordeste',
-  MA: 'nordeste',
-  AM: 'norte',
-  PA: 'norte',
-  AP: 'norte',
-  RO: 'norte',
-  RR: 'norte',
-  AC: 'norte',
-  TO: 'norte',
-};
-
-const PROMOTIONAL_PAC_REGIONS = new Set<Region>([
-  'local',
-  'vizinhos',
-  'sudeste',
-  'centro_oeste',
-]);
-
-export function sanitizeCep(raw: string): string | null {
-  const digits = raw.replace(/\D/g, '');
-  if (digits.length !== 8) return null;
-  return digits;
 }
 
 interface CorreiosResponse {
@@ -91,89 +38,162 @@ interface CorreiosResponse {
   MsgErro: string;
 }
 
+export interface MelhorEnvioQuote {
+  id?: number;
+  name?: string;
+  price?: string;
+  custom_price?: string;
+  delivery_time?: number;
+  custom_delivery_time?: number;
+  error?: string;
+  company?: { name?: string };
+}
+
+const DEFAULT_DIAMETER = '0';
+const API_TIMEOUT_MS = 6000;
+const MELHOR_ENVIO_PRODUCTION_URL = 'https://melhorenvio.com.br';
+
+export function sanitizeCep(raw: string): string | null {
+  const digits = raw.replace(/\D/g, '');
+  return digits.length === 8 ? digits : null;
+}
+
+function normalizePackage(shippingPackage: ShippingPackage) {
+  return {
+    weightKg: Math.max(0.3, shippingPackage.weightGrams / 1000),
+    lengthCm: Math.max(16, Math.ceil(shippingPackage.lengthCm)),
+    widthCm: Math.max(11, Math.ceil(shippingPackage.widthCm)),
+    heightCm: Math.max(2, Math.ceil(shippingPackage.heightCm)),
+  };
+}
+
+function parsePositiveNumber(value: unknown): number | null {
+  const number = typeof value === 'number' ? value : Number(String(value ?? '').replace(',', '.'));
+  return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+export function parseMelhorEnvioQuotes(quotes: MelhorEnvioQuote[]): ShippingOption[] {
+  const options = new Map<'pac' | 'sedex', ShippingOption>();
+
+  for (const quote of quotes) {
+    if (quote.error) continue;
+    const serviceName = String(quote.name ?? '').trim();
+    const normalizedName = serviceName.toUpperCase();
+    const id = /\bSEDEX\b/.test(normalizedName) ? 'sedex' : /\bPAC\b/.test(normalizedName) ? 'pac' : null;
+    if (!id) continue;
+
+    const price = parsePositiveNumber(quote.custom_price) ?? parsePositiveNumber(quote.price);
+    const days = parsePositiveNumber(quote.custom_delivery_time) ?? parsePositiveNumber(quote.delivery_time);
+    if (price === null || days === null) continue;
+
+    const company = String(quote.company?.name ?? '').trim();
+    const option: ShippingOption = {
+      id,
+      name: company && !serviceName.toUpperCase().includes(company.toUpperCase()) ? `${company} ${serviceName}` : serviceName,
+      price: Math.round(price * 100) / 100,
+      days_min: Math.ceil(days),
+      days_max: Math.ceil(days),
+    };
+
+    const current = options.get(id);
+    if (!current || option.price < current.price) options.set(id, option);
+  }
+
+  return [...options.values()];
+}
+
+async function fetchMelhorEnvioRates(originCep: string, destCep: string, shippingPackage: ShippingPackage): Promise<ShippingOption[] | null> {
+  const token = process.env.MELHOR_ENVIO_ACCESS_TOKEN?.trim();
+  if (!token) {
+    console.warn('[shipping] MELHOR_ENVIO_ACCESS_TOKEN não configurado; usando cotação real de contingência.');
+    return null;
+  }
+
+  const apiUrl = (process.env.MELHOR_ENVIO_API_URL?.trim() || MELHOR_ENVIO_PRODUCTION_URL).replace(/\/$/, '');
+  const userAgent = process.env.MELHOR_ENVIO_USER_AGENT?.trim() || 'Hellou Studio (studiohellou@gmail.com.br)';
+  const pkg = normalizePackage(shippingPackage);
+
+  try {
+    const response = await fetch(`${apiUrl}/api/v2/me/shipment/calculate`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'User-Agent': userAgent,
+      },
+      body: JSON.stringify({
+        from: { postal_code: originCep },
+        to: { postal_code: destCep },
+        volumes: [{
+          width: pkg.widthCm,
+          height: pkg.heightCm,
+          length: pkg.lengthCm,
+          weight: Number(pkg.weightKg.toFixed(3)),
+        }],
+        options: { receipt: false, own_hand: false },
+      }),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(API_TIMEOUT_MS),
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const quotes = await response.json() as MelhorEnvioQuote[];
+    const options = parseMelhorEnvioQuotes(Array.isArray(quotes) ? quotes : []);
+    return options.length > 0 ? options : null;
+  } catch (error) {
+    console.warn('[shipping] Melhor Envio indisponível:', error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
 function parseCorreiosPrice(value: string): number {
   return parseFloat(value.replace('.', '').replace(',', '.'));
 }
 
-export interface ShippingPackage {
-  weightGrams: number;
-  lengthCm: number;
-  widthCm: number;
-  heightCm: number;
-}
-
-async function fetchCorreiosRates(destCep: string, shippingPackage: ShippingPackage): Promise<ShippingOption[] | null> {
-  const settings = await getStoreSettings();
+async function fetchCorreiosRates(originCep: string, destCep: string, shippingPackage: ShippingPackage): Promise<ShippingOption[] | null> {
   try {
+    const pkg = normalizePackage(shippingPackage);
     const args = {
-      sCepOrigem: settings.shipping.originCep,
+      sCepOrigem: originCep,
       sCepDestino: destCep,
-      nVlPeso: Math.max(0.3, shippingPackage.weightGrams / 1000).toFixed(3),
+      nVlPeso: pkg.weightKg.toFixed(3),
       nCdFormato: '1',
-      nVlComprimento: String(Math.max(16, Math.ceil(shippingPackage.lengthCm))),
-      nVlAltura: String(Math.max(2, Math.ceil(shippingPackage.heightCm))),
-      nVlLargura: String(Math.max(11, Math.ceil(shippingPackage.widthCm))),
+      nVlComprimento: String(pkg.lengthCm),
+      nVlAltura: String(pkg.heightCm),
+      nVlLargura: String(pkg.widthCm),
       nVlDiametro: DEFAULT_DIAMETER,
       nCdServico: ['04510', '04014'],
     };
 
     const response: CorreiosResponse[] = await Promise.race([
       calcularPrecoPrazo(args),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), API_TIMEOUT_MS),
-      ),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), API_TIMEOUT_MS)),
     ]);
-
     const options: ShippingOption[] = [];
 
     for (const item of response) {
       if (item.Erro && item.Erro !== '0' && item.Erro !== '010') continue;
-
       const price = parseCorreiosPrice(item.Valor);
       if (price <= 0) continue;
-
       const days = parseInt(item.PrazoEntrega, 10) || 0;
-
-      if (item.Codigo === '04510') {
-        options.push({ id: 'pac', name: 'PAC', price, days_min: days, days_max: days + 3 });
-      } else if (item.Codigo === '04014') {
-        options.push({ id: 'sedex', name: 'SEDEX', price, days_min: days, days_max: days + 1 });
-      }
+      if (item.Codigo === '04510') options.push({ id: 'pac', name: 'PAC', price, days_min: days, days_max: days + 3 });
+      if (item.Codigo === '04014') options.push({ id: 'sedex', name: 'SEDEX', price, days_min: days, days_max: days + 1 });
     }
-
     return options.length > 0 ? options : null;
-  } catch (err) {
-    console.warn('[shipping] Correios API failed, using fallback:', (err as Error).message);
+  } catch (error) {
+    console.warn('[shipping] Cotação de contingência dos Correios indisponível:', error instanceof Error ? error.message : error);
     return null;
   }
-}
-
-function getFallbackOptions(uf: string): ShippingOption[] {
-  const region = UF_REGION[uf] || 'sudeste';
-  const rate = RATES[region];
-  return [
-    { id: 'pac', name: 'PAC', price: rate.pac, days_min: rate.pac_min, days_max: rate.pac_max },
-    { id: 'sedex', name: 'SEDEX', price: rate.sedex, days_min: rate.sedex_min, days_max: rate.sedex_max },
-  ];
-}
-
-export function hasPromotionalPacCap(uf: string): boolean {
-  const region = UF_REGION[uf.trim().toUpperCase()];
-  return Boolean(region && PROMOTIONAL_PAC_REGIONS.has(region));
-}
-
-export function applyPromotionalShippingPolicy(uf: string, options: ShippingOption[]): ShippingOption[] {
-  if (!hasPromotionalPacCap(uf)) return options;
-
-  return options.map((option) => option.id === 'pac'
-    ? { ...option, price: Math.min(option.price, PROMOTIONAL_PAC_MAX) }
-    : option);
 }
 
 export async function calculateShipping(rawCep: string, packageOverride?: Partial<ShippingPackage>): Promise<ShippingResult> {
   const cep = sanitizeCep(rawCep);
   if (!cep) throw new Error('CEP inválido. Use 8 dígitos.');
   const settings = await getStoreSettings();
+  const originCep = sanitizeCep(settings.shipping.originCep);
+  if (!originCep) throw new Error('O CEP de origem da loja não está configurado corretamente.');
+
   const shippingPackage: ShippingPackage = {
     weightGrams: Math.max(1, packageOverride?.weightGrams ?? settings.shipping.defaultWeightGrams),
     lengthCm: Math.max(1, packageOverride?.lengthCm ?? settings.shipping.defaultLengthCm),
@@ -181,36 +201,21 @@ export async function calculateShipping(rawCep: string, packageOverride?: Partia
     heightCm: Math.max(1, packageOverride?.heightCm ?? settings.shipping.defaultHeightCm),
   };
 
-  const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
-    next: { revalidate: 86400 },
-    verbose: true,
-  } as RequestInit);
-
+  const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { next: { revalidate: 86400 } });
   if (!res.ok) throw new Error('Não foi possível consultar o CEP.');
-
   const data: ViaCepResponse = await res.json();
   if (data.erro) throw new Error('CEP não encontrado.');
 
-  const uf = data.uf;
-  if (!UF_REGION[uf]) throw new Error(`Estado ${uf} não suportado.`);
-
-  // Santa Catarina: frete fixo PAC R$ 9,90 e SEDEX R$ 15,90
-  if (uf === 'SC') {
-    return {
-      options: applyPromotionalShippingPolicy(uf, [
-        { id: 'pac', name: 'PAC', price: 9.90, days_min: 3, days_max: 5 },
-        { id: 'sedex', name: 'SEDEX', price: 15.90, days_min: 1, days_max: 2 },
-      ]).filter((option) => option.id === 'pac' ? settings.shipping.pacEnabled : settings.shipping.sedexEnabled) as ShippingOption[],
-      address: { city: data.localidade, state: data.uf, street: data.logradouro, neighborhood: data.bairro },
-    };
-  }
-
-  const correiosOptions = await fetchCorreiosRates(cep, shippingPackage);
-  if (!correiosOptions && !hasPromotionalPacCap(uf)) {
+  const quotedOptions = await fetchMelhorEnvioRates(originCep, cep, shippingPackage)
+    ?? await fetchCorreiosRates(originCep, cep, shippingPackage);
+  if (!quotedOptions) {
     throw new Error('Não foi possível consultar o valor real do frete para este CEP. Tente novamente em instantes.');
   }
-  const options = applyPromotionalShippingPolicy(uf, correiosOptions || getFallbackOptions(uf))
-    .filter((option) => option.id === 'pac' ? settings.shipping.pacEnabled : settings.shipping.sedexEnabled);
+
+  const options = quotedOptions.filter((option) => option.id === 'pac'
+    ? settings.shipping.pacEnabled
+    : settings.shipping.sedexEnabled);
+  if (options.length === 0) throw new Error('Nenhuma modalidade de frete está disponível para este CEP.');
 
   return {
     options,
