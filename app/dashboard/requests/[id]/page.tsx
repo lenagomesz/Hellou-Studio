@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { PrintRequest, PrintRequestStatus } from '@/types/database';
 
@@ -61,6 +61,8 @@ type RequestWithUser = PrintRequest & { user?: { id: string; email: string; name
 
 export default function AdminRequestDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const id = params.id;
 
   const [request, setRequest] = useState<RequestWithUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,6 +74,35 @@ export default function AdminRequestDetailPage() {
   const [quotedPrice, setQuotedPrice] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [linkingOrder, setLinkingOrder] = useState(false);
+  const [linkingError, setLinkingError] = useState('');
+
+  const handleLinkOrder = async () => {
+    if (!confirm('Converter esta encomenda em um pedido? Isso marcará a encomenda como "Em produção".')) {
+      return;
+    }
+
+    setLinkingError('');
+    setLinkingOrder(true);
+
+    try {
+      const res = await fetch(`/api/print-requests/${id}/link-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setLinkingError(data.error || 'Erro ao vincular encomenda');
+      } else {
+        router.push(`/dashboard/orders/${data.order.id}`);
+      }
+    } catch (err) {
+      setLinkingError(err instanceof Error ? err.message : 'Erro desconhecido');
+    } finally {
+      setLinkingOrder(false);
+    }
+  };
 
   useEffect(() => {
     fetch(`/api/print-requests/${params.id}`)
@@ -93,6 +124,7 @@ export default function AdminRequestDetailPage() {
       .catch(() => setError('Erro ao carregar solicitação'))
       .finally(() => setLoading(false));
   }, [params.id]);
+
 
   async function handleSave() {
     setError(null);
@@ -351,6 +383,23 @@ export default function AdminRequestDetailPage() {
             <p className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
               {success}
             </p>
+          )}
+
+          {linkingError && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 mb-2">
+              Erro: {linkingError}
+            </p>
+          )}
+
+          {!isLocked && request.status !== 'pending' && request.quoted_price && (
+            <button
+              type="button"
+              onClick={handleLinkOrder}
+              disabled={linkingOrder}
+              className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50 mb-2"
+            >
+              {linkingOrder ? 'Vinculando...' : '🔗 Vincular como Pedido'}
+            </button>
           )}
 
           <button

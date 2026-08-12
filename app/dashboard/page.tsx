@@ -184,6 +184,19 @@ function OrderMiniRow({ order }: { order: OrderRow }) {
   );
 }
 
+function getGreeting(hour: number): string {
+  if (hour < 6) return 'Boa madrugada';
+  if (hour < 12) return 'Bom dia';
+  if (hour < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
+function getTimeBasedSubtitle(todoCount: number): string {
+  if (todoCount === 0) return 'Tudo em dia! Nenhum pedido pendente.';
+  if (todoCount === 1) return 'Você tem 1 pedido para preparar.';
+  return `Você tem ${todoCount} pedidos aguardando preparação.`;
+}
+
 export default async function DashboardHome() {
   const data = await getDashboardData();
   const currentUser = await getCurrentUser();
@@ -191,6 +204,9 @@ export default async function DashboardHome() {
 
   const todoCount = data.paidOrders.length + data.toPrepareOrders.length + data.pendingRequests.length;
   const toShipCount = data.readyToShipOrders.length;
+  const hour = new Date().getHours();
+  const greeting = getGreeting(hour);
+  const userName = currentUser?.name ?? 'você';
 
   return (
     <div className="space-y-8">
@@ -203,8 +219,8 @@ export default async function DashboardHome() {
             <span className="inline-flex items-center gap-2 rounded-full border border-pink-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" /> Operação ao vivo
             </span>
-            <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">Seu estúdio, em uma visão clara.</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Priorize o que precisa sair hoje, acompanhe a saúde da loja e chegue a qualquer área sem perder tempo.</p>
+            <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">{greeting}, {userName}! 👋</h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">{getTimeBasedSubtitle(todoCount)}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {isOwner && <Link href="/dashboard/analytics" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-pink-200 hover:bg-pink-50">
@@ -295,9 +311,15 @@ export default async function DashboardHome() {
           </div>
           <div className="divide-y divide-gray-50 px-2 py-2 dark:divide-gray-800">
             {data.paidOrders.length === 0 && data.toPrepareOrders.length === 0 && data.pendingRequests.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-gray-400">Nenhuma ação pendente</p>
+              <>
+                <p className="px-3 py-3 text-center text-sm font-medium text-gray-600 dark:text-gray-300">Tudo em dia! 🎉</p>
+                <p className="px-3 py-6 text-center text-sm text-gray-400">Nenhum pedido pendente no momento</p>
+              </>
             ) : (
               <>
+                <p className="px-3 py-3 text-center text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Você tem {todoCount} {todoCount === 1 ? 'pedido' : 'pedidos'} aguardando preparação
+                </p>
                 {data.paidOrders.map((order) => (
                   <OrderMiniRow key={order.id} order={order} />
                 ))}

@@ -1175,3 +1175,78 @@ export async function sendSTLDeliveryEmail(params: {
     return false;
   }
 }
+
+export async function sendOrderLinkedEmail(params: {
+  email: string;
+  nome: string | null;
+  orderId: string;
+  printRequestTitle: string;
+}): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) {
+    structuredLog('warn', 'email.provider_not_configured', { emailType: 'order_status' });
+    return false;
+  }
+
+  const baseUrl = getBaseUrl();
+  const shortId = params.orderId.slice(0, 8).toUpperCase();
+
+  try {
+    const res = await sendTrackedEmail(resend, {
+      from: getFrom(),
+      to: params.email,
+      subject: `Sua encomenda "${params.printRequestTitle}" entrou na produção!`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff;">
+          <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
+            <h1 style="color: #111; margin: 0 0 8px 0; font-size: 24px; font-weight: 700;">
+              🎉 Sua encomenda entrou na produção!
+            </h1>
+            <p style="color: #666; margin: 0; font-size: 14px;">
+              Pedido #${shortId}
+            </p>
+          </div>
+
+          <p style="color: #555; line-height: 1.6; margin: 0 0 24px 0;">
+            Olá${params.nome ? `, ${params.nome}` : ''}! Sua encomenda <strong>"${params.printRequestTitle}"</strong> foi vinculada e entrou na nossa fila de produção.
+          </p>
+
+          <div style="margin: 24px 0; padding: 16px; background-color: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+            <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">
+              Próximas etapas
+            </p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #15803d; line-height: 1.8;">
+              <li>✓ Encomenda aprovada</li>
+              <li>Preparação em andamento</li>
+              <li>Envio para você (retirada combinada)</li>
+              <li>Conclusão</li>
+            </ul>
+          </div>
+
+          <p style="color: #555; line-height: 1.6; margin: 24px 0 0 0;">
+            Você pode acompanhar o status pelo seu pedido. Se precisar de mais informações, entre em contato conosco pelo WhatsApp!
+          </p>
+
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 12px 0; color: #555; font-size: 13px;">
+              Obrigada por encomendaruma impressão conosco! ✨
+            </p>
+            <p style="margin: 0; color: #999; font-size: 12px;">
+              © helloustudio • Feito com ❤️ em 3D
+            </p>
+          </div>
+        </div>
+      `,
+    }, { emailType: 'order_status', orderId: params.orderId });
+    if (res.error) {
+      structuredLog('error', 'email.provider_response_error', { emailType: 'order_status', orderId: params.orderId });
+      return false;
+    } else {
+      structuredLog('info', 'email.send_completed', { emailType: 'order_status', orderId: params.orderId, providerEmailId: res.data?.id });
+      return true;
+    }
+  } catch (err) {
+    structuredLog('error', 'email.template_exception', { emailType: 'order_status', orderId: params.orderId, error: err });
+    return false;
+  }
+}
