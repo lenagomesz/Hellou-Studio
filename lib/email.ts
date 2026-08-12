@@ -768,8 +768,8 @@ export async function sendOrderStatusEmail(params: {
             <p style="margin: 0; font-weight: 600; color: #166534;">Código de rastreamento:</p>
             <p style="margin: 8px 0 0; font-size: 16px; color: #15803D; font-family: monospace; letter-spacing: 0.5px;">${params.trackingCode}</p>
           </div>
-          <a href="https://www.linkcorreios.com.br/?id=${params.trackingCode}" style="display: inline-block; margin: 8px 0 16px; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
-            Rastrear encomenda
+          <a href="https://melhorrastreio.com.br/${params.trackingCode}" style="display: inline-block; margin: 8px 0 16px; padding: 12px 24px; background: linear-gradient(to right, #ec4899, #f97316); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Rastrear no Melhor Envio
           </a>
         `;
       }

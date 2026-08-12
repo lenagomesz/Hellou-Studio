@@ -129,7 +129,7 @@ export const preBuiltTemplates: PreBuiltTemplate[] = [
         <p style="margin:0;font-weight:600;color:#1e40af;">Código de rastreamento:</p>
         <p style="margin:8px 0 0;font-size:18px;color:#1d4ed8;font-family:monospace;letter-spacing:1px;">{tracking_code}</p>
       </div>
-      ${ctaButton('Rastrear encomenda', 'https://www.linkcorreios.com.br/?id={tracking_code}')}
+      ${ctaButton('Rastrear no Melhor Envio', 'https://melhorrastreio.com.br/{tracking_code}')}
     `),
   },
   {
