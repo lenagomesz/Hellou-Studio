@@ -33,3 +33,23 @@ export function getProductColorValue(value: string | null | undefined) {
     (color) => color.hex.toLowerCase() === normalized || color.name.toLowerCase() === normalized,
   )?.hex ?? value;
 }
+
+export function normalizeProductColor(value: string | null | undefined): string | null {
+  if (!value?.trim()) return null;
+  const raw = value.trim();
+  const paletteColor = PRODUCT_COLOR_PALETTE.find(
+    (color) => color.hex.toLowerCase() === raw.toLowerCase() || color.name.toLowerCase() === raw.toLowerCase(),
+  );
+  if (paletteColor) return paletteColor.hex;
+  const shortHex = /^#([0-9a-f]{3})$/i.exec(raw);
+  if (shortHex) return `#${shortHex[1].split('').map((character) => character.repeat(2)).join('')}`.toUpperCase();
+  if (/^#[0-9a-f]{6}$/i.test(raw)) return raw.toUpperCase();
+  const rgb = /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[\d.]+)?\s*\)$/i.exec(raw);
+  if (rgb) {
+    const channels = rgb.slice(1, 4).map(Number);
+    if (channels.every((channel) => channel >= 0 && channel <= 255)) {
+      return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+    }
+  }
+  return null;
+}

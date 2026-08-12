@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { useProductEditor } from '../hooks/useProductEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
+import { getProductColorName, getProductColorValue, PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
 
 export function VariationsSection() {
   const { state, dispatch } = useProductEditor();
@@ -73,7 +74,8 @@ export function VariationsSection() {
                     {variation.color && (
                       <div
                         className="h-4 w-4 rounded-full border"
-                        style={{ backgroundColor: variation.color }}
+                        style={{ backgroundColor: getProductColorValue(variation.color) }}
+                        title={getProductColorName(variation.color)}
                       />
                     )}
                     <span className="font-medium text-sm">{variation.name || '(sem nome)'}</span>
@@ -122,13 +124,13 @@ export function VariationsSection() {
               onChange={(e) => setFormName(e.target.value)}
               className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
             />
-            <input
-              type="text"
-              placeholder="Cor em hex (ex: #FF0000)"
-              value={formColor}
-              onChange={(e) => setFormColor(e.target.value)}
-              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-            />
+            <div>
+              <p className="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-300">Cor padronizada</p>
+              <div className="flex flex-wrap gap-2">
+                {PRODUCT_COLOR_PALETTE.map((color) => <button key={color.name} type="button" title={color.name} aria-label={color.name} onClick={() => setFormColor(formColor === color.hex ? '' : color.hex)} className={`h-8 w-8 rounded-full border-2 ${formColor === color.hex ? 'border-pink-500 ring-2 ring-pink-200' : 'border-slate-200'}`} style={{ backgroundColor: color.hex }} />)}
+              </div>
+              <input type="color" value={/^#[0-9a-f]{6}$/i.test(formColor) ? formColor : '#EC4899'} onChange={(event) => setFormColor(event.target.value.toUpperCase())} aria-label="Cor personalizada" className="mt-3 h-10 w-full cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-600 dark:bg-gray-900" />
+            </div>
             <input
               type="number"
               placeholder="Preço adicional"

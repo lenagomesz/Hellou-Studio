@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { badRequest, notFound, requireAdmin, serverError } from '@/lib/api';
 import type { ProductOption } from '@/types/database';
+import { normalizeProductColor } from '@/lib/product-colors';
 
 export async function PATCH(
   request: Request,
@@ -58,7 +59,9 @@ export async function PATCH(
     update.notes = input.notes?.trim() || null;
   }
   if (input.color !== undefined) {
-    update.color = input.color?.trim() || null;
+    const normalizedColor = normalizeProductColor(input.color);
+    if (input.color?.trim() && !normalizedColor) return badRequest('Escolha uma cor da paleta ou informe um código hexadecimal válido');
+    update.color = normalizedColor;
   }
   if (input.image_url !== undefined) {
     update.image_url = input.image_url?.trim() || null;
@@ -84,7 +87,7 @@ export async function PATCH(
     if (!current) return notFound('Variação não encontrada');
 
     const nextName = input.name !== undefined ? input.name.trim() : current.name.trim();
-    const nextColor = input.color !== undefined ? input.color?.trim() ?? '' : current.color?.trim() ?? '';
+    const nextColor = input.color !== undefined ? normalizeProductColor(input.color) ?? '' : current.color?.trim() ?? '';
     if (!nextName && !nextColor) return badRequest('Informe um nome ou uma cor');
   }
 

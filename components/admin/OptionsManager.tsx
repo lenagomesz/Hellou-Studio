@@ -29,13 +29,8 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
           />
         ))}
       </div>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Ou digite a cor"
-        className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
-      />
+      <input type="color" value={/^#[0-9a-f]{6}$/i.test(getProductColorValue(value)) ? getProductColorValue(value) : '#EC4899'} onChange={(e) => onChange(e.target.value.toUpperCase())} aria-label="Escolher uma cor personalizada" className="h-10 w-full cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-800" />
+      <p className="text-[11px] text-gray-500">Use a paleta padrão ou o seletor. A cor será salva sempre no mesmo formato.</p>
     </div>
   );
 }

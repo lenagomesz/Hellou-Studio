@@ -10,6 +10,7 @@ import EditableShippingAddress from './EditableShippingAddress';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import RatingPrompt from './RatingPrompt';
 import ProductReviewSuggestion from './ProductReviewSuggestion';
+import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 
 export const dynamic = 'force-dynamic';
 
@@ -215,9 +216,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 {item.option && (
                   <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                     {item.option.color && (
-                      <span className="inline-block h-3 w-3 rounded-full border border-gray-200" style={{ backgroundColor: item.option.color }} />
+                      <span className="inline-block h-3 w-3 rounded-full border border-gray-200" style={{ backgroundColor: getProductColorValue(item.option.color) }} />
                     )}
-                    {item.option.name ? `Variação: ${item.option.name}` : 'Cor selecionada'}
+                    {item.option.name ? `Variação: ${item.option.name}` : `Cor: ${getProductColorName(item.option.color)}`}
                   </p>
                 )}
                 {item.customization_text && (

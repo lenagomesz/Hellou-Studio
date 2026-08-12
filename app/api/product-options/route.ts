@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { badRequest, notFound, requireAdmin, serverError } from '@/lib/api';
 import type { ProductOption } from '@/types/database';
+import { normalizeProductColor } from '@/lib/product-colors';
 
 export async function POST(request: Request) {
   const auth = await requireAdmin();
@@ -28,6 +29,8 @@ export async function POST(request: Request) {
 
   if (!product_id) return badRequest('product_id é obrigatório');
   if (!name?.trim() && !color?.trim()) return badRequest('Informe um nome ou uma cor');
+  const normalizedColor = normalizeProductColor(color);
+  if (color?.trim() && !normalizedColor) return badRequest('Escolha uma cor da paleta ou informe um código hexadecimal válido');
 
   const modifier = price_modifier ?? 0;
   if (typeof modifier !== 'number') return badRequest('price_modifier inválido');
@@ -69,7 +72,7 @@ export async function POST(request: Request) {
       stock: stockValue,
       dimensions: dimensions?.trim() || null,
       notes: notes?.trim() || null,
-      color: color?.trim() || null,
+      color: normalizedColor,
       image_url: image_url?.trim() || null,
       active: active ?? true,
       sort_order: (lastOption?.sort_order ?? -10) + 10,

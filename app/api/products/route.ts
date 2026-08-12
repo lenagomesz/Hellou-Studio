@@ -9,6 +9,7 @@ import {
   serverError,
 } from '@/lib/api';
 import type { Product } from '@/types/database';
+import { normalizeProductColor } from '@/lib/product-colors';
 import { attachProductTags } from '@/lib/product-tags';
 import { parseOptionalPrice } from '@/lib/product-filters';
 import { normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
@@ -204,7 +205,7 @@ export async function POST(request: Request) {
       name: option.name?.trim() || '',
       dimensions: option.dimensions?.trim() || null,
       notes: option.notes?.trim() || null,
-      color: option.color?.trim() || null,
+      color: normalizeProductColor(option.color),
       image_url: option.image_url?.trim() || null,
       price_modifier: Number(option.price_modifier ?? 0),
       stock: Math.max(0, Math.trunc(Number(option.stock ?? 0))),

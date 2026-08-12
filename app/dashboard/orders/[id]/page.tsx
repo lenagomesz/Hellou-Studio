@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import type { OrderStatus } from '@/types/database';
+import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_payment: 'Aguardando Pagamento',
@@ -341,8 +342,8 @@ export default function OrderDetailPage() {
                       if (!optionName && !optionColor) return null;
                       return (
                         <div className="mt-2 flex min-w-0 items-center gap-2 rounded-xl border border-violet-100 bg-violet-50 px-3 py-2 text-xs text-violet-800 dark:border-violet-900/50 dark:bg-violet-500/10 dark:text-violet-200">
-                          {optionColor && <span className="h-4 w-4 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: optionColor }} />}
-                          <span className="min-w-0 break-words"><span className="font-semibold">Variação escolhida:</span> {optionName || optionColor}</span>
+                          {optionColor && <span className="h-4 w-4 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: getProductColorValue(optionColor) }} />}
+                          <span className="min-w-0 break-words"><span className="font-semibold">Variação escolhida:</span> {optionName || getProductColorName(optionColor)}</span>
                         </div>
                       );
                     })()}
