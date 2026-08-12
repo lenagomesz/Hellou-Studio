@@ -74,6 +74,7 @@ export default function AdminRequestDetailPage() {
   const [quotedPrice, setQuotedPrice] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [requestDate, setRequestDate] = useState('');
   const [linkingOrder, setLinkingOrder] = useState(false);
   const [linkingError, setLinkingError] = useState('');
 
@@ -119,6 +120,9 @@ export default function AdminRequestDetailPage() {
           setQuotedPrice(data.request.quoted_price?.toString() ?? '');
           setAdminNotes(data.request.admin_notes ?? '');
           setRejectionReason(data.request.rejection_reason ?? '');
+          const date = new Date(data.request.created_at);
+          const formattedDate = date.toISOString().split('T')[0];
+          setRequestDate(formattedDate);
         }
       })
       .catch(() => setError('Erro ao carregar solicitação'))
@@ -153,6 +157,9 @@ export default function AdminRequestDetailPage() {
 
     body.admin_notes = adminNotes.trim() || null;
     body.rejection_reason = status === 'rejected' ? (rejectionReason.trim() || null) : null;
+    if (requestDate) {
+      body.created_at = new Date(requestDate).toISOString();
+    }
 
     const res = await fetch(`/api/print-requests/${params.id}`, {
       method: 'PATCH',
@@ -325,19 +332,33 @@ export default function AdminRequestDetailPage() {
           </div>
 
           {status === 'approved' && (
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                Valor (R$) *
-              </label>
-              <input
-                id="price"
-                type="text"
-                value={quotedPrice}
-                onChange={(e) => setQuotedPrice(e.target.value)}
-                placeholder="Ex: 89.90"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
+            <>
+              <div>
+                <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                  Valor (R$) *
+                </label>
+                <input
+                  id="price"
+                  type="text"
+                  value={quotedPrice}
+                  onChange={(e) => setQuotedPrice(e.target.value)}
+                  placeholder="Ex: 89.90"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="requestDate" className="block text-sm font-medium text-gray-700">
+                  Data da encomenda
+                </label>
+                <input
+                  id="requestDate"
+                  type="date"
+                  value={requestDate}
+                  onChange={(e) => setRequestDate(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+                />
+              </div>
+            </>
           )}
 
           {status === 'rejected' && (

@@ -60,6 +60,7 @@ export async function PATCH(
     admin_notes?: string | null;
     rejection_reason?: string | null;
     user_response?: string | null;
+    created_at?: string;
   };
 
   const admin = getSupabaseAdmin();
@@ -133,6 +134,14 @@ export async function PATCH(
 
   if (input.rejection_reason !== undefined) {
     update.rejection_reason = input.rejection_reason?.trim() || null;
+  }
+
+  if (input.created_at !== undefined) {
+    try {
+      update.created_at = new Date(input.created_at).toISOString();
+    } catch {
+      return badRequest('Data inválida');
+    }
   }
 
   if (Object.keys(update).length === 0) {
