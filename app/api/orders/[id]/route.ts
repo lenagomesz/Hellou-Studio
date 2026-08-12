@@ -37,17 +37,46 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
 
   const { id } = await ctx.params;
   const body = await req.json();
-  const { status, tracking_code, admin_notes } = body as {
+  const { status, tracking_code, admin_notes, prepared } = body as {
     status?: string;
     tracking_code?: string;
     admin_notes?: string;
+    prepared?: boolean;
   };
 
-  if (!status) {
-    return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+  if (!status && !prepared) {
+    return NextResponse.json({ error: 'Status or prepared flag is required' }, { status: 400 });
   }
 
   const admin = getSupabaseAdmin();
+
+  // Handle preparation flag (admin-only)
+  if (prepared) {
+    const preparePermission = await requirePermission('orders.status.manage');
+    if (preparePermission.response) return preparePermission.response;
+
+    const { data: order, error: fetchError } = await admin
+      .from('orders')
+      .select('shipping_address, status')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !order) return notFound('Pedido não encontrado');
+    if (order.status !== 'processing') {
+      return badRequest('Apenas pedidos em produção podem ser marcados como preparados');
+    }
+
+    const shippingData = (order.shipping_address ?? {}) as Record<string, unknown>;
+    shippingData.prepared_at = new Date().toISOString();
+
+    const { error: updateError } = await admin
+      .from('orders')
+      .update({ shipping_address: shippingData, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (updateError) return serverError(updateError.message);
+    return NextResponse.json({ success: true, message: 'Pedido marcado como preparado' });
+  }
 
   // --- Customer flow: only allow digital-only order self-delivery ---
   if (auth.user.role !== 'admin') {

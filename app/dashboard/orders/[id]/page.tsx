@@ -160,6 +160,30 @@ export default function OrderDetailPage() {
     }
   }
 
+  async function markPrepared() {
+    setUpdating(true);
+    setSaveMsg('');
+    try {
+      const res = await fetch(`/api/orders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prepared: true }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setSaveMsg(`Erro: ${err.error || 'Falha ao marcar como preparado'}`);
+      } else {
+        setSaveMsg('✅ Pedido marcado como preparado');
+        const reloadRes = await fetch(`/api/orders/${id}`);
+        if (reloadRes.ok) setOrder(await reloadRes.json());
+      }
+    } catch (error) {
+      setSaveMsg(`Erro: ${error instanceof Error ? error.message : 'Falha desconhecida'}`);
+    } finally {
+      setUpdating(false);
+    }
+  }
+
   async function updateStatus(status: OrderStatus) {
     if (status === 'shipped' && !trackingCode.trim()) {
       setSaveMsg('');
@@ -223,6 +247,8 @@ export default function OrderDetailPage() {
       </div>
     );
   }
+
+  const isPrepared = order && order.status === 'processing' && !!(order.shipping_address as Record<string, unknown> | null)?.prepared_at;
 
   if (!order) {
     return (
@@ -510,9 +536,16 @@ export default function OrderDetailPage() {
                     </button>
                   )}
                   {order.status === 'processing' && (
-                    <button type="button" disabled={updating} onClick={() => updateStatus('shipped')} className="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-purple-700 disabled:opacity-50">
-                      📦 Marcar como enviado
-                    </button>
+                    <>
+                      {!isPrepared && (
+                        <button type="button" disabled={updating} onClick={markPrepared} className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-green-700 disabled:opacity-50">
+                          ✓ Marcar como preparado
+                        </button>
+                      )}
+                      <button type="button" disabled={updating || !isPrepared} onClick={() => updateStatus('shipped')} className="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-purple-700 disabled:opacity-50">
+                        📦 Marcar como enviado
+                      </button>
+                    </>
                   )}
                   {order.status === 'shipped' && (
                     <button type="button" disabled={updating} onClick={() => updateStatus('delivered')} className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-green-700 disabled:opacity-50">

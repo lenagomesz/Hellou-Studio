@@ -10,6 +10,7 @@ import { ArrowUpRight, BarChart3, Box, ClipboardCheck, PackageCheck, Truck } fro
 import { getCurrentUser } from '@/lib/api';
 import { getStoreDateKey, getStoreMonthBounds } from '@/lib/store-time';
 import { REVENUE_ORDER_STATUSES, summarizeRevenueOrders } from '@/lib/order-analytics';
+import { OrderMiniRowWithPrepare } from '@/app/dashboard/OrderMiniRowWithPrepare';
 
 type OrderRow = Order & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
 type RequestRow = PrintRequest & { user?: Pick<User, 'id' | 'email' | 'name'> | null };
@@ -95,6 +96,16 @@ const getDashboardData = unstable_cache(
           count: v.count,
         }));
 
+        const processingOrders = (processingOrdersRes.data ?? []) as OrderRow[];
+        const toPrepareOrders = processingOrders.filter(o => {
+          const shipping = o.shipping_address as Record<string, unknown> | null;
+          return !shipping?.prepared_at;
+        });
+        const readyToShipOrders = processingOrders.filter(o => {
+          const shipping = o.shipping_address as Record<string, unknown> | null;
+          return !!shipping?.prepared_at;
+        });
+
         return {
           activeProducts: activeRes.count ?? 0,
           totalOrders,
@@ -111,7 +122,9 @@ const getDashboardData = unstable_cache(
           },
           chartData,
           paidOrders: (paidOrdersRes.data ?? []) as OrderRow[],
-          processingOrders: (processingOrdersRes.data ?? []) as OrderRow[],
+          toPrepareOrders,
+          readyToShipOrders,
+          processingOrders,
           shippedOrders: (shippedOrdersRes.data ?? []) as OrderRow[],
           pendingRequests: (printRequestsRes.data ?? []) as RequestRow[],
           recentUsers: (recentUsersRes.data ?? []) as Pick<User, 'id' | 'email' | 'name' | 'created_at'>[],
@@ -130,6 +143,8 @@ const getDashboardData = unstable_cache(
       growth: { revenue: 0, orders: 0, users: 0 },
       chartData: [] as { date: string; revenue: number; count: number }[],
       paidOrders: [] as OrderRow[],
+      toPrepareOrders: [] as OrderRow[],
+      readyToShipOrders: [] as OrderRow[],
       processingOrders: [] as OrderRow[],
       shippedOrders: [] as OrderRow[],
       pendingRequests: [] as RequestRow[],
@@ -174,8 +189,8 @@ export default async function DashboardHome() {
   const currentUser = await getCurrentUser();
   const isOwner = currentUser?.accessLevel !== 'partner';
 
-  const todoCount = data.paidOrders.length + data.pendingRequests.length;
-  const toShipCount = data.processingOrders.length;
+  const todoCount = data.paidOrders.length + data.toPrepareOrders.length + data.pendingRequests.length;
+  const toShipCount = data.readyToShipOrders.length;
 
   return (
     <div className="space-y-8">
@@ -279,12 +294,15 @@ export default async function DashboardHome() {
             </Link>
           </div>
           <div className="divide-y divide-gray-50 px-2 py-2 dark:divide-gray-800">
-            {data.paidOrders.length === 0 && data.pendingRequests.length === 0 ? (
+            {data.paidOrders.length === 0 && data.toPrepareOrders.length === 0 && data.pendingRequests.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-gray-400">Nenhuma ação pendente</p>
             ) : (
               <>
                 {data.paidOrders.map((order) => (
                   <OrderMiniRow key={order.id} order={order} />
+                ))}
+                {data.toPrepareOrders.map((order: OrderRow) => (
+                  <OrderMiniRowWithPrepare key={order.id} order={order} />
                 ))}
                 {data.pendingRequests.map((req) => (
                   <Link
@@ -324,10 +342,10 @@ export default async function DashboardHome() {
             </Link>
           </div>
           <div className="divide-y divide-gray-50 px-2 py-2 dark:divide-gray-800">
-            {data.processingOrders.length === 0 ? (
+            {data.readyToShipOrders.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-gray-400">Nada para enviar no momento</p>
             ) : (
-              data.processingOrders.map((order) => (
+              data.readyToShipOrders.map((order: OrderRow) => (
                 <OrderMiniRow key={order.id} order={order} />
               ))
             )}
