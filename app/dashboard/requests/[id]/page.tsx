@@ -412,7 +412,7 @@ export default function AdminRequestDetailPage() {
             </p>
           )}
 
-          {!isLocked && request.status !== 'pending' && request.quoted_price && (
+          {request.status !== 'pending' && request.quoted_price && (
             <button
               type="button"
               onClick={handleLinkOrder}
