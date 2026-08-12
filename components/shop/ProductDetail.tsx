@@ -180,6 +180,7 @@ export function ProductDetail({
               price_modifier: selectedOption.price_modifier,
               stock: selectedOption.stock,
               color: selectedOption.color,
+              image_url: selectedOption.image_url,
             }
           : null,
         quantity,

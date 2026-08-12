@@ -876,7 +876,7 @@ export default function CartPage() {
                       />
                       <div>
                         <span className="text-sm font-medium text-gray-900 dark:text-white">{opt.name}</span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{opt.days_min}-{opt.days_max} dias úteis</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{opt.delivery_label ?? (opt.days_min === opt.days_max ? `Até ${opt.days_max} dias úteis` : `${opt.days_min} a ${opt.days_max} dias úteis`)}</p>
                       </div>
                     </div>
                     <span className="text-sm font-bold text-gray-900 dark:text-white">{hasThresholdFreeShipping ? <span className="text-green-700 dark:text-green-400">Grátis</span> : formatPrice(opt.price)}</span>
@@ -935,9 +935,9 @@ export default function CartPage() {
                 <li key={item.id} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-950/30 dark:to-orange-950/30">
-                      {item.product.image_url ? (
+                      {item.option?.image_url || item.product.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+                        <img src={item.option?.image_url || item.product.image_url || ''} alt={item.option?.name || item.product.name} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-xs text-pink-200">◇</div>
                       )}
@@ -1052,9 +1052,9 @@ export default function CartPage() {
                     <li key={item.id} className="flex items-start justify-between gap-2 text-xs">
                       <div className="flex items-start gap-2 min-w-0 flex-1">
                         <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-950/30 dark:to-orange-950/30">
-                          {item.product.image_url ? (
+                          {item.option?.image_url || item.product.image_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+                            <img src={item.option?.image_url || item.product.image_url || ''} alt={item.option?.name || item.product.name} className="h-full w-full object-cover" />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center text-xs text-pink-200">◇</div>
                           )}
@@ -1089,7 +1089,7 @@ export default function CartPage() {
                   )}
                   {selectedShipping && (
                     <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                      {selectedShipping.id === 'pickup' ? 'Sem entrega pelos Correios' : `${selectedShipping.name} · ${selectedShipping.days_min}-${selectedShipping.days_max} dias úteis`}
+                      {selectedShipping.id === 'pickup' ? 'Sem entrega pelos Correios' : `${selectedShipping.name} · ${selectedShipping.delivery_label ?? (selectedShipping.days_min === selectedShipping.days_max ? `Até ${selectedShipping.days_max} dias úteis` : `${selectedShipping.days_min} a ${selectedShipping.days_max} dias úteis`)}`}
                     </p>
                   )}
                   {(couponDiscount?.free_shipping || hasThresholdFreeShipping) && (
@@ -1264,9 +1264,9 @@ function CartLine({
       <div className="flex gap-3 sm:gap-4">
         <Link href={`/products/${item.product.id}` as Route} className="flex-shrink-0">
           <div className="h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-xl bg-gradient-to-br from-pink-50 to-orange-50 ring-1 ring-gray-100 transition group-hover:ring-pink-100">
-            {item.product.image_url ? (
+            {item.option?.image_url || item.product.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+              <img src={item.option?.image_url || item.product.image_url || ''} alt={item.option?.name || item.product.name} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-2xl sm:text-3xl text-pink-200">◇</div>
             )}

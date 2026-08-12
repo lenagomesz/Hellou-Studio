@@ -37,7 +37,7 @@ export type PaymentPricingSummary = {
 
 interface PaymentFormProps {
   grandTotal: number;
-  shippingMethod?: 'pac' | 'sedex' | 'pickup';
+  shippingMethod?: string;
   shippingCep?: string;
   couponCode?: string;
   shippingAddress?: Record<string, unknown>;

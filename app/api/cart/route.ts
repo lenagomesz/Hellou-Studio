@@ -17,7 +17,7 @@ type RawCartRow = CartItem & {
     'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'active' | 'fulfillment_mode' | 'is_wholesale' | 'minimum_order_quantity'
   > | null;
   option:
-    | Pick<ProductOption, 'id' | 'product_id' | 'name' | 'price_modifier' | 'stock' | 'color'>
+    | Pick<ProductOption, 'id' | 'product_id' | 'name' | 'price_modifier' | 'stock' | 'color' | 'image_url'>
     | null;
 };
 
@@ -49,6 +49,7 @@ function toView(row: RawCartRow): CartItemView | null {
           price_modifier: row.option.price_modifier,
           stock: row.option.stock,
           color: row.option.color,
+          image_url: row.option.image_url,
         }
       : null,
   };
@@ -62,7 +63,7 @@ export async function GET() {
   const { data, error } = await admin
     .from('cart_items')
     .select(
-      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, sale_price, image_url, category, type, active, fulfillment_mode, is_wholesale, minimum_order_quantity), option:product_options(id, product_id, name, price_modifier, stock, color)',
+      'id, user_id, product_id, product_option_id, quantity, customization_text, created_at, product:products(id, name, base_price, sale_price, image_url, category, type, active, fulfillment_mode, is_wholesale, minimum_order_quantity), option:product_options(id, product_id, name, price_modifier, stock, color, image_url)',
     )
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: true });

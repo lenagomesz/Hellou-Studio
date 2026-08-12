@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     issuer_id?: string;
     cpf?: string;
     shipping_address?: Record<string, unknown>;
-    shipping_method?: 'pac' | 'sedex' | 'pickup';
+    shipping_method?: string;
     shipping_cep?: string;
     coupon_code?: string;
     wants_invoice?: boolean;
@@ -252,7 +252,7 @@ export async function POST(request: Request) {
 
   if (!hasFreeShipping) {
     const cep = sanitizeCep(shipping_cep ?? String(shipping_address?.cep ?? ''));
-    if (!cep || !shipping_method || !['pac', 'sedex'].includes(shipping_method)) {
+    if (!cep || !shipping_method || shipping_method === 'pickup' || shipping_method.length > 80) {
       return badRequest('Selecione uma opção de frete válida');
     }
     try {

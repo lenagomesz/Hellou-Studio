@@ -2,11 +2,13 @@ import { calcularPrecoPrazo } from 'correios-brasil';
 import { getStoreSettings } from '@/lib/store-settings';
 
 export interface ShippingOption {
-  id: 'pac' | 'sedex' | 'pickup';
+  id: string;
   name: string;
   price: number;
   days_min: number;
   days_max: number;
+  delivery_label?: string;
+  service_type?: 'pac' | 'sedex' | 'carrier' | 'pickup';
 }
 
 export interface ShippingResult {
@@ -73,14 +75,16 @@ function parsePositiveNumber(value: unknown): number | null {
 }
 
 export function parseMelhorEnvioQuotes(quotes: MelhorEnvioQuote[]): ShippingOption[] {
-  const options = new Map<'pac' | 'sedex', ShippingOption>();
+  const options = new Map<string, ShippingOption>();
 
   for (const quote of quotes) {
     if (quote.error) continue;
     const serviceName = String(quote.name ?? '').trim();
     const normalizedName = serviceName.toUpperCase();
-    const id = /\bSEDEX\b/.test(normalizedName) ? 'sedex' : /\bPAC\b/.test(normalizedName) ? 'pac' : null;
-    if (!id) continue;
+    const serviceType = /\bSEDEX\b/.test(normalizedName) ? 'sedex' : /\bPAC\b/.test(normalizedName) ? 'pac' : 'carrier';
+    const quoteId = Number(quote.id);
+    if (!Number.isInteger(quoteId) || quoteId <= 0 || !serviceName) continue;
+    const id = `melhor-envio-${quoteId}`;
 
     const price = parsePositiveNumber(quote.custom_price) ?? parsePositiveNumber(quote.price);
     const days = parsePositiveNumber(quote.custom_delivery_time) ?? parsePositiveNumber(quote.delivery_time);
@@ -93,10 +97,11 @@ export function parseMelhorEnvioQuotes(quotes: MelhorEnvioQuote[]): ShippingOpti
       price: Math.round(price * 100) / 100,
       days_min: Math.ceil(days),
       days_max: Math.ceil(days),
+      delivery_label: `Até ${Math.ceil(days)} dias úteis`,
+      service_type: serviceType,
     };
 
-    const current = options.get(id);
-    if (!current || option.price < current.price) options.set(id, option);
+    options.set(id, option);
   }
 
   return [...options.values()];
@@ -177,8 +182,8 @@ async function fetchCorreiosRates(originCep: string, destCep: string, shippingPa
       const price = parseCorreiosPrice(item.Valor);
       if (price <= 0) continue;
       const days = parseInt(item.PrazoEntrega, 10) || 0;
-      if (item.Codigo === '04510') options.push({ id: 'pac', name: 'PAC', price, days_min: days, days_max: days + 3 });
-      if (item.Codigo === '04014') options.push({ id: 'sedex', name: 'SEDEX', price, days_min: days, days_max: days + 1 });
+      if (item.Codigo === '04510') options.push({ id: 'pac', name: 'Correios PAC', price, days_min: days, days_max: days + 3, delivery_label: `${days} a ${days + 3} dias úteis`, service_type: 'pac' });
+      if (item.Codigo === '04014') options.push({ id: 'sedex', name: 'Correios SEDEX', price, days_min: days, days_max: days + 1, delivery_label: `${days} a ${days + 1} dias úteis`, service_type: 'sedex' });
     }
     return options.length > 0 ? options : null;
   } catch (error) {
@@ -212,9 +217,10 @@ export async function calculateShipping(rawCep: string, packageOverride?: Partia
     throw new Error('Não foi possível consultar o valor real do frete para este CEP. Tente novamente em instantes.');
   }
 
-  const options = quotedOptions.filter((option) => option.id === 'pac'
-    ? settings.shipping.pacEnabled
-    : settings.shipping.sedexEnabled);
+  const options = quotedOptions.filter((option) => {
+    if (option.service_type === 'sedex') return settings.shipping.sedexEnabled;
+    return settings.shipping.pacEnabled;
+  });
   if (options.length === 0) throw new Error('Nenhuma modalidade de frete está disponível para este CEP.');
 
   return {

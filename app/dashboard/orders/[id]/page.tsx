@@ -69,6 +69,7 @@ type OrderItem = {
   customization_text: string | null;
   product_snapshot: Record<string, unknown> | null;
   product: { id: string; name: string; image_url: string | null; type?: string; file_path?: string } | null;
+  option: { id: string; name: string; color: string | null; image_url: string | null } | null;
 };
 
 type OrderDetail = {
@@ -317,9 +318,9 @@ export default function OrderDetailPage() {
               {order.items.map((item) => (
                 <li key={item.id} className="flex items-center gap-4 px-5 py-3.5">
                   <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-pink-50 to-orange-50">
-                    {item.product?.image_url ? (
+                    {item.option?.image_url || item.product?.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+                      <img src={item.option?.image_url || item.product?.image_url || ''} alt={item.option?.name || item.product?.name || 'Produto'} className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-lg text-pink-300">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
@@ -333,8 +334,20 @@ export default function OrderDetailPage() {
                     <p className="text-xs text-gray-500">
                       {item.quantity}x &middot; {formatPrice(item.unit_price)} cada
                     </p>
+                    {(() => {
+                      const snapshot = item.product_snapshot ?? {};
+                      const optionName = item.option?.name || (typeof snapshot.option_name === 'string' ? snapshot.option_name : '');
+                      const optionColor = item.option?.color || (typeof snapshot.option_color === 'string' ? snapshot.option_color : '');
+                      if (!optionName && !optionColor) return null;
+                      return (
+                        <div className="mt-2 flex min-w-0 items-center gap-2 rounded-xl border border-violet-100 bg-violet-50 px-3 py-2 text-xs text-violet-800 dark:border-violet-900/50 dark:bg-violet-500/10 dark:text-violet-200">
+                          {optionColor && <span className="h-4 w-4 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: optionColor }} />}
+                          <span className="min-w-0 break-words"><span className="font-semibold">Variação escolhida:</span> {optionName || optionColor}</span>
+                        </div>
+                      );
+                    })()}
                     {item.customization_text && (
-                      <div className="mt-2 whitespace-pre-line rounded-xl border border-pink-100 bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:border-pink-900/50 dark:bg-pink-500/10 dark:text-pink-200">
+                      <div className="mt-2 min-w-0 whitespace-pre-wrap break-all rounded-xl border border-pink-100 bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:border-pink-900/50 dark:bg-pink-500/10 dark:text-pink-200">
                         <span className="font-semibold">Personalização solicitada:</span> {item.customization_text}
                       </div>
                     )}

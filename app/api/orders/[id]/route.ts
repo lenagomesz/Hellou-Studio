@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 
   const { data: order, error } = await admin
     .from('orders')
-    .select('*, user:users(id, email, name), items:order_items(*, product:products(id, name, image_url, type, file_path))')
+    .select('*, user:users(id, email, name), items:order_items(*, product:products(id, name, image_url, type, file_path), option:product_options(id, name, color, image_url))')
     .eq('id', id)
     .single();
 

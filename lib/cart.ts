@@ -11,10 +11,10 @@ export interface CartItemView {
     Product,
     'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'fulfillment_mode' | 'is_wholesale' | 'minimum_order_quantity'
   >;
-  option: Pick<
+  option: (Pick<
     ProductOption,
     'id' | 'name' | 'price_modifier' | 'stock' | 'color'
-  > | null;
+  > & { image_url?: string | null }) | null;
 }
 
 export interface AddItemInput {
