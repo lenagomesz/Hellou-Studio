@@ -37,10 +37,19 @@ export function ProductCard({ product, basePath = "/products", category }: { pro
       className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:shadow-gray-900/50"
     >
       <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700">
-        {product.is_wholesale && (
-          <span className="absolute left-2 top-2 z-10 rounded-full bg-orange-500 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm sm:left-3 sm:top-3 sm:text-[10px]">
-            Lojistas · mín. {Math.max(2, product.minimum_order_quantity ?? 2)} un.
-          </span>
+        {(product.is_wholesale || product.is_best_seller) && (
+          <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1 sm:left-3 sm:top-3">
+            {product.is_wholesale && (
+              <span className="rounded-full bg-orange-500 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm sm:text-[10px]">
+                Lojistas · mín. {Math.max(2, product.minimum_order_quantity ?? 2)} un.
+              </span>
+            )}
+            {product.is_best_seller && (
+              <span className="rounded-full bg-pink-600 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm sm:text-[10px]">
+                Mais vendido
+              </span>
+            )}
+          </div>
         )}
         {product.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element

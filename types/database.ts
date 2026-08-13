@@ -62,6 +62,7 @@ export interface Product {
   seo_description?: string | null;
   slug?: string | null;
   tags?: ProductTag[];
+  is_best_seller?: boolean;
   product_options?: Array<Pick<ProductOption, 'price_modifier'>>;
 }
 

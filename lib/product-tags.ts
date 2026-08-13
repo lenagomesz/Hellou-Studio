@@ -1,15 +1,27 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getBestSellerProductIds } from '@/lib/best-sellers';
 import type { ProductTag } from '@/types/database';
 
-export async function attachProductTags<T extends { id: string }>(products: T[]): Promise<Array<T & { tags: ProductTag[] }>> {
+export async function attachProductTags<T extends { id: string }>(products: T[]): Promise<Array<T & { tags: ProductTag[]; is_best_seller: boolean }>> {
   if (products.length === 0) return [];
   const admin = getSupabaseAdmin();
   const productIds = products.map((product) => product.id);
-  const { data: assignments, error: assignmentError } = await admin
-    .from('product_tag_assignments')
-    .select('product_id, tag_id')
-    .in('product_id', productIds);
-  if (assignmentError || !assignments?.length) return products.map((product) => ({ ...product, tags: [] }));
+  const [{ data: assignments, error: assignmentError }, bestSellerIds] = await Promise.all([
+    admin
+      .from('product_tag_assignments')
+      .select('product_id, tag_id')
+      .in('product_id', productIds),
+    getBestSellerProductIds().catch(() => [] as string[]),
+  ]);
+  const bestSellerIdSet = new Set(bestSellerIds);
+
+  if (assignmentError || !assignments?.length) {
+    return products.map((product) => ({
+      ...product,
+      tags: [],
+      is_best_seller: bestSellerIdSet.has(product.id),
+    }));
+  }
 
   const tagIds = Array.from(new Set(assignments.map((item) => item.tag_id)));
   const { data: tags, error: tagError } = await admin
@@ -17,7 +29,13 @@ export async function attachProductTags<T extends { id: string }>(products: T[])
     .select('*')
     .in('id', tagIds)
     .order('name', { ascending: true });
-  if (tagError) return products.map((product) => ({ ...product, tags: [] }));
+  if (tagError) {
+    return products.map((product) => ({
+      ...product,
+      tags: [],
+      is_best_seller: bestSellerIdSet.has(product.id),
+    }));
+  }
 
   const tagById = new Map((tags ?? []).map((tag) => [tag.id, tag as ProductTag]));
   const tagIdsByProduct = new Map<string, string[]>();
@@ -29,6 +47,7 @@ export async function attachProductTags<T extends { id: string }>(products: T[])
 
   return products.map((product) => ({
     ...product,
+    is_best_seller: bestSellerIdSet.has(product.id),
     tags: (tagIdsByProduct.get(product.id) ?? [])
       .map((id) => tagById.get(id))
       .filter((tag): tag is ProductTag => Boolean(tag)),
