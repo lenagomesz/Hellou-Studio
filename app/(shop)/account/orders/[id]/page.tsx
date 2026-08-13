@@ -11,6 +11,7 @@ import { ProductRecommendations } from '@/components/shop/ProductRecommendations
 import RatingPrompt from './RatingPrompt';
 import ProductReviewSuggestion from './ProductReviewSuggestion';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
+import { ShipmentTracking } from '@/components/orders/ShipmentTracking';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const statusOrder = getStatusOrder(isDigitalOnly);
   const displayStatus = order.status === 'paid' ? 'processing' : order.status;
   const currentStepIndex = statusOrder.indexOf(displayStatus);
+  const shipping = order.shipping_address as Record<string, unknown> | null;
+  const trackingCode = typeof shipping?.tracking_code === 'string' ? shipping.tracking_code : '';
 
   return (
     <div>
@@ -275,31 +278,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Tracking Code */}
-      {(() => {
-        const shipping = order.shipping_address as Record<string, unknown> | null;
-        const trackingCode = typeof shipping?.tracking_code === 'string' ? shipping.tracking_code : '';
-        if (!trackingCode || (order.status !== 'shipped' && order.status !== 'delivered')) return null;
-        return (
-          <div className="mt-6 rounded-2xl border border-purple-100 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/50 p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-purple-900 dark:text-purple-300 mb-2">Rastreamento</h2>
-            <p className="text-sm text-purple-800 dark:text-purple-300">
-              Código: <span className="font-mono font-semibold">{trackingCode}</span>
-            </p>
-            <a
-              href={`https://melhorrastreio.com.br/${trackingCode}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 transition"
-            >
-              Rastrear no Melhor Envio
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3 w-3">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-              </svg>
-            </a>
-          </div>
-        );
-      })()}
+      {(order.status === 'shipped' || order.status === 'delivered') && trackingCode && (
+        <div className="mt-6">
+          <ShipmentTracking orderId={order.id} trackingCode={trackingCode} />
+        </div>
+      )}
 
       {/* Confirm Delivery */}
       {order.status === 'shipped' && (

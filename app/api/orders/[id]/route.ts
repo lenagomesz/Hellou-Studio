@@ -44,8 +44,8 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     prepared?: boolean;
   };
 
-  if (!status && !prepared) {
-    return NextResponse.json({ error: 'Status or prepared flag is required' }, { status: 400 });
+  if (!status && tracking_code === undefined && admin_notes === undefined && !prepared) {
+    return badRequest('Informe o status ou os dados de envio que deseja atualizar');
   }
 
   const admin = getSupabaseAdmin();
@@ -80,6 +80,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
 
   // --- Customer flow: only allow digital-only order self-delivery ---
   if (auth.user.role !== 'admin') {
+    if (!status) return badRequest('Status é obrigatório');
     // Verify order ownership
     const { data: order, error: fetchError } = await admin
       .from('orders')

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import type { OrderStatus } from '@/types/database';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
+import { ShipmentTracking } from '@/components/orders/ShipmentTracking';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_payment: 'Aguardando Pagamento',
@@ -114,6 +115,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [trackingCode, setTrackingCode] = useState('');
+  const [savedTrackingCode, setSavedTrackingCode] = useState('');
   const [saveMsg, setSaveMsg] = useState('');
   const [shippingError, setShippingError] = useState('');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -127,7 +129,9 @@ export default function OrderDetailPage() {
       .then((data) => {
         setOrder(data);
         const shipping = data.shipping_address as Record<string, unknown> | null;
-        setTrackingCode((shipping?.tracking_code as string) ?? '');
+        const savedCode = (shipping?.tracking_code as string) ?? '';
+        setTrackingCode(savedCode);
+        setSavedTrackingCode(savedCode);
       })
       .catch(() => setOrder(null))
       .finally(() => setLoading(false));
@@ -204,6 +208,7 @@ export default function OrderDetailPage() {
     });
     if (res.ok && order) {
       setOrder({ ...order, status });
+      if (status === 'shipped') setSavedTrackingCode(trackingCode.trim());
       setSaveMsg('Status atualizado!');
     } else {
       try {
@@ -218,6 +223,11 @@ export default function OrderDetailPage() {
   }
 
   async function saveTracking() {
+    if (!trackingCode.trim()) {
+      setShippingError('Informe o código de rastreio');
+      return;
+    }
+    setShippingError('');
     setUpdating(true);
     setSaveMsg('');
     const res = await fetch(`/api/orders/${id}`, {
@@ -225,7 +235,13 @@ export default function OrderDetailPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tracking_code: trackingCode }),
     });
-    if (res.ok) setSaveMsg('Rastreio salvo!');
+    if (res.ok) {
+      setSavedTrackingCode(trackingCode.trim());
+      setSaveMsg('Rastreio salvo!');
+    } else {
+      const data = await res.json().catch(() => ({ error: 'Falha ao salvar o rastreio' })) as { error?: string };
+      setShippingError(data.error || 'Falha ao salvar o rastreio');
+    }
     setUpdating(false);
   }
 
@@ -432,6 +448,10 @@ export default function OrderDetailPage() {
               <span className="text-lg font-bold text-gray-900 dark:text-white">{formatPrice(order.total)}</span>
             </div>
           </div>
+
+          {savedTrackingCode && (
+            <ShipmentTracking orderId={order.id} trackingCode={savedTrackingCode} />
+          )}
 
           {/* Gerenciar pedido */}
           {canChangeOrderStatus ? <div className="rounded-[24px] border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
