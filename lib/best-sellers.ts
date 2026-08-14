@@ -32,26 +32,62 @@ export function findBestSellerProductIds(products: CategorizedProduct[], sales: 
 
 async function loadBestSellerProductIds(): Promise<string[]> {
   const admin = getSupabaseAdmin();
-  const { data: products, error: productsError } = await admin
-    .from('products')
-    .select('id, category')
-    .eq('active', true)
-    .neq('category', 'encomenda');
-
-  if (productsError || !products?.length) return [];
-
-  const sales: SaleItem[] = [];
   const pageSize = 1000;
+  const products: CategorizedProduct[] = [];
   for (let offset = 0; ; offset += pageSize) {
     const { data, error } = await admin
-      .from('order_items')
-      .select('product_id, quantity, order:orders!inner(status)')
-      .in('order.status', [...REVENUE_ORDER_STATUSES])
+      .from('products')
+      .select('id, category')
+      .eq('active', true)
+      .neq('category', 'encomenda')
+      .order('id', { ascending: true })
       .range(offset, offset + pageSize - 1);
-
-    if (error) return [];
-    sales.push(...(data ?? []).map((item) => ({ product_id: item.product_id, quantity: item.quantity })));
+    if (error) {
+      console.error('[best-sellers] Falha ao carregar produtos:', error.message);
+      return [];
+    }
+    products.push(...(data ?? []));
     if (!data || data.length < pageSize) break;
+  }
+  if (products.length === 0) return [];
+
+  const revenueOrderIds: string[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await admin
+      .from('orders')
+      .select('id')
+      .in('status', [...REVENUE_ORDER_STATUSES])
+      .order('id', { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (error) {
+      console.error('[best-sellers] Falha ao carregar pedidos confirmados:', error.message);
+      return [];
+    }
+    revenueOrderIds.push(...(data ?? []).map((order) => order.id));
+    if (!data || data.length < pageSize) break;
+  }
+  if (revenueOrderIds.length === 0) return [];
+
+  // Consulta os itens diretamente pelos pedidos confirmados. Isso evita depender
+  // de filtros em relações embutidas do PostgREST, que podem retornar uma lista vazia.
+  const sales: SaleItem[] = [];
+  const orderIdChunkSize = 200;
+  for (let chunkStart = 0; chunkStart < revenueOrderIds.length; chunkStart += orderIdChunkSize) {
+    const orderIds = revenueOrderIds.slice(chunkStart, chunkStart + orderIdChunkSize);
+    for (let offset = 0; ; offset += pageSize) {
+      const { data, error } = await admin
+        .from('order_items')
+        .select('product_id, quantity')
+        .in('order_id', orderIds)
+        .order('id', { ascending: true })
+        .range(offset, offset + pageSize - 1);
+      if (error) {
+        console.error('[best-sellers] Falha ao carregar itens vendidos:', error.message);
+        return [];
+      }
+      sales.push(...(data ?? []).map((item) => ({ product_id: item.product_id, quantity: item.quantity })));
+      if (!data || data.length < pageSize) break;
+    }
   }
 
   return findBestSellerProductIds(products, sales);
@@ -59,6 +95,6 @@ async function loadBestSellerProductIds(): Promise<string[]> {
 
 export const getBestSellerProductIds = unstable_cache(
   loadBestSellerProductIds,
-  ['best-selling-products-by-category'],
+  ['best-selling-products-by-category-v2'],
   { revalidate: 60 },
 );
