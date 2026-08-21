@@ -20,6 +20,7 @@
     "quality:deploy": "npm run lint && npm run test:run && npm run db:check && npm run typecheck && npm run build"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@react-email/components": "^1.0.12",
     "@sentry/nextjs": "^10.65.0",
     "@supabase/supabase-js": "^2.106.2",
