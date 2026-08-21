@@ -223,7 +223,7 @@ export default async function DashboardHome() {
             <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">{getTimeBasedSubtitle(todoCount)}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {isOwner && <Link href="/admin/ai-dashboard" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-amber-200 hover:bg-amber-50">
+            {isOwner && <Link href="/dashboard/ai-dashboard" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-amber-200 hover:bg-amber-50">
               <Zap className="h-4 w-4 text-amber-500" /> AI Dashboard
             </Link>}
             {isOwner && <Link href="/dashboard/analytics" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-pink-200 hover:bg-pink-50">

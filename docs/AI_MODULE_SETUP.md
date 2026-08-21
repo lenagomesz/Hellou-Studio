@@ -47,7 +47,7 @@ You should see one row with default brand voice settings.
 Once set up, access the AI Dashboard at:
 
 ```
-http://localhost:3000/admin/ai-dashboard
+http://localhost:3000/dashboard/ai-dashboard
 ```
 
 ### Features
