@@ -57,7 +57,7 @@ export function formatErrorResponse(error: unknown): string {
     if (error.message.includes('JSON')) {
       return 'A IA retornou uma resposta inválida. Tente novamente.';
     }
-    return error.message;
+    return 'Erro ao processar a solicitação. Tente novamente.';
   }
   return 'Erro desconhecido ao gerar conteúdo.';
 }
