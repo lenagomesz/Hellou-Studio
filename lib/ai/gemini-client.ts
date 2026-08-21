@@ -17,7 +17,7 @@ export class GeminiClient {
     responseSchema?: { type: string; properties: Record<string, unknown>; required: string[] },
   ): Promise<string> {
     try {
-      const config: Parameters<typeof this.model.generateContent>[0] = {
+      const config = {
         contents: [
           {
             role: 'user',
@@ -36,7 +36,7 @@ export class GeminiClient {
           : undefined,
       };
 
-      const result = await this.model.generateContent(config);
+      const result = await (this.model.generateContent as any)(config);
       const text = result.response.text();
       return text;
     } catch (error) {
