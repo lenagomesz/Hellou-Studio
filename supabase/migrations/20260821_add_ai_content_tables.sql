@@ -50,7 +50,7 @@ create table if not exists public.blog_posts (
 
 -- Create indexes for common queries
 create index if not exists idx_blog_posts_status on public.blog_posts(status);
-create index if not exists idx_blog_posts_slug on public.blog_posts(slug);
+-- idx_blog_posts_slug removed: the UNIQUE constraint on slug already creates an index
 create index if not exists idx_ai_generated_feature_type on public.ai_generated_content(feature_type);
 create index if not exists idx_ai_generated_product_id on public.ai_generated_content(product_id);
 
@@ -58,10 +58,9 @@ create index if not exists idx_ai_generated_product_id on public.ai_generated_co
 -- Insert default brand voice record
 -- ============================================================================
 insert into public.ai_brand_voice (tone, tone_description, interests, brand_rules)
-values (
+select
   'balanced',
   'Approachable but credible, friendly but professional, appeals to broad audience',
   array['geek', 'pop-culture', 'design', 'organization', 'gaming', 'anime'],
   'CRITICAL RULES: Never mention 3D printing, printer, filament, resina, bico, camadas, fatiador, or any manufacturing terms. Focus ONLY on: the final product beauty, lifestyle value, design innovation, practical utility, exclusivity, and art. Customers buy the finished piece, not the process.'
-)
-on conflict do nothing;
+where not exists (select 1 from public.ai_brand_voice where tone = 'balanced');
