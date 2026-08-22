@@ -1,17 +1,27 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 
-const client = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY!);
-
 export class GeminiClient {
-  private model = client.getGenerativeModel({
-    model: 'gemini-1.5-flash',
-    safetySettings: [
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { category: 'HARM_CATEGORY_UNSPECIFIED' as any, threshold: 'BLOCK_NONE' as any },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT' as any, threshold: 'BLOCK_NONE' as any },
-    ],
-  });
+  private modelInstance: ReturnType<GoogleGenerativeAI['getGenerativeModel']> | null = null;
+
+  private get model() {
+    if (!this.modelInstance) {
+      const apiKey = process.env.GOOGLE_GENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error('GOOGLE_GENAI_API_KEY não está configurada');
+      }
+      const client = new GoogleGenerativeAI(apiKey);
+      this.modelInstance = client.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        safetySettings: [
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { category: 'HARM_CATEGORY_UNSPECIFIED' as any, threshold: 'BLOCK_NONE' as any },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT' as any, threshold: 'BLOCK_NONE' as any },
+        ],
+      });
+    }
+    return this.modelInstance;
+  }
 
   async generateContent(
     userPrompt: string,

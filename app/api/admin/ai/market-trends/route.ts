@@ -59,21 +59,21 @@ export async function POST(request: Request) {
     ]);
 
     if (productsResult.error || !productsResult.data) {
-      return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
+      return NextResponse.json({ error: 'Falha ao buscar produtos' }, { status: 500 });
     }
 
     const products = productsResult.data;
     const productSummary = products
-      .map((p) => `- ${p.name} (${p.category}): ${p.description || 'no description'}`)
+      .map((p) => `- ${p.name} (${p.category}): ${p.description || 'sem descrição'}`)
       .join('\n');
 
     const systemPrompt = buildMarketTrendsSystemPrompt(brandVoice);
-    const userPrompt = `Our current catalog (${products.length} products):\n\n${productSummary}\n\nAnalyze current market trends in pop culture, interior design, and organization that align with our style. Suggest 3 exact new products we should manufacture.`;
+    const userPrompt = `Nosso catálogo atual (${products.length} produtos):\n\n${productSummary}\n\nAnalise tendências de mercado atuais em cultura pop, design de interiores e organização que se alinham com nosso estilo. Sugira 3 novos produtos exatos que devemos fabricar.`;
 
     const response = await geminiClient.generateContent(userPrompt, systemPrompt, MARKET_TRENDS_SCHEMA);
 
     if (!validateGeminiResponse(response, ['trends', 'products'])) {
-      return NextResponse.json({ error: 'Invalid response structure from AI' }, { status: 502 });
+      return NextResponse.json({ error: 'Estrutura de resposta inválida da IA' }, { status: 502 });
     }
 
     const result = JSON.parse(response);
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[market-trends] Error:', error);
+    console.error('[market-trends] Erro:', error);
     return NextResponse.json(
       { error: formatErrorResponse(error) },
       { status: 500 },

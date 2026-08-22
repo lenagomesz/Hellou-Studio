@@ -77,11 +77,11 @@ export function SocialMarketingSection() {
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center gap-2">
         <Share2 className="h-5 w-5 text-pink-500" />
-        <h2 className="text-lg font-semibold">Social Media Campaign</h2>
+        <h2 className="text-lg font-semibold">Campanha de Redes Sociais</h2>
       </div>
 
       <p className="mb-4 text-sm text-gray-600">
-        Generate viral-ready Reels/TikTok scripts with hook, script, and caption for any product.
+        Gere scripts viralais para Reels/TikTok com hook, script e legenda para qualquer produto.
       </p>
 
       <div className="mb-4 flex gap-2">
@@ -90,7 +90,7 @@ export function SocialMarketingSection() {
           onChange={(e) => setSelectedProduct(e.target.value)}
           className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
         >
-          <option value="">Select a product...</option>
+          <option value="">Selecione um produto...</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -105,12 +105,12 @@ export function SocialMarketingSection() {
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Generating...
+              Gerando...
             </>
           ) : (
             <>
               <Share2 className="h-4 w-4" />
-              Generate
+              Gerar
             </>
           )}
         </button>
@@ -125,16 +125,22 @@ export function SocialMarketingSection() {
 
       {campaign && (
         <div className="space-y-4">
-          {(['visual_hook', 'script', 'caption'] as const).map((field) => (
+          {(['visual_hook', 'script', 'caption'] as const).map((field) => {
+            const labels: Record<typeof field, string> = {
+              visual_hook: 'Visual - Hook',
+              script: 'Script do Vídeo',
+              caption: 'Legenda'
+            };
+            return (
             <div key={field}>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium capitalize">{field.replace(/_/g, ' ')}</label>
+                <label className="text-sm font-medium">{labels[field]}</label>
                 <button
                   onClick={() => copyToClipboard(campaign[field], field)}
                   className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
                 >
                   <Copy className="h-3 w-3" />
-                  {copiedField === field ? 'Copied!' : 'Copy'}
+                  {copiedField === field ? 'Copiado!' : 'Copiar'}
                 </button>
               </div>
               <textarea
@@ -144,7 +150,8 @@ export function SocialMarketingSection() {
                 rows={field === 'script' ? 6 : 3}
               />
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
     </div>

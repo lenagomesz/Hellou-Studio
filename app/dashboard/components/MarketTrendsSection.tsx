@@ -44,11 +44,11 @@ export function MarketTrendsSection() {
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-amber-500" />
-        <h2 className="text-lg font-semibold">Market Trends Analysis</h2>
+        <h2 className="text-lg font-semibold">Análise de Tendências</h2>
       </div>
 
       <p className="mb-4 text-sm text-gray-600">
-        Analyze current market trends and get AI-powered suggestions for new products to manufacture.
+        Analise tendências de mercado e receba sugestões de IA para novos produtos.
       </p>
 
       <button
@@ -59,12 +59,12 @@ export function MarketTrendsSection() {
         {loading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Analyzing...
+            Analisando...
           </>
         ) : (
           <>
             <Sparkles className="h-4 w-4" />
-            Analyze Trends
+            Analisar Tendências
           </>
         )}
       </button>
@@ -79,26 +79,26 @@ export function MarketTrendsSection() {
       {results && (
         <div className="space-y-6">
           <div>
-            <h3 className="mb-3 font-semibold">Current Market Trends</h3>
+            <h3 className="mb-3 font-semibold">Tendências de Mercado</h3>
             <div className="space-y-3">
               {results.trends.map((trend, idx) => (
                 <div key={idx} className="rounded-lg bg-amber-50 p-4">
                   <div className="font-medium text-amber-900">{trend.name}</div>
                   <p className="mt-1 text-sm text-amber-800">{trend.justification}</p>
-                  <p className="mt-2 text-xs text-amber-700">Target: {trend.audience}</p>
+                  <p className="mt-2 text-xs text-amber-700">Público: {trend.audience}</p>
                 </div>
               ))}
             </div>
           </div>
 
           <div>
-            <h3 className="mb-3 font-semibold">Suggested New Products</h3>
+            <h3 className="mb-3 font-semibold">Produtos Sugeridos</h3>
             <div className="space-y-3">
               {results.products.map((product, idx) => (
                 <div key={idx} className="rounded-lg border border-green-200 bg-green-50 p-4">
                   <div className="font-medium text-green-900">{product.name}</div>
                   <p className="mt-1 text-sm text-green-800">{product.description}</p>
-                  <p className="mt-2 text-xs font-medium text-green-700">Aligns with: {product.trend_alignment}</p>
+                  <p className="mt-2 text-xs font-medium text-green-700">Alinha com: {product.trend_alignment}</p>
                 </div>
               ))}
             </div>

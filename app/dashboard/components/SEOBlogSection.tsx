@@ -18,7 +18,7 @@ export function SEOBlogSection() {
 
   async function generateBlog() {
     if (!topic.trim()) {
-      setError('Enter a blog topic');
+      setError('Digite um tema para o blog');
       return;
     }
 
@@ -33,14 +33,14 @@ export function SEOBlogSection() {
 
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error || 'Failed to generate blog post');
+        setError(data.error || 'Falha ao gerar post');
         return;
       }
 
       setBlogPost(data.blogPost);
       setTopic('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setLoading(false);
     }
@@ -50,11 +50,11 @@ export function SEOBlogSection() {
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center gap-2">
         <PenTool className="h-5 w-5 text-blue-500" />
-        <h2 className="text-lg font-semibold">SEO Blog Posts</h2>
+        <h2 className="text-lg font-semibold">Blog SEO</h2>
       </div>
 
       <p className="mb-4 text-sm text-gray-600">
-        Generate SEO-optimized blog posts that naturally promote Hellou Studio products. Posts are auto-published to /blog.
+        Gere posts de blog otimizados para SEO que promovem produtos Hellou Studio. Posts são auto-publicados em /blog.
       </p>
 
       <div className="mb-4 flex gap-2">
@@ -63,7 +63,7 @@ export function SEOBlogSection() {
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && generateBlog()}
-          placeholder="Blog topic (e.g., 'ideias de decoração para quarto gamer')"
+          placeholder="Tema do blog (ex: 'ideias de decoração para quarto gamer')"
           className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400"
         />
         <button
@@ -74,12 +74,12 @@ export function SEOBlogSection() {
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Generating...
+              Gerando...
             </>
           ) : (
             <>
               <PenTool className="h-4 w-4" />
-              Generate
+              Gerar
             </>
           )}
         </button>
@@ -97,7 +97,7 @@ export function SEOBlogSection() {
           <div className="mb-2 flex items-start justify-between">
             <div>
               <h3 className="font-medium text-blue-900">{blogPost.title}</h3>
-              <p className="mt-1 text-xs text-blue-700">Published: {new Date(blogPost.publishedAt).toLocaleDateString()}</p>
+              <p className="mt-1 text-xs text-blue-700">Publicado: {new Date(blogPost.publishedAt).toLocaleDateString('pt-BR')}</p>
             </div>
             <a
               href={`/blog/${blogPost.slug}`}
@@ -105,11 +105,11 @@ export function SEOBlogSection() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
             >
-              View Post
+              Ver Post
               <ExternalLink className="h-3 w-3" />
             </a>
           </div>
-          <p className="text-xs text-blue-700">Edit or delete this post in the blog management panel.</p>
+          <p className="text-xs text-blue-700">Edite ou delete este post no painel de gerenciamento de blog.</p>
         </div>
       )}
     </div>
