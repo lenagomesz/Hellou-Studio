@@ -9,12 +9,12 @@ interface Message {
   content: string;
 }
 
-const QUICK_OPTIONS = [
-  'Dúvida sobre produto',
-  'Frete e entrega',
-  'Formas de pagamento',
-  'Falar com vendedor',
-];
+const QUICK_RESPONSES: Record<string, string> = {
+  'Dúvida sobre produto': 'Qual produto você gostaria de saber mais? Posso ajudar com especificações, cores disponíveis, ou características técnicas! 🎨',
+  'Frete e entrega': '📦 **Produtos Físicos:** Frete varia por CEP. Prazo = tempo de produção + envio dos Correios.\n\n**Arquivos Digitais:** Envio por email, sem frete!\n\nQuer simular frete? Entre em contato pelo WhatsApp (47) 98845-0461! 🚚',
+  'Formas de pagamento': '💳 Aceitamos:\n• Pix (à vista)\n• Crédito (à vista ou parcelado)\n• Débito\n• Boleto\n\nTodas as formas seguras e com proteção ao comprador!',
+  'Falar com vendedor': '📲 Quer falar com nosso time?\n\n**WhatsApp:** (47) 98845-0461\n**Instagram:** @helloustudio_\n\nEstamos prontos para te atender! 😊',
+};
 
 export function AIHelpWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +24,7 @@ export function AIHelpWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   function getWhatsAppLink(text: string): string {
-    const storePhone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5511999999999';
+    const storePhone = '5547988450461';
     const encodedText = encodeURIComponent(text);
     return `https://wa.me/${storePhone}?text=${encodedText}`;
   }
@@ -32,6 +32,17 @@ export function AIHelpWidget() {
   function sendToWhatsApp(text: string) {
     const link = getWhatsAppLink(text);
     window.open(link, '_blank');
+  }
+
+  function sendQuickReply(option: string) {
+    const autoReply = QUICK_RESPONSES[option];
+    if (autoReply) {
+      setMessages([{ role: 'assistant', content: autoReply }]);
+    }
+  }
+
+  function isQuickOption(text: string): boolean {
+    return text in QUICK_RESPONSES;
   }
 
   const scrollToBottom = () => {
@@ -48,6 +59,13 @@ export function AIHelpWidget() {
     const newMessages: Message[] = [...messages, { role: 'user', content: text }];
     setMessages(newMessages);
     setInput('');
+
+    if (isQuickOption(text)) {
+      const autoReply = QUICK_RESPONSES[text];
+      setMessages([...newMessages, { role: 'assistant', content: autoReply }]);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -70,7 +88,7 @@ export function AIHelpWidget() {
         ...newMessages,
         {
           role: 'assistant',
-          content: `Desculpe, ocorreu um erro. Tente conversar via WhatsApp.`,
+          content: `Desculpe, ocorreu um erro. Tente conversar via WhatsApp (47) 98845-0461.`,
         },
       ]);
     } finally {
@@ -124,7 +142,7 @@ export function AIHelpWidget() {
                   <p className="text-xs text-gray-600 font-medium">Olá! Como posso ajudar?</p>
                 </div>
                 <div className="flex flex-col gap-2 w-full">
-                  {QUICK_OPTIONS.map((option) => (
+                  {Object.keys(QUICK_RESPONSES).map((option: string) => (
                     <button
                       key={option}
                       onClick={() => sendMessage(option)}
@@ -140,12 +158,12 @@ export function AIHelpWidget() {
                 {messages.map((msg, idx) => (
                   <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
                     {msg.role === 'assistant' && (
-                      <div className="relative h-6 w-6 flex-shrink-0 mt-1">
+                      <div className="relative h-8 w-8 flex-shrink-0 mt-1">
                         <Image
                           src="/images/avatars/axolotl-02.png"
                           alt="Hellou"
                           fill
-                          className="object-contain rounded-full"
+                          className="object-cover rounded-full"
                         />
                       </div>
                     )}
@@ -156,7 +174,11 @@ export function AIHelpWidget() {
                           : 'bg-white text-gray-900 border border-pink-100'
                       }`}
                     >
-                      {msg.content}
+                      <div className="whitespace-pre-wrap break-words">
+                        {msg.content.split('\n').map((line, i) => (
+                          <div key={i}>{line}</div>
+                        ))}
+                      </div>
                       {msg.role === 'assistant' && (
                         <button
                           onClick={() => sendToWhatsApp(msg.content)}
