@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Loader2 } from 'lucide-react';
+import { X, Send, Loader2, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
 
 interface Message {
@@ -9,12 +9,30 @@ interface Message {
   content: string;
 }
 
+const QUICK_OPTIONS = [
+  'Dúvida sobre produto',
+  'Frete e entrega',
+  'Formas de pagamento',
+  'Falar com vendedor',
+];
+
 export function AIHelpWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  function getWhatsAppLink(text: string): string {
+    const storePhone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5511999999999';
+    const encodedText = encodeURIComponent(text);
+    return `https://wa.me/${storePhone}?text=${encodedText}`;
+  }
+
+  function sendToWhatsApp(text: string) {
+    const link = getWhatsAppLink(text);
+    window.open(link, '_blank');
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -93,7 +111,7 @@ export function AIHelpWidget() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gradient-to-b from-orange-50 to-pink-50">
             {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-center">
+              <div className="flex flex-col items-center justify-center h-full text-center gap-4">
                 <div>
                   <div className="relative h-12 w-12 mx-auto mb-2">
                     <Image
@@ -105,11 +123,32 @@ export function AIHelpWidget() {
                   </div>
                   <p className="text-xs text-gray-600 font-medium">Olá! Como posso ajudar?</p>
                 </div>
+                <div className="flex flex-col gap-2 w-full">
+                  {QUICK_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => sendMessage(option)}
+                      className="px-3 py-2 bg-white border border-pink-200 rounded-lg text-xs text-gray-700 hover:bg-pink-50 hover:border-pink-400 transition-all text-left"
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : (
               <>
                 {messages.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
+                    {msg.role === 'assistant' && (
+                      <div className="relative h-6 w-6 flex-shrink-0 mt-1">
+                        <Image
+                          src="/images/avatars/axolotl-02.png"
+                          alt="Hellou"
+                          fill
+                          className="object-contain rounded-full"
+                        />
+                      </div>
+                    )}
                     <div
                       className={`max-w-xs rounded-lg px-3 py-2 text-sm ${
                         msg.role === 'user'
@@ -118,6 +157,14 @@ export function AIHelpWidget() {
                       }`}
                     >
                       {msg.content}
+                      {msg.role === 'assistant' && (
+                        <button
+                          onClick={() => sendToWhatsApp(msg.content)}
+                          className="block mt-2 text-xs text-pink-600 hover:text-pink-700 font-medium"
+                        >
+                          Enviar pro WhatsApp →
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -134,27 +181,38 @@ export function AIHelpWidget() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-pink-200 bg-white px-3 py-3 flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage(input)}
-              placeholder="Sua pergunta..."
-              className="flex-1 rounded-lg border border-pink-300 px-3 py-2 text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 focus:outline-none"
-              disabled={loading}
-            />
-            <button
-              onClick={() => sendMessage(input)}
-              disabled={loading || !input.trim()}
-              className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-500 px-3 py-2 text-white hover:shadow-lg disabled:opacity-50 transition-all"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </button>
+          <div className="border-t border-pink-200 bg-white px-3 py-3 space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && sendMessage(input)}
+                placeholder="Sua pergunta..."
+                className="flex-1 rounded-lg border border-pink-300 px-3 py-2 text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 focus:outline-none"
+                disabled={loading}
+              />
+              <button
+                onClick={() => sendMessage(input)}
+                disabled={loading || !input.trim()}
+                className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-500 px-3 py-2 text-white hover:shadow-lg disabled:opacity-50 transition-all"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            {input.trim() && (
+              <button
+                onClick={() => sendToWhatsApp(input)}
+                className="w-full text-xs text-pink-600 hover:text-pink-700 font-medium py-1 flex items-center justify-center gap-1"
+              >
+                <MessageCircle className="h-3 w-3" />
+                Enviar direto pro WhatsApp
+              </button>
+            )}
           </div>
         </div>
       )}
