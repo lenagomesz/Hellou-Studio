@@ -14,13 +14,19 @@ interface MLProduct {
   available_quantity: number;
   description: string;
   pictures: Array<{ url: string }>;
-  listing_type_id: string;
+  listing_type_id: 'gold_special' | 'bronze' | 'silver' | 'gold' | 'platinum';
   condition: string;
   attributes?: Array<{
     id: string;
     value_id?: string;
     value_name?: string;
   }>;
+}
+
+interface MLResponse {
+  id: string;
+  permalink: string;
+  error?: string;
 }
 
 const CATEGORY_MAPPING: Record<string, string> = {
@@ -52,7 +58,7 @@ async function uploadToMercadoLivre(
     pictures: product.image_url
       ? [{ url: product.image_url }]
       : [],
-    listing_type_id: 'gold_special' as any,
+    listing_type_id: 'gold_special',
     condition: 'new',
   };
 
@@ -66,7 +72,7 @@ async function uploadToMercadoLivre(
       body: JSON.stringify(mlProduct),
     });
 
-    const data = await response.json() as any;
+    const data = await response.json() as MLResponse;
 
     if (!response.ok) {
       console.error('[ML Sync] Error uploading product:', data);

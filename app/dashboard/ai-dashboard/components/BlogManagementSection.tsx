@@ -7,7 +7,6 @@ import {
   FileText,
   Loader2,
   Plus,
-  ThumbsDown,
   ThumbsUp,
   Trash2,
 } from 'lucide-react';

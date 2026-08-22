@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Loader2, MessageCircle, ShoppingBag, Star, ArrowRight } from 'lucide-react';
+import { X, Send, Loader2, MessageCircle, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 

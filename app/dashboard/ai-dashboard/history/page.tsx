@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { AlertCircle, ChevronLeft, Trash2, Edit2, Loader2 } from 'lucide-react';
 
 interface HistoryEntry {
@@ -34,7 +34,7 @@ export default function HistoryPage() {
   const [editContent, setEditContent] = useState<string>('');
   const [totalTokens, setTotalTokens] = useState(0);
 
-  async function fetchHistory() {
+  const fetchHistory = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -57,11 +57,11 @@ export default function HistoryPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [pagination.page, pagination.limit, type]);
 
   useEffect(() => {
     fetchHistory();
-  }, [pagination.page, type]);
+  }, [fetchHistory]);
 
   async function deleteEntry(id: string) {
     if (!confirm('Tem certeza?')) return;

@@ -40,7 +40,7 @@ const MARKET_TRENDS_SCHEMA = {
   required: ['trends', 'products'],
 };
 
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   const auth = await requirePermission('settings.manage');
   if (auth.response) return auth.response;
 

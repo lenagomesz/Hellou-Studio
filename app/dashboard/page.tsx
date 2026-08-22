@@ -6,7 +6,7 @@ import type { Order, PrintRequest, User, AdminNotification } from '@/types/datab
 import { DashboardCharts } from '@/components/admin/charts/DashboardCharts';
 import { UrgentAlerts } from '@/components/admin/UrgentAlerts';
 import { AdvancedAnalyticsDashboard } from '@/components/admin/analytics/AdvancedAnalyticsDashboard';
-import { ArrowUpRight, BarChart3, Box, ClipboardCheck, FileText, PackageCheck, ShoppingBag, Truck, Zap } from 'lucide-react';
+import { ArrowUpRight, BarChart3, Box, ClipboardCheck, PackageCheck, ShoppingBag, Truck, Zap } from 'lucide-react';
 import { getCurrentUser } from '@/lib/api';
 import { getStoreDateKey, getStoreMonthBounds } from '@/lib/store-time';
 import { REVENUE_ORDER_STATUSES, summarizeRevenueOrders } from '@/lib/order-analytics';
