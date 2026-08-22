@@ -1,44 +1,64 @@
-# Task 6 Report: PATCH endpoint for order status updates
+# Task 6 Report: Blog Approval API
 
-## Status: DONE (security fixes applied)
+## Status: DONE
 
 ## What was done
 
-Modified `app/api/orders/[id]/route.ts` to support customer-facing PATCH requests alongside the existing admin flow:
+Created PATCH endpoint at `app/api/admin/ai/blog-approval/route.ts` that allows admins to approve (publish) or reject (delete) draft blog posts.
 
-1. Changed auth from `requireAdmin()` to `requireUser()` so both admins and customers can access the endpoint
-2. Added role-based routing: customers hit the new digital-only flow; admins hit the original unchanged logic
-3. Customer flow:
-   - Verifies order ownership via `user_id` match
-   - Fetches order with items and product types to determine if digital-only
-   - If already delivered, returns `{ received: true, status }` (idempotent)
-   - Updates status in database
-   - Sends STL delivery email when transitioning digital-only orders to 'delivered'
-   - Returns `{ success: true, status, message: 'Status atualizado' }`
-4. Error handling: 401 if not authenticated, 400 if no status provided, 404 if order not found or not owned by user
-5. Email errors are caught and logged without failing the request
+### Endpoint Details
 
-## Security Fixes Applied (review round)
+- **Route**: `PATCH /api/admin/ai/blog-approval`
+- **Permission**: `settings.manage` (admin only)
+- **Runtime**: nodejs
 
-Issues found and fixed:
+### Request Body
 
-1. **Customer could set ANY status** - Now restricted to `status: 'delivered'` only
-2. **Non-digital orders could be updated** - Now validates `isDigitalOnly` BEFORE allowing update; returns 400 if not digital-only
-3. **Idempotent response mismatch** - Changed from `{ received: true, status }` to `{ success: true, status, message }` for consistency
-4. **Missing status+type validation gate** - Added combined check: `if (!isDigitalOnly || status !== 'delivered')` returns 400 error with descriptive message
+```json
+{
+  "postId": "uuid-do-post",
+  "action": "approve" | "reject",
+  "updates": {
+    "title": "Titulo editado (opcional)",
+    "excerpt": "Resumo editado (opcional)",
+    "content": "Conteudo editado (opcional)",
+    "seo_keywords": ["palavras", "chave", "opcionais"]
+  }
+}
+```
 
-The fix ensures the validation gate (`!isDigitalOnly || status !== 'delivered'`) runs before ANY update logic, so customers cannot bypass restrictions.
+### Behavior
 
-## Files modified
+- **approve**: Atualiza status para `published`, define `published_at` automaticamente (via `updateBlogPost`). Aceita edicoes opcionais antes de publicar.
+- **reject**: Exclui o post permanentemente (via `deleteBlogPost`).
 
-- `app/api/orders/[id]/route.ts` - Added customer PATCH flow, imported `requireUser` and `sendSTLDeliveryEmail`
+### Validation
+
+- `postId` obrigatorio
+- `action` obrigatorio e deve ser `approve` ou `reject`
+- Body deve ser JSON valido
+- Todas as mensagens de erro em portugues (pt-BR)
+
+## Files created
+
+- `app/api/admin/ai/blog-approval/route.ts` - Endpoint PATCH
+- `app/api/admin/ai/blog-approval/__tests__/route.test.ts` - 13 testes de integracao
 
 ## Testing
 
-- TypeScript type check: PASS (no errors in modified file)
-- Next.js build: PASS (full production build succeeds)
-- Existing GET handler: unchanged, still admin-only
+- **Vitest**: 13 testes passando (autorizacao, validacao, approve, reject)
+- **TypeScript**: PASS (sem erros no arquivo)
+- **Next.js build**: PASS (rota compilada com sucesso)
 
-## Commits
+## Test Coverage
 
-7f867e4..f281c4e
+| Categoria | Testes |
+|-----------|--------|
+| Autorizacao | 3 (permissao, 403 sem permissao, 401 sem autenticacao) |
+| Validacao | 4 (postId ausente, action ausente, action invalida, JSON invalido) |
+| Approve | 4 (publicar, edicoes opcionais, seo_keywords, erro 500) |
+| Reject | 2 (excluir, erro 500) |
+
+## Base Commit
+
+7077c0f
