@@ -30,7 +30,9 @@ const mockSupabaseLimit = vi.fn();
 const mockSupabaseFrom = vi.fn();
 
 vi.mock('@/lib/supabase', () => ({
-  getSupabaseAdmin: () => ({ from: mockSupabaseFrom }),
+  getSupabaseAdmin: () => ({
+    from: mockSupabaseFrom,
+  }),
 }));
 
 // ---------------------------------------------------------------------------
@@ -73,6 +75,31 @@ describe('blog-generator', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetBrandVoice.mockResolvedValue(mockBrandVoice);
+
+    // Mock Supabase chain for product fetching
+    const mockChain = {
+      select: mockSupabaseSelect,
+      eq: mockSupabaseEq,
+      limit: mockSupabaseLimit,
+    };
+
+    mockSupabaseSelect.mockReturnValue({
+      eq: mockSupabaseEq,
+    });
+
+    mockSupabaseEq.mockReturnValue({
+      limit: mockSupabaseLimit,
+    });
+
+    mockSupabaseLimit.mockResolvedValue({
+      data: [
+        { id: 'prod-1', name: 'Produto 1', description: 'Desc 1', category: 'Cat 1' },
+        { id: 'prod-2', name: 'Produto 2', description: 'Desc 2', category: 'Cat 2' },
+      ],
+      error: null,
+    });
+
+    mockSupabaseFrom.mockReturnValue(mockChain);
   });
 
   // -------------------------------------------------------------------------
@@ -81,23 +108,29 @@ describe('blog-generator', () => {
 
   describe('generateBlogPost', () => {
     it('retorna um GeneratedBlogPost valido quando Gemini responde corretamente', async () => {
-      mockGenerateContent.mockResolvedValue(validGeminiResponse);
+      mockGenerateContent.mockResolvedValue({
+        text: validGeminiResponse,
+        tokensUsed: 1000,
+      });
 
-      const result = await generateBlogPost();
+      const { generated } = await generateBlogPost();
 
-      expect(result).toHaveProperty('title');
-      expect(result).toHaveProperty('excerpt');
-      expect(result).toHaveProperty('meta_description');
-      expect(result).toHaveProperty('content');
-      expect(result).toHaveProperty('seo_keywords');
-      expect(result).toHaveProperty('theme');
-      expect(result.theme).toBe('decoracao_gamer');
-      expect(Array.isArray(result.seo_keywords)).toBe(true);
-      expect(result.seo_keywords.length).toBeGreaterThan(0);
+      expect(generated).toHaveProperty('title');
+      expect(generated).toHaveProperty('excerpt');
+      expect(generated).toHaveProperty('meta_description');
+      expect(generated).toHaveProperty('content');
+      expect(generated).toHaveProperty('seo_keywords');
+      expect(generated).toHaveProperty('theme');
+      expect(generated.theme).toBe('decoracao_gamer');
+      expect(Array.isArray(generated.seo_keywords)).toBe(true);
+      expect(generated.seo_keywords.length).toBeGreaterThan(0);
     });
 
     it('chama getBrandVoice para obter a voz da marca', async () => {
-      mockGenerateContent.mockResolvedValue(validGeminiResponse);
+      mockGenerateContent.mockResolvedValue({
+        text: validGeminiResponse,
+        tokensUsed: 1000,
+      });
 
       await generateBlogPost();
 
@@ -105,7 +138,10 @@ describe('blog-generator', () => {
     });
 
     it('chama geminiClient.generateContent com prompts e schema', async () => {
-      mockGenerateContent.mockResolvedValue(validGeminiResponse);
+      mockGenerateContent.mockResolvedValue({
+        text: validGeminiResponse,
+        tokensUsed: 1000,
+      });
 
       await generateBlogPost();
 
@@ -127,14 +163,17 @@ describe('blog-generator', () => {
         seo_keywords: ['gamer', 'setup'],
         theme: 'decoracao_gamer',
       });
-      mockGenerateContent.mockResolvedValue(responseWithBannedTerms);
+      mockGenerateContent.mockResolvedValue({
+        text: responseWithBannedTerms,
+        tokensUsed: 1000,
+      });
 
-      const result = await generateBlogPost();
+      const { generated } = await generateBlogPost();
 
-      expect(result.title).not.toContain('impressora');
-      expect(result.excerpt).not.toContain('filament');
-      expect(result.meta_description).not.toContain('resina');
-      expect(result.content).not.toContain('3d print');
+      expect(generated.title).not.toContain('impressora');
+      expect(generated.excerpt).not.toContain('filament');
+      expect(generated.meta_description).not.toContain('resina');
+      expect(generated.content).not.toContain('3d print');
     });
 
     it('lanca erro quando resposta do Gemini nao tem campos obrigatorios', async () => {
@@ -142,7 +181,10 @@ describe('blog-generator', () => {
         title: 'Titulo',
         content: 'Conteudo',
       });
-      mockGenerateContent.mockResolvedValue(incompleteResponse);
+      mockGenerateContent.mockResolvedValue({
+        text: incompleteResponse,
+        tokensUsed: 1000,
+      });
 
       await expect(generateBlogPost()).rejects.toThrow(
         'Resposta da IA com estrutura inválida',
@@ -150,7 +192,10 @@ describe('blog-generator', () => {
     });
 
     it('lanca erro quando Gemini retorna JSON invalido', async () => {
-      mockGenerateContent.mockResolvedValue('not valid json at all');
+      mockGenerateContent.mockResolvedValue({
+        text: 'not valid json at all',
+        tokensUsed: 1000,
+      });
 
       await expect(generateBlogPost()).rejects.toThrow();
     });
@@ -164,11 +209,14 @@ describe('blog-generator', () => {
         seo_keywords: ['teste'],
         theme: 'sustentabilidade_design',
       });
-      mockGenerateContent.mockResolvedValue(responseWithWrongTheme);
+      mockGenerateContent.mockResolvedValue({
+        text: responseWithWrongTheme,
+        tokensUsed: 1000,
+      });
 
-      const result = await generateBlogPost();
+      const { generated } = await generateBlogPost();
 
-      expect(result.theme).toBe('decoracao_gamer');
+      expect(generated.theme).toBe('decoracao_gamer');
     });
   });
 
