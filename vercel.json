@@ -4,6 +4,7 @@
     { "path": "/api/cron/cancel-expired-pix", "schedule": "0 8 * * *" },
     { "path": "/api/cron/cleanup-encomendas", "schedule": "0 3 * * 0" },
     { "path": "/api/cron/admin-reminders", "schedule": "0 9 * * *" },
-    { "path": "/api/cron/recover-abandoned-carts", "schedule": "0 15 * * *" }
+    { "path": "/api/cron/recover-abandoned-carts", "schedule": "0 15 * * *" },
+    { "path": "/api/admin/ai/blog-schedule", "schedule": "0 9 * * 1,4" }
   ]
 }
