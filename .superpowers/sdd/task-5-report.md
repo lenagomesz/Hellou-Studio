@@ -1,34 +1,52 @@
-# Task 5 Report: DownloadButton with Order Status Update
+# Task 5: Blog Generation API - Report
 
-## Status: DONE
+## Status: COMPLETE
 
-## Changes Made
+## Files Created
 
-### Modified Files:
-1. `app/(shop)/account/orders/[id]/DownloadButton.tsx` - Complete rewrite to new interface
-2. `app/(shop)/account/orders/[id]/page.tsx` - Updated prop passing to match new interface
+- `lib/ai/blog-generator.ts` - Blog generation logic (Gemini integration)
+- `app/api/admin/ai/blog-generation/route.ts` - POST endpoint for generating blog posts
+- `lib/ai/blog-generator.test.ts` - Unit tests (11 tests, all passing)
 
-### Implementation Details:
-- Replaced old per-item props (orderId, productId, productName, orderStatus) with new interface: `order: Order` and `isDigitalOnly: boolean`
-- Added automatic PATCH to `/api/orders/{id}` with `{ status: 'delivered' }` when:
-  - The order is digital-only (`isDigitalOnly === true`)
-  - The order status is `'approved'`
-- Loading state shown with "Processando..." text and disabled button
-- Errors caught and displayed via `error` state (logged to console)
-- Download proceeds via dynamically created anchor element pointing to `/api/orders/{id}/download`
-- Styled with pink-to-orange gradient, rounded-full, shadow, and hover scale effect
+## Implementation Details
 
-### Parent Page Update:
-- Changed from per-item download button props to order-level props
-- `isDigitalOnly` computed in the server component and passed down
+### `lib/ai/blog-generator.ts`
 
-## Commits
-7f867e4..66d6ce5
+Exports:
+- `GeneratedBlogPost` interface: title, excerpt, meta_description, content, seo_keywords, theme
+- `generateBlogPost()`: Calls Gemini with random theme, validates response schema, sanitizes manufacturing terms
+- `getRandomProductId()`: Fetches random active product ID from Supabase (returns null if none)
 
-## Build Verification
-- `npx next build` passes successfully
-- No new TypeScript errors introduced (pre-existing test error in unrelated file)
+### `app/api/admin/ai/blog-generation/route.ts`
 
-## Notes
-- The PATCH endpoint (`/api/orders/[id]/route.ts`) currently requires admin auth (`requireAdmin()`). Task 6 will need to add a customer-facing PATCH endpoint or modify the existing one to allow customers to update their own digital-only orders to 'delivered' status.
-- Until Task 6 implements the customer-accessible endpoint, the PATCH call will return 401/403 for non-admin users. The component handles this gracefully by catching the error and displaying a message.
+- POST-only endpoint
+- Permission: `settings.manage` (admin only)
+- Returns 503 if `GOOGLE_GENAI_API_KEY` not set
+- Generates unique slug: `slugify(title) + '-' + Date.now().toString(36)`
+- Creates post as 'draft' status (admin approves later)
+- Sets `generated_by` as authenticated user ID
+- Sets `featured_product_id` to random active product (or null)
+- Returns: `{ success, post, generatedAt }`
+- Error handling with `formatErrorResponse` (Portuguese messages)
+- `maxDuration: 90`, `runtime: 'nodejs'`
+
+## Verification
+
+- TypeScript: `tsc --noEmit` passes with zero errors
+- Build: `npm run build` completes successfully
+- Tests: `vitest run lib/ai/blog-generator.test.ts` - 11/11 passing
+
+## Test Coverage
+
+- `generateBlogPost` returns valid GeneratedBlogPost structure
+- Brand voice is fetched and used in prompts
+- Gemini client receives correct prompts and schema
+- Manufacturing terms are sanitized from output
+- Invalid/incomplete Gemini responses throw descriptive errors
+- Theme is forced to correct value regardless of model output
+- `getRandomProductId` returns valid ID when products exist
+- `getRandomProductId` handles: empty list, Supabase errors, null data
+
+## Base Commit
+
+d79c829
