@@ -154,7 +154,7 @@ Seja conservador nas recomendações. Use URLs fictícias mas realistas para exe
       calculo_custo: calculation,
       margem_atual: calculateMarketMargin(currentPrice, productionCost, feePercent),
       resumo_mercado: summary,
-      comparaveis,
+      comparaveis: comparables,
       confianca: analysis.confianca || 'media',
       recomendacao: analysis.recomendacao || {
         minimo: currentPrice * 0.9,

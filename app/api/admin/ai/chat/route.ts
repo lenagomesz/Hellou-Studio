@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { geminiClient } from '@/lib/ai/gemini-client';
 import { getBrandVoice } from '@/lib/ai/brand-voice';
 import { getStoreSettings } from '@/lib/store-settings';
-import { FORBIDDEN_TERMS } from '@/lib/ai/utils';
+import { FORBIDDEN_TERMS } from '@/lib/ai/prompts';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -74,7 +74,7 @@ Regras Comerciais:
 - Contato: WhatsApp ${storeSettings.contact?.whatsapp || ''}, Instagram ${storeSettings.contact?.instagram || ''}
 
 IMPORTANTE:
-${FORBIDDEN_TERMS.map(term => `- NUNCA mencione: ${term}`).join('\n')}
+${FORBIDDEN_TERMS.map((term: string) => `- NUNCA mencione: ${term}`).join('\n')}
 
 Seja um consultor amigável e prestativo. Responda em português. Foque em ajudar o negócio a crescer.`;
 

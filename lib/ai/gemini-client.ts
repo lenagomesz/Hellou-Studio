@@ -24,35 +24,61 @@ export class GeminiClient {
   async generateContent(
     userPrompt: string,
     systemPrompt: string,
-    responseSchema?: { type: string; properties: Record<string, unknown>; required: string[] },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    responseSchema?: { type: string; properties: Record<string, unknown>; required: string[] } | { mimeType: string; data: string },
     conversationHistory?: Array<{ role: string; parts: Array<{ text: string }> }>,
   ): Promise<{ text: string; tokensUsed: number }> {
     try {
+      const isImage = responseSchema && 'mimeType' in responseSchema && 'data' in responseSchema;
+      const imageParam = isImage ? responseSchema as { mimeType: string; data: string } : null;
+
       const contents = conversationHistory
         ? [
             ...conversationHistory,
             {
               role: 'user',
-              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+              parts: imageParam
+                ? [
+                    { text: `${systemPrompt}\n\n${userPrompt}` },
+                    {
+                      inlineData: {
+                        mimeType: imageParam.mimeType,
+                        data: imageParam.data,
+                      },
+                    },
+                  ]
+                : [{ text: `${systemPrompt}\n\n${userPrompt}` }],
             },
           ]
         : [
             {
               role: 'user',
-              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+              parts: imageParam
+                ? [
+                    { text: `${systemPrompt}\n\n${userPrompt}` },
+                    {
+                      inlineData: {
+                        mimeType: imageParam.mimeType,
+                        data: imageParam.data,
+                      },
+                    },
+                  ]
+                : [{ text: `${systemPrompt}\n\n${userPrompt}` }],
             },
           ];
 
+      const schemaParam = responseSchema && !isImage && 'type' in responseSchema
+        ? responseSchema as { type: string; properties: Record<string, unknown>; required: string[] }
+        : null;
+
       const config = {
         contents,
-        generationConfig: responseSchema
+        generationConfig: schemaParam
           ? {
               responseMimeType: 'application/json',
               responseSchema: {
                 type: SchemaType.OBJECT,
-                properties: responseSchema.properties as Record<string, unknown>,
-                required: responseSchema.required,
+                properties: schemaParam.properties as Record<string, unknown>,
+                required: schemaParam.required,
               },
             }
           : undefined,

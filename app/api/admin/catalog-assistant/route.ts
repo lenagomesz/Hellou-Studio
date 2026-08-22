@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     const { text: catalogJson } = await geminiClient.generateContent(
       userMessage,
       SYSTEM_PROMPT,
-      { inlineData: { mimeType: image.type, data: imageBase64 } },
+      { mimeType: image.type, data: imageBase64 },
     );
 
     let catalog: { titulo: string; descricao_curta: string; descricao_completa: string };

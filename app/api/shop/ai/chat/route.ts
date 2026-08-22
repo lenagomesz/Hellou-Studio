@@ -3,7 +3,7 @@ import { geminiClient } from '@/lib/ai/gemini-client';
 import { getBrandVoice } from '@/lib/ai/brand-voice';
 import { getStoreSettings } from '@/lib/store-settings';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { FORBIDDEN_TERMS } from '@/lib/ai/utils';
+import { FORBIDDEN_TERMS } from '@/lib/ai/prompts';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch store context
-    const [storeSettings, brandVoice, productsResult] = await Promise.all([
+    const [storeSettings, _brandVoice, productsResult] = await Promise.all([
       getStoreSettings(),
       getBrandVoice(),
       getSupabaseAdmin()
@@ -66,7 +66,7 @@ IMPORTANTE:
 - Seja amigável, prestativo e conciso
 - Responda SEMPRE em português (pt-BR)
 - Se o cliente quiser falar com alguém, sugira WhatsApp: ${storeSettings.contact?.whatsapp || ''}
-${FORBIDDEN_TERMS.map(term => `- NUNCA mencione: ${term}`).join('\n')}
+${FORBIDDEN_TERMS.map((term: string) => `- NUNCA mencione: ${term}`).join('\n')}
 
 Foco: Ajudar o cliente com dúvidas sobre produtos, preços, envio e políticas. Seja breve e direto.`;
 

@@ -1,6 +1,6 @@
 import { BrandVoice } from './brand-voice';
 
-const FORBIDDEN_TERMS = [
+export const FORBIDDEN_TERMS = [
   '3D printing',
   'impressão 3D',
   'filamento',
