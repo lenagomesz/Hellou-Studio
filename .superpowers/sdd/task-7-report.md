@@ -1,40 +1,49 @@
-# Task 7 Report: Admin PATCH Endpoint for Order Status Changes
+# Task 7: Admin Blog Management Panel - Report
 
-## Status: FIXED
+## Status: COMPLETE
 
-## Summary
+## Files Created
 
-Added a PATCH handler to `app/api/admin/orders/route.ts` that allows admins to change any order's status and automatically notify the customer via email.
+1. **`app/dashboard/ai-dashboard/components/BlogManagementSection.tsx`** - Client component with full CRUD workflow
+2. **`app/dashboard/ai-dashboard/blog-management/page.tsx`** - Server page wrapping the management section
+3. **`app/api/admin/ai/blog-posts/route.ts`** - GET endpoint returning draft posts
 
 ## Implementation Details
 
-- **File modified:** `app/api/admin/orders/route.ts`
-- Added `sendOrderStatusEmail` import from `@/lib/email`
-- Added PATCH handler after the existing GET handler
+### BlogManagementSection.tsx
+- `'use client'` component with useState/useEffect hooks
+- States: posts, loading, generating, error, approving, successMessage
+- `fetchDraftPosts()` - GET `/api/admin/ai/blog-posts`
+- `generateNewPost()` - POST `/api/admin/ai/blog-generation`
+- `approvePost(postId)` - PATCH `/api/admin/ai/blog-approval` with action: 'approve'
+- `rejectPost(postId)` - PATCH `/api/admin/ai/blog-approval` with action: 'reject' (with confirm dialog)
+- All buttons disabled during in-flight requests
+- Loading state, empty state, error state, success state
+- All text in Portuguese (pt-BR)
+- Displays post title, excerpt, creation date, and SEO keywords
 
-### PATCH Handler Behavior:
-1. Verifies admin access via `requireAdmin()` (returns 401 if not authenticated, 403 if not admin)
-2. Validates required fields `orderId` and `status` (returns 400 if missing)
-3. Fetches order from database (returns 404 if not found)
-4. Idempotent: returns `{ success: true, status, message }` if status hasn't changed (consistent with normal success response)
-5. Updates order status; if status is `shipped` and `trackingCode` provided, also saves `tracking_code`
-6. Sends status notification email to customer via `sendOrderStatusEmail`
-7. Email failures are caught and logged but do not break the response
-8. Returns `{ success: true, status, message }` on success
+### blog-management/page.tsx
+- Server component with metadata
+- Back link to AI Dashboard
+- Header: "Gerenciamento de Blog" with description
+- Renders BlogManagementSection
 
-## Tests
+### /api/admin/ai/blog-posts/route.ts
+- GET only endpoint
+- Permission check: `settings.manage` via `requirePermission()`
+- Uses `getDraftPosts()` from blog-service
+- Returns `{success: true, posts: [...]}`
+- runtime: 'nodejs'
 
-- Build passes successfully (`npm run build`)
-- TypeScript compilation: no errors
+## Build Verification
 
-## Commits
+```
+npm run build - PASSED
+Routes confirmed:
+  /api/admin/ai/blog-posts
+  /dashboard/ai-dashboard/blog-management
+```
 
-5fb1677..15882e3
+## Base Commit
 
-### Post-review fix
-- Normalized idempotent response format (line 71) from `{ received: true, status }` to `{ success: true, status, message }` to ensure consistency with the normal success response
-
-## Key Decisions
-
-- Reused existing `requireAdmin()` helper from `@/lib/api` instead of manually checking `is_admin` in the users table (the existing GET handler already uses this pattern and it checks user role from the session)
-- Reused existing `sendOrderStatusEmail` from `@/lib/email` which already handles tracking code display, status labels in Portuguese, and proper email formatting
+a06c8b7
