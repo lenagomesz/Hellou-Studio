@@ -24,7 +24,7 @@ export function SocialMarketingSection() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/products');
+      const response = await fetch('/api/products?limit=50&active=true');
       if (!response.ok) return;
       const data = await response.json();
       setProducts(data.products || []);

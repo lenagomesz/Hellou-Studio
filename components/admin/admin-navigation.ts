@@ -26,6 +26,7 @@ import {
   UserRoundSearch,
   Users,
   Warehouse,
+  Zap,
   type LucideIcon,
 } from 'lucide-react';
 import { hasAdminPermission, type AdminAccessLevel, type AdminPermission } from '@/lib/admin-permissions';
@@ -73,6 +74,7 @@ export const ADMIN_NAVIGATION: AdminNavigationSection[] = [
     items: [
       { href: '/dashboard/financeiro', label: 'Financeiro', description: 'Receitas, ticket e conciliação', icon: CircleDollarSign, permission: 'finance.view', keywords: 'dinheiro faturamento' },
       { href: '/dashboard/analytics', label: 'Análises', description: 'Tráfego, vendas e comportamento', icon: BarChart3, permission: 'analytics.view', keywords: 'analytics insights métricas acessos', featureKey: 'period_comparison' },
+      { href: '/dashboard/ai', label: 'Inteligência Artificial', description: 'IA para conteúdo, tendências e crescimento', icon: Zap, permission: 'settings.manage', keywords: 'gemini ai ml machine learning' },
       { href: '/dashboard/campaigns', label: 'Campanhas', description: 'E-mails, públicos e automações', icon: Mail, permission: 'marketing.manage', keywords: 'marketing mensagens', featureKey: 'email_campaigns' },
       { href: '/dashboard/coupons', label: 'Cupons', description: 'Descontos, bônus e promoções', icon: Tag, permission: 'marketing.manage', keywords: 'ofertas códigos' },
       { href: '/dashboard/calculadora', label: 'Calculadora', description: 'Custos, preços e análise de mercado', icon: Calculator, permission: 'settings.manage', keywords: 'margem lucro ia' },

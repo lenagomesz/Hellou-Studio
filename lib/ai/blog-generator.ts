@@ -45,21 +45,32 @@ const BLOG_SCHEMA = {
  * Gera um blog post completo usando Gemini AI com um tema aleatório.
  * Retorna o conteúdo gerado validado contra o schema esperado.
  */
-export async function generateBlogPost(): Promise<GeneratedBlogPost> {
+export async function generateBlogPost(): Promise<{ generated: GeneratedBlogPost; tokensUsed: number }> {
   const theme = getRandomTheme();
   const brandVoice = await getBrandVoice();
 
-  const systemPrompt = buildBlogSystemPrompt(brandVoice, theme);
-  const userPrompt = buildBlogUserPrompt(theme);
+  // Buscar 3-5 produtos reais para contexto
+  const supabase = getSupabaseAdmin();
+  const { data: products } = await supabase
+    .from('products')
+    .select('id, name, description, category')
+    .eq('active', true)
+    .limit(5);
 
-  const response = await geminiClient.generateContent(userPrompt, systemPrompt, BLOG_SCHEMA);
+  const systemPrompt = buildBlogSystemPrompt(brandVoice, theme);
+  const productContext = products && products.length > 0
+    ? products.map(p => `- ${p.name} (${p.category}): ${p.description || 'sem descrição'}`).join('\n')
+    : '';
+  const userPrompt = buildBlogUserPrompt(theme, productContext);
+
+  const { text: responseText, tokensUsed } = await geminiClient.generateContent(userPrompt, systemPrompt, BLOG_SCHEMA);
 
   const requiredKeys = ['title', 'excerpt', 'meta_description', 'content', 'seo_keywords', 'theme'];
-  if (!validateGeminiResponse(response, requiredKeys)) {
+  if (!validateGeminiResponse(responseText, requiredKeys)) {
     throw new Error('Resposta da IA com estrutura inválida. Tente novamente.');
   }
 
-  const parsed = JSON.parse(response) as GeneratedBlogPost;
+  const parsed = JSON.parse(responseText) as GeneratedBlogPost;
 
   // Sanitize manufacturing terms from content
   parsed.content = sanitizeManufacturingTerms(parsed.content);
@@ -70,7 +81,7 @@ export async function generateBlogPost(): Promise<GeneratedBlogPost> {
   // Ensure theme is set correctly (in case the model returns something else)
   parsed.theme = theme;
 
-  return parsed;
+  return { generated: parsed, tokensUsed };
 }
 
 // ---------------------------------------------------------------------------

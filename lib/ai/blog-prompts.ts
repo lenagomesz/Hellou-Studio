@@ -169,12 +169,16 @@ FORMATO DE SAIDA - Responda EXCLUSIVAMENTE com um JSON valido nesta estrutura:
  * Builds the user prompt for blog generation given a theme.
  * This triggers the generation with specific instructions for the theme context.
  */
-export function buildBlogUserPrompt(theme: BlogTheme): string {
+export function buildBlogUserPrompt(theme: BlogTheme, productContext?: string): string {
   const themeInfo = THEME_DESCRIPTIONS[theme];
+
+  const productSection = productContext
+    ? `\n\nProdutos em nosso catalogo que podem ser mencionados:\n${productContext}`
+    : '';
 
   return `Escreva agora um blog post completo sobre "${themeInfo.title}".
 
-Contexto do tema: ${themeInfo.focus}
+Contexto do tema: ${themeInfo.focus}${productSection}
 
 Lembre-se:
 - 800 a 1200 palavras

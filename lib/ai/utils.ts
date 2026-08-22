@@ -26,6 +26,7 @@ export async function logGeneratedContent(
   content: unknown,
   productId?: string,
   userId?: string,
+  tokensUsed?: number,
 ) {
   try {
     const admin = getSupabaseAdmin();
@@ -34,6 +35,7 @@ export async function logGeneratedContent(
       product_id: productId,
       content: JSON.stringify(content),
       generated_by: userId,
+      tokens_used: tokensUsed,
     });
   } catch (error) {
     console.error('[logGeneratedContent] Failed to log:', error);
@@ -51,13 +53,15 @@ export function validateGeminiResponse(response: string, expectedKeys: string[])
 
 export function formatErrorResponse(error: unknown): string {
   if (error instanceof Error) {
+    console.error('[formatErrorResponse] Full error message:', error.message);
+    console.error('[formatErrorResponse] Error stack:', error.stack);
     if (error.message.includes('API key')) {
       return 'Configure GOOGLE_GENAI_API_KEY no ambiente do servidor.';
     }
     if (error.message.includes('JSON')) {
       return 'A IA retornou uma resposta inválida. Tente novamente.';
     }
-    return 'Erro ao processar a solicitação. Tente novamente.';
+    return `Erro ao processar a solicitação: ${error.message}`;
   }
   return 'Erro desconhecido ao gerar conteúdo.';
 }

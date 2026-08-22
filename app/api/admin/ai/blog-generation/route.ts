@@ -31,7 +31,7 @@ export async function POST() {
 
   try {
     // Gerar conteúdo via Gemini AI
-    const generated = await generateBlogPost();
+    const { generated, tokensUsed } = await generateBlogPost();
 
     // Gerar slug único: título slugificado + timestamp em base36
     const slug = `${slugify(generated.title)}-${Date.now().toString(36)}`;
@@ -53,7 +53,7 @@ export async function POST() {
     });
 
     // Registrar conteúdo gerado para auditoria
-    await logGeneratedContent('blog_post', generated, featuredProductId ?? undefined, auth.user.id);
+    await logGeneratedContent('blog_post', generated, featuredProductId ?? undefined, auth.user.id, tokensUsed);
 
     return NextResponse.json({
       success: true,

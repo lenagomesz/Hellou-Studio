@@ -11,10 +11,8 @@ export class GeminiClient {
       }
       const client = new GoogleGenerativeAI(apiKey);
       this.modelInstance = client.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3.6-flash',
         safetySettings: [
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          { category: 'HARM_CATEGORY_UNSPECIFIED' as any, threshold: 'BLOCK_NONE' as any },
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT' as any, threshold: 'BLOCK_NONE' as any },
         ],
@@ -27,7 +25,7 @@ export class GeminiClient {
     userPrompt: string,
     systemPrompt: string,
     responseSchema?: { type: string; properties: Record<string, unknown>; required: string[] },
-  ): Promise<string> {
+  ): Promise<{ text: string; tokensUsed: number }> {
     try {
       const config = {
         contents: [
@@ -51,7 +49,8 @@ export class GeminiClient {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await (this.model.generateContent as any)(config);
       const text = result.response.text();
-      return text;
+      const tokensUsed = result.response.usageMetadata?.totalTokenCount || 0;
+      return { text, tokensUsed };
     } catch (error) {
       console.error('[GeminiClient] Error generating content:', error);
       throw error;

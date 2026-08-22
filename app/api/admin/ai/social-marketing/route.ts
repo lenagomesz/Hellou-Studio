@@ -54,15 +54,15 @@ export async function POST(request: Request) {
     const systemPrompt = buildSocialCampaignSystemPrompt(brandVoice, product.name);
     const userPrompt = `Product details:\nName: ${product.name}\nDescription: ${product.description || 'No description'}\nImage: ${product.image_url || 'No image'}\n\nCreate a viral-ready campaign for this product.`;
 
-    const response = await geminiClient.generateContent(userPrompt, systemPrompt, SOCIAL_CAMPAIGN_SCHEMA);
+    const { text: responseText, tokensUsed } = await geminiClient.generateContent(userPrompt, systemPrompt, SOCIAL_CAMPAIGN_SCHEMA);
 
-    if (!validateGeminiResponse(response, ['visual_hook', 'script', 'caption'])) {
+    if (!validateGeminiResponse(responseText, ['visual_hook', 'script', 'caption'])) {
       return NextResponse.json({ error: 'Invalid response structure from AI' }, { status: 502 });
     }
 
-    const result = JSON.parse(response);
+    const result = JSON.parse(responseText);
 
-    await logGeneratedContent('social_campaign', result, body.productId, auth.user.id);
+    await logGeneratedContent('social_campaign', result, body.productId, auth.user.id, tokensUsed);
 
     return NextResponse.json({
       success: true,

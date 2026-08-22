@@ -53,13 +53,13 @@ export async function POST(request: Request) {
     const systemPrompt = buildSEOBlogSystemPrompt(brandVoice, body.topic);
     const userPrompt = `Generate an SEO-optimized blog post about: ${body.topic}`;
 
-    const response = await geminiClient.generateContent(userPrompt, systemPrompt, SEO_BLOG_SCHEMA);
+    const { text: responseText, tokensUsed } = await geminiClient.generateContent(userPrompt, systemPrompt, SEO_BLOG_SCHEMA);
 
-    if (!validateGeminiResponse(response, ['title', 'content', 'seo_keywords'])) {
+    if (!validateGeminiResponse(responseText, ['title', 'content', 'seo_keywords'])) {
       return NextResponse.json({ error: 'Invalid response structure from AI' }, { status: 502 });
     }
 
-    const result = JSON.parse(response);
+    const result = JSON.parse(responseText);
     const slug = `${slugify(result.title)}-${Date.now().toString(36)}`;
 
     const admin = getSupabaseAdmin();
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to save blog post' }, { status: 500 });
     }
 
-    await logGeneratedContent('blog_post', result, undefined, auth.user.id);
+    await logGeneratedContent('blog_post', result, undefined, auth.user.id, tokensUsed);
 
     return NextResponse.json({
       success: true,
