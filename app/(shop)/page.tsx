@@ -326,7 +326,7 @@ export default async function HomePage() {
                 </div>
 
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 leading-tight">
-                  Arquivos STL<br className="hidden md:block" />
+                  Arquivos STL<br />
                   <span className="text-white/90">da Hellou Studio</span>
                 </h2>
 
