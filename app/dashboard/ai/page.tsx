@@ -15,6 +15,7 @@ import {
   Target,
   FileText,
   History,
+  MessageCircle,
 } from 'lucide-react';
 
 interface StatsData {
@@ -93,6 +94,14 @@ export default function AIPage() {
       href: '/dashboard/ai-dashboard/history',
       color: 'from-green-500 to-green-600',
       action: 'Ver Histórico',
+    },
+    {
+      icon: MessageCircle,
+      title: 'Chat Consultor',
+      description: 'Converse com um especialista em IA que conhece tudo sobre sua loja',
+      href: '/dashboard/ai-dashboard/chat',
+      color: 'from-indigo-500 to-indigo-600',
+      action: 'Abrir Chat',
     },
   ];
 

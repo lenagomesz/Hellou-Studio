@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import { UserActivityTracker } from '@/components/analytics/UserActivityTracker';
 import { CookieConsentBanner } from '@/components/privacy/CookieConsentBanner';
+import { AIHelpWidget } from '@/components/shop/AIHelpWidget';
 import { absoluteUrl, safeJsonLd, SITE_URL } from '@/lib/seo';
 import { getStoreSettings, storeThemeStyle } from '@/lib/store-settings';
 import './globals.css';
@@ -98,6 +99,7 @@ export default async function RootLayout({
           <SessionProvider>
             <UserActivityTracker />
             {children}
+            <AIHelpWidget />
             <CookieConsentBanner />
             <ToastProvider />
           </SessionProvider>

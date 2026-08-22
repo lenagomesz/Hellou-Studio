@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { MarketTrendsSection } from '../components/MarketTrendsSection';
 import { SocialMarketingSection } from '../components/SocialMarketingSection';
 import { SEOBlogSection } from '../components/SEOBlogSection';
-import { FileText, Zap, TrendingUp, Share2, PenTool, History } from 'lucide-react';
+import { FileText, Zap, TrendingUp, Share2, PenTool, History, MessageCircle } from 'lucide-react';
 
 export default function AIDashboardPage() {
   return (
@@ -19,6 +19,13 @@ export default function AIDashboardPage() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Link
+              href="/dashboard/ai-dashboard/chat"
+              className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Chat
+            </Link>
             <Link
               href="/dashboard/ai-dashboard/history"
               className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"

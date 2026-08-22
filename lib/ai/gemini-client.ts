@@ -25,15 +25,27 @@ export class GeminiClient {
     userPrompt: string,
     systemPrompt: string,
     responseSchema?: { type: string; properties: Record<string, unknown>; required: string[] },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    conversationHistory?: Array<{ role: string; parts: Array<{ text: string }> }>,
   ): Promise<{ text: string; tokensUsed: number }> {
     try {
+      const contents = conversationHistory
+        ? [
+            ...conversationHistory,
+            {
+              role: 'user',
+              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+            },
+          ]
+        : [
+            {
+              role: 'user',
+              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+            },
+          ];
+
       const config = {
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-          },
-        ],
+        contents,
         generationConfig: responseSchema
           ? {
               responseMimeType: 'application/json',
