@@ -1,13 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const auth = await requirePermission('settings.manage');
   if (auth.response) return auth.response;
 
@@ -16,7 +17,7 @@ export async function GET(
     const { data, error } = await admin
       .from('ai_generated_content')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (error || !data) {
@@ -24,8 +25,8 @@ export async function GET(
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('[history GET/:id] Error:', error);
+  } catch (err) {
+    console.error('[history GET/:id] Error:', err);
     return NextResponse.json(
       { error: 'Failed to fetch entry' },
       { status: 500 }
@@ -34,13 +35,14 @@ export async function GET(
 }
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requirePermission('settings.manage');
   if (auth.response) return auth.response;
 
   try {
+    const { id } = await params;
     const body = await request.json();
     const { content } = body;
 
@@ -52,7 +54,7 @@ export async function PATCH(
     const { data, error } = await admin
       .from('ai_generated_content')
       .update({ content: JSON.stringify(content) })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single();
 
@@ -61,8 +63,8 @@ export async function PATCH(
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('[history PATCH/:id] Error:', error);
+  } catch (err) {
+    console.error('[history PATCH/:id] Error:', err);
     return NextResponse.json(
       { error: 'Failed to update entry' },
       { status: 500 }
@@ -71,24 +73,25 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requirePermission('settings.manage');
   if (auth.response) return auth.response;
 
   try {
+    const { id } = await params;
     const admin = getSupabaseAdmin();
     const { error } = await admin
       .from('ai_generated_content')
       .delete()
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('[history DELETE/:id] Error:', error);
+  } catch (err) {
+    console.error('[history DELETE/:id] Error:', err);
     return NextResponse.json(
       { error: 'Failed to delete entry' },
       { status: 500 }
