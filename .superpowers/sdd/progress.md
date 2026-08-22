@@ -21,8 +21,8 @@
 
 - [x] Task 1: Public Blog Grid Page (`/blog`) ✅ (1e8527d)
 - [x] Task 2: Individual Blog Post Page (`/blog/[slug]`) ✅ (c0368d8)
-- [ ] Task 3: Blog Generation Prompts
-- [ ] Task 4: Blog Generation Service
+- [x] Task 3: Blog Generation Prompts ✅ (b2b4674, 21 tests passing)
+- [x] Task 4: Blog Generation Service ✅ (0e88977, 19 tests passing)
 - [ ] Task 5: Blog Generation API
 - [ ] Task 6: Blog Approval API
 - [ ] Task 7: Admin Blog Management Panel
