@@ -1188,7 +1188,7 @@ export async function sendOrderLinkedEmail(params: {
     return false;
   }
 
-  const baseUrl = getBaseUrl();
+  const _baseUrl = getBaseUrl();
   const shortId = params.orderId.slice(0, 8).toUpperCase();
 
   try {

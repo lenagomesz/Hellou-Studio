@@ -6,7 +6,9 @@ export class GeminiClient {
   private model = client.getGenerativeModel({
     model: 'gemini-1.5-flash',
     safetySettings: [
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { category: 'HARM_CATEGORY_UNSPECIFIED' as any, threshold: 'BLOCK_NONE' as any },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT' as any, threshold: 'BLOCK_NONE' as any },
     ],
   });
@@ -36,6 +38,7 @@ export class GeminiClient {
           : undefined,
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await (this.model.generateContent as any)(config);
       const text = result.response.text();
       return text;

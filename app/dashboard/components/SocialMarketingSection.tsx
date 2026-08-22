@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AlertCircle, Copy, Loader2, Share2 } from 'lucide-react';
 
 interface Product {
@@ -22,11 +22,7 @@ export function SocialMarketingSection() {
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  async function fetchProducts() {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/products');
       if (!response.ok) return;
@@ -36,7 +32,11 @@ export function SocialMarketingSection() {
     } catch (err) {
       console.error('Failed to fetch products:', err);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   async function generateCampaign() {
     if (!selectedProduct) {
