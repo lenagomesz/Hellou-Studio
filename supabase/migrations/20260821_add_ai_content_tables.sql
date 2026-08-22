@@ -64,3 +64,38 @@ select
   array['geek', 'pop-culture', 'design', 'organization', 'gaming', 'anime'],
   'CRITICAL RULES: Never mention 3D printing, printer, filament, resina, bico, camadas, fatiador, or any manufacturing terms. Focus ONLY on: the final product beauty, lifestyle value, design innovation, practical utility, exclusivity, and art. Customers buy the finished piece, not the process.'
 where not exists (select 1 from public.ai_brand_voice where tone = 'balanced');
+
+-- ============================================================================
+-- Enable Row Level Security
+-- ============================================================================
+alter table public.ai_brand_voice enable row level security;
+alter table public.ai_generated_content enable row level security;
+alter table public.blog_posts enable row level security;
+
+-- RLS Policies: Allow admins to manage, all authenticated users to read
+create policy "Admins can manage brand voice"
+  on public.ai_brand_voice
+  for all
+  using (auth.jwt() ->> 'role' = 'authenticated')
+  with check (auth.jwt() ->> 'role' = 'authenticated');
+
+create policy "Users can read AI generated content"
+  on public.ai_generated_content
+  for select
+  using (true);
+
+create policy "Admins can insert AI generated content"
+  on public.ai_generated_content
+  for insert
+  with check (auth.jwt() ->> 'role' = 'authenticated');
+
+create policy "Users can read published blog posts"
+  on public.blog_posts
+  for select
+  using (status = 'published');
+
+create policy "Admins can manage all blog posts"
+  on public.blog_posts
+  for all
+  using (auth.jwt() ->> 'role' = 'authenticated')
+  with check (auth.jwt() ->> 'role' = 'authenticated');
