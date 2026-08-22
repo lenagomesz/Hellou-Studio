@@ -1,33 +1,53 @@
-# Task 3 Report: Type-aware notifications in Mercado Pago webhook
+# Task 3 Report: Blog Generation Prompts
 
 ## Status: DONE
 
 ## Summary
 
-Modified `app/api/webhooks/mercadopago/route.ts` to create personalized notifications based on order type (digital-only, physical, hybrid) instead of a generic "PIX confirmado!" message.
+Created the blog generation prompts system with 10 multi-theme support for automated Gemini AI content generation. All prompts produce content in Portuguese (pt-BR) with SEO optimization, HTML formatting, and natural product integration.
 
 ## Changes Made
 
-1. Added import for `hasDigitalItems`, `hasPhysicalItems`, and `OrderItemWithProduct` from `@/lib/order-helpers`
-2. Replaced hardcoded notification block with logic that:
-   - Queries order items with product type via Supabase
-   - Uses helper functions to determine order composition
-   - Sets notification title/body based on three cases:
-     - Digital-only: "Seu arquivo STL esta pronto!"
-     - Physical-only: "Pedido aprovado!"
-     - Hybrid: "Arquivo pronto + Pedido em producao!"
-3. Changed event name from `pix_approved` to `order_approved`
+1. **Created `lib/ai/blog-prompts.ts`** - Main prompts module with:
+   - `BlogTheme` TypeScript type (union of 10 theme strings)
+   - `BLOG_THEMES` constant array with all 10 themes
+   - `buildBlogSystemPrompt(brandVoice, theme)` - Generates full system prompt with brand voice, theme context, content requirements (800-1200 words, HTML, H2 headings), SEO specs, and JSON output schema
+   - `buildBlogUserPrompt(theme)` - Generates user prompt to trigger generation
+   - `getThemeDescription(theme)` - Returns title and focus for a theme
+   - `getRandomTheme()` - Selects a random theme for scheduled generation
 
-## Commits
+2. **Created `lib/ai/blog-prompts.test.ts`** - Comprehensive test suite with 21 tests covering:
+   - BLOG_THEMES has exactly 10 items with no duplicates
+   - All required themes are present
+   - System prompt includes theme title, word count, JSON schema, brand voice, HTML format, forbidden terms, product integration, and Portuguese language
+   - User prompt includes theme context and format requirements
+   - getThemeDescription returns valid data for all themes
+   - getRandomTheme returns valid themes with statistical variation
 
-7f867e4..07cd17e
+## Themes Implemented
 
-## Tests
+1. `decoracao_gamer` - Setups gaming, LED, organizadores
+2. `organizacao_minimalista` - Armazenamento inteligente, estetica clean
+3. `design_pop_culture` - Filmes, series, animes, arte pop
+4. `ideias_pequenos_espacos` - Apartamentos compactos, aproveitamento vertical
+5. `tendencias_lifestyle` - Novidades em decoracao, estilos emergentes
+6. `colecionadores_organization` - Displays, vitrines, preservacao
+7. `home_office_setup` - Ergonomia, produtividade, personalizacao
+8. `dicas_feng_shui_moderno` - Fluxo de energia, harmonia contemporanea
+9. `cores_trending_2026` - Paletas tendencia, psicologia das cores
+10. `sustentabilidade_design` - Eco-friendly, upcycling, consumo consciente
 
-- Next.js build passes successfully (no TypeScript or compilation errors)
-- The only pre-existing TS error is in an unrelated test file (`tests/api/notifications.test.ts:64`)
-- No webhook-specific test files found to run
+## Verification
 
-## Files Modified
+- TypeScript: `tsc --noEmit` passes with zero errors
+- Tests: 21/21 passing (vitest)
+- Build: `next build` completes successfully
 
-- `app/api/webhooks/mercadopago/route.ts`
+## Base Commit
+
+918e266
+
+## Files Created
+
+- `lib/ai/blog-prompts.ts`
+- `lib/ai/blog-prompts.test.ts`
