@@ -1,21 +1,38 @@
-## Task 2 Report: Conditional Checkout Success Cards by Order Type
+# Task 2: Individual Blog Post Page - Report
 
-Status: DONE
-Commits: 7f867e4..e384438
-Tests: Build passes (`next build` successful). Manual browser testing requires a running dev server with Supabase credentials and existing orders of each type.
-Report: /Users/helena.gomes/projects/ecommerce-3d/.superpowers/sdd/task-2-report.md
+## Status: COMPLETE
 
-### Changes Made
+## Files Created
 
-**Modified:** `app/(shop)/checkout/success/page.tsx`
+- `app/blog/[slug]/page.tsx` - SSR page with generateMetadata, JSON-LD schema, notFound handling
+- `app/blog/components/BlogPost.tsx` - Post display component with back link, keywords, and product section
+- `app/blog/components/ProductRecommendation.tsx` - Product recommendation section with image and price
 
-1. Added imports for `getSupabaseAdmin`, `isDigitalOnly`, `hasDigitalItems`, `hasPhysicalItems`, and `OrderItemWithProduct` type.
-2. Added server-side order fetching logic that queries `orders` joined with `order_items` and `products` to determine order type (digital/physical/hybrid).
-3. Replaced static title/description with `titlesByType` and `descriptionByType` maps keyed by order type.
-4. Replaced static 3-card progress layout with `cardsByType` map: 2 cards for digital orders, 3 cards for physical/hybrid orders.
-5. Grid layout adjusts columns based on order type (`grid-cols-2` for digital, `grid-cols-3` for physical/hybrid).
+## Implementation Details
 
-### Verification
+### SEO Features
+- Dynamic `generateMetadata` with title, description, keywords, OpenGraph (article type), Twitter cards
+- JSON-LD structured data (`BlogPosting` schema) injected via `<script type="application/ld+json">`
+- Only published posts are fetched (`.eq('status', 'published')`)
+- `notFound()` triggered when post doesn't exist or isn't published
 
-- `next build` completes successfully with no type or compilation errors.
-- The page defaults to `physical` order type when no `order_id` is provided or when the order cannot be fetched, maintaining backward compatibility.
+### Components
+- **ProductRecommendation**: Renders up to 2 products with image, name, price; links to `/products/[id]`; returns null gracefully when no products
+- **BlogPost**: Full article layout with back navigation, title, excerpt, formatted date (pt-BR), HTML content via `dangerouslySetInnerHTML`, keyword badges, and product recommendations
+
+### Product Recommendations
+- Only fetches when `featured_product_id` is not null
+- Fetches 2 active products from the store
+- Handles empty state gracefully (component returns null)
+
+### Language
+- All user-facing text in Portuguese (pt-BR)
+- Date formatted with `toLocaleDateString('pt-BR', { day, month, year })`
+
+## Verification
+- TypeScript: `npx tsc --noEmit` passes with zero errors
+- ESLint: No violations on any new file
+- Next.js API: Uses `params: Promise<{ slug: string }>` per Next.js 16 conventions
+
+## Base Commit
+590b763
