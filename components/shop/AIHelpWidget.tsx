@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { X, Send, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -65,12 +66,20 @@ export function AIHelpWidget() {
       {isOpen && (
         <div className="w-96 max-h-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-pink-500 via-pink-400 to-orange-500 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-white" />
+              <div className="relative h-6 w-6 rounded-full overflow-hidden bg-white">
+                <Image
+                  src="/images/avatars/axolotl-01.png"
+                  alt="Hellou"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
               <div>
-                <div className="font-semibold text-white text-sm">Hellou Studio IA</div>
-                <div className="text-xs text-blue-100">Responde em tempo real</div>
+                <div className="font-semibold text-white text-sm">Hellou</div>
+                <div className="text-xs text-white/80">Responde em tempo real</div>
               </div>
             </div>
             <button
@@ -82,12 +91,19 @@ export function AIHelpWidget() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gradient-to-b from-orange-50 to-pink-50">
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-center">
                 <div>
-                  <MessageCircle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-xs text-gray-600">Olá! Como posso ajudar?</p>
+                  <div className="relative h-12 w-12 mx-auto mb-2">
+                    <Image
+                      src="/images/avatars/axolotl-01.png"
+                      alt="Hellou"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 font-medium">Olá! Como posso ajudar?</p>
                 </div>
               </div>
             ) : (
@@ -97,8 +113,8 @@ export function AIHelpWidget() {
                     <div
                       className={`max-w-xs rounded-lg px-3 py-2 text-sm ${
                         msg.role === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-900'
+                          ? 'bg-gradient-to-r from-pink-500 to-orange-500 text-white'
+                          : 'bg-white text-gray-900 border border-pink-100'
                       }`}
                     >
                       {msg.content}
@@ -107,8 +123,8 @@ export function AIHelpWidget() {
                 ))}
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-200 rounded-lg px-3 py-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-gray-900" />
+                    <div className="bg-white border border-pink-100 rounded-lg px-3 py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-pink-500" />
                     </div>
                   </div>
                 )}
@@ -118,20 +134,20 @@ export function AIHelpWidget() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-200 bg-white px-3 py-3 flex gap-2">
+          <div className="border-t border-pink-200 bg-white px-3 py-3 flex gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && sendMessage(input)}
               placeholder="Sua pergunta..."
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="flex-1 rounded-lg border border-pink-300 px-3 py-2 text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 focus:outline-none"
               disabled={loading}
             />
             <button
               onClick={() => sendMessage(input)}
               disabled={loading || !input.trim()}
-              className="rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-500 px-3 py-2 text-white hover:shadow-lg disabled:opacity-50 transition-all"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -146,12 +162,19 @@ export function AIHelpWidget() {
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl hover:shadow-2xl transition-all hover:scale-110 flex items-center justify-center"
+        className="w-14 h-14 rounded-full bg-gradient-to-r from-pink-500 via-pink-400 to-orange-500 text-white shadow-xl hover:shadow-2xl transition-all hover:scale-110 flex items-center justify-center overflow-hidden border-2 border-white"
       >
         {isOpen ? (
           <X className="h-6 w-6" />
         ) : (
-          <MessageCircle className="h-6 w-6" />
+          <Image
+            src="/images/avatars/axolotl-01.png"
+            alt="Hellou"
+            width={56}
+            height={56}
+            className="w-full h-full object-cover"
+            priority
+          />
         )}
       </button>
     </div>
