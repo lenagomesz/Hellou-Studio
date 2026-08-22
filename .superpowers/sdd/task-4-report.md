@@ -1,35 +1,45 @@
-# Task 4 Report: Enhance Product Order Confirmation Email
+# Task 4: Blog Generation Service - Report
 
-## Status: DONE
+## Status: Completo
 
-## Summary
+## Arquivos Criados
 
-Rewrote `emails/pedido-confirmado.tsx` with a rich email template that includes:
+- `lib/blog/blog-service.ts` - Servico CRUD completo para blog posts
+- `lib/blog/blog-service.test.ts` - 19 testes unitarios cobrindo todas as funcoes
 
-- **Header**: Order ID (short uppercase) and formatted date with celebration emoji
-- **Personal greeting**: Conditional name display
-- **Items section**: Lists each item with quantity, unit price, and line total using `Intl.NumberFormat` for BRL currency
-- **Total section**: Green-highlighted total amount
-- **Timeline**: 4-step visual timeline (Payment confirmed, Production, Shipping, Delivery) with icons and descriptions
-- **CTA button**: Pink-to-orange gradient button linking to order tracking page
-- **Footer**: Support links and branding
+## Funcoes Implementadas
 
-## Changes
+| Funcao | Descricao |
+|--------|-----------|
+| `createBlogPost(post)` | Insere novo post (status padrao: draft) |
+| `updateBlogPost(id, updates)` | Atualiza post, define edited_at automaticamente |
+| `getBlogPostById(id)` | Busca post por ID, retorna null se nao encontrado |
+| `getDraftPosts(userId?)` | Lista rascunhos, filtra por usuario opcional |
+| `getPublishedPosts(limit, offset)` | Lista publicados com paginacao e total |
+| `deleteBlogPost(id)` | Remove post permanentemente |
 
-- Removed dependency on `@react-email/components` (the new template uses plain HTML/JSX with inline styles)
-- Switched from `export function` to `export const` (named export still works with existing imports)
-- Mobile-first responsive design (max-width 480px)
-- Color palette matches site design system (pink/orange gradient, green for confirmed status)
+## Interfaces Exportadas
 
-## Commits
+- `BlogPostInput` - tipo de entrada para criar/atualizar
+- `BlogPost` - tipo completo com timestamps
 
-7f867e4..feeded5
+## Validacoes
 
-## Tests
+- [x] TypeScript: `npx tsc --noEmit` - 0 erros
+- [x] Testes: `npx vitest run lib/blog/blog-service.test.ts` - 19/19 passando
+- [x] Mensagens de erro em portugues (pt-BR)
+- [x] Timestamps ISO com timestamptz
+- [x] Usa `getSupabaseAdmin()` para acesso ao banco
+- [x] Tratamento gracioso de null/undefined
+- [x] Status draft por padrao na criacao
+- [x] published_at definido automaticamente ao publicar
+- [x] edited_at definido automaticamente ao atualizar
 
-- Build passes (`npm run build` completes without errors)
-- Import compatibility verified: `lib/email.ts` and test file both use named import which works with the new export style
+## Dependencias
 
-## Files Modified
+- `@/lib/supabase` (getSupabaseAdmin) - ja existente no projeto
+- Tabela `blog_posts` no Supabase (migracao 20260821)
 
-- `/Users/helena.gomes/projects/ecommerce-3d/emails/pedido-confirmado.tsx` (complete rewrite: 218 deletions, 105 insertions)
+## Base Commit
+
+b2b4674
