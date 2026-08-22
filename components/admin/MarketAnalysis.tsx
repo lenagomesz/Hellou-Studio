@@ -176,7 +176,7 @@ export function MarketAnalysis({
             </div>
           </div>
           <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
-            10 pesquisas/hora
+            Gemini · sem custos
           </span>
         </div>
 

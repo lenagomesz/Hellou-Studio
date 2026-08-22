@@ -216,9 +216,9 @@ export function CatalogAssistant({
 
           <button type="button" onClick={generate} disabled={loading} className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-500 px-5 py-3 font-bold text-white shadow-lg shadow-orange-200/60 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 dark:shadow-none">
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
-            {loading ? 'Criando catálogo e mockup…' : 'Gerar catálogo completo'}
+            {loading ? 'Criando catálogo…' : 'Gerar catálogo completo'}
           </button>
-          <p className="mt-2 text-center text-[11px] text-slate-400">A foto é processada pela OpenAI. A geração pode levar até 2 minutos e utiliza créditos da API.</p>
+          <p className="mt-2 text-center text-[11px] text-slate-400">A foto é processada pelo Google Gemini. Geração rápida com IA sem custos.</p>
         </div>
       </div>
 
