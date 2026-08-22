@@ -6,7 +6,7 @@ import type { Order, PrintRequest, User, AdminNotification } from '@/types/datab
 import { DashboardCharts } from '@/components/admin/charts/DashboardCharts';
 import { UrgentAlerts } from '@/components/admin/UrgentAlerts';
 import { AdvancedAnalyticsDashboard } from '@/components/admin/analytics/AdvancedAnalyticsDashboard';
-import { ArrowUpRight, BarChart3, Box, ClipboardCheck, PackageCheck, Truck, Zap } from 'lucide-react';
+import { ArrowUpRight, BarChart3, Box, ClipboardCheck, FileText, PackageCheck, Truck, Zap } from 'lucide-react';
 import { getCurrentUser } from '@/lib/api';
 import { getStoreDateKey, getStoreMonthBounds } from '@/lib/store-time';
 import { REVENUE_ORDER_STATUSES, summarizeRevenueOrders } from '@/lib/order-analytics';
@@ -225,6 +225,9 @@ export default async function DashboardHome() {
           <div className="flex flex-wrap gap-2">
             {isOwner && <Link href="/dashboard/ai-dashboard" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-amber-200 hover:bg-amber-50">
               <Zap className="h-4 w-4 text-amber-500" /> Painel de IA
+            </Link>}
+            {isOwner && <Link href="/dashboard/ai-dashboard/blog-management" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-blue-200 hover:bg-blue-50">
+              <FileText className="h-4 w-4 text-blue-500" /> Gerenciar Blog
             </Link>}
             {isOwner && <Link href="/dashboard/analytics" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-pink-200 hover:bg-pink-50">
               <BarChart3 className="h-4 w-4" /> Ver desempenho
