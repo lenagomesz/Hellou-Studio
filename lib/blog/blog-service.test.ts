@@ -15,7 +15,7 @@ const mockOrder = vi.fn();
 const mockRange = vi.fn();
 const mockFrom = vi.fn();
 
-function buildChain(terminal?: 'single' | 'maybeSingle') {
+function buildChain(_terminal?: 'single' | 'maybeSingle') {
   const chain: Record<string, unknown> = {
     select: mockSelect,
     insert: mockInsert,

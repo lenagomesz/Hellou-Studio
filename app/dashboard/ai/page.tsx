@@ -13,10 +13,8 @@ import {
   ArrowRight,
   Sparkles,
   Target,
-  Search,
   FileText,
   History,
-  Settings,
 } from 'lucide-react';
 
 interface StatsData {
@@ -28,7 +26,6 @@ interface StatsData {
 export default function AIPage() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStats() {
@@ -38,10 +35,10 @@ export default function AIPage() {
         const data = await response.json();
 
         const totalGenerations = data.pagination?.total || 0;
-        const totalTokens = data.data?.reduce((sum: number, entry: any) => sum + (entry.tokens_used || 0), 0) || 0;
+        const totalTokens = data.data?.reduce((sum: number, entry: { tokens_used?: number }) => sum + (entry.tokens_used || 0), 0) || 0;
         const generationsByType: Record<string, number> = {};
 
-        data.data?.forEach((entry: any) => {
+        data.data?.forEach((entry: { feature_type: string }) => {
           generationsByType[entry.feature_type] = (generationsByType[entry.feature_type] || 0) + 1;
         });
 
