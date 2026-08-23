@@ -10,7 +10,7 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
   const slides = settings.home.heroSlides.filter((slide) => slide.active);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
-  const touchStartX = useRef<number | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (paused || slides.length < 2) return;
@@ -32,7 +32,7 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
 
   return (
     <section
-      className="home-hero relative w-full overflow-hidden bg-[#fffaf7] dark:bg-gray-950"
+      className="home-hero relative w-full touch-pan-y overflow-hidden bg-[#fffaf7] dark:bg-gray-950"
       aria-roledescription="carrossel"
       aria-label={`Destaques da ${settings.identity.name}`}
       onMouseEnter={() => setPaused(true)}
@@ -42,17 +42,25 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
         if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
       }}
       onTouchStart={(event) => {
-        touchStartX.current = event.touches[0]?.clientX ?? null;
+        const touch = event.touches[0];
+        touchStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
       }}
       onTouchEnd={(event) => {
-        if (touchStartX.current === null) return;
-        const distance = (event.changedTouches[0]?.clientX ?? touchStartX.current) - touchStartX.current;
-        if (Math.abs(distance) > 50) {
-          if (distance > 0) showPrevious();
+        const start = touchStart.current;
+        const touch = event.changedTouches[0];
+        touchStart.current = null;
+        if (!start || !touch) return;
+
+        const distanceX = touch.clientX - start.x;
+        const distanceY = touch.clientY - start.y;
+        const isHorizontalSwipe = Math.abs(distanceX) > 50 && Math.abs(distanceX) > Math.abs(distanceY) * 1.25;
+
+        if (isHorizontalSwipe) {
+          if (distanceX > 0) showPrevious();
           else showNext();
         }
-        touchStartX.current = null;
       }}
+      onTouchCancel={() => { touchStart.current = null; }}
     >
       <div className="relative h-[calc(100svh-6rem)] min-h-[560px] max-h-[680px] w-full overflow-hidden bg-[#fff8f4] dark:bg-gray-900 md:h-[calc(100svh-6.75rem)] md:min-h-[560px] md:max-h-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_88%_12%,rgba(249,115,22,0.18),transparent_30%),radial-gradient(circle_at_10%_88%,rgba(236,72,153,0.2),transparent_32%),linear-gradient(135deg,#fffaf7,#fff1f5_52%,#fff7ed)] dark:bg-[radial-gradient(circle_at_88%_12%,rgba(249,115,22,0.18),transparent_30%),radial-gradient(circle_at_10%_88%,rgba(236,72,153,0.2),transparent_32%),linear-gradient(135deg,#111827,#1f1722_52%,#21170f)]" />
