@@ -322,8 +322,9 @@ export function AIHelpWidget() {
       )}
 
       {!isOpen && (
-        <button type="button" onClick={() => setIsOpen(true)} className="group flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-white bg-[linear-gradient(135deg,var(--store-accent),var(--store-primary),var(--store-secondary))] text-white shadow-[0_12px_35px_-8px_rgba(219,39,119,0.65)] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_-8px_rgba(219,39,119,0.75)] sm:h-16 sm:w-16 sm:rounded-[22px]" aria-label="Abrir assistente virtual" aria-expanded="false">
-          <MessageCircle className="h-6 w-6 transition duration-300 group-hover:scale-110 sm:h-7 sm:w-7" strokeWidth={2.25} />
+        <button type="button" onClick={() => setIsOpen(true)} className="group relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[linear-gradient(135deg,var(--store-accent),var(--store-primary)_55%,var(--store-secondary))] text-white shadow-[0_10px_28px_-6px_rgba(219,39,119,0.72),0_0_0_1px_rgba(219,39,119,0.12)] ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_16px_36px_-7px_rgba(219,39,119,0.82),0_0_22px_-7px_rgba(249,115,22,0.9)] active:translate-y-0 active:scale-95" aria-label="Abrir assistente virtual" aria-expanded="false">
+          <span aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.6),transparent_34%)] opacity-80 transition group-hover:opacity-100" />
+          <MessageCircle className="relative h-6 w-6 drop-shadow-[0_2px_3px_rgba(120,20,70,0.28)] transition duration-300 group-hover:scale-110" strokeWidth={2.3} />
         </button>
       )}
     </div>
