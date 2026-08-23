@@ -13,6 +13,20 @@ interface Message {
   content: string;
 }
 
+const MAX_MESSAGES = 20;
+const MAX_MESSAGE_LENGTH = 1_500;
+
+function isValidMessage(message: unknown): message is Message {
+  if (!message || typeof message !== 'object') return false;
+  const candidate = message as Partial<Message>;
+  return (
+    (candidate.role === 'user' || candidate.role === 'assistant') &&
+    typeof candidate.content === 'string' &&
+    candidate.content.trim().length > 0 &&
+    candidate.content.length <= MAX_MESSAGE_LENGTH
+  );
+}
+
 export async function POST(request: NextRequest) {
   if (!process.env.GOOGLE_GENAI_API_KEY) {
     return NextResponse.json(
@@ -23,10 +37,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { messages } = body as { messages: Message[] };
+    const { messages } = body as { messages?: unknown };
 
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: 'Messages required' }, { status: 400 });
+    if (
+      !Array.isArray(messages) ||
+      messages.length === 0 ||
+      messages.length > MAX_MESSAGES ||
+      !messages.every(isValidMessage)
+    ) {
+      return NextResponse.json({ error: 'Conversa inválida ou muito longa.' }, { status: 400 });
     }
 
     const lastMessage = messages[messages.length - 1];
@@ -70,8 +89,10 @@ ${FORBIDDEN_TERMS.map((term: string) => `- NUNCA mencione: ${term}`).join('\n')}
 
 Foco: Ajudar o cliente com dúvidas sobre produtos, preços, envio e políticas. Seja breve e direto.`;
 
-    // Format messages for API
-    const formattedMessages = messages.map(m => ({
+    // The current prompt is sent separately by GeminiClient. Only previous turns
+    // belong in history; including the last message here duplicated every prompt
+    // and broke follow-up interactions.
+    const conversationHistory = messages.slice(0, -1).map(m => ({
       role: m.role,
       parts: [{ text: m.content }],
     }));
@@ -81,7 +102,7 @@ Foco: Ajudar o cliente com dúvidas sobre produtos, preços, envio e políticas.
       lastMessage.content,
       systemPrompt,
       undefined,
-      formattedMessages
+      conversationHistory
     );
 
     return NextResponse.json({

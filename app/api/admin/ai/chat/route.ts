@@ -79,7 +79,8 @@ ${FORBIDDEN_TERMS.map((term: string) => `- NUNCA mencione: ${term}`).join('\n')}
 Seja um consultor amigável e prestativo. Responda em português. Foque em ajudar o negócio a crescer.`;
 
     // Format messages for API
-    const formattedMessages = messages.map(m => ({
+    // generateContent appends the current prompt, so history must exclude it.
+    const formattedMessages = messages.slice(0, -1).map(m => ({
       role: m.role,
       parts: [{ text: m.content }],
     }));
