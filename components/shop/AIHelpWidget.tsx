@@ -182,7 +182,7 @@ export function AIHelpWidget() {
   }
 
   return (
-    <div className={`fixed ${isOpen ? 'inset-0 z-[60] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:top-auto' : 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-6 z-30'}`}>
+    <div className={`fixed ${isOpen ? 'inset-0 z-[60] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:top-auto' : 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-6 z-30 lg:bottom-6'}`}>
       {isOpen && (
         <section
           aria-label="Assistente virtual da Hellou Studio"
