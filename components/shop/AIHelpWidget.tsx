@@ -91,15 +91,23 @@ export function AIHelpWidget() {
   }, [isOpen, loading, messages, showProducts]);
 
   useEffect(() => {
-    if (isOpen) window.setTimeout(() => inputRef.current?.focus(), 150);
+    if (isOpen && !window.matchMedia('(max-width: 639px)').matches) {
+      window.setTimeout(() => inputRef.current?.focus(), 150);
+    }
   }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || !window.matchMedia('(max-width: 639px)').matches) return;
     const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
     document.body.style.overflow = 'hidden';
+
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
     };
   }, [isOpen]);
 
@@ -182,19 +190,25 @@ export function AIHelpWidget() {
   }
 
   return (
-    <div className={`fixed ${isOpen ? 'inset-0 z-[60] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:top-auto' : 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-6 z-30 lg:bottom-6'}`}>
+    <div
+      className={`fixed ${
+        isOpen
+          ? 'inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[60] flex justify-end sm:inset-x-auto sm:bottom-5 sm:right-5'
+          : 'bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 sm:bottom-5 sm:right-5'
+      }`}
+    >
       {isOpen && (
         <section
           aria-label="Assistente virtual da Hellou Studio"
           role="dialog"
           aria-modal="true"
-          className="flex h-[100dvh] w-full flex-col overflow-hidden bg-white shadow-[0_24px_80px_-20px_rgba(107,33,65,0.38)] sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[410px] sm:rounded-[28px] sm:border sm:border-pink-100"
+          className="flex h-[min(600px,calc(100dvh-1.5rem-env(safe-area-inset-bottom)))] w-full max-w-[380px] flex-col overflow-hidden rounded-[24px] border border-pink-100 bg-white shadow-[0_24px_80px_-20px_rgba(107,33,65,0.38)] sm:h-[min(620px,calc(100dvh-2.5rem))] sm:w-[380px] sm:rounded-[26px]"
         >
-          <header className="relative shrink-0 overflow-hidden bg-[linear-gradient(135deg,var(--store-accent),var(--store-primary),var(--store-secondary))] px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] text-white sm:px-5 sm:pt-5">
+          <header className="relative shrink-0 overflow-hidden bg-[linear-gradient(135deg,var(--store-accent),var(--store-primary),var(--store-secondary))] px-4 py-3.5 text-white sm:px-5 sm:py-4">
             <div className="absolute -right-8 -top-12 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
             <div className="relative flex items-center gap-2.5 sm:gap-3">
               <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-white/50 bg-white/95 shadow-sm sm:h-8 sm:w-8">
-                <Image src="/images/avatars/axolotl-01.png" alt="Mascote Hellou" fill className="object-cover" priority />
+                <Image src="/images/avatars/axolotl-01.png" alt="Mascote Hellou" fill sizes="32px" className="object-cover" priority />
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="truncate font-display text-sm font-extrabold sm:text-base">Hellou, posso ajudar?</h2>
@@ -237,7 +251,7 @@ export function AIHelpWidget() {
                 {messages.map((message, index) => (
                   <div key={`${message.role}-${index}`} className={`flex items-end gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     {message.role === 'assistant' && (
-                      <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-pink-100 bg-white"><Image src="/images/avatars/axolotl-02.png" alt="" fill className="object-cover" /></div>
+                      <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-pink-100 bg-white"><Image src="/images/avatars/axolotl-02.png" alt="" fill sizes="28px" className="object-cover" /></div>
                     )}
                     <div className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-6 shadow-sm sm:max-w-[82%] sm:px-4 sm:py-3 ${message.role === 'user' ? 'rounded-br-md bg-[linear-gradient(135deg,var(--store-primary),var(--store-accent))] text-white' : 'rounded-bl-md border border-slate-100 bg-white text-slate-700'}`}>
                       {message.content}
@@ -247,7 +261,7 @@ export function AIHelpWidget() {
 
                 {loading && (
                   <div className="flex items-end gap-2">
-                    <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-pink-100 bg-white"><Image src="/images/avatars/axolotl-02.png" alt="" fill className="object-cover" /></div>
+                    <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-pink-100 bg-white"><Image src="/images/avatars/axolotl-02.png" alt="" fill sizes="28px" className="object-cover" /></div>
                     <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-slate-100 bg-white px-4 py-3 shadow-sm">
                       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-pink-400 [animation-delay:-0.3s]" />
                       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-pink-400 [animation-delay:-0.15s]" />
@@ -266,7 +280,7 @@ export function AIHelpWidget() {
                         {suggestedProducts.map(product => (
                           <Link key={product.id} href={`/products/${product.id}`} onClick={() => setIsOpen(false)} className="group w-36 shrink-0 snap-start overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                             <div className="relative h-24 bg-pink-50">
-                              {product.image_url ? <Image src={product.image_url} alt={product.name} fill className="object-cover transition duration-300 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-pink-300"><ShoppingBag className="h-7 w-7" /></div>}
+                              {product.image_url ? <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-cover transition duration-300 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-pink-300"><ShoppingBag className="h-7 w-7" /></div>}
                             </div>
                             <div className="p-3">
                               <p className="truncate text-xs font-bold text-slate-800">{product.name}</p>
@@ -322,9 +336,13 @@ export function AIHelpWidget() {
       )}
 
       {!isOpen && (
-        <button type="button" onClick={() => setIsOpen(true)} className="group relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[linear-gradient(135deg,var(--store-accent),var(--store-primary)_55%,var(--store-secondary))] text-white shadow-[0_10px_28px_-6px_rgba(219,39,119,0.72),0_0_0_1px_rgba(219,39,119,0.12)] ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_16px_36px_-7px_rgba(219,39,119,0.82),0_0_22px_-7px_rgba(249,115,22,0.9)] active:translate-y-0 active:scale-95" aria-label="Abrir assistente virtual" aria-expanded="false">
-          <span aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.6),transparent_34%)] opacity-80 transition group-hover:opacity-100" />
-          <MessageCircle className="relative h-6 w-6 drop-shadow-[0_2px_3px_rgba(120,20,70,0.28)] transition duration-300 group-hover:scale-110" strokeWidth={2.3} />
+        <button type="button" onClick={() => setIsOpen(true)} className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--store-primary),var(--store-secondary))] p-[3px] shadow-[0_12px_30px_-7px_rgba(219,39,119,0.65)] ring-2 ring-white transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_17px_38px_-8px_rgba(219,39,119,0.75)] active:translate-y-0 active:scale-95" aria-label="Abrir assistente virtual" aria-expanded="false">
+          <span className="relative h-full w-full overflow-hidden rounded-full bg-white">
+            <Image src="/images/avatars/axolotl-01.png" alt="" fill sizes="50px" className="object-cover transition duration-300 group-hover:scale-105" />
+          </span>
+          <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[var(--store-accent)] text-white shadow-sm">
+            <MessageCircle className="h-3 w-3" strokeWidth={2.6} />
+          </span>
         </button>
       )}
     </div>

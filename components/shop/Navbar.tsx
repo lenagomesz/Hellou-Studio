@@ -456,7 +456,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
       {count > 0 && pathname !== '/cart' && (
         <Link
           href="/cart"
-          className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 transition-transform hover:scale-105 active:scale-95 lg:hidden"
+          className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-[5.5rem] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 transition-transform hover:scale-105 active:scale-95 lg:hidden"
           aria-label={`Carrinho com ${count} ${count === 1 ? 'item' : 'itens'}`}
         >
           <BagIcon className="h-6 w-6" />
