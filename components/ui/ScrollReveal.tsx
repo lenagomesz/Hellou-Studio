@@ -47,12 +47,12 @@ export function ScrollReveal({
   return (
     <div
       ref={ref}
-      className={className}
+      className={`scroll-reveal ${className}`}
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'translate3d(0,0,0) scale(1)' : transforms[direction],
         transition: `opacity 0.7s ease-out ${delay}ms, transform 0.7s ease-out ${delay}ms`,
-        willChange: 'opacity, transform',
+        willChange: visible ? 'auto' : 'opacity, transform',
       }}
     >
       {children}

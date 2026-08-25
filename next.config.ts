@@ -3,6 +3,9 @@ import { createRequire } from 'node:module';
 
 const nextConfig: NextConfig = {
   turbopack: {},
+  // The development badge sits over the fixed mobile navigation. Errors still
+  // surface through the development overlay and terminal with this disabled.
+  devIndicators: false,
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co' },

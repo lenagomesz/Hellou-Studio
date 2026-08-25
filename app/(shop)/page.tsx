@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
-import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
+import { getSupabaseAdmin, isSupabaseAdminConfigured, withTimeout } from '@/lib/supabase';
 import { FeaturedProductsClient } from '@/components/shop/FeaturedProducts';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { HeroCarousel } from '@/components/shop/HeroCarousel';
@@ -69,16 +69,11 @@ const MARQUEE_ITEMS = [
 
 const getFeaturedProducts = unstable_cache(
   async (type: 'physical' | 'digital'): Promise<Product[]> => {
-    console.log('[home/page] getFeaturedProducts called with type:', type);
+    if (!isSupabaseAdminConfigured()) return [];
+
     return withTimeout(
       (async () => {
-        let admin;
-        try {
-          admin = getSupabaseAdmin();
-        } catch (err) {
-          console.error('[home/page] getSupabaseAdmin() THREW:', err);
-          return [] as Product[];
-        }
+        const admin = getSupabaseAdmin();
 
         let query = admin
           .from('products')
@@ -179,8 +174,8 @@ async function WholesaleProducts() {
 
 function FeaturedSkeleton() {
   return (
-    <section className="bg-white/80 dark:bg-gray-950/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className="bg-white py-12 shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)] sm:bg-white/80 sm:py-20 sm:backdrop-blur-sm dark:bg-gray-950 sm:dark:bg-gray-950/80">
+      <div className="mx-auto max-w-[1400px] px-3 sm:px-5">
         <div className="h-8 w-48 animate-pulse rounded-lg bg-pink-200/60" />
         <div className="mt-10 grid grid-cols-2 gap-2.5 min-[520px]:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -222,8 +217,8 @@ export default async function HomePage() {
       {/* =========================================== */}
       {/* CATEGORIES */}
       {/* =========================================== */}
-      <section className="bg-white/80 dark:bg-gray-950/80 py-12 sm:py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <section className="bg-white py-12 shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)] sm:bg-white/80 sm:py-20 sm:backdrop-blur-sm dark:bg-gray-950 sm:dark:bg-gray-950/80">
+        <div className="mx-auto max-w-6xl px-3 sm:px-6">
           <ScrollReveal direction="scale">
             <div className="text-center">
               <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 dark:bg-orange-950/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-orange-600 dark:text-orange-400 ring-1 ring-orange-100 dark:ring-orange-800/50">
@@ -320,7 +315,7 @@ export default async function HomePage() {
             <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
               {/* Esquerda - Content */}
               <div className="text-center md:text-left">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/25 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/40 mb-3">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/25 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/40 sm:backdrop-blur-sm">
                   <span>📥</span>
                   <span>Modelos 3D</span>
                 </div>
@@ -336,7 +331,7 @@ export default async function HomePage() {
 
                 {/* Benefícios em cards - Otimizado para mobile */}
                 <div className="space-y-2 mb-5 sm:mb-7">
-                  <div className="flex items-start gap-2.5 bg-white/10 backdrop-blur-sm rounded-lg p-2.5 sm:p-3">
+                  <div className="flex items-start gap-2.5 rounded-lg bg-white/10 p-2.5 sm:p-3 sm:backdrop-blur-sm">
                     <span className="text-lg sm:text-xl mt-0.5 flex-shrink-0">✓</span>
                     <div className="min-w-0">
                       <p className="font-semibold text-white text-xs sm:text-sm">Uso comercial livre</p>
@@ -344,7 +339,7 @@ export default async function HomePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-2.5 bg-white/10 backdrop-blur-sm rounded-lg p-2.5 sm:p-3">
+                  <div className="flex items-start gap-2.5 rounded-lg bg-white/10 p-2.5 sm:p-3 sm:backdrop-blur-sm">
                     <span className="text-lg sm:text-xl mt-0.5 flex-shrink-0">✓</span>
                     <div className="min-w-0">
                       <p className="font-semibold text-white text-xs sm:text-sm">Prontos para FDM</p>
@@ -352,7 +347,7 @@ export default async function HomePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-2.5 bg-white/10 backdrop-blur-sm rounded-lg p-2.5 sm:p-3">
+                  <div className="flex items-start gap-2.5 rounded-lg bg-white/10 p-2.5 sm:p-3 sm:backdrop-blur-sm">
                     <span className="text-lg sm:text-xl mt-0.5 flex-shrink-0">✓</span>
                     <div className="min-w-0">
                       <p className="font-semibold text-white text-xs sm:text-sm">Personalizáveis</p>
@@ -376,10 +371,10 @@ export default async function HomePage() {
               <div className="hidden md:flex justify-center items-center">
                 <div className="relative">
                   {/* Card principal */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-md rounded-3xl border border-white/30 transform scale-100 group-hover:scale-105 transition" />
+                  <div className="absolute inset-0 scale-100 rounded-3xl border border-white/30 bg-gradient-to-br from-white/20 to-white/5 transition group-hover:scale-105 sm:backdrop-blur-md" />
 
                   <div className="relative h-80 w-80 flex items-center justify-center rounded-3xl overflow-hidden">
-                    <div className="absolute inset-0 bg-white/5 backdrop-blur-sm" />
+                    <div className="absolute inset-0 bg-white/5 sm:backdrop-blur-sm" />
 
                     {/* Ícone grande */}
                     <div className="relative z-10 text-center">
@@ -398,7 +393,7 @@ export default async function HomePage() {
       {/* =========================================== */}
       {/* WHY CHOOSE US */}
       {/* =========================================== */}
-      <section className="bg-white/80 dark:bg-gray-950/80 py-12 sm:py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+      <section className="bg-white py-12 shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)] sm:bg-white/80 sm:py-20 sm:backdrop-blur-sm dark:bg-gray-950 sm:dark:bg-gray-950/80">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <ScrollReveal direction="right">
             <div className="text-center">
@@ -418,19 +413,19 @@ export default async function HomePage() {
             </div>
           </ScrollReveal>
 
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-12 sm:gap-5 lg:grid-cols-4">
             {FEATURES.map((feat, i) => (
               <ScrollReveal key={feat.title} delay={i * 120} direction={i < 2 ? 'left' : 'right'} className="h-full">
-                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-orange-100/60 dark:border-gray-800 bg-gradient-to-br from-orange-50/50 to-pink-50/30 dark:from-gray-900 dark:to-gray-900 p-7 text-center transition-all duration-500 hover:border-pink-200 dark:hover:border-pink-800 hover:shadow-xl hover:bg-white dark:hover:bg-gray-800 hover:-translate-y-2">
+                <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-orange-100/60 bg-gradient-to-br from-orange-50/50 to-pink-50/30 p-4 text-center transition-all duration-500 hover:-translate-y-2 hover:border-pink-200 hover:bg-white hover:shadow-xl sm:rounded-3xl sm:p-7 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900 dark:hover:border-pink-800 dark:hover:bg-gray-800">
                   <div className="absolute inset-0 bg-gradient-to-br from-pink-500/0 to-orange-400/0 transition-all duration-500 group-hover:from-pink-500/[0.03] group-hover:to-orange-400/[0.05]" />
                   <div className="relative flex flex-1 flex-col">
-                    <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-100 to-orange-100 text-2xl shadow-sm transition-all duration-500 group-hover:scale-125 group-hover:rotate-12 group-hover:shadow-lg mx-auto">
+                    <span className="mx-auto inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-pink-100 to-orange-100 text-xl shadow-sm transition-all duration-500 group-hover:rotate-12 group-hover:scale-125 group-hover:shadow-lg sm:h-14 sm:w-14 sm:rounded-2xl sm:text-2xl">
                       {feat.emoji}
                     </span>
                     <h3 className="mt-4 text-base font-bold text-gray-900 dark:text-white transition-colors duration-300 group-hover:text-orange-600 dark:group-hover:text-orange-400">
                       {feat.title}
                     </h3>
-                    <p className="mt-2 flex-1 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    <p className="mt-2 flex-1 text-xs leading-5 text-gray-600 sm:text-sm sm:leading-relaxed dark:text-gray-400">
                       {feat.description}
                     </p>
                   </div>
@@ -454,7 +449,7 @@ export default async function HomePage() {
           <div className="grid gap-6 sm:grid-cols-4 text-center">
             {STATS.map((stat, i) => (
               <ScrollReveal key={stat.label} delay={i * 120} direction="scale">
-                <div className="group rounded-2xl bg-white/60 dark:bg-gray-900/60 p-6 backdrop-blur-sm transition-all duration-500 hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg hover:scale-105">
+                <div className="group rounded-2xl bg-white/60 p-6 transition-all duration-500 hover:scale-105 hover:bg-white hover:shadow-lg sm:backdrop-blur-sm dark:bg-gray-900/60 dark:hover:bg-gray-800">
                   <AnimatedCounter
                     target={stat.value}
                     className="text-3xl font-bold text-gray-800 dark:text-white sm:text-4xl"
@@ -474,7 +469,7 @@ export default async function HomePage() {
       {/* SOCIAL PROOF / REVIEWS — comentado até ter depoimentos reais */}
       {/* =========================================== */}
       {/*
-      <section className="bg-white/80 dark:bg-gray-950/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
+      <section className="bg-white py-20 shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)] sm:bg-white/80 sm:backdrop-blur-sm dark:bg-gray-950 sm:dark:bg-gray-950/80">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <ScrollReveal direction="scale">
             <div className="text-center">
@@ -529,7 +524,7 @@ export default async function HomePage() {
       {/* =========================================== */}
       {/* CTA FINAL — Catálogo + Sob Demanda */}
       {/* =========================================== */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-pink-50/40 to-orange-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 py-24">
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-pink-50/40 to-orange-50/30 py-14 sm:py-24 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -right-32 top-0 h-64 w-64 rounded-full bg-pink-200/30 blur-3xl dark:bg-pink-500/10" />
           <div className="absolute -left-32 bottom-0 h-64 w-64 rounded-full bg-orange-200/30 blur-3xl dark:bg-orange-500/10" />
@@ -551,11 +546,11 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <div className="mt-14 grid gap-5 sm:grid-cols-2">
+            <div className="mt-8 grid gap-3 sm:mt-14 sm:grid-cols-2 sm:gap-5">
               {/* Card — Explorar catálogo */}
               <Link
                 href="/products"
-                className="group relative overflow-hidden rounded-2xl border border-pink-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 transition-all duration-300 hover:shadow-xl hover:shadow-pink-100/50 dark:hover:shadow-pink-900/20 hover:-translate-y-1"
+                className="group relative overflow-hidden rounded-2xl border border-pink-100 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-100/50 sm:p-8 dark:border-gray-800 dark:bg-gray-900 dark:hover:shadow-pink-900/20"
               >
                 <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-to-br from-pink-100 to-orange-100 opacity-60 blur-2xl transition-opacity group-hover:opacity-100 dark:from-pink-900/30 dark:to-orange-900/20" />
                 <div className="relative">
@@ -582,7 +577,7 @@ export default async function HomePage() {
               {/* Card — Impressão sob demanda */}
               <Link
                 href="/request-print"
-                className="group relative overflow-hidden rounded-2xl border border-orange-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 transition-all duration-300 hover:shadow-xl hover:shadow-orange-100/50 dark:hover:shadow-orange-900/20 hover:-translate-y-1"
+                className="group relative overflow-hidden rounded-2xl border border-orange-100 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-100/50 sm:p-8 dark:border-gray-800 dark:bg-gray-900 dark:hover:shadow-orange-900/20"
               >
                 <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-to-br from-orange-100 to-pink-100 opacity-60 blur-2xl transition-opacity group-hover:opacity-100 dark:from-orange-900/30 dark:to-pink-900/20" />
                 <div className="relative">

@@ -3,7 +3,6 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { normalizeAdminAccessLevel } from '@/lib/admin-permissions';
-import { getAuthSecret } from '@/lib/security-env';
 import { profileAvatarImageUrl } from '@/lib/profile-avatars';
 
 export const authOptions: NextAuthOptions = {
@@ -190,5 +189,8 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: getAuthSecret(),
+  // Keep configuration lazy at build time. NextAuth validates the secret when
+  // an authentication request is handled, while production builds can collect
+  // route metadata without requiring runtime secrets.
+  secret: process.env.NEXTAUTH_SECRET,
 };

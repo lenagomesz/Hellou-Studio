@@ -1,11 +1,13 @@
 import * as Sentry from '@sentry/nextjs';
 
+const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  dsn: sentryDsn,
   environment: process.env.NODE_ENV,
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-  debug: process.env.NODE_ENV !== 'production',
-  enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+  debug: Boolean(sentryDsn) && process.env.NODE_ENV !== 'production',
+  enabled: Boolean(sentryDsn),
   sendDefaultPii: false,
 
   // Ignore native bridge failures injected by in-app browsers. These scripts

@@ -65,7 +65,7 @@ function BagIcon({ className = 'h-5 w-5' }: { className?: string }) {
 
 function MenuIcon({ path, filled = false }: { path: string; filled?: boolean }) {
   return (
-    <span aria-hidden="true" className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-gray-400 dark:text-gray-500">
+    <span aria-hidden="true" className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-current">
       <svg viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.7} className="h-[18px] w-[18px]">
         <path strokeLinecap="round" strokeLinejoin="round" d={path} />
       </svg>
@@ -86,6 +86,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
       icon: NAV_LINKS.find((defaultLink) => defaultLink.href === link.href)?.icon
         ?? 'M4.75 12h14.5M12 4.75v14.5',
     }));
+  const bottomNavigationLinks = navigationLinks.filter((link) => ['/', '/products', '/request-print'].includes(link.href));
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -115,8 +116,14 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
+    let wasScrolled = window.scrollY > 8;
+    setScrolled(wasScrolled);
+    const onScroll = () => {
+      const isNowScrolled = window.scrollY > 8;
+      if (isNowScrolled === wasScrolled) return;
+      wasScrolled = isNowScrolled;
+      setScrolled(isNowScrolled);
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -129,14 +136,22 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
   useEffect(() => {
     if (!menuOpen || !window.matchMedia('(max-width: 1023px)').matches) return;
 
-    const previousOverflow = document.body.style.overflow;
-    const previousOverscrollBehavior = document.body.style.overscrollBehavior;
-    document.body.style.overflow = 'hidden';
-    document.body.style.overscrollBehavior = 'none';
+    const root = document.documentElement;
+    const previousOverflow = root.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const previousOverscrollBehavior = root.style.overscrollBehavior;
+    const scrollbarWidth = window.innerWidth - root.clientWidth;
+
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    root.style.overflow = 'hidden';
+    root.style.overscrollBehavior = 'none';
 
     return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.overscrollBehavior = previousOverscrollBehavior;
+      root.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+      root.style.overscrollBehavior = previousOverscrollBehavior;
     };
   }, [menuOpen]);
 
@@ -163,7 +178,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-xl transition-shadow dark:bg-gray-950/95 lg:fixed lg:inset-x-0 lg:top-0 ${
+        className={`sticky top-0 w-full border-b bg-white transition-shadow dark:bg-gray-950 lg:fixed lg:inset-x-0 lg:top-0 lg:z-50 lg:bg-white/95 lg:backdrop-blur-xl lg:dark:bg-gray-950/95 ${menuOpen ? 'z-[80]' : 'z-50'} ${
           scrolled
             ? 'border-pink-100/80 shadow-md shadow-pink-100/20 dark:border-gray-800 dark:shadow-black/30'
             : 'border-gray-100 dark:border-gray-900'
@@ -197,6 +212,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
                 className={iconButtonClass}
                 aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
                 aria-expanded={menuOpen}
+                aria-controls="mobile-navigation-drawer"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
                   {menuOpen ? (
@@ -337,14 +353,22 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
           </div>
         </div>
 
+        {menuOpen && <button type="button" className="fixed inset-0 z-[60] bg-gray-950/45 backdrop-blur-[2px] lg:hidden" onClick={() => setMenuOpen(false)} aria-label="Fechar menu" />}
+
         <div
-          className={`w-full border-x-0 border-b border-t bg-white/98 shadow-xl shadow-gray-900/10 backdrop-blur-xl transition-[max-height,opacity] duration-300 ease-in-out dark:bg-gray-950/98 lg:hidden ${
-            menuOpen
-              ? 'max-h-[calc(100dvh-4.25rem)] overflow-y-auto overscroll-contain border-gray-200 opacity-100 dark:border-gray-800'
-              : 'max-h-0 overflow-hidden border-transparent opacity-0'
+          id="mobile-navigation-drawer"
+          aria-hidden={!menuOpen}
+          className={`fixed inset-y-0 right-0 z-[70] w-[min(88vw,380px)] overflow-y-auto overscroll-contain border-l border-pink-100 bg-white shadow-2xl shadow-gray-950/30 transition duration-300 ease-out dark:border-gray-800 dark:bg-gray-950 lg:hidden ${
+            menuOpen ? 'visible translate-x-0 opacity-100' : 'hidden'
           }`}
         >
-          <nav className="flex flex-col gap-1 p-3" aria-label="Menu do celular">
+          <nav className="flex min-h-full flex-col gap-1 p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(0.75rem+env(safe-area-inset-top))]" aria-label="Menu do celular">
+            <div className="mb-2 flex items-center justify-between rounded-2xl bg-gradient-to-r from-pink-50 to-orange-50 px-3 py-2.5 dark:from-pink-950/40 dark:to-orange-950/20">
+              <span><strong className="block text-sm text-gray-950 dark:text-white">Menu Hellou</strong><small className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Encontre tudo em poucos toques</small></span>
+              <button type="button" onClick={() => setMenuOpen(false)} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-pink-100 bg-white text-gray-600 shadow-sm dark:border-pink-900 dark:bg-gray-900 dark:text-gray-300" aria-label="Fechar menu">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
             {session?.user && (
               <div className="mb-1 flex items-center gap-3 rounded-xl border border-pink-100 bg-gradient-to-r from-pink-50 to-orange-50 p-3 dark:border-pink-900/60 dark:from-pink-950/40 dark:to-orange-950/20">
                 {avatarImageUrl ? (
@@ -453,18 +477,18 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
 
       <div aria-hidden="true" className="hidden h-16 lg:block" />
 
-      {count > 0 && pathname !== '/cart' && (
-        <Link
-          href="/cart"
-          className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-[5.5rem] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 transition-transform hover:scale-105 active:scale-95 lg:hidden"
-          aria-label={`Carrinho com ${count} ${count === 1 ? 'item' : 'itens'}`}
-        >
-          <BagIcon className="h-6 w-6" />
-          <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold leading-5 text-pink-600 shadow-sm">
-            {count > 99 ? '99+' : count}
-          </span>
-        </Link>
-      )}
+      <nav className="fixed inset-x-0 bottom-0 z-50 grid h-[calc(4.25rem+env(safe-area-inset-bottom))] grid-cols-5 border-t border-pink-100 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_36px_-24px_rgba(107,33,65,.45)] dark:border-gray-800 dark:bg-gray-950 lg:hidden" aria-label="Navegação rápida">
+        {bottomNavigationLinks.slice(0, 2).map((link) => {
+          const active = isActive(link.href);
+          return <Link key={link.href} href={link.href} scroll onClick={handleMobileNavigation} aria-current={active ? 'page' : undefined} className={`flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[9px] font-bold transition ${active ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}><MenuIcon path={link.icon} /><span className="max-w-full truncate">{link.label}</span></Link>;
+        })}
+        {bottomNavigationLinks.slice(2, 3).map((link) => {
+          const active = isActive(link.href);
+          return <Link key={link.href} href={link.href} scroll onClick={handleMobileNavigation} aria-current={active ? 'page' : undefined} className="relative flex min-w-0 flex-col items-center justify-end gap-1 pb-2 text-[9px] font-black text-pink-600 dark:text-pink-400"><span className="absolute -top-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border-4 border-white bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-lg shadow-pink-500/30 dark:border-gray-950"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" d={link.icon} /></svg></span><span>{link.label === 'Encomendas' ? 'Criar' : link.label}</span></Link>;
+        })}
+        <Link href="/cart" scroll onClick={handleMobileNavigation} aria-current={pathname === '/cart' ? 'page' : undefined} className={`relative flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[9px] font-bold ${pathname === '/cart' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}><span className="relative inline-flex h-7 w-7 items-center justify-center"><BagIcon className="h-[19px] w-[19px]" />{count > 0 && <span className="absolute -right-1.5 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-orange-500 px-1 text-[8px] font-black leading-4 text-white">{count > 99 ? '99+' : count}</span>}</span><span>Carrinho</span></Link>
+        <button type="button" onClick={() => setMenuOpen(true)} aria-expanded={menuOpen} aria-controls="mobile-navigation-drawer" className={`flex min-w-0 flex-col items-center justify-center gap-1 border-0 bg-transparent px-1 text-[9px] font-bold ${menuOpen ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}><span aria-hidden="true" className="inline-flex h-7 w-7 items-center justify-center"><svg viewBox="0 0 24 24" fill="currentColor" className="h-[19px] w-[19px]"><circle cx="5" cy="12" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="19" cy="12" r="1.7" /></svg></span><span>Mais</span></button>
+      </nav>
     </>
   );
 }

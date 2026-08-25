@@ -1,11 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Cookie, Settings2, ShieldCheck, X } from 'lucide-react';
 import { OPEN_PRIVACY_EVENT, PRIVACY_CHANGED_EVENT, type PrivacyConsent } from '@/lib/privacy';
 
 export function CookieConsentBanner() {
+  const pathname = usePathname();
+  const hasMobileShopNavigation = !['/dashboard', '/admin', '/login', '/register', '/forgot-password', '/reset-password'].some((prefix) => pathname.startsWith(prefix));
   const [consent, setConsent] = useState<PrivacyConsent | null | undefined>(undefined);
   const [customizing, setCustomizing] = useState(false);
   const [analytics, setAnalytics] = useState(false);
@@ -67,7 +70,12 @@ export function CookieConsentBanner() {
   if (consent !== null) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100] p-2 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
+    <div
+      className={`fixed inset-x-0 z-[100] p-2 sm:p-5 ${hasMobileShopNavigation ? 'bottom-[calc(4.25rem+env(safe-area-inset-bottom))] lg:bottom-0' : 'bottom-0'}`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="privacy-title"
+    >
       <div className="mx-auto max-w-3xl overflow-hidden rounded-xl border border-pink-100 bg-white shadow-2xl shadow-gray-900/20 sm:rounded-2xl dark:border-gray-700 dark:bg-gray-900">
         <div className="flex gap-2.5 p-3 sm:gap-3 sm:p-5">
           <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-pink-600 sm:flex dark:bg-pink-950/40 dark:text-pink-300"><Cookie className="h-5 w-5" /></span>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, ExternalLink, Loader2, MessageCircle, RefreshCcw, ShoppingBag, Sparkles, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -54,6 +55,8 @@ function isStoredMessage(value: unknown): value is Message {
 }
 
 export function AIHelpWidget() {
+  const pathname = usePathname();
+  const hasMobileShopNavigation = !['/dashboard', '/admin', '/login', '/register', '/forgot-password', '/reset-password'].some((prefix) => pathname.startsWith(prefix));
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -193,8 +196,8 @@ export function AIHelpWidget() {
     <div
       className={`fixed ${
         isOpen
-          ? 'inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[60] flex justify-end sm:inset-x-auto sm:bottom-5 sm:right-5'
-          : 'bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 sm:bottom-5 sm:right-5'
+          ? `inset-x-0 px-3 ${hasMobileShopNavigation ? 'bottom-[calc(5rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(0.75rem+env(safe-area-inset-bottom))]'} z-[60] flex justify-end sm:left-auto sm:right-5 sm:px-0 lg:bottom-5`
+          : `${hasMobileShopNavigation ? 'bottom-[calc(5.25rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(1rem+env(safe-area-inset-bottom))]'} right-4 z-50 sm:right-5 lg:bottom-5`
       }`}
     >
       {isOpen && (
@@ -202,7 +205,7 @@ export function AIHelpWidget() {
           aria-label="Assistente virtual da Hellou Studio"
           role="dialog"
           aria-modal="true"
-          className="flex h-[min(600px,calc(100dvh-1.5rem-env(safe-area-inset-bottom)))] w-full max-w-[380px] flex-col overflow-hidden rounded-[24px] border border-pink-100 bg-white shadow-[0_24px_80px_-20px_rgba(107,33,65,0.38)] sm:h-[min(620px,calc(100dvh-2.5rem))] sm:w-[380px] sm:rounded-[26px]"
+          className={`flex ${hasMobileShopNavigation ? 'h-[min(600px,calc(100dvh-10rem-env(safe-area-inset-bottom)))]' : 'h-[min(600px,calc(100dvh-1.5rem-env(safe-area-inset-bottom)))]'} w-full max-w-[380px] flex-col overflow-hidden rounded-[24px] border border-pink-100 bg-white shadow-[0_24px_80px_-20px_rgba(107,33,65,0.38)] sm:w-[380px] sm:rounded-[26px] lg:h-[min(620px,calc(100dvh-2.5rem))]`}
         >
           <header className="relative shrink-0 overflow-hidden bg-[linear-gradient(135deg,var(--store-accent),var(--store-primary),var(--store-secondary))] px-4 py-3.5 text-white sm:px-5 sm:py-4">
             <div className="absolute -right-8 -top-12 h-32 w-32 rounded-full bg-white/15 blur-2xl" />

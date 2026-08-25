@@ -17,6 +17,7 @@
     "test:e2e:list": "playwright test --list",
     "typecheck": "tsc --noEmit",
     "db:check": "node scripts/check-migrations.mjs",
+    "quality": "npm run quality:deploy",
     "quality:deploy": "npm run lint && npm run test:run && npm run db:check && npm run typecheck && npm run build"
   },
   "dependencies": {

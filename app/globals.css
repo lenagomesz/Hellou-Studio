@@ -32,6 +32,7 @@
 body {
   background: var(--color-background);
   color: var(--color-foreground);
+  overflow-x: clip;
   font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -367,6 +368,19 @@ html {
 /* Shared accessibility and touch defaults. */
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid rgb(236 72 153 / 0.65); outline-offset: 3px; }
+@media (max-width: 640px) {
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
+
+  .animate-float,
+  .animate-gradient-x {
+    animation: none !important;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }

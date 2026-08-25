@@ -1,7 +1,9 @@
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase';
 import type { ProductCategory, ProductType } from '@/types/database';
 
 export async function getCatalogCategories(type: ProductType): Promise<ProductCategory[]> {
+  if (!isSupabaseAdminConfigured()) return [];
+
   try {
     const admin = getSupabaseAdmin();
     let productsQuery = admin

@@ -68,7 +68,7 @@ export function FeaturedProductsClient({
 
         <div className="grid grid-cols-2 gap-2.5 min-[520px]:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5">
           {featured.map((product, i) => (
-            <ScrollReveal key={product.id} delay={i * 100} direction={i % 2 === 0 ? 'up' : 'scale'}>
+            <ScrollReveal key={product.id} className="h-full" delay={i * 100} direction={i % 2 === 0 ? 'up' : 'scale'}>
               <ProductCard product={product} category={categories.find((category) => category.slug === product.category)} showcase />
             </ScrollReveal>
           ))}
