@@ -19,7 +19,7 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
-export function ProductCard({ product, basePath = "/products", category, catalog = false }: { product: Product; basePath?: string; category?: Pick<ProductCategory, 'name' | 'color'>; catalog?: boolean }) {
+export function ProductCard({ product, basePath = "/products", category, showcase = false }: { product: Product; basePath?: string; category?: Pick<ProductCategory, 'name' | 'color'>; showcase?: boolean }) {
   const [zoomed, setZoomed] = useState(false);
   const currentPrice = product.sale_price ?? product.base_price;
   const hasAdditionalPriceOptions = product.product_options?.some(
@@ -35,9 +35,9 @@ export function ProductCard({ product, basePath = "/products", category, catalog
     <Link
       href={`${basePath}/${product.id}`}
       prefetch={false}
-      className={`group block overflow-hidden bg-white transition dark:bg-gray-900 dark:hover:shadow-gray-900/50 ${catalog ? 'rounded-2xl border border-pink-100/80 shadow-[0_8px_26px_-20px_rgba(219,39,119,.45)] hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_22px_45px_-24px_rgba(219,39,119,.42)] dark:border-gray-800 dark:hover:border-pink-900' : 'rounded-2xl border border-gray-100 shadow-sm hover:shadow-md dark:border-gray-800'}`}
+      className={`group block overflow-hidden bg-white transition dark:bg-gray-900 dark:hover:shadow-gray-900/50 ${showcase ? 'rounded-2xl border border-pink-100/80 shadow-[0_8px_26px_-20px_rgba(219,39,119,.45)] hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_22px_45px_-24px_rgba(219,39,119,.42)] dark:border-gray-800 dark:hover:border-pink-900' : 'rounded-2xl border border-gray-100 shadow-sm hover:shadow-md dark:border-gray-800'}`}
     >
-      <div className={`relative aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700 ${catalog ? 'm-1.5 mb-0 rounded-[13px]' : ''}`}>
+      <div className={`relative aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700 ${showcase ? 'm-1.5 mb-0 rounded-[13px]' : ''}`}>
         {(product.is_wholesale || product.is_best_seller) && (
           <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1 sm:left-3 sm:top-3">
             {product.is_wholesale && (
@@ -65,17 +65,17 @@ export function ProductCard({ product, basePath = "/products", category, catalog
           </div>
         )}
       </div>
-      <div className={catalog ? 'p-3 sm:p-3.5' : 'p-3 sm:p-4'}>
+      <div className={showcase ? 'p-3 sm:p-3.5' : 'p-3 sm:p-4'}>
         <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-pink-600">
           {category?.name ?? CATEGORY_LABELS[product.category] ?? product.category}
         </p>
-        <h3 className={`${catalog ? 'line-clamp-2 min-h-[2.4rem] font-bold leading-[1.2rem]' : 'line-clamp-1 font-semibold'} mt-1 text-xs text-gray-900 sm:text-sm dark:text-white`}>
+        <h3 className={`${showcase ? 'line-clamp-2 min-h-[2.4rem] font-bold leading-[1.2rem]' : 'line-clamp-1 font-semibold'} mt-1 text-xs text-gray-900 sm:text-sm dark:text-white`}>
           {product.name}
         </h3>
-        <p className={`${catalog ? 'hidden sm:line-clamp-2' : 'line-clamp-2'} mt-1 min-h-8 text-[11px] leading-4 text-gray-400 dark:text-gray-400 sm:min-h-9 sm:text-xs sm:leading-[18px]`}>
+        <p className={`${showcase ? 'hidden sm:line-clamp-2' : 'line-clamp-2'} mt-1 min-h-8 text-[11px] leading-4 text-gray-400 dark:text-gray-400 sm:min-h-9 sm:text-xs sm:leading-[18px]`}>
           {product.description || '\u00A0'}
         </p>
-        {catalog && (product.is_customizable || product.fulfillment_mode === 'ready_stock') && (
+        {showcase && (product.is_customizable || product.fulfillment_mode === 'ready_stock') && (
           <div className="mt-2 flex flex-wrap gap-1">
             {product.is_customizable && <span className="rounded-full bg-pink-50 px-2 py-0.5 text-[8px] font-bold text-pink-700 dark:bg-pink-950/40 dark:text-pink-300">Personalizável</span>}
             {product.fulfillment_mode === 'ready_stock' && <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[8px] font-bold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">Pronta entrega</span>}
@@ -84,10 +84,10 @@ export function ProductCard({ product, basePath = "/products", category, catalog
         <div className="mt-2 flex items-end justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-baseline gap-1.5">
             {hasAdditionalPriceOptions && <span className="w-full text-[8px] font-bold uppercase tracking-wide text-pink-500 dark:text-pink-400 sm:text-[9px]">A partir de</span>}
-            <p className={`${catalog ? 'font-black tracking-tight' : 'font-semibold'} text-sm text-gray-900 sm:text-base dark:text-white`}>{formatPrice(currentPrice)}</p>
+            <p className={`${showcase ? 'font-black tracking-tight' : 'font-semibold'} text-sm text-gray-900 sm:text-base dark:text-white`}>{formatPrice(currentPrice)}</p>
             {product.sale_price !== null && product.sale_price < product.base_price && <span className="text-[9px] text-gray-400 line-through sm:text-[10px]">{formatPrice(product.base_price)}</span>}
           </div>
-          {catalog && <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-gray-950 text-white transition group-hover:bg-gradient-to-br group-hover:from-pink-500 group-hover:to-orange-500 dark:bg-white dark:text-gray-950 dark:group-hover:text-white"><ArrowUpRight className="h-3.5 w-3.5" /></span>}
+          {showcase && <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-sm transition group-hover:scale-105 group-hover:shadow-md"><ArrowUpRight className="h-3.5 w-3.5" /></span>}
         </div>
       </div>
     </Link>

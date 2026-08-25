@@ -22,24 +22,21 @@ export function FeaturedProductsClient({
   if (featured.length === 0) return null;
 
   return (
-    <section className="bg-white/80 dark:bg-gray-950/80 py-12 sm:py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className="bg-gradient-to-b from-white via-pink-50/25 to-orange-50/30 py-12 dark:from-gray-950 dark:via-gray-950 dark:to-gray-900 sm:py-20">
+      <div className="mx-auto max-w-[1400px] px-3 sm:px-5">
         <ScrollReveal direction="left">
-          <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 dark:bg-orange-950/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-orange-600 dark:text-orange-400 ring-1 ring-orange-100 dark:ring-orange-800">
-                Destaques
-              </span>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl md:text-4xl">
+              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-pink-600 dark:text-pink-400">Escolhas da Hellou</span>
+              <h2 className="mt-2 text-3xl font-black tracking-[-0.045em] text-gray-950 dark:text-white sm:text-4xl md:text-5xl">
                 Lançamentos{' '}
-                <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
-                  Recentes
-                </span>
+                <span className="bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 bg-clip-text text-transparent">Recentes</span>
               </h2>
+              <p className="mt-2 max-w-lg text-xs leading-5 text-gray-500 dark:text-gray-400 sm:text-sm">Novas peças e arquivos para escolher, personalizar e criar do seu jeito.</p>
             </div>
             <Link
               href={selectedTab === 'physical' ? '/products' : '/stl'}
-              className="group flex items-center gap-1.5 rounded-full border border-orange-200/60 dark:border-orange-800/40 bg-white dark:bg-gray-900 px-5 py-2.5 text-sm font-semibold text-orange-600 dark:text-orange-400 shadow-sm transition-all duration-300 hover:border-pink-300 hover:text-pink-600 dark:hover:text-pink-400 hover:shadow-md hover:scale-[1.03] active:scale-[0.98]"
+              className="group flex items-center gap-1.5 rounded-full border border-pink-200 bg-white px-5 py-2.5 text-xs font-bold text-pink-600 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-300 hover:text-orange-600 hover:shadow-md dark:border-pink-900 dark:bg-gray-900 dark:text-pink-400"
             >
               Ver tudo
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1">
@@ -49,18 +46,18 @@ export function FeaturedProductsClient({
           </div>
 
           {/* Abas de filtro */}
-          <div className="flex gap-3 mb-8">
+          <div className="mb-7 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
-              { id: 'physical', label: '🖨️ Produtos Novos' },
-              { id: 'digital', label: '📥 Arquivos STL' },
+              { id: 'physical', label: 'Produtos físicos' },
+              { id: 'digital', label: 'Arquivos STL' },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setSelectedTab(tab.id as 'physical' | 'digital')}
-                className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition-all ${
                   selectedTab === tab.id
-                    ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg'
-                    : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-pink-300 hover:text-pink-600 dark:hover:text-pink-400'
+                    ? 'border-transparent bg-gradient-to-r from-pink-500 to-orange-500 text-white shadow-lg shadow-pink-500/20'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-pink-300 hover:bg-pink-50 hover:text-pink-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-pink-800 dark:hover:bg-pink-950/30'
                 }`}
               >
                 {tab.label}
@@ -69,12 +66,10 @@ export function FeaturedProductsClient({
           </div>
         </ScrollReveal>
 
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2.5 min-[520px]:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5">
           {featured.map((product, i) => (
             <ScrollReveal key={product.id} delay={i * 100} direction={i % 2 === 0 ? 'up' : 'scale'}>
-              <div className="hover-lift transition-all duration-500">
-                <ProductCard product={product} category={categories.find((category) => category.slug === product.category)} />
-              </div>
+              <ProductCard product={product} category={categories.find((category) => category.slug === product.category)} showcase />
             </ScrollReveal>
           ))}
         </div>

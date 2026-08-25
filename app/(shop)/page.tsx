@@ -93,14 +93,14 @@ const getFeaturedProducts = unstable_cache(
 
         const { data, error } = await query
           .order('created_at', { ascending: false })
-          .limit(6);
+          .limit(10);
 
         if (error) return [];
         return attachProductTags((data ?? []) as Product[]);
       })(),
     ).catch((err) => { console.error('[home/page] withTimeout catch:', err); return [] as Product[]; });
   },
-  ['featured-products-limit-6'],
+  ['featured-products-limit-10'],
   { revalidate: 60 },
 );
 
@@ -182,8 +182,8 @@ function FeaturedSkeleton() {
     <section className="bg-white/80 dark:bg-gray-950/80 py-20 backdrop-blur-sm shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)]">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="h-8 w-48 animate-pulse rounded-lg bg-pink-200/60" />
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="mt-10 grid grid-cols-2 gap-2.5 min-[520px]:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, i) => (
             <ProductCardSkeleton key={i} />
           ))}
         </div>

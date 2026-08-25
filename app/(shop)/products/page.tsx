@@ -7,7 +7,6 @@ import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
 import { matchesCatalogSearch } from '@/lib/catalog-search';
 import { getStoreSettings } from '@/lib/store-settings';
-import { Palette, Search, ShieldCheck, SlidersHorizontal, Sparkles, Truck } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,14 +99,10 @@ export default async function ProductsCatalogPage(
   },
 ) {
   const searchParams = await props.searchParams;
-  const category =
-    typeof searchParams.category === 'string' ? searchParams.category : undefined;
-  const search =
-    typeof searchParams.search === 'string' ? searchParams.search : undefined;
-  const sort =
-    typeof searchParams.sort === 'string' ? searchParams.sort : undefined;
-  const collectionId =
-    typeof searchParams.collection === 'string' ? searchParams.collection : undefined;
+  const category = typeof searchParams.category === 'string' ? searchParams.category : undefined;
+  const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
+  const sort = typeof searchParams.sort === 'string' ? searchParams.sort : undefined;
+  const collectionId = typeof searchParams.collection === 'string' ? searchParams.collection : undefined;
   const wholesale = searchParams.wholesale === 'true';
 
   const [categories, storeSettings] = await Promise.all([
@@ -121,70 +116,27 @@ export default async function ProductsCatalogPage(
   const categoryTabs = [{ slug: 'all', name: 'Todos' }, ...categories];
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#fffaf7_0%,#ffffff_38%,#fff9f4_100%)] dark:bg-[linear-gradient(180deg,#111827_0%,#030712_45%,#111827_100%)]">
-      <section className="px-3 pt-3 sm:px-5 sm:pt-5" aria-labelledby="catalog-hero-title">
-        <div className="relative mx-auto flex min-h-[235px] max-w-[1440px] items-center overflow-hidden rounded-[26px] border border-pink-100 bg-[radial-gradient(circle_at_85%_10%,rgba(255,255,255,.82),transparent_24%),radial-gradient(circle_at_78%_85%,rgba(249,115,22,.18),transparent_27%),linear-gradient(125deg,#ffe4f1_0%,#fff0f3_48%,#fff1df_100%)] px-6 py-9 shadow-[0_24px_70px_-38px_rgba(219,39,119,.42)] sm:min-h-[285px] sm:rounded-[32px] sm:px-12 lg:px-16 dark:border-pink-900/40 dark:bg-[radial-gradient(circle_at_80%_10%,rgba(249,115,22,.12),transparent_30%),linear-gradient(125deg,#25131f,#2b1720_52%,#2c1b12)]">
-          <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full border-[42px] border-white/40 sm:right-8" aria-hidden="true" />
-          <div className="pointer-events-none absolute -bottom-24 right-[16%] h-48 w-48 rounded-full bg-gradient-to-br from-pink-300/20 to-orange-300/35 blur-2xl" aria-hidden="true" />
-          <div className="relative max-w-3xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/75 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-pink-600 shadow-sm backdrop-blur sm:text-xs">
-              <Sparkles className="h-3.5 w-3.5" /> Feito especialmente para você
-            </div>
-            <h1 id="catalog-hero-title" className="max-w-2xl text-[2.35rem] font-black leading-[.98] tracking-[-0.055em] text-gray-950 sm:text-5xl lg:text-6xl dark:text-white">
-              Ideias que ganham <span className="bg-gradient-to-r from-pink-600 via-rose-500 to-orange-500 bg-clip-text text-transparent">forma.</span>
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-gray-600 sm:text-base sm:leading-7 dark:text-gray-300">
-              Peças impressas em 3D, produzidas sob demanda com cuidado nos detalhes e personalidade em cada camada.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-bold text-gray-700 sm:text-xs dark:text-gray-200">
-              <span className="inline-flex items-center gap-1.5"><Palette className="h-3.5 w-3.5 text-pink-600" /> Produção artesanal</span>
-              <span className="inline-flex items-center gap-1.5"><Truck className="h-3.5 w-3.5 text-orange-500" /> Envio para todo o Brasil</span>
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-pink-600" /> Compra segura</span>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+      <div className="flex h-40 flex-col items-center justify-center bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-4 text-center sm:h-44 sm:px-10">
+        <h2 className="text-2xl font-bold text-white sm:text-3xl">Peças exclusivas impressas em 3D</h2>
+        <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
+          Cada item é fabricado sob demanda com acabamento artesanal. Encontre o seu favorito!
+        </p>
+      </div>
 
-      <div className="mx-auto max-w-[1440px] px-3 py-8 sm:px-5 sm:py-10">
-        <header className="mb-5 flex flex-col gap-2 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.16em] text-pink-600">Catálogo Hellou</p>
-            <h2 className="text-2xl font-black tracking-[-0.035em] text-gray-950 sm:text-3xl dark:text-white">
-              {collection ? collection.name : wholesale ? 'Seleção para lojistas' : 'Encontre seu favorito'}
-            </h2>
-            {collection && <p className="mt-1 max-w-2xl text-sm text-gray-600 dark:text-gray-400">{collection.description}</p>}
-            {wholesale && <p className="mt-1 max-w-2xl text-sm text-gray-600 dark:text-gray-400">Produtos para comprar em quantidade. O pedido mínimo aparece em cada item.</p>}
-          </div>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            <strong className="text-gray-900 dark:text-white">{products.length}</strong>{' '}
-            {products.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
+      <div className="mx-auto max-w-[1400px] px-3 py-8 sm:px-5 sm:py-10">
+        <header className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">{collection ? collection.name : wholesale ? 'Para lojistas' : 'Catálogo'}</h1>
+          {collection && <p className="mt-1 max-w-2xl text-sm text-gray-600 dark:text-gray-400">{collection.description}</p>}
+          {wholesale && <p className="mt-1 max-w-2xl text-sm text-gray-600 dark:text-gray-400">Produtos para comprar em quantidade. O pedido mínimo aparece em cada item.</p>}
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {products.length} {products.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
           </p>
         </header>
 
-        <form method="get" className="mb-4 grid grid-cols-[1fr_auto] gap-2 rounded-2xl border border-pink-100/80 bg-white p-2.5 shadow-[0_12px_38px_-26px_rgba(219,39,119,.4)] sm:grid-cols-[minmax(0,1fr)_190px_auto] sm:gap-3 sm:p-3 dark:border-gray-800 dark:bg-gray-900">
-          {validCategory ? <input type="hidden" name="category" value={validCategory} /> : null}
-          {collection ? <input type="hidden" name="collection" value={collection.id} /> : null}
-          {wholesale ? <input type="hidden" name="wholesale" value="true" /> : null}
-          <label className="relative col-span-2 block sm:col-span-1">
-            <span className="sr-only">Buscar no catálogo</span>
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-500" />
-            <input type="search" name="search" defaultValue={search ?? ''} placeholder="Buscar por nome, descrição ou tag" className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50/70 pl-10 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-pink-400 focus:bg-white focus:ring-4 focus:ring-pink-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-pink-900/30" />
-          </label>
-          <label className="relative">
-            <span className="sr-only">Ordenar produtos</span>
-            <select name="sort" defaultValue={sort ?? 'recent'} className="h-11 w-full appearance-none rounded-xl border border-gray-200 bg-gray-50/70 px-3 pr-8 text-xs font-semibold text-gray-700 outline-none transition focus:border-pink-400 focus:bg-white focus:ring-4 focus:ring-pink-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:ring-pink-900/30">
-              {SORT_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-            </select>
-            <SlidersHorizontal className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-          </label>
-          <button type="submit" className="h-11 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 px-5 text-xs font-black text-white shadow-lg shadow-pink-500/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/20 active:translate-y-0">
-            Buscar
-          </button>
-        </form>
-
-        <nav className="mb-7 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Categorias de produtos">
-          {collection && <Link href="/products" className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-xs font-bold text-pink-700 transition hover:bg-pink-100 dark:border-pink-900 dark:bg-pink-950/30 dark:text-pink-300">← Catálogo completo</Link>}
-          {wholesale && <Link href="/products" className="shrink-0 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-bold text-orange-700 transition hover:bg-orange-100 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-300">← Catálogo completo</Link>}
+        <div className="mb-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {collection && <Link href="/products" className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-1.5 text-sm font-semibold text-pink-700 transition hover:bg-pink-100 dark:border-pink-900 dark:bg-pink-950/30 dark:text-pink-300">← Ver catálogo completo</Link>}
+          {wholesale && <Link href="/products" className="shrink-0 rounded-full border border-orange-200 bg-orange-50 px-4 py-1.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-300">← Ver catálogo completo</Link>}
           {categoryTabs.map((cat) => {
             const params = new URLSearchParams();
             if (cat.slug !== 'all') params.set('category', cat.slug);
@@ -194,25 +146,48 @@ export default async function ProductsCatalogPage(
             const href = `/products${params.toString() ? `?${params}` : ''}`;
             const isActive = activeCategory === cat.slug;
             return (
-              <Link key={cat.slug} href={href} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition ${isActive ? 'border-gray-950 bg-gray-950 text-white shadow-md dark:border-white dark:bg-white dark:text-gray-950' : 'border-gray-200 bg-white text-gray-600 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-pink-800 dark:hover:bg-pink-950/30'}`}>
+              <Link
+                key={cat.slug}
+                href={href}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition ${isActive ? 'bg-pink-500 text-white shadow-sm' : 'border border-gray-200 bg-white text-gray-700 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800'}`}
+              >
                 {cat.name}
               </Link>
             );
           })}
-        </nav>
+        </div>
+
+        <form method="get" className="mb-8 grid grid-cols-[1fr_auto] gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:grid-cols-[1fr_180px_auto] sm:p-5 dark:border-gray-800 dark:bg-gray-900">
+          {validCategory ? <input type="hidden" name="category" value={validCategory} /> : null}
+          {collection ? <input type="hidden" name="collection" value={collection.id} /> : null}
+          {wholesale ? <input type="hidden" name="wholesale" value="true" /> : null}
+          <div className="relative col-span-2 sm:col-span-1">
+            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-pink-500" aria-hidden="true">⌕</span>
+            <input
+              type="search"
+              name="search"
+              defaultValue={search ?? ''}
+              placeholder="Buscar por nome, descrição ou tag..."
+              className="w-full rounded-xl border border-gray-200 bg-gray-50/50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-pink-500 focus:bg-white focus:ring-2 focus:ring-pink-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:bg-gray-700"
+            />
+          </div>
+          <select name="sort" defaultValue={sort ?? 'recent'} className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 sm:px-4 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:bg-gray-700">
+            {SORT_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+          </select>
+          <button type="submit" className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-orange-500/20 active:translate-y-0">Buscar</button>
+        </form>
 
         {products.length === 0 ? (
-          <div className="rounded-[28px] border border-pink-100 bg-white px-6 py-16 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-100 to-orange-100 text-pink-600"><Sparkles className="h-5 w-5" /></span>
-            <h3 className="mt-4 text-xl font-black text-gray-950 dark:text-white">Nenhum produto por aqui ainda</h3>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500 dark:text-gray-400">{validCategory || search || collection || wholesale ? 'Tente mudar a busca ou escolher outra categoria.' : 'Estamos preparando novas peças para você. Volte em breve!'}</p>
-            {(validCategory || search || collection || wholesale) && <Link href="/products" className="mt-5 inline-flex rounded-full bg-gradient-to-r from-pink-500 to-orange-500 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-pink-500/20">Limpar filtros</Link>}
+          <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            {validCategory || search || collection || wholesale ? (
+              <><p className="text-gray-600 dark:text-gray-400">Nenhum produto encontrado com esses filtros.</p><Link href="/products" className="mt-3 inline-block text-sm font-medium text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300">Limpar filtros</Link></>
+            ) : (
+              <><span className="text-5xl">✨🎨</span><h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">Opa! Ainda não chegaram novidades...</h2><p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Estamos preparando peças incríveis pra você! 🚀<br />Volte em breve, novidades a caminho!</p></>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2.5 min-[520px]:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} category={categories.find((item) => item.slug === product.category)} catalog />
-            ))}
+            {products.map((product) => <ProductCard key={product.id} product={product} category={categories.find((item) => item.slug === product.category)} />)}
           </div>
         )}
       </div>
