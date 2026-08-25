@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Estudo visual responsivo para o catálogo da Hellou Studio.">
+  <title>Hellou Studio — opções para o catálogo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #271c24;
+      --muted: #766771;
+      --paper: #fffaf7;
+      --surface: #ffffff;
+      --line: #f0e3e9;
+      --pink: #ec4899;
+      --pink-dark: #db2777;
+      --coral: #fb5f68;
+      --orange: #f97316;
+      --green: #237a57;
+      --radius: 20px;
+      --shadow: 0 18px 50px rgba(65, 36, 50, .09);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+
+    .study-bar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 12px max(20px, calc((100vw - 1440px) / 2));
+      color: #fff;
+      background: #261d23;
+      box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    }
+    .study-title { min-width: 190px; }
+    .study-title strong { display: block; font-size: 14px; letter-spacing: -.01em; }
+    .study-title span { color: #cbbfc7; font-size: 11px; }
+    .variants {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr));
+      width: min(690px, 100%);
+      padding: 4px;
+      background: rgba(255,255,255,.08);
+      border-radius: 14px;
+    }
+    .variant-button {
+      position: relative;
+      min-height: 42px;
+      border: 0;
+      border-radius: 10px;
+      color: #d9ced5;
+      background: transparent;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .variant-button:hover { color: #fff; background: rgba(255,255,255,.06); }
+    .variant-button.is-active { color: var(--ink); background: #fff; box-shadow: 0 5px 16px rgba(0,0,0,.2); }
+    .variant-button b { display: block; font-size: 12px; }
+    .variant-button span { display: block; margin-top: 2px; font-size: 9px; opacity: .7; }
+    .variant-button em {
+      position: absolute;
+      top: -8px;
+      right: 7px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--pink);
+      font-size: 8px;
+      font-style: normal;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .site-header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      min-height: 78px;
+      padding: 0 max(22px, calc((100vw - 1440px) / 2));
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,250,247,.92);
+      backdrop-filter: blur(16px);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 850; letter-spacing: -.04em; }
+    .brand-logo { width: 104px; height: 44px; object-fit: contain; object-position: left center; }
+    .main-nav { display: flex; gap: 30px; }
+    .main-nav a, .header-actions a { color: inherit; text-decoration: none; font-size: 13px; font-weight: 650; }
+    .main-nav a:first-child { color: var(--pink-dark); }
+    .header-actions { display: flex; justify-content: flex-end; align-items: center; gap: 9px; }
+    .icon-button {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--surface);
+      cursor: pointer;
+    }
+    .cart-count { position: relative; }
+    .cart-count::after {
+      content: "2";
+      position: absolute;
+      top: -3px;
+      right: -2px;
+      display: grid;
+      place-items: center;
+      width: 17px;
+      height: 17px;
+      border: 2px solid var(--paper);
+      border-radius: 50%;
+      color: #fff;
+      background: var(--pink);
+      font-size: 8px;
+      font-weight: 800;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      align-items: center;
+      width: min(1440px, calc(100% - 40px));
+      min-height: 350px;
+      margin: 28px auto 0;
+      padding: 54px 60px;
+      border-radius: 30px;
+      background:
+        radial-gradient(circle at 74% 15%, rgba(255,255,255,.7), transparent 23%),
+        linear-gradient(125deg, #ffe3f1 0%, #fff0f3 42%, #fff0df 72%, #ffe2cf 100%);
+      box-shadow: inset 0 0 0 1px rgba(236,72,153,.08), 0 22px 60px rgba(219,39,119,.08);
+    }
+    .hero::before, .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,.55);
+      filter: blur(1px);
+    }
+    .hero::before { width: 210px; height: 210px; top: -90px; left: 42%; }
+    .hero::after { width: 130px; height: 130px; right: 34%; bottom: -70px; }
+    .hero-copy { position: relative; z-index: 2; max-width: 620px; }
+    .eyebrow { margin: 0 0 13px; color: var(--pink-dark); font-size: 11px; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; }
+    .hero h1 { max-width: 650px; margin: 0; font-size: clamp(38px, 4.7vw, 68px); line-height: .98; letter-spacing: -.055em; }
+    .hero h1 span { color: var(--pink-dark); }
+    .hero p { max-width: 510px; margin: 18px 0 0; color: #695b64; font-size: 15px; line-height: 1.65; }
+    .hero-proof { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 23px; color: #5c4c55; font-size: 11px; font-weight: 700; }
+    .hero-proof span::before { content: "✓"; margin-right: 6px; color: var(--green); }
+    .hero-visual {
+      position: absolute;
+      z-index: 1;
+      right: 0;
+      bottom: -5%;
+      width: 46%;
+      height: 110%;
+      object-fit: cover;
+      object-position: center;
+      mix-blend-mode: multiply;
+      filter: saturate(.88) contrast(.98);
+      mask-image: linear-gradient(90deg, transparent 0, #000 24%, #000 100%);
+    }
+
+    .catalog-shell { width: min(1440px, calc(100% - 40px)); margin: 34px auto 80px; }
+    .catalog-top { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px; margin-bottom: 22px; }
+    .catalog-title h2 { margin: 0; font-size: 30px; letter-spacing: -.04em; }
+    .catalog-title p { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: min(370px, 100%);
+      height: 48px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--surface);
+      box-shadow: 0 6px 22px rgba(55,30,43,.04);
+    }
+    .search span { color: #9a8d95; }
+    .search input { width: 100%; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 13px; }
+    .search input::placeholder { color: #a89da4; }
+
+    .category-row { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; overflow: auto; scrollbar-width: none; }
+    .category-row::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto;
+      min-height: 40px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #635760;
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .chip.is-active { border-color: var(--ink); color: #fff; background: var(--ink); }
+    .sort-button { margin-left: auto; }
+
+    .catalog-layout { display: grid; grid-template-columns: 210px 1fr; gap: 28px; }
+    .filters { align-self: start; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255,255,255,.68); }
+    .filter-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+    .filter-head strong { font-size: 13px; }
+    .filter-head button { border: 0; color: var(--pink-dark); background: none; font-size: 10px; cursor: pointer; }
+    .filter-group + .filter-group { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .filter-group h3 { margin: 0 0 12px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    .check { display: flex; align-items: center; gap: 9px; margin-top: 10px; color: var(--muted); font-size: 12px; }
+    .check input { accent-color: var(--pink); }
+    .price-range { height: 3px; margin: 18px 2px 10px; border-radius: 99px; background: linear-gradient(90deg, var(--pink) 0 72%, #e5dce1 72%); }
+    .price-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+
+    .results-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .results-head p { margin: 0; color: var(--muted); font-size: 12px; }
+    .results-head select { padding: 8px 30px 8px 11px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: #fff; font-size: 11px; }
+    .product-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 14px; }
+    .product-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 4px 16px rgba(50,25,38,.035);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+    .product-image-wrap { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: #f6edee; }
+    .product-image { width: 100%; height: 100%; object-fit: cover; transition: transform .45s ease; }
+    .product-card:hover .product-image { transform: scale(1.035); }
+    .badge { position: absolute; top: 12px; left: 12px; padding: 6px 9px; border-radius: 8px; color: #fff; background: var(--pink-dark); font-size: 9px; font-weight: 850; letter-spacing: .04em; text-transform: uppercase; }
+    .badge.orange { background: #d7622d; }
+    .favorite { position: absolute; top: 11px; right: 11px; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: rgba(255,255,255,.92); box-shadow: 0 5px 16px rgba(0,0,0,.09); cursor: pointer; }
+    .card-body { padding: 16px; }
+    .category { margin: 0; color: var(--pink-dark); font-size: 9px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+    .product-card h3 { min-height: 38px; margin: 6px 0 3px; font-size: 14px; line-height: 1.35; letter-spacing: -.01em; }
+    .rating { color: #a0919a; font-size: 10px; }
+    .stars { color: #ec8d2f; letter-spacing: 1px; }
+    .price-row { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-top: 13px; }
+    .from { display: block; margin-bottom: 1px; color: var(--muted); font-size: 8px; font-weight: 650; text-transform: uppercase; }
+    .price { font-size: 17px; font-weight: 850; letter-spacing: -.03em; }
+    .installment { margin: 3px 0 0; color: var(--muted); font-size: 9px; }
+    .quick-add { width: 36px; height: 36px; border: 0; border-radius: 11px; color: #fff; background: var(--ink); cursor: pointer; font-size: 20px; transition: .2s ease; }
+    .quick-add:hover { background: var(--pink-dark); }
+
+    .mobile-filter { display: none; }
+    .mobile-nav { display: none; }
+    .insight {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: min(1440px, calc(100% - 40px));
+      margin: 22px auto 0;
+      padding: 12px 16px;
+      border: 1px solid #f1d8e2;
+      border-radius: 14px;
+      color: #6b4d5b;
+      background: #fff5f8;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .insight b { color: var(--pink-dark); }
+
+    /* Opção 2: linguagem editorial, mais imagem e emoção. */
+    body[data-variant="editorial"] .hero { min-height: 500px; grid-template-columns: .92fr 1.08fr; background: linear-gradient(125deg, #ffe1ef, #fff0ed 55%, #ffe3cf); }
+    body[data-variant="editorial"] .hero h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(48px, 6vw, 80px); font-weight: 500; letter-spacing: -.055em; }
+    body[data-variant="editorial"] .hero-visual { width: 54%; height: 100%; bottom: 0; mix-blend-mode: normal; mask-image: linear-gradient(90deg, transparent 0, #000 17%); }
+    body[data-variant="editorial"] .catalog-layout { grid-template-columns: 1fr; }
+    body[data-variant="editorial"] .filters { display: none; }
+    body[data-variant="editorial"] .product-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    body[data-variant="editorial"] .product-card:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+    body[data-variant="editorial"] .product-card:nth-child(1) .product-image-wrap { aspect-ratio: 1 / 1.08; }
+    body[data-variant="editorial"] .product-card:nth-child(1) h3 { font-family: Georgia, serif; font-size: 20px; }
+
+    /* Opção 3: catálogo compacto, prioriza comparação e quantidade. */
+    body[data-variant="compact"] { --radius: 14px; }
+    body[data-variant="compact"] .hero { min-height: 230px; padding-block: 36px; border-radius: 18px; }
+    body[data-variant="compact"] .hero h1 { font-size: clamp(34px, 4vw, 52px); }
+    body[data-variant="compact"] .hero p { margin-top: 10px; }
+    body[data-variant="compact"] .hero-proof { margin-top: 14px; }
+    body[data-variant="compact"] .catalog-layout { grid-template-columns: 180px 1fr; gap: 18px; }
+    body[data-variant="compact"] .product-grid { grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; }
+
+    @media (max-width: 1200px) and (min-width: 901px) {
+      .product-grid, body[data-variant="compact"] .product-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+      body[data-variant="editorial"] .product-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    }
+    body[data-variant="compact"] .card-body { padding: 12px; }
+    body[data-variant="compact"] .product-card h3 { min-height: 34px; font-size: 12px; }
+    body[data-variant="compact"] .price { font-size: 15px; }
+    body[data-variant="compact"] .quick-add { width: 32px; height: 32px; }
+
+    @media (max-width: 900px) {
+      .site-header { grid-template-columns: 1fr auto; min-height: 66px; }
+      .main-nav { display: none; }
+      .hero { min-height: 320px; padding: 38px; }
+      .hero-visual { width: 53%; opacity: .68; }
+      .catalog-layout, body[data-variant="compact"] .catalog-layout { grid-template-columns: 1fr; }
+      .filters { display: none; }
+      .product-grid, body[data-variant="compact"] .product-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      body[data-variant="editorial"] .product-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+
+    @media (max-width: 680px) {
+      body { padding-bottom: 74px; }
+      .study-bar { position: relative; display: block; padding: 12px; }
+      .study-title { margin: 0 4px 10px; }
+      .variants { width: 100%; grid-template-columns: repeat(3, 1fr); }
+      .variant-button { min-width: 0; padding-inline: 3px; }
+      .variant-button b { font-size: 10px; }
+      .variant-button span { display: none; }
+      .variant-button em { display: none; }
+      .site-header { padding: 0 15px; }
+      .brand { font-size: 16px; }
+      .brand-logo { width: 91px; height: 39px; }
+      .header-actions a { display: none; }
+      .icon-button:first-of-type { display: none; }
+      .hero, body[data-variant="editorial"] .hero, body[data-variant="compact"] .hero {
+        width: calc(100% - 24px);
+        min-height: 305px;
+        margin-top: 12px;
+        padding: 29px 24px;
+        border-radius: 23px;
+      }
+      .hero-copy { align-self: start; }
+      .hero h1, body[data-variant="editorial"] .hero h1, body[data-variant="compact"] .hero h1 { max-width: 340px; font-size: 39px; line-height: 1.01; }
+      .hero p { max-width: 305px; font-size: 13px; line-height: 1.48; }
+      .hero-proof { gap: 8px 13px; max-width: 280px; margin-top: 15px; font-size: 9px; }
+      .hero-visual, body[data-variant="editorial"] .hero-visual {
+        right: -18%;
+        bottom: -24%;
+        width: 74%;
+        height: 90%;
+        opacity: .34;
+        mask-image: linear-gradient(90deg, transparent, #000 45%);
+      }
+      .insight { align-items: flex-start; width: calc(100% - 24px); margin-top: 12px; padding: 10px 12px; font-size: 10px; }
+      .catalog-shell { width: calc(100% - 24px); margin-top: 25px; }
+      .catalog-top { grid-template-columns: 1fr; gap: 14px; }
+      .catalog-title h2 { font-size: 25px; }
+      .search { width: 100%; height: 46px; }
+      .category-row { width: calc(100vw - 12px); margin-right: -12px; padding-right: 12px; }
+      .chip { min-height: 38px; padding-inline: 14px; }
+      .sort-button { margin-left: 0; }
+      .results-head select { display: none; }
+      .mobile-filter {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 11px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        font-size: 10px;
+        font-weight: 750;
+      }
+      .product-grid, body[data-variant="editorial"] .product-grid, body[data-variant="compact"] .product-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+      body[data-variant="editorial"] .product-card:nth-child(1) { grid-column: auto; grid-row: auto; }
+      body[data-variant="editorial"] .product-card:nth-child(1) .product-image-wrap { aspect-ratio: 1 / 1; }
+      body[data-variant="editorial"] .product-card:nth-child(1) h3 { font-family: inherit; font-size: 13px; }
+      .product-card { border-radius: 15px; }
+      .card-body, body[data-variant="compact"] .card-body { padding: 11px; }
+      .badge { top: 8px; left: 8px; padding: 5px 7px; font-size: 7px; }
+      .favorite { top: 7px; right: 7px; width: 30px; height: 30px; }
+      .product-card h3, body[data-variant="compact"] .product-card h3 { min-height: 34px; margin-top: 5px; font-size: 12px; }
+      .rating { font-size: 8px; }
+      .price { font-size: 15px; }
+      .quick-add { width: 32px; height: 32px; border-radius: 9px; }
+      .mobile-nav {
+        position: fixed;
+        z-index: 40;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        height: 65px;
+        padding-bottom: env(safe-area-inset-bottom);
+        border-top: 1px solid var(--line);
+        background: rgba(255,255,255,.96);
+        backdrop-filter: blur(15px);
+      }
+      .mobile-nav button { border: 0; color: #7b6f77; background: transparent; font-size: 9px; font-weight: 700; }
+      .mobile-nav button span { display: block; margin-bottom: 4px; font-size: 17px; }
+      .mobile-nav button:first-child { color: var(--pink-dark); }
+    }
+
+    @media (min-width: 520px) and (max-width: 680px) {
+      .product-grid,
+      body[data-variant="editorial"] .product-grid,
+      body[data-variant="compact"] .product-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-variant="balanced">
+  <aside class="study-bar" aria-label="Seletor de proposta visual">
+    <div class="study-title">
+      <strong>Estudo do catálogo</strong>
+      <span>Troque a direção visual abaixo</span>
+    </div>
+    <div class="variants" role="tablist" aria-label="Opções de layout">
+      <button class="variant-button is-active" data-variant="balanced" role="tab" aria-selected="true">
+        <em>Recomendada</em><b>1 · Vitrine clara</b><span>equilíbrio e conversão</span>
+      </button>
+      <button class="variant-button" data-variant="editorial" role="tab" aria-selected="false">
+        <b>2 · Editorial</b><span>marca e desejo</span>
+      </button>
+      <button class="variant-button" data-variant="compact" role="tab" aria-selected="false">
+        <b>3 · Compacta</b><span>volume e comparação</span>
+      </button>
+    </div>
+  </aside>
+
+  <header class="site-header">
+    <div class="brand"><img class="brand-logo" src="../public/logo.png" alt="Hellou Studio"></div>
+    <nav class="main-nav" aria-label="Navegação principal">
+      <a href="#produtos">Catálogo</a><a href="#">Personalizados</a><a href="#">Sobre nós</a>
+    </nav>
+    <div class="header-actions">
+      <a href="#">Entrar</a>
+      <button class="icon-button" aria-label="Pesquisar">⌕</button>
+      <button class="icon-button cart-count" aria-label="Carrinho com 2 itens">♡</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Feito especialmente para você</p>
+        <h1 id="hero-title">Ideias que ganham <span>forma.</span></h1>
+        <p>Peças impressas em 3D, produzidas sob demanda com cuidado nos detalhes e personalidade em cada camada.</p>
+        <div class="hero-proof"><span>Produção artesanal</span><span>Envio para todo o Brasil</span><span>Compra segura</span></div>
+      </div>
+      <img class="hero-visual" src="../public/images/home-hero-catalogo.png" alt="Peças criativas impressas em 3D">
+    </section>
+
+    <div class="insight" role="status">
+      <span>✦</span>
+      <span id="variant-description"><b>Por que esta opção:</b> mostra a proposta da marca sem atrasar a chegada aos produtos; filtros claros no desktop e controles simples no celular.</span>
+    </div>
+
+    <section class="catalog-shell" id="produtos" aria-labelledby="catalog-title">
+      <div class="catalog-top">
+        <div class="catalog-title"><h2 id="catalog-title">Encontre seu favorito</h2><p>24 peças criadas para surpreender — cada uma pode ser sua.</p></div>
+        <label class="search"><span>⌕</span><input type="search" placeholder="Buscar no catálogo" aria-label="Buscar no catálogo"></label>
+      </div>
+
+      <div class="category-row" aria-label="Categorias">
+        <button class="chip is-active">Todos</button><button class="chip">Criaturas</button><button class="chip">Chaveiros</button><button class="chip">Decoração</button><button class="chip">Escritório</button><button class="chip">Presentes</button>
+        <button class="chip sort-button">Ordenar: Destaques ↓</button>
+      </div>
+
+      <div class="catalog-layout">
+        <aside class="filters" aria-label="Filtros">
+          <div class="filter-head"><strong>Filtrar</strong><button>Limpar</button></div>
+          <div class="filter-group"><h3>Disponibilidade</h3><label class="check"><input type="checkbox"> Pronta entrega</label><label class="check"><input type="checkbox"> Personalizável</label><label class="check"><input type="checkbox"> Para lojistas</label></div>
+          <div class="filter-group"><h3>Faixa de preço</h3><div class="price-range"></div><div class="price-labels"><span>R$ 15</span><span>R$ 180+</span></div></div>
+          <div class="filter-group"><h3>Ocasião</h3><label class="check"><input type="checkbox"> Para presentear</label><label class="check"><input type="checkbox"> Para organizar</label><label class="check"><input type="checkbox"> Para decorar</label></div>
+        </aside>
+
+        <div class="results">
+          <div class="results-head"><p><strong>24</strong> produtos</p><button class="mobile-filter">☷ Filtrar e ordenar</button><select aria-label="Ordenar produtos"><option>Mais relevantes</option><option>Menor preço</option><option>Mais recentes</option></select></div>
+          <div class="product-grid">
+            <article class="product-card">
+              <div class="product-image-wrap"><img class="product-image" src="../public/images/home-hero-axolotl-banner.png" alt="Axolote articulado rosa"><span class="badge">Mais vendido</span><button class="favorite" aria-label="Favoritar Axolote articulado">♡</button></div>
+              <div class="card-body"><p class="category">Criaturas</p><h3>Axolote articulado em cores especiais</h3><div class="rating"><span class="stars">★★★★★</span> 4,9 (32)</div><div class="price-row"><div><span class="from">A partir de</span><span class="price">R$ 34,90</span><p class="installment">ou 3x de R$ 11,63</p></div><button class="quick-add" aria-label="Adicionar ao carrinho">+</button></div></div>
+            </article>
+            <article class="product-card">
+              <div class="product-image-wrap"><img class="product-image" src="../public/images/home-hero-personalizaveis.png" alt="Chaveiro personalizado"><span class="badge orange">Personalizável</span><button class="favorite" aria-label="Favoritar chaveiro personalizado">♡</button></div>
+              <div class="card-body"><p class="category">Chaveiros</p><h3>Chaveiro com nome personalizado</h3><div class="rating"><span class="stars">★★★★★</span> 5,0 (18)</div><div class="price-row"><div><span class="from">A partir de</span><span class="price">R$ 19,90</span><p class="installment">cores à sua escolha</p></div><button class="quick-add" aria-label="Adicionar ao carrinho">+</button></div></div>
+            </article>
+            <article class="product-card">
+              <div class="product-image-wrap"><img class="product-image" src="../public/images/home-hero-encomenda.png" alt="Organizador de mesa"><button class="favorite" aria-label="Favoritar organizador de mesa">♡</button></div>
+              <div class="card-body"><p class="category">Escritório</p><h3>Organizador modular para sua mesa</h3><div class="rating"><span class="stars">★★★★☆</span> 4,8 (11)</div><div class="price-row"><div><span class="from">A partir de</span><span class="price">R$ 49,90</span><p class="installment">ou 4x de R$ 12,48</p></div><button class="quick-add" aria-label="Adicionar ao carrinho">+</button></div></div>
+            </article>
+            <article class="product-card">
+              <div class="product-image-wrap"><img class="product-image" src="../public/images/home-hero-stl.png" alt="Miniatura decorativa colorida"><span class="badge">Novidade</span><button class="favorite" aria-label="Favoritar miniatura decorativa">♡</button></div>
+              <div class="card-body"><p class="category">Decoração</p><h3>Mini coleção jardim encantado</h3><div class="rating"><span class="stars">★★★★★</span> novo</div><div class="price-row"><div><span class="from">A partir de</span><span class="price">R$ 29,90</span><p class="installment">produção sob demanda</p></div><button class="quick-add" aria-label="Adicionar ao carrinho">+</button></div></div>
+            </article>
+            <article class="product-card">
+              <div class="product-image-wrap"><img class="product-image" src="../public/images/home-hero-catalogo.png" alt="Suporte criativo para celular"><button class="favorite" aria-label="Favoritar suporte para celular">♡</button></div>
+              <div class="card-body"><p class="category">Utilidades</p><h3>Suporte criativo para celular</h3><div class="rating"><span class="stars">★★★★★</span> 4,9 (9)</div><div class="price-row"><div><span class="from">A partir de</span><span class="price">R$ 39,90</span><p class="installment">ou 3x de R$ 13,30</p></div><button class="quick-add" aria-label="Adicionar ao carrinho">+</button></div></div>
+            </article>
+            <article class="product-card">
+              <div class="product-image-wrap"><img class="product-image" src="../public/images/product-background-neutral.png" alt="Vaso geométrico decorativo"><span class="badge orange">Edição limitada</span><button class="favorite" aria-label="Favoritar vaso geométrico">♡</button></div>
+              <div class="card-body"><p class="category">Decoração</p><h3>Vaso geométrico minimalista</h3><div class="rating"><span class="stars">★★★★★</span> 5,0 (7)</div><div class="price-row"><div><span class="from">A partir de</span><span class="price">R$ 59,90</span><p class="installment">ou 5x de R$ 11,98</p></div><button class="quick-add" aria-label="Adicionar ao carrinho">+</button></div></div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="mobile-nav" aria-label="Navegação para celular"><button><span>⌂</span>Início</button><button><span>▦</span>Catálogo</button><button><span>♡</span>Favoritos</button><button><span>♙</span>Conta</button></nav>
+
+  <script>
+    const descriptions = {
+      balanced: '<b>Por que esta opção:</b> mostra a proposta da marca sem atrasar a chegada aos produtos; filtros claros no desktop e controles simples no celular.',
+      editorial: '<b>Por que escolher:</b> imagens maiores e tipografia marcante valorizam produtos autorais e aumentam a percepção de exclusividade da marca.',
+      compact: '<b>Por que escolher:</b> mais itens aparecem por tela, facilitando comparação de preço e navegação em catálogos extensos.'
+    };
+    document.querySelectorAll('.variant-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        const variant = button.dataset.variant;
+        document.body.dataset.variant = variant;
+        document.querySelectorAll('.variant-button').forEach((item) => {
+          const active = item === button;
+          item.classList.toggle('is-active', active);
+          item.setAttribute('aria-selected', String(active));
+        });
+        document.getElementById('variant-description').innerHTML = descriptions[variant];
+      });
+    });
+    document.querySelectorAll('.favorite').forEach((button) => button.addEventListener('click', () => {
+      button.textContent = button.textContent === '♥' ? '♡' : '♥';
+      button.style.color = button.textContent === '♥' ? 'var(--pink-dark)' : 'inherit';
+    }));
+  </script>
+</body>
+</html>
