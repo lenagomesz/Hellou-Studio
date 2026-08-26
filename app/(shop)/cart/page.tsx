@@ -1289,7 +1289,7 @@ function CartLine({
                   )}
                   {item.option.color && (
                     <span className="inline-flex items-center gap-1">
-                      Cor: <span className="inline-block h-2.5 w-2.5 rounded-full ring-1 ring-gray-200 dark:ring-gray-600" style={{ backgroundColor: getProductColorValue(item.option.color) }} /> {getProductColorName(item.option.color)}
+                      Cor: <span className="inline-block h-2.5 w-2.5 rounded-full ring-1 ring-gray-200 dark:ring-gray-600" style={{ backgroundColor: getProductColorValue(item.option.color) }} /> {getProductColorName(item.option.color, item.option.color_name)}
                     </span>
                   )}
                 </div>

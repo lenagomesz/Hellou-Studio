@@ -18,7 +18,8 @@ export const PRODUCT_COLOR_PALETTE = [
   { name: 'Transparente', hex: 'transparent' },
 ] as const;
 
-export function getProductColorName(value: string | null | undefined) {
+export function getProductColorName(value: string | null | undefined, customName?: string | null) {
+  if (customName?.trim()) return customName.trim();
   if (!value) return 'Cor';
   const normalized = value.trim().toLowerCase();
   return PRODUCT_COLOR_PALETTE.find(

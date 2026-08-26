@@ -11,6 +11,7 @@ export function VariationsSection() {
   const [showForm, setShowForm] = useState(false);
   const [formName, setFormName] = useState('');
   const [formColor, setFormColor] = useState('');
+  const [formColorName, setFormColorName] = useState('');
   const [formPrice, setFormPrice] = useState('0');
   const [formStock, setFormStock] = useState('0');
 
@@ -30,6 +31,7 @@ export function VariationsSection() {
         id,
         name: formName.trim(),
         color: formColor.trim() || undefined,
+        colorName: formColorName.trim() || undefined,
         priceModifier,
         stock,
         _isDirty: false,
@@ -38,6 +40,7 @@ export function VariationsSection() {
 
     setFormName('');
     setFormColor('');
+    setFormColorName('');
     setFormPrice('0');
     setFormStock('0');
     setShowForm(false);
@@ -75,10 +78,10 @@ export function VariationsSection() {
                       <div
                         className="h-4 w-4 rounded-full border"
                         style={{ backgroundColor: getProductColorValue(variation.color) }}
-                        title={getProductColorName(variation.color)}
+                        title={variation.colorName || getProductColorName(variation.color)}
                       />
                     )}
-                    <span className="font-medium text-sm">{variation.name || '(sem nome)'}</span>
+                    <span className="font-medium text-sm">{variation.name || variation.colorName || '(sem nome)'}</span>
                   </div>
                   <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                     +R$ {variation.priceModifier.toFixed(2)} • {variation.stock} em estoque
@@ -130,6 +133,15 @@ export function VariationsSection() {
                 {PRODUCT_COLOR_PALETTE.map((color) => <button key={color.name} type="button" title={color.name} aria-label={color.name} onClick={() => setFormColor(formColor === color.hex ? '' : color.hex)} className={`h-8 w-8 rounded-full border-2 ${formColor === color.hex ? 'border-pink-500 ring-2 ring-pink-200' : 'border-slate-200'}`} style={{ backgroundColor: color.hex }} />)}
               </div>
               <input type="color" value={/^#[0-9a-f]{6}$/i.test(formColor) ? formColor : '#EC4899'} onChange={(event) => setFormColor(event.target.value.toUpperCase())} aria-label="Cor personalizada" className="mt-3 h-10 w-full cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-600 dark:bg-gray-900" />
+              {formColor && (
+                <input
+                  type="text"
+                  value={formColorName}
+                  onChange={(event) => setFormColorName(event.target.value)}
+                  placeholder="Nome da cor (ex.: Rosa chiclete)"
+                  className="mt-3 w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900"
+                />
+              )}
             </div>
             <input
               type="number"
@@ -160,6 +172,7 @@ export function VariationsSection() {
                   setShowForm(false);
                   setFormName('');
                   setFormColor('');
+                  setFormColorName('');
                   setFormPrice('0');
                   setFormStock('0');
                 }}

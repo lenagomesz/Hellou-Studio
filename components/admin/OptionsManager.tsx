@@ -58,6 +58,7 @@ export function OptionsManager({
   );
   const [name, setName] = useState('');
   const [color, setColor] = useState('');
+  const [colorName, setColorName] = useState('');
   const [priceModifier, setPriceModifier] = useState('0');
   const [stock, setStock] = useState('0');
   const [dimensions, setDimensions] = useState('');
@@ -133,6 +134,7 @@ export function OptionsManager({
         product_id: productId,
         name: name.trim(),
         color: color.trim() || null,
+        color_name: color.trim() ? colorName.trim() || null : null,
         price_modifier: modifier,
         stock: stockValue,
         dimensions: dimensions.trim() || undefined,
@@ -152,6 +154,7 @@ export function OptionsManager({
     setOptions((prev) => [...prev, data.option]);
     setName('');
     setColor('');
+    setColorName('');
     setPriceModifier('0');
     setStock('0');
     setDimensions('');
@@ -193,6 +196,7 @@ export function OptionsManager({
           product_id: productId,
           name: '',
           color: paletteColor?.hex ?? colorName,
+          color_name: colorName,
           price_modifier: modifier,
           stock: stockValue,
           image_url: colorImageUrl.trim() || undefined,
@@ -475,6 +479,15 @@ export function OptionsManager({
         <div>
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Cor (opcional)</p>
           <ColorPicker value={color} onChange={setColor} />
+          {color && (
+            <input
+              type="text"
+              value={colorName}
+              onChange={(event) => setColorName(event.target.value)}
+              placeholder="Nome da cor (ex.: Rosa chiclete)"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
+          )}
         </div>
         <button
           type="button"
@@ -518,6 +531,7 @@ function OptionRow({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(option.name);
   const [color, setColor] = useState(option.color ?? '');
+  const [colorName, setColorName] = useState(option.color_name ?? '');
   const [priceModifier, setPriceModifier] = useState(String(option.price_modifier));
   const [stock, setStock] = useState(String(option.stock));
   const [dimensions, setDimensions] = useState(option.dimensions ?? '');
@@ -534,6 +548,7 @@ function OptionRow({
     const saved = await onUpdate({
       name: name.trim(),
       color: color.trim() || null,
+      color_name: color.trim() ? colorName.trim() || null : null,
       price_modifier: modifier,
       stock: stockValue,
       dimensions: dimensions.trim() || null,
@@ -547,6 +562,7 @@ function OptionRow({
   function cancel() {
     setName(option.name);
     setColor(option.color ?? '');
+    setColorName(option.color_name ?? '');
     setPriceModifier(String(option.price_modifier));
     setStock(String(option.stock));
     setDimensions(option.dimensions ?? '');
@@ -606,6 +622,15 @@ function OptionRow({
         <div className="mt-2">
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Cor</p>
           <ColorPicker value={color} onChange={setColor} />
+          {color && (
+            <input
+              type="text"
+              value={colorName}
+              onChange={(event) => setColorName(event.target.value)}
+              placeholder="Nome da cor (ex.: Rosa chiclete)"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
+          )}
         </div>
         <div className="flex gap-2 mt-2">
           <button
@@ -649,11 +674,12 @@ function OptionRow({
               {option.active ? 'Ativa' : 'Inativa'}
             </span>
             {option.color && (
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800" title={getProductColorName(option.color)}>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300" title={option.color_name || getProductColorName(option.color)}>
                 <span
                   className="h-4 w-4 rounded-full border border-gray-200 dark:border-gray-600"
                   style={{ backgroundColor: getProductColorValue(option.color) }}
                 />
+                {option.color_name || getProductColorName(option.color)}
               </span>
             )}
           </div>

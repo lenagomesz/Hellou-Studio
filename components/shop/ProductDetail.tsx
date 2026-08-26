@@ -58,6 +58,15 @@ export function ProductDetail({
     () => options.filter((option) => !requiresReadyStock || option.stock > 0),
     [options, requiresReadyStock],
   );
+  const colorChoices = useMemo(() => {
+    const choices = new Map<string, string>();
+    for (const option of options) {
+      if (option.color && !choices.has(option.color)) {
+        choices.set(option.color, getProductColorName(option.color, option.color_name));
+      }
+    }
+    return Array.from(choices, ([value, label]) => ({ value, label }));
+  }, [options]);
   const customizationSections = useMemo(() => {
     try {
       return normalizeProductCustomizationSections(product.customization_sections);
@@ -72,6 +81,10 @@ export function ProductDetail({
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(() =>
     (preselectedOptionId && options.some(o => o.id === preselectedOptionId)) ? preselectedOptionId : inStockOptions[0]?.id ?? null,
   );
+  const [selectedColor, setSelectedColor] = useState<string | null>(() => {
+    const preselected = options.find((option) => option.id === preselectedOptionId);
+    return preselected?.color ?? colorChoices[0]?.value ?? null;
+  });
   const [quantity, setQuantity] = useState(1);
   const [customizationText, setCustomizationText] = useState(initialCustomizationText);
   const [customizationSelections, setCustomizationSelections] = useState<Record<string, ProductCustomizationSelection>>(
@@ -97,6 +110,7 @@ export function ProductDetail({
   const selectedOption = automaticPricingSection
     ? automaticPricingOption
     : options.find((o) => o.id === selectedOptionId) ?? null;
+  const selectedColorLabel = colorChoices.find((choice) => choice.value === selectedColor)?.label ?? null;
   const hasAdditionalPriceOptions = options.some((option) => option.price_modifier > 0);
   const isShowingStartingPrice = hasAdditionalPriceOptions && (
     automaticPricingSection
@@ -127,6 +141,9 @@ export function ProductDetail({
   const finalCustomizationText = customizationSections.length > 0
     ? structuredCustomizationText
     : customizationText.trim();
+  const cartCustomizationText = selectedColor && selectedOption?.color !== selectedColor
+    ? [finalCustomizationText, `Cor: ${selectedColorLabel ?? getProductColorName(selectedColor)}`].filter(Boolean).join(' · ')
+    : finalCustomizationText;
   const hasRequiredCustomization = !product.is_customizable || (
     customizationSections.length > 0
       ? areRequiredCustomizationSectionsComplete(customizationSections, customizationSelections)
@@ -180,11 +197,12 @@ export function ProductDetail({
               price_modifier: selectedOption.price_modifier,
               stock: selectedOption.stock,
               color: selectedOption.color,
+              color_name: selectedOption.color_name,
               image_url: selectedOption.image_url,
             }
           : null,
         quantity,
-        customization_text: product.is_customizable ? finalCustomizationText : null,
+        customization_text: cartCustomizationText || null,
       });
       if (replaceCartItemId) {
         router.push('/cart');
@@ -273,13 +291,11 @@ export function ProductDetail({
         </div>
 
         {!automaticPricingSection && options.some((option) => option.color) && (() => {
-          const colors = Array.from(new Set(options.filter((option) => option.color).map((option) => option.color!)));
-          const selectedColor = selectedOption?.color ?? colors[0] ?? null;
           return (
             <div className="mt-4 lg:hidden">
               <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cor</h2>
               <div className="mt-3 flex flex-wrap gap-3">
-                {colors.map((color) => {
+                {colorChoices.map(({ value: color, label }) => {
                   const isActive = selectedColor === color;
                   const colorOptions = options.filter((option) => option.color === color);
                   const allOutOfStock = requiresReadyStock && colorOptions.every((option) => option.stock === 0);
@@ -291,23 +307,29 @@ export function ProductDetail({
                       onClick={() => {
                         const firstInStock = colorOptions.find((option) => !requiresReadyStock || option.stock > 0);
                         if (firstInStock) {
-                          setSelectedOptionId(firstInStock.id);
+                          setSelectedColor(color);
+                          const selectedSizeMatch = selectedOption?.name
+                            ? colorOptions.find((option) => option.name === selectedOption.name && (!requiresReadyStock || option.stock > 0))
+                            : null;
+                          const hasUniversalSize = options.some((option) => !option.color && option.name.trim());
+                          if (selectedSizeMatch || !hasUniversalSize) setSelectedOptionId((selectedSizeMatch ?? firstInStock).id);
                           setGallerySelectionVersion((version) => version + 1);
                           setQuantity(1);
                         }
                       }}
-                      className={`relative h-8 w-8 rounded-full border-2 transition-all ${
+                      className={`relative inline-flex items-center gap-2 rounded-full border-2 px-2.5 py-1.5 text-xs font-medium transition-all ${
                         allOutOfStock
                           ? 'cursor-not-allowed opacity-40'
                           : isActive
                             ? 'scale-110 border-pink-500 ring-2 ring-pink-200'
                             : 'border-gray-300 hover:scale-105 hover:border-gray-400'
                       }`}
-                      title={getProductColorName(color)}
-                      aria-label={`Cor ${getProductColorName(color)}`}
+                      title={label}
+                      aria-label={`Cor ${label}`}
                     >
-                      <span className="absolute inset-1 rounded-full" style={{ backgroundColor: getProductColorValue(color) }} />
-                      {allOutOfStock && <span className="absolute inset-0 flex items-center justify-center"><span className="block h-[2px] w-6 rotate-45 rounded bg-gray-400" /></span>}
+                      <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: getProductColorValue(color) }} />
+                      <span>{label}</span>
+                      {allOutOfStock && <span aria-hidden="true">—</span>}
                     </button>
                   );
                 })}
@@ -544,13 +566,11 @@ export function ProductDetail({
           <div className="mt-6 space-y-5">
             {/* Color swatches (only if any option has color) */}
             {options.some((o) => o.color) && (() => {
-              const colors = Array.from(new Set(options.filter((o) => o.color).map((o) => o.color!)));
-              const selectedColor = selectedOption?.color ?? colors[0] ?? null;
               return (
                 <div className="hidden lg:block">
                   <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cor</h2>
                   <div className="mt-3 flex flex-wrap gap-3">
-                    {colors.map((color) => {
+                    {colorChoices.map(({ value: color, label }) => {
                       const isActive = selectedColor === color;
                       const colorOptions = options.filter((o) => o.color === color);
                       const allOutOfStock = requiresReadyStock && colorOptions.every((o) => o.stock === 0);
@@ -562,28 +582,30 @@ export function ProductDetail({
                           onClick={() => {
                             const firstInStock = colorOptions.find((o) => !requiresReadyStock || o.stock > 0);
                             if (firstInStock) {
-                              setSelectedOptionId(firstInStock.id);
+                              setSelectedColor(color);
+                              const selectedSizeMatch = selectedOption?.name
+                                ? colorOptions.find((option) => option.name === selectedOption.name && (!requiresReadyStock || option.stock > 0))
+                                : null;
+                              const hasUniversalSize = options.some((option) => !option.color && option.name.trim());
+                              if (selectedSizeMatch || !hasUniversalSize) setSelectedOptionId((selectedSizeMatch ?? firstInStock).id);
                               setGallerySelectionVersion((version) => version + 1);
                               setQuantity(1);
                             }
                           }}
-                          className={`relative h-8 w-8 rounded-full border-2 transition-all ${
+                          className={`relative inline-flex items-center gap-2 rounded-full border-2 px-2.5 py-1.5 text-xs font-medium transition-all ${
                             allOutOfStock
                               ? 'cursor-not-allowed opacity-40'
                               : isActive
                                 ? 'border-pink-500 ring-2 ring-pink-200 scale-110'
                                 : 'border-gray-300 hover:border-gray-400 hover:scale-105'
                           }`}
-                          title={getProductColorName(color)}
+                          title={label}
+                          aria-label={`Cor ${label}`}
                         >
-                          <span
-                            className="absolute inset-1 rounded-full"
-                            style={{ backgroundColor: getProductColorValue(color) }}
-                          />
+                          <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: getProductColorValue(color) }} />
+                          <span>{label}</span>
                           {allOutOfStock && (
-                            <span className="absolute inset-0 flex items-center justify-center">
-                              <span className="block h-[2px] w-6 rotate-45 bg-gray-400 rounded" />
-                            </span>
+                            <span aria-hidden="true">—</span>
                           )}
                         </button>
                       );
@@ -603,7 +625,7 @@ export function ProductDetail({
                   const hasColors = options.some((o) => o.color);
                   const selectedColor = selectedOption?.color ?? null;
                   const visibleOptions = (hasColors && selectedColor
-                    ? options.filter((o) => o.color === selectedColor)
+                    ? options.filter((o) => !o.color || o.color === selectedColor)
                     : options).filter((option) => option.name.trim());
                   return visibleOptions.map((option) => {
                     const isSelected = selectedOptionId === option.id;
@@ -615,6 +637,7 @@ export function ProductDetail({
                         onClick={() => {
                           if (outOfStock) return;
                           setSelectedOptionId(option.id);
+                          if (option.color) setSelectedColor(option.color);
                           setGallerySelectionVersion((version) => version + 1);
                           setQuantity(1);
                         }}

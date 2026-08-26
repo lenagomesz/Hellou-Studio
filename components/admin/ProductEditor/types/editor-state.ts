@@ -8,6 +8,7 @@ export interface DraftVariation {
   id: string;
   name: string;
   color?: string;
+  colorName?: string;
   priceModifier: number;
   stock: number;
   dimensions?: string;

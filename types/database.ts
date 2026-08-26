@@ -77,6 +77,7 @@ export interface ProductOption {
   dimensions: string | null;
   notes: string | null;
   color: string | null;
+  color_name: string | null;
   image_url: string | null;
   sort_order: number;
   active: boolean;
@@ -436,6 +437,7 @@ export interface Database {
           reorder_point?: number;
           standard_order_qty?: number;
           color?: string | null;
+          color_name?: string | null;
           sort_order?: number;
           created_at?: string;
         };
@@ -448,6 +450,7 @@ export interface Database {
           reorder_point?: number;
           standard_order_qty?: number;
           color?: string | null;
+          color_name?: string | null;
           sort_order?: number;
           created_at?: string;
         };

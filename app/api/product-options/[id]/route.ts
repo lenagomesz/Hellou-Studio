@@ -27,6 +27,7 @@ export async function PATCH(
     dimensions?: string | null;
     notes?: string | null;
     color?: string | null;
+    color_name?: string | null;
     image_url?: string | null;
     active?: boolean;
   };
@@ -62,6 +63,10 @@ export async function PATCH(
     const normalizedColor = normalizeProductColor(input.color);
     if (input.color?.trim() && !normalizedColor) return badRequest('Escolha uma cor da paleta ou informe um código hexadecimal válido');
     update.color = normalizedColor;
+    if (!normalizedColor && input.color_name === undefined) update.color_name = null;
+  }
+  if (input.color_name !== undefined) {
+    update.color_name = input.color_name?.trim() || null;
   }
   if (input.image_url !== undefined) {
     update.image_url = input.image_url?.trim() || null;

@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { product_id, name, price_modifier, stock, dimensions, notes, color, image_url, active } = (body ?? {}) as {
+  const { product_id, name, price_modifier, stock, dimensions, notes, color, color_name, image_url, active } = (body ?? {}) as {
     product_id?: string;
     name?: string;
     price_modifier?: number;
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     dimensions?: string;
     notes?: string;
     color?: string;
+    color_name?: string;
     image_url?: string;
     active?: boolean;
   };
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
       dimensions: dimensions?.trim() || null,
       notes: notes?.trim() || null,
       color: normalizedColor,
+      color_name: normalizedColor ? color_name?.trim() || null : null,
       image_url: image_url?.trim() || null,
       active: active ?? true,
       sort_order: (lastOption?.sort_order ?? -10) + 10,

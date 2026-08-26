@@ -63,6 +63,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
         dimensions: v.dimensions?.trim() || null,
         notes: v.notes?.trim() || null,
         color: v.color || null,
+        color_name: v.colorName?.trim() || null,
         price_modifier: Number(v.priceModifier || 0),
         stock: Number(v.stock || 0),
         image_url: v.imageUrl || null,

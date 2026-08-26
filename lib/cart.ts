@@ -14,7 +14,7 @@ export interface CartItemView {
   option: (Pick<
     ProductOption,
     'id' | 'name' | 'price_modifier' | 'stock' | 'color'
-  > & { image_url?: string | null }) | null;
+  > & { color_name?: string | null; image_url?: string | null }) | null;
 }
 
 export interface AddItemInput {

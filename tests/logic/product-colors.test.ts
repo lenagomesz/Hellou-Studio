@@ -18,4 +18,8 @@ describe('product color standardization', () => {
   it('rejects arbitrary text that browsers cannot render as a color', () => {
     expect(normalizeProductColor('rosa chiclete especial')).toBeNull();
   });
+
+  it('uses the custom color name without turning it into a variation name', () => {
+    expect(getProductColorName('#FF69B4', 'Rosa chiclete')).toBe('Rosa chiclete');
+  });
 });
