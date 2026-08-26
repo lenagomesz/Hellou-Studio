@@ -651,6 +651,11 @@ export function ProductDetail({
                         }`}
                       >
                         <span className="block">{option.name}</span>
+                        {option.dimensions && (
+                          <span className="mt-0.5 block text-[11px] font-normal opacity-75">
+                            {option.dimensions}
+                          </span>
+                        )}
                       </button>
                     );
                   });
@@ -670,6 +675,11 @@ export function ProductDetail({
                         ? `${selectedOption.stock} em pronta-entrega; demais unidades sob demanda`
                         : 'Produzido sob demanda após o pagamento'}
                   </p>
+                  {selectedOption.dimensions && (
+                    <p className="mt-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+                      Medidas: {selectedOption.dimensions}
+                    </p>
+                  )}
                   {selectedOption.notes && (
                     <p className="mt-2 whitespace-pre-line text-xs text-gray-600 dark:text-gray-300">
                       {selectedOption.notes}

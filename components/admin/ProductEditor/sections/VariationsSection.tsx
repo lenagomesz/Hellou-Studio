@@ -14,6 +14,7 @@ export function VariationsSection() {
   const [formColorName, setFormColorName] = useState('');
   const [formPrice, setFormPrice] = useState('0');
   const [formStock, setFormStock] = useState('0');
+  const [formDimensions, setFormDimensions] = useState('');
 
   const handleAddVariation = () => {
     const id = crypto.randomUUID();
@@ -34,6 +35,7 @@ export function VariationsSection() {
         colorName: formColorName.trim() || undefined,
         priceModifier,
         stock,
+        dimensions: formDimensions.trim() || undefined,
         _isDirty: false,
       },
     });
@@ -43,6 +45,7 @@ export function VariationsSection() {
     setFormColorName('');
     setFormPrice('0');
     setFormStock('0');
+    setFormDimensions('');
     setShowForm(false);
   };
 
@@ -85,6 +88,7 @@ export function VariationsSection() {
                   </div>
                   <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                     +R$ {variation.priceModifier.toFixed(2)} • {variation.stock} em estoque
+                    {variation.dimensions ? ` • ${variation.dimensions}` : ''}
                   </div>
                 </div>
 
@@ -157,6 +161,13 @@ export function VariationsSection() {
               onChange={(e) => setFormStock(e.target.value)}
               className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
             />
+            <input
+              type="text"
+              placeholder="Medidas (ex.: 24 × 24 × 11 cm)"
+              value={formDimensions}
+              onChange={(e) => setFormDimensions(e.target.value)}
+              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            />
 
             <div className="flex gap-2">
               <button
@@ -175,6 +186,7 @@ export function VariationsSection() {
                   setFormColorName('');
                   setFormPrice('0');
                   setFormStock('0');
+                  setFormDimensions('');
                 }}
                 className="flex-1 rounded border border-gray-300 dark:border-gray-600 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-900"
               >
