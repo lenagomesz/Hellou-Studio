@@ -89,6 +89,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
       seo_title: state.seoTitle.trim() || null,
       seo_description: state.seoDescription.trim() || null,
       image_url: state.images[0] || null,
+      image_url_2: null,
       images: state.images.length > 0 ? state.images : null,
       fulfillment_mode: state.fulfillmentMode,
       is_wholesale: state.isWholesale,
@@ -311,7 +312,10 @@ export function ProductEditor(props: ProductEditorProps) {
           customizationHelpText: props.product.customization_help_text || '',
           customizationPlaceholder: props.product.customization_placeholder || '',
           customizationSections: props.product.customization_sections || [],
-          images: props.product.images || (props.product.image_url ? [props.product.image_url] : []),
+          images: Array.from(new Set(
+            [props.product.image_url, ...(props.product.images ?? []), props.product.image_url_2]
+              .filter((image): image is string => Boolean(image?.trim())),
+          )),
           active: props.product.active,
           seoTitle: props.product.seo_title || '',
           seoDescription: props.product.seo_description || '',

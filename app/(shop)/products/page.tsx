@@ -16,17 +16,24 @@ export const metadata: Metadata = {
   alternates: { canonical: '/products' },
 };
 
-const SORT_OPTIONS: { value: string; label: string }[] = [
-  { value: 'recent', label: 'Mais recentes' },
+const SORT_OPTIONS = [
+  { value: 'default', label: 'Como está' },
+  { value: 'name', label: 'Nome (A–Z)' },
   { value: 'price_asc', label: 'Menor preço' },
   { value: 'price_desc', label: 'Maior preço' },
-  { value: 'name', label: 'Nome (A–Z)' },
-];
+] as const;
+
+function sortCatalogProducts(products: Product[], sort?: string) {
+  const sorted = [...products];
+  if (sort === 'name') return sorted.sort((first, second) => first.name.localeCompare(second.name, 'pt-BR'));
+  if (sort === 'price_asc') return sorted.sort((first, second) => (first.sale_price ?? first.base_price) - (second.sale_price ?? second.base_price));
+  if (sort === 'price_desc') return sorted.sort((first, second) => (second.sale_price ?? second.base_price) - (first.sale_price ?? first.base_price));
+  return sorted;
+}
 
 async function getProductsRaw(filters: {
   category?: string;
   search?: string;
-  sort?: string;
   productIds?: string[];
   wholesale?: boolean;
 }): Promise<Product[]> {
@@ -55,19 +62,7 @@ async function getProductsRaw(filters: {
     query = query.eq('category', filters.category);
   }
 
-  switch (filters.sort) {
-    case 'price_asc':
-      query = query.order('base_price', { ascending: true });
-      break;
-    case 'price_desc':
-      query = query.order('base_price', { ascending: false });
-      break;
-    case 'name':
-      query = query.order('name', { ascending: true });
-      break;
-    default:
-      query = query.order('created_at', { ascending: false });
-  }
+  query = query.order('created_at', { ascending: false });
 
   const { data, error } = await query;
   console.log('[products/page] query result - count:', data?.length ?? 0, 'error:', error?.message ?? 'none');
@@ -80,7 +75,6 @@ async function getProductsRaw(filters: {
 async function getProducts(filters: {
   category?: string;
   search?: string;
-  sort?: string;
   productIds?: string[];
   wholesale?: boolean;
 }): Promise<Product[]> {
@@ -111,9 +105,22 @@ export default async function ProductsCatalogPage(
   ]);
   const collection = (storeSettings.home.collections ?? []).find((item) => item.id === collectionId && item.active);
   const validCategory = category && categories.some((item) => item.slug === category) ? category : undefined;
-  const products = await getProducts({ category: validCategory, search, sort, productIds: collection?.productIds, wholesale });
+  const products = await getProducts({ category: validCategory, search, productIds: collection?.productIds, wholesale });
   const activeCategory = validCategory ?? 'all';
   const categoryTabs = [{ slug: 'all', name: 'Todos' }, ...categories];
+  const isGroupedCatalog = !validCategory && !search?.trim() && !collection && !wholesale;
+  const recentProducts = isGroupedCatalog ? products.slice(0, 5) : [];
+  const recentProductIds = new Set(recentProducts.map((product) => product.id));
+  const groupedProducts = categories
+    .map((catalogCategory) => ({
+      category: catalogCategory,
+      products: sortCatalogProducts(
+        products.filter((product) => !recentProductIds.has(product.id) && product.category === catalogCategory.slug),
+        sort,
+      ),
+    }))
+    .filter((group) => group.products.length > 0);
+  const focusedProducts = isGroupedCatalog ? [] : sortCatalogProducts(products, sort);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
@@ -141,7 +148,7 @@ export default async function ProductsCatalogPage(
             const params = new URLSearchParams();
             if (cat.slug !== 'all') params.set('category', cat.slug);
             if (search) params.set('search', search);
-            if (sort) params.set('sort', sort);
+            if (sort && sort !== 'default') params.set('sort', sort);
             if (wholesale) params.set('wholesale', 'true');
             const href = `/products${params.toString() ? `?${params}` : ''}`;
             const isActive = activeCategory === cat.slug;
@@ -171,8 +178,8 @@ export default async function ProductsCatalogPage(
               className="w-full rounded-xl border border-gray-200 bg-gray-50/50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-pink-500 focus:bg-white focus:ring-2 focus:ring-pink-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:bg-gray-700"
             />
           </div>
-          <select name="sort" defaultValue={sort ?? 'recent'} className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 sm:px-4 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:bg-gray-700">
-            {SORT_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+          <select name="sort" defaultValue={sort ?? 'default'} aria-label="Ordenar produtos" className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 sm:px-4 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:bg-gray-700">
+            {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
           <button type="submit" className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-orange-500/20 active:translate-y-0">Buscar</button>
         </form>
@@ -185,9 +192,40 @@ export default async function ProductsCatalogPage(
               <><span className="text-5xl">✨🎨</span><h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">Opa! Ainda não chegaram novidades...</h2><p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Estamos preparando peças incríveis pra você! 🚀<br />Volte em breve, novidades a caminho!</p></>
             )}
           </div>
+        ) : isGroupedCatalog ? (
+          <div className="space-y-12">
+            {recentProducts.length > 0 && (
+              <section aria-labelledby="recent-products-title">
+                <div className="mb-5 flex items-end justify-between gap-4 border-b border-pink-100 pb-3 dark:border-pink-900/50">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600 dark:text-pink-400">Em ordem de publicação</p>
+                    <h2 id="recent-products-title" className="mt-1 text-2xl font-black text-gray-900 dark:text-white">Lançamentos recentes</h2>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 min-[520px]:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5">
+                  {recentProducts.map((product) => <ProductCard key={product.id} product={product} category={categories.find((item) => item.slug === product.category)} />)}
+                </div>
+              </section>
+            )}
+
+            {groupedProducts.map(({ category: catalogCategory, products: categoryProducts }) => (
+              <section key={catalogCategory.id} aria-labelledby={`category-${catalogCategory.slug}`}>
+                <div className="mb-5 flex items-end justify-between gap-4 border-b pb-3" style={{ borderColor: `${catalogCategory.color}33` }}>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: catalogCategory.color }}>Categoria</p>
+                    <h2 id={`category-${catalogCategory.slug}`} className="mt-1 text-2xl font-black text-gray-900 dark:text-white">{catalogCategory.name}</h2>
+                  </div>
+                  <Link href={`/products?category=${encodeURIComponent(catalogCategory.slug)}${sort && sort !== 'default' ? `&sort=${encodeURIComponent(sort)}` : ''}`} className="shrink-0 text-xs font-bold text-pink-600 hover:text-orange-500 dark:text-pink-400">Ver grupo →</Link>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 min-[520px]:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5">
+                  {categoryProducts.map((product) => <ProductCard key={product.id} product={product} category={catalogCategory} />)}
+                </div>
+              </section>
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-2.5 min-[520px]:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5">
-            {products.map((product) => <ProductCard key={product.id} product={product} category={categories.find((item) => item.slug === product.category)} />)}
+            {focusedProducts.map((product) => <ProductCard key={product.id} product={product} category={categories.find((item) => item.slug === product.category)} />)}
           </div>
         )}
       </div>

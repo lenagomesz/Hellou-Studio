@@ -95,7 +95,7 @@ export function ImagesSection() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt={`Imagem ${idx + 1}`} className="absolute inset-0 w-full h-full object-cover" />
                 </div>
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1">
+                <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/40 opacity-100 transition sm:bg-black/50 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                   {idx > 0 && (
                     <button
                       type="button"
@@ -110,7 +110,8 @@ export function ImagesSection() {
                     type="button"
                     onClick={() => dispatch({ type: 'REMOVE_IMAGE', index: idx })}
                     className="rounded-full bg-red-500 p-1.5 text-xs font-bold text-white hover:bg-red-600"
-                    title="Remover"
+                    title={idx === 0 ? 'Remover capa' : 'Remover imagem'}
+                    aria-label={idx === 0 ? 'Remover capa do produto' : `Remover imagem ${idx + 1}`}
                   >
                     ✕
                   </button>
@@ -164,7 +165,7 @@ export function ImagesSection() {
         )}
 
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          A primeira imagem será usada como capa. As imagens enviadas ficam no bucket products do Supabase.
+          A primeira imagem será usada como capa. Se ela for removida, a próxima imagem vira a nova capa; se não restar nenhuma, o produto fica sem imagem. As imagens enviadas ficam no bucket products do Supabase.
         </p>
       </div>
     </CollapsibleSection>

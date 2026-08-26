@@ -67,6 +67,7 @@ export async function PATCH(
       base_price?: number;
       sale_price?: number | null;
       image_url?: string | null;
+      image_url_2?: string | null;
       images?: string[] | null;
       active?: boolean;
       fulfillment_mode?: string;
@@ -165,6 +166,9 @@ export async function PATCH(
     }
     if (input.image_url !== undefined) {
       update.image_url = input.image_url?.trim() || null;
+    }
+    if (input.image_url_2 !== undefined) {
+      update.image_url_2 = input.image_url_2?.trim() || null;
     }
     if (input.images !== undefined) {
       update.images = input.images;
