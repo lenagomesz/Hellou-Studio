@@ -5,12 +5,13 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 interface ImageGalleryProps {
   images: string[];
   alt: string;
+  altTexts?: Record<string, string>;
   activeImage?: string | null;
   activeImageKey?: string | number;
   overlay?: ReactNode;
 }
 
-export function ImageGallery({ images, alt, activeImage = null, activeImageKey = 0, overlay }: ImageGalleryProps) {
+export function ImageGallery({ images, alt, altTexts, activeImage = null, activeImageKey = 0, overlay }: ImageGalleryProps) {
   const normalizedImages = useMemo(
     () => Array.from(new Set(images.map((image) => image.trim()).filter(Boolean))),
     [images],
@@ -66,7 +67,7 @@ export function ImageGallery({ images, alt, activeImage = null, activeImageKey =
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={currentImage}
-          alt={`${alt} — imagem ${currentImageIndex + 1}`}
+          alt={altTexts?.[currentImage] || `${alt} — imagem ${currentImageIndex + 1}`}
           className="h-full w-full object-cover"
           onError={() => markAsFailed(currentImage)}
         />

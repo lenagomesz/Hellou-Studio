@@ -3,6 +3,7 @@
 import { useState, useRef, type FormEvent, type DragEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { STLAnalysisPanel } from '@/components/shop/STLAnalysisPanel';
 
 export default function RequestPrintPage() {
   const router = useRouter();
@@ -215,6 +216,7 @@ export default function RequestPrintPage() {
                   className="hidden"
                 />
               </div>
+              {file && !makerLink.trim() && <STLAnalysisPanel key={file.name + file.lastModified} file={file} authenticated={status === 'authenticated'} />}
             </div>
 
             {/* Option 2: Makerworld Link */}

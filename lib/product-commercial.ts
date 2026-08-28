@@ -7,6 +7,8 @@ export type ProductCommercialInput = {
   height_cm?: number | null;
   seo_title?: string | null;
   seo_description?: string | null;
+  seo_keywords?: string[];
+  image_alt_texts?: Record<string, string>;
   slug?: string | null;
 };
 
@@ -37,6 +39,13 @@ function nullableNumber(value: unknown, options: { integer?: boolean; positive?:
 }
 
 export function normalizeProductCommercialFields(input: ProductCommercialInput) {
+  if (input.seo_keywords !== undefined && (!Array.isArray(input.seo_keywords) || input.seo_keywords.length > 20 || input.seo_keywords.some(k => typeof k !== 'string' || k.length > 60))) {
+    throw new Error('Use até 20 palavras-chave de até 60 caracteres');
+  }
+  if (input.image_alt_texts !== undefined && (!input.image_alt_texts || typeof input.image_alt_texts !== 'object' || Array.isArray(input.image_alt_texts)
+    || Object.keys(input.image_alt_texts).length > 30 || Object.entries(input.image_alt_texts).some(([url, alt]) => url.length > 2000 || typeof alt !== 'string' || alt.length > 180))) {
+    throw new Error('Textos alternativos inválidos');
+  }
   const sku = nullableText(input.sku, 80)?.toUpperCase() ?? null;
   if (sku && !/^[A-Z0-9][A-Z0-9._-]{1,79}$/.test(sku)) {
     throw new Error('SKU inválido. Use letras, números, ponto, hífen ou sublinhado');
@@ -55,6 +64,8 @@ export function normalizeProductCommercialFields(input: ProductCommercialInput) 
     height_cm: nullableNumber(input.height_cm, { positive: true }),
     seo_title: nullableText(input.seo_title, 70) ?? null,
     seo_description: nullableText(input.seo_description, 180) ?? null,
+    ...(input.seo_keywords !== undefined ? { seo_keywords: [...new Set(input.seo_keywords.map(k => k.trim()).filter(Boolean))] } : {}),
+    ...(input.image_alt_texts !== undefined ? { image_alt_texts: Object.fromEntries(Object.entries(input.image_alt_texts).map(([url, alt]) => [url, alt.trim()])) } : {}),
     slug,
   };
 }

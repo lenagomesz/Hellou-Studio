@@ -60,6 +60,8 @@ export interface Product {
   height_cm?: number | null;
   seo_title?: string | null;
   seo_description?: string | null;
+  seo_keywords?: string[];
+  image_alt_texts?: Record<string, string>;
   slug?: string | null;
   tags?: ProductTag[];
   is_best_seller?: boolean;

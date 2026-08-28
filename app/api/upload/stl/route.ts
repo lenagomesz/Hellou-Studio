@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { processProductSEOSafely } from '@/lib/ai/product-seo-worker';
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { isCategory, requirePermission } from '@/lib/api';
@@ -174,6 +175,7 @@ export async function POST(request: NextRequest) {
     }
 
     revalidateProduct(product.id);
+    after(() => processProductSEOSafely(product.id));
     return NextResponse.json({ success: true, product: savedProduct as Product }, { status: 201 });
   } catch (error) {
     console.error('[stl-upload] create exception:', error);
@@ -239,6 +241,7 @@ export async function PATCH(request: NextRequest) {
       await supabase.storage.from(STL_BUCKET).remove([currentProduct.file_path]);
     }
     revalidateProduct(productId);
+    after(() => processProductSEOSafely(productId));
     return NextResponse.json({ success: true, product: savedProduct as Product });
   } catch (error) {
     console.error('[stl-upload] update exception:', error);

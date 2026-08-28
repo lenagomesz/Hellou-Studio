@@ -90,6 +90,7 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
   return {
     title,
     description,
+    keywords: product.seo_keywords ?? [],
     alternates: { canonical },
     openGraph: { type: 'website', url: canonical, title, description, images },
     twitter: { card: 'summary_large_image', title, description, images },

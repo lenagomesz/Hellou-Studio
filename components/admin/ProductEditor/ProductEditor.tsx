@@ -14,6 +14,7 @@ import { ImagesSection } from './sections/ImagesSection';
 import { VariationsSection } from './sections/VariationsSection';
 import { SEOSection } from './sections/SEOSection';
 import { TagsSection } from './sections/TagsSection';
+import { AIAssistantSection } from './sections/AIAssistantSection';
 import { ProductLivePreview } from '../ProductLivePreview';
 import { OptionsManager } from '../OptionsManager';
 import { ConfirmDialog } from '../ConfirmDialog';
@@ -88,6 +89,8 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
       slug: state.slug.trim() || null,
       seo_title: state.seoTitle.trim() || null,
       seo_description: state.seoDescription.trim() || null,
+      seo_keywords: state.seoKeywords,
+      image_alt_texts: state.imageAltTexts,
       image_url: state.images[0] || null,
       image_url_2: null,
       images: state.images.length > 0 ? state.images : null,
@@ -171,6 +174,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
 
       <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_460px]">
         <div className="rounded-[26px] bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 space-y-5 sm:p-8">
+          <AIAssistantSection />
           <BasicInfoSection />
           <PricingSection />
           <ImagesSection />
@@ -303,6 +307,10 @@ export function ProductEditor(props: ProductEditorProps) {
           basePrice: props.product.base_price,
           salePrice: props.product.sale_price,
           costPrice: props.product.cost_price || null,
+          weightGrams: props.product.weight_grams || 0,
+          lengthCm: props.product.length_cm || 0,
+          widthCm: props.product.width_cm || 0,
+          heightCm: props.product.height_cm || 0,
           sku: props.product.sku || '',
           fulfillmentMode: (props.product.fulfillment_mode as 'made_to_order' | 'ready_stock' | 'hybrid') || 'made_to_order',
           isWholesale: props.product.is_wholesale,
@@ -319,6 +327,8 @@ export function ProductEditor(props: ProductEditorProps) {
           active: props.product.active,
           seoTitle: props.product.seo_title || '',
           seoDescription: props.product.seo_description || '',
+          seoKeywords: props.product.seo_keywords || [],
+          imageAltTexts: props.product.image_alt_texts || {},
           slug: props.product.slug || '',
           tags: props.product.tags?.map(t => t.id) || [],
         }

@@ -221,7 +221,7 @@ export function ProductDetail({
       <div className="space-y-6">
         <div className="group relative">
           {galleryImages.length > 0 ? (
-            <ImageGallery images={galleryImages} alt={product.name} activeImage={currentDisplayImage} activeImageKey={gallerySelectionVersion} overlay={tagOverlay} />
+            <ImageGallery images={galleryImages} alt={product.name} altTexts={product.image_alt_texts} activeImage={currentDisplayImage} activeImageKey={gallerySelectionVersion} overlay={tagOverlay} />
           ) : (
             <div className="relative flex aspect-square h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 text-7xl text-pink-200 shadow-sm dark:from-gray-800 dark:to-gray-800">
               ◇

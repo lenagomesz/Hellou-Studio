@@ -135,6 +135,7 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+          <Link href="/dashboard/products/seo" className="rounded-lg border border-pink-200 px-3 py-2.5 text-center text-sm font-medium text-pink-700">SEO com IA</Link>
           <a
             href="/api/admin/products/export"
             className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 sm:px-4 sm:text-sm"

@@ -17,13 +17,14 @@ interface Product {
   base_price: number;
   sale_price: number | null;
   image_url: string | null;
+  type?: string;
 }
 
 const STORAGE_KEY = 'hellou-chat-history-v1';
 const WHATSAPP_NUMBER = '5547988450461';
 
 const QUICK_OPTIONS = [
-  'Quero encontrar um produto',
+  'Não sei o que presentear',
   'Como funciona o frete?',
   'Quais são as formas de pagamento?',
   'Ver produtos populares',
@@ -125,7 +126,7 @@ export function AIHelpWidget() {
     setProductsLoading(true);
 
     try {
-      const response = await fetch('/api/products?limit=3&active=true');
+      const response = await fetch('/api/products?limit=3&active=true&type=physical');
       if (!response.ok) throw new Error('Falha ao carregar produtos');
       const data = (await response.json()) as { products?: Product[] };
       setSuggestedProducts((data.products ?? []).slice(0, 3));
@@ -140,6 +141,7 @@ export function AIHelpWidget() {
     setMessages([]);
     setInput('');
     setShowProducts(false);
+    setSuggestedProducts([]);
     window.sessionStorage.removeItem(STORAGE_KEY);
     window.setTimeout(() => inputRef.current?.focus(), 0);
   }
@@ -168,16 +170,20 @@ export function AIHelpWidget() {
     }
 
     setLoading(true);
+    setShowProducts(false);
+    setSuggestedProducts([]);
     try {
       const response = await fetch('/api/shop/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: nextMessages }),
       });
-      const data = (await response.json()) as { message?: string; error?: string };
+      const data = (await response.json()) as { message?: string; error?: string; products?: Product[] };
       if (!response.ok || !data.message) throw new Error(data.error || 'Não foi possível responder');
 
       setMessages([...nextMessages, { role: 'assistant', content: cleanFormatting(data.message) }]);
+      setSuggestedProducts(data.products ?? []);
+      setShowProducts(Boolean(data.products?.length));
     } catch (error) {
       console.error('[shop-chat] Error:', error);
       setMessages([
@@ -281,7 +287,7 @@ export function AIHelpWidget() {
                     ) : suggestedProducts.length > 0 ? (
                       <div className="flex snap-x gap-2.5 overflow-x-auto pb-2">
                         {suggestedProducts.map(product => (
-                          <Link key={product.id} href={`/products/${product.id}`} onClick={() => setIsOpen(false)} className="group w-36 shrink-0 snap-start overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                          <Link key={product.id} href={`/${product.type === 'digital' ? 'stl' : 'products'}/${product.id}`} onClick={() => setIsOpen(false)} className="group w-36 shrink-0 snap-start overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                             <div className="relative h-24 bg-pink-50">
                               {product.image_url ? <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-cover transition duration-300 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-pink-300"><ShoppingBag className="h-7 w-7" /></div>}
                             </div>
@@ -338,6 +344,7 @@ export function AIHelpWidget() {
         </section>
       )}
 
+      {!isOpen && pathname === '/' && <button type="button" onClick={() => setIsOpen(true)} className="mr-2 max-w-36 rounded-2xl border border-pink-200 bg-white px-3 py-2 text-xs font-bold text-pink-700 shadow-md">Não sabe o que presentear?</button>}
       {!isOpen && (
         <button type="button" onClick={() => setIsOpen(true)} className="group relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[linear-gradient(145deg,var(--store-accent)_0%,var(--store-primary)_48%,var(--store-secondary)_100%)] text-white shadow-[0_12px_30px_-7px_rgba(219,39,119,0.68),0_3px_10px_-4px_rgba(249,115,22,0.55)] ring-1 ring-pink-500/15 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_18px_40px_-8px_rgba(219,39,119,0.78),0_5px_16px_-5px_rgba(249,115,22,0.65)] active:translate-y-0 active:scale-95" aria-label="Abrir assistente virtual" aria-expanded="false">
           <span aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,rgba(255,255,255,0.55),transparent_34%)] opacity-80 transition-opacity group-hover:opacity-100" />

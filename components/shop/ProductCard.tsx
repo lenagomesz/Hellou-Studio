@@ -49,7 +49,7 @@ export function ProductCard({ product, basePath = "/products", category, showcas
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={product.image_url}
-            alt={product.name}
+            alt={product.image_alt_texts?.[product.image_url] || product.name}
             className="h-full w-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.03]"
           />
         ) : (

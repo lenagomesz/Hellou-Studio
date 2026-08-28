@@ -95,6 +95,8 @@ export interface ProductEditorState {
   // SEO
   seoTitle: string;
   seoDescription: string;
+  seoKeywords: string[];
+  imageAltTexts: Record<string, string>;
   slug: string;
 
   // Editor Metadata
@@ -167,6 +169,8 @@ export function createInitialEditorState(
 
     seoTitle: '',
     seoDescription: '',
+    seoKeywords: [],
+    imageAltTexts: {},
     slug: '',
 
     errors: {},

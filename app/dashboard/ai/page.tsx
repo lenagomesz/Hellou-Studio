@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { TestimonialSummary } from '@/components/admin/TestimonialSummary';
 import {
   Zap,
   TrendingUp,
@@ -53,6 +54,22 @@ export default function AIPage() {
   }, []);
 
   const features = [
+    {
+      icon: Sparkles,
+      title: 'Cadastro de produtos com IA',
+      description: 'Gere nome, descrição, palavras-chave e SEO a partir de uma foto ou poucas palavras, mantendo o cadastro manual',
+      href: '/dashboard/products/new',
+      color: 'from-pink-500 to-orange-500',
+      action: 'Criar produto',
+    },
+    {
+      icon: Target,
+      title: 'SEO de produtos existentes',
+      description: 'Complete o SEO do catálogo e acompanhe a fila, preservando textos manuais',
+      href: '/dashboard/products/seo',
+      color: 'from-violet-500 to-pink-500',
+      action: 'Abrir fila de SEO',
+    },
     {
       icon: TrendingUp,
       title: 'Análise de Tendências',
@@ -152,6 +169,7 @@ export default function AIPage() {
         </div>
       </div>
 
+      <TestimonialSummary />
       {/* Main Features Grid */}
       <div>
         <h2 className="text-xl font-bold mb-4">Recursos Principais</h2>

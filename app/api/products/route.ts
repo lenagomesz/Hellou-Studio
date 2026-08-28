@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
+import { processProductSEOSafely } from '@/lib/ai/product-seo-worker';
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import {
@@ -18,6 +19,8 @@ import {
   normalizeProductCustomizationSections,
   type ProductCustomizationCopyInput,
 } from '@/lib/product-customization';
+
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -59,7 +62,7 @@ export async function GET(request: Request) {
   if (category) query = query.eq('category', category);
   if (search) {
     const safeSearch = search.replace(/[%_,()]/g, ' ').trim();
-    if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,sku.ilike.%${safeSearch}%`);
+    if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,sku.ilike.%${safeSearch}%,seo_search_text.ilike.%${safeSearch}%`);
   }
   if (type === 'physical' || type === 'digital') query = query.eq('type', type);
   if (minPrice !== undefined) query = query.gte('base_price', minPrice);
@@ -222,5 +225,6 @@ export async function POST(request: Request) {
 
   revalidatePath('/');
   revalidatePath('/products');
+  after(() => processProductSEOSafely(data.id));
   return NextResponse.json({ product: data as Product }, { status: 201 });
 }

@@ -1,4 +1,7 @@
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType, type Schema, type Part, type GenerateContentRequest } from '@google/generative-ai';
+
+export type GeminiImage = { mimeType: string; data: string };
+export type GeminiSchema = { type: string; properties: Record<string, unknown>; required: string[] };
 
 export class GeminiClient {
   private modelInstance: ReturnType<GoogleGenerativeAI['getGenerativeModel']> | null = null;
@@ -11,7 +14,7 @@ export class GeminiClient {
       }
       const client = new GoogleGenerativeAI(apiKey);
       this.modelInstance = client.getGenerativeModel({
-        model: 'gemini-3.6-flash',
+        model: process.env.GOOGLE_GENAI_MODEL || 'gemini-3.6-flash',
         safetySettings: [
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT' as any, threshold: 'BLOCK_NONE' as any },
@@ -26,71 +29,49 @@ export class GeminiClient {
     systemPrompt: string,
     responseSchema?: { type: string; properties: Record<string, unknown>; required: string[] } | { mimeType: string; data: string },
     conversationHistory?: Array<{ role: string; parts: Array<{ text: string }> }>,
+    options?: { images?: GeminiImage[]; timeoutMs?: number; maxOutputTokens?: number },
   ): Promise<{ text: string; tokensUsed: number }> {
     try {
       const isImage = responseSchema && 'mimeType' in responseSchema && 'data' in responseSchema;
       const imageParam = isImage ? responseSchema as { mimeType: string; data: string } : null;
 
-      const contents = conversationHistory
-        ? [
-            ...conversationHistory,
-            {
-              role: 'user',
-              parts: imageParam
-                ? [
-                    { text: `${systemPrompt}\n\n${userPrompt}` },
-                    {
-                      inlineData: {
-                        mimeType: imageParam.mimeType,
-                        data: imageParam.data,
-                      },
-                    },
-                  ]
-                : [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-            },
-          ]
-        : [
-            {
-              role: 'user',
-              parts: imageParam
-                ? [
-                    { text: `${systemPrompt}\n\n${userPrompt}` },
-                    {
-                      inlineData: {
-                        mimeType: imageParam.mimeType,
-                        data: imageParam.data,
-                      },
-                    },
-                  ]
-                : [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-            },
-          ];
+      const parts: Part[] = [{ text: userPrompt }];
+      for (const image of [...(imageParam ? [imageParam] : []), ...(options?.images ?? [])]) {
+        parts.push({ inlineData: image });
+      }
+      const contents = [
+        ...(conversationHistory ?? []).map(turn => ({
+          ...turn, role: turn.role === 'assistant' ? 'model' : turn.role,
+        })),
+        { role: 'user', parts },
+      ];
 
       const schemaParam = responseSchema && !isImage && 'type' in responseSchema
         ? responseSchema as { type: string; properties: Record<string, unknown>; required: string[] }
         : null;
 
-      const config = {
+      const config: GenerateContentRequest = {
         contents,
-        generationConfig: schemaParam
-          ? {
+        systemInstruction: systemPrompt,
+        generationConfig: {
+          ...(options?.maxOutputTokens ? { maxOutputTokens: options.maxOutputTokens } : {}),
+          ...(schemaParam ? {
               responseMimeType: 'application/json',
               responseSchema: {
                 type: SchemaType.OBJECT,
-                properties: schemaParam.properties as Record<string, unknown>,
+                properties: schemaParam.properties as Record<string, Schema>,
                 required: schemaParam.required,
               },
-            }
-          : undefined,
+            } : {}),
+        },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await (this.model.generateContent as any)(config);
+      const result = await this.model.generateContent(config, { timeout: options?.timeoutMs ?? 45_000 });
       const text = result.response.text();
       const tokensUsed = result.response.usageMetadata?.totalTokenCount || 0;
       return { text, tokensUsed };
     } catch (error) {
-      console.error('[GeminiClient] Error generating content:', error);
+      console.error('[GeminiClient] Falha na geração de conteúdo.');
       throw error;
     }
   }
@@ -99,7 +80,7 @@ export class GeminiClient {
     try {
       return JSON.parse(response) as T;
     } catch {
-      console.error('[GeminiClient] Failed to parse response as JSON:', response);
+      console.error('[GeminiClient] Resposta JSON inválida.');
       throw new Error('Invalid JSON response from Gemini');
     }
   }

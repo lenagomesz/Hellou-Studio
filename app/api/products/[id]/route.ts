@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
+import { processProductSEOSafely } from '@/lib/ai/product-seo-worker';
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import {
@@ -17,6 +18,7 @@ import {
 } from '@/lib/product-customization';
 
 type ProductWithOptions = Product & { product_options: ProductOption[] };
+export const maxDuration = 60;
 
 export async function GET(
   _request: Request,
@@ -84,7 +86,7 @@ export async function PATCH(
       if (statusAuth.response) return statusAuth.response;
     }
 
-    const commercialKeys: Array<keyof ProductCommercialInput> = ['sku', 'cost_price', 'weight_grams', 'length_cm', 'width_cm', 'height_cm', 'seo_title', 'seo_description', 'slug'];
+    const commercialKeys: Array<keyof ProductCommercialInput> = ['sku', 'cost_price', 'weight_grams', 'length_cm', 'width_cm', 'height_cm', 'seo_title', 'seo_description', 'seo_keywords', 'image_alt_texts', 'slug'];
     if (commercialKeys.some((key) => input[key] !== undefined)) {
       try {
         const normalized = normalizeProductCommercialFields(input);
@@ -219,6 +221,7 @@ export async function PATCH(
     revalidatePath('/products');
     revalidatePath('/stl');
 
+    after(() => processProductSEOSafely(id));
     return NextResponse.json({ product: data as Product });
   } catch (err) {
     console.error('[products-patch] exception:', {

@@ -2,6 +2,7 @@ type SearchableCatalogProduct = {
   name: string;
   description?: string | null;
   tags?: Array<{ name: string }>;
+  seo_keywords?: string[];
 };
 
 export function normalizeCatalogSearchText(value: string) {
@@ -13,5 +14,6 @@ export function matchesCatalogSearch(product: SearchableCatalogProduct, search: 
   if (!term) return true;
   return normalizeCatalogSearchText(product.name).includes(term)
     || normalizeCatalogSearchText(product.description ?? '').includes(term)
-    || (product.tags ?? []).some((tag) => normalizeCatalogSearchText(tag.name).includes(term));
+    || (product.tags ?? []).some((tag) => normalizeCatalogSearchText(tag.name).includes(term))
+    || (product.seo_keywords ?? []).some(keyword => normalizeCatalogSearchText(keyword).includes(term));
 }
