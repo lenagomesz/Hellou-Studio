@@ -8,13 +8,23 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
 describe('gift chat widget', () => {
-  it('keeps the launcher at the right edge with the gift label beside it', () => {
+  it('keeps a single launcher at the right edge without the gift label', () => {
     render(<AIHelpWidget />);
     const launcher = screen.getByRole('button', { name: 'Abrir assistente virtual' });
     const wrapper = launcher.parentElement!;
-    expect(wrapper).toHaveClass('right-4', 'flex', 'items-center', 'justify-end', 'gap-2');
+    expect(wrapper).toHaveClass('right-4', 'flex', 'items-center', 'justify-end');
     expect(launcher).toHaveClass('shrink-0');
-    expect(screen.getByRole('button', { name: 'Não sabe o que presentear?' }).parentElement).toBe(wrapper);
+    expect(screen.queryByText('Não sabe o que presentear?')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+  it('opens the conversation and restores the launcher when closed', () => {
+    render(<AIHelpWidget />);
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir assistente virtual' }));
+    expect(screen.getByRole('dialog', { name: 'Assistente virtual da Hellou Studio' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Abrir assistente virtual' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar conversa' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Abrir assistente virtual' })).toBeVisible();
   });
   it('offers normal catalog and human support when quota is exhausted', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: false, json: async () => ({ code: 'GEMINI_QUOTA_EXCEEDED', error: 'internal quota details' }) });

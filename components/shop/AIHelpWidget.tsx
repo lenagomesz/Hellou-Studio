@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUp, ExternalLink, Loader2, MessageCircle, RefreshCcw, ShoppingBag, Sparkles, X } from 'lucide-react';
+import { ArrowUp, ExternalLink, Loader2, MessageCircle, MessageCircleMore, RefreshCcw, ShoppingBag, Sparkles, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -208,7 +208,7 @@ export function AIHelpWidget() {
       className={`fixed ${
         isOpen
           ? `inset-x-0 px-3 ${hasMobileShopNavigation ? 'bottom-[calc(5rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(0.75rem+env(safe-area-inset-bottom))]'} z-[60] flex justify-end sm:left-auto sm:right-5 sm:px-0 lg:bottom-5`
-          : `${hasMobileShopNavigation ? 'bottom-[calc(5.25rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(1rem+env(safe-area-inset-bottom))]'} right-4 z-50 flex max-w-[calc(100vw-2rem)] items-center justify-end gap-2 sm:right-5 lg:bottom-5`
+          : `${hasMobileShopNavigation ? 'bottom-[calc(5.25rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(1rem+env(safe-area-inset-bottom))]'} right-4 z-50 flex max-w-[calc(100vw-2rem)] items-center justify-end sm:right-5 lg:bottom-5`
       }`}
     >
       {isOpen && (
@@ -349,18 +349,16 @@ export function AIHelpWidget() {
         </section>
       )}
 
-      {!isOpen && pathname === '/' && <button type="button" onClick={() => setIsOpen(true)} className="min-w-0 max-w-36 rounded-2xl border border-pink-200 bg-white px-3 py-2 text-xs font-bold text-pink-700 shadow-md">Não sabe o que presentear?</button>}
       {!isOpen && (
-        <button type="button" onClick={() => setIsOpen(true)} className="group relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[linear-gradient(145deg,var(--store-accent)_0%,var(--store-primary)_48%,var(--store-secondary)_100%)] text-white shadow-[0_12px_30px_-7px_rgba(219,39,119,0.68),0_3px_10px_-4px_rgba(249,115,22,0.55)] ring-1 ring-pink-500/15 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_18px_40px_-8px_rgba(219,39,119,0.78),0_5px_16px_-5px_rgba(249,115,22,0.65)] active:translate-y-0 active:scale-95" aria-label="Abrir assistente virtual" aria-expanded="false">
-          <span aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,rgba(255,255,255,0.55),transparent_34%)] opacity-80 transition-opacity group-hover:opacity-100" />
-          <span aria-hidden="true" className="relative flex h-9 w-9 items-center justify-center rounded-[14px] border border-white/45 bg-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_4px_12px_rgba(120,20,70,0.18)] backdrop-blur-sm transition duration-300 group-hover:scale-105 group-hover:bg-white/20">
-            <svg viewBox="0 0 32 32" fill="none" className="h-6 w-6 drop-shadow-[0_2px_3px_rgba(120,20,70,0.24)]">
-              <path d="M6.25 7.75A4.75 4.75 0 0 1 11 3h10a4.75 4.75 0 0 1 4.75 4.75v7.5A4.75 4.75 0 0 1 21 20h-6.3l-5.85 4.62c-.74.59-1.85.06-1.85-.89V19.2a4.74 4.74 0 0 1-.75-2.55v-8.9Z" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="11.3" cy="11.6" r="1.25" fill="currentColor" />
-              <circle cx="16" cy="11.6" r="1.25" fill="currentColor" />
-              <circle cx="20.7" cy="11.6" r="1.25" fill="currentColor" />
-            </svg>
-          </span>
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-white/20 bg-[var(--store-accent)] text-white shadow-[0_6px_20px_-6px_rgba(107,33,65,0.35)] transition-[transform,box-shadow] duration-200 hover:shadow-[0_10px_24px_-6px_rgba(107,33,65,0.4)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--store-accent)] motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-95 motion-reduce:transition-none"
+          aria-label="Abrir assistente virtual"
+          aria-expanded="false"
+          title="Conversar com a Hellou"
+        >
+          <MessageCircleMore aria-hidden="true" className="h-7 w-7" strokeWidth={1.8} />
         </button>
       )}
     </div>
