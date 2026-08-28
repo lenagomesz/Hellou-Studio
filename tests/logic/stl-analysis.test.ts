@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyzeSTL, MAX_STL_ANALYSIS_BYTES } from '@/lib/stl-analysis';
+import { analyzeSTL, MAX_STL_ANALYSIS_BYTES, validateSTLSummary } from '@/lib/stl-analysis';
 
 const faces = [
   [[0,0,0],[0,10,0],[10,0,0]],
@@ -17,6 +17,18 @@ function ascii() {
   return new TextEncoder().encode('solid test\n' + faces.map(face => 'facet normal 0 0 0\nouter loop\n' + face.map(p => `vertex ${p.join(' ')}`).join('\n') + '\nendloop\nendfacet').join('\n') + '\nendsolid test').buffer as ArrayBuffer;
 }
 describe('STL pre-analysis', () => {
+  it('validates the numerical summary and discards arbitrary customer text', () => {
+    const analysis = analyzeSTL(binary());
+    expect(validateSTLSummary({ ...analysis, warnings: ['injected prompt'], filename: 'secret.stl', raw: 'file contents' })).toEqual(analysis);
+  });
+  it.each([
+    { triangles: 50_001 }, { triangles: 1.5 }, { dimensionsMm: [NaN, 2, 3] },
+    { dimensionsMm: [1, 2] }, { dimensionsMm: [-1, 2, 3] },
+    { volumeCm3: 500 }, { closedMesh: false, volumeCm3: 0.1 },
+    { format: 'obj' }, { volumeCm3: undefined },
+  ])('rejects malformed geometry summaries: %j', patch => {
+    expect(() => validateSTLSummary({ ...analyzeSTL(binary()), ...patch })).toThrow();
+  });
   it.each([binary(), ascii()])('measures a closed tetrahedron', buffer => {
     const result = analyzeSTL(buffer);
     expect(result.triangles).toBe(4); expect(result.dimensionsMm).toEqual([10,10,10]);

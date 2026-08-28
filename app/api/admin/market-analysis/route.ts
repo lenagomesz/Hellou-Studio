@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { geminiQuotaResponse } from '@/lib/ai/quota-response';
 import { requirePermission } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { rateLimit } from '@/lib/rate-limit';
@@ -169,6 +170,8 @@ Seja conservador nas recomendações. Use URLs fictícias mas realistas para exe
       analisado_em: new Date().toISOString(),
     });
   } catch (error) {
+    const quota = geminiQuotaResponse(error);
+    if (quota) return quota;
     console.error('[market-analysis] Unexpected error', error);
     return NextResponse.json(
       { error: 'Não foi possível analisar o mercado agora.' },

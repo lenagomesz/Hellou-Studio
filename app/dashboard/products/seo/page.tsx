@@ -11,20 +11,33 @@ export default function ProductSEOPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [configured, setConfigured] = useState(false);
+  const [pausedUntil, setPausedUntil] = useState<string | null>(null);
+  const [quotaMessage, setQuotaMessage] = useState('');
 
   async function refresh() {
     const response = await fetch('/api/admin/ai/product-seo');
     const data = await response.json();
     if (!response.ok) throw new Error(data.error);
     setJobs(data.jobs); setTotal(data.total); setConfigured(data.configured);
+    setPausedUntil(data.pausedUntil); setQuotaMessage(data.quotaMessage || '');
   }
   useEffect(() => { refresh().catch(e => setError(e.message)); }, []);
+  useEffect(() => {
+    if (!pausedUntil) return;
+    const timer = window.setTimeout(() => { refresh().catch(e => setError(e.message)); }, Math.max(1000, Date.parse(pausedUntil) - Date.now() + 1000));
+    return () => window.clearTimeout(timer);
+  }, [pausedUntil]);
   async function runBatch() {
     setBusy(true); setError(''); setMessage('');
     try {
       const response = await fetch('/api/admin/ai/product-seo', { method: 'POST' });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
+      if (data.pausedUntil) {
+        setMessage(data.message || 'Gerações pausadas por cota. Os produtos continuam na fila.');
+        await refresh();
+        return;
+      }
       const updated = data.results.filter((r: { status: string }) => r.status === 'updated').length;
       const skipped = data.results.reduce((n: number, r: { skippedImages?: number }) => n + (r.skippedImages ?? 0), 0);
       setMessage(data.processed ? `${updated} de ${data.processed} produtos atualizados. ${skipped ? `${skipped} imagens não puderam ser analisadas; confira os textos alternativos manualmente.` : 'Textos manuais preservados.'}` : 'Nenhum item disponível agora. Confira as tentativas e os horários abaixo.');
@@ -49,7 +62,8 @@ export default function ProductSEOPage() {
     <div className="rounded-2xl border border-pink-200 bg-pink-50 p-5 text-slate-900">
       <p className="text-2xl font-bold">{total} produtos pendentes</p>
       <p className="my-3 text-sm">Cada lote processa até 3 produtos e consome a cota da API. O processamento diário retoma a fila automaticamente. Produtos salvos no editor têm processamento imediato em segundo plano.</p>
-      <button type="button" disabled={busy || !configured || !total} onClick={runBatch} className="rounded-xl bg-pink-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{busy ? 'Gerando SEO...' : 'Processar próximo lote'}</button>
+      <button type="button" disabled={busy || !configured || !total || Boolean(pausedUntil)} onClick={runBatch} className="rounded-xl bg-pink-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{pausedUntil ? 'Aguardando renovação da cota' : busy ? 'Gerando SEO...' : 'Processar próximo lote'}</button>
+      {quotaMessage && <p role="status" className="mt-3 text-sm text-amber-800">{quotaMessage} Os itens serão retomados na próxima execução disponível; a falta de cota não conta como falha do produto.</p>}
       {!configured && <p className="mt-2 text-sm">Configure a chave do Gemini no servidor para ativar.</p>}
     </div>
     {error && <p role="alert" className="text-red-600">{error}</p>}

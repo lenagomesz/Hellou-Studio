@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { geminiQuotaResponse } from '@/lib/ai/quota-response';
 import { requirePermission } from '@/lib/api';
 import { durableRateLimit } from '@/lib/durable-rate-limit';
 import { geminiClient } from '@/lib/ai/gemini-client';
@@ -23,5 +24,5 @@ export async function POST(request: Request) {
       undefined, { timeoutMs: 30_000, maxOutputTokens: 1024 });
     const data = JSON.parse(text);
     return NextResponse.json({ summary: cleanContentText(data.summary, 300), reviewNote: cleanContentText(data.review_note, 250) });
-  } catch { return NextResponse.json({ error: 'Não foi possível resumir. O depoimento original não foi alterado.' }, { status: 502 }); }
+  } catch (error) { return geminiQuotaResponse(error) ?? NextResponse.json({ error: 'Não foi possível resumir. O depoimento original não foi alterado.' }, { status: 502 }); }
 }

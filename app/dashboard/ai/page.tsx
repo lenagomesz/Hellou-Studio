@@ -163,9 +163,10 @@ export default function AIPage() {
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <div className="text-sm text-gray-600 mb-2">Limite Disponível</div>
-          <div className="text-3xl font-bold text-gray-900">∞</div>
-          <div className="text-xs text-gray-500 mt-1">Gratuito com chave AQ</div>
+          <div className="text-sm text-gray-600 mb-2">Cota do Gemini</div>
+          <div className="text-xl font-bold text-gray-900">Conforme seu plano</div>
+          <div className="mt-2 text-xs leading-5 text-gray-500">Chat, SEO e outras gerações compartilham a cota do projeto no Google. Não é uso ilimitado; os limites internos da loja não aumentam essa cota.</div>
+          <a href="https://ai.dev/rate-limit" target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-pink-700 underline">Consultar uso e limites no Google AI Studio</a>
         </div>
       </div>
 

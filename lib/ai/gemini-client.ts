@@ -1,4 +1,6 @@
 import { GoogleGenerativeAI, SchemaType, type Schema, type Part, type GenerateContentRequest } from '@google/generative-ai';
+import { asGeminiQuotaError } from './quota-error';
+import { getGeminiQuotaPause, rememberGeminiQuotaPause, geminiModelName } from './quota-store';
 
 export type GeminiImage = { mimeType: string; data: string };
 export type GeminiSchema = { type: string; properties: Record<string, unknown>; required: string[] };
@@ -14,7 +16,7 @@ export class GeminiClient {
       }
       const client = new GoogleGenerativeAI(apiKey);
       this.modelInstance = client.getGenerativeModel({
-        model: process.env.GOOGLE_GENAI_MODEL || 'gemini-3.6-flash',
+        model: geminiModelName(),
         safetySettings: [
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT' as any, threshold: 'BLOCK_NONE' as any },
@@ -31,6 +33,8 @@ export class GeminiClient {
     conversationHistory?: Array<{ role: string; parts: Array<{ text: string }> }>,
     options?: { images?: GeminiImage[]; timeoutMs?: number; maxOutputTokens?: number },
   ): Promise<{ text: string; tokensUsed: number }> {
+    const pause = await getGeminiQuotaPause();
+    if (pause) throw pause;
     try {
       const isImage = responseSchema && 'mimeType' in responseSchema && 'data' in responseSchema;
       const imageParam = isImage ? responseSchema as { mimeType: string; data: string } : null;
@@ -71,6 +75,11 @@ export class GeminiClient {
       const tokensUsed = result.response.usageMetadata?.totalTokenCount || 0;
       return { text, tokensUsed };
     } catch (error) {
+      const quota = asGeminiQuotaError(error);
+      if (quota) {
+        await rememberGeminiQuotaPause(quota);
+        throw quota;
+      }
       console.error('[GeminiClient] Falha na geração de conteúdo.');
       throw error;
     }

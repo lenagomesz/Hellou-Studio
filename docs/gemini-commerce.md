@@ -2,12 +2,21 @@
 
 ## Ativação
 
-1. Aplique **somente** `supabase/migrations/20260828_product_ai_seo.sql` no Supabase SQL Editor, seguindo `supabase/README.md`. A migração é aditiva: não apaga produtos nem substitui SEO. Não execute `supabase db push` neste projeto.
+1. No Supabase SQL Editor, aplique as migrações ainda não executadas, nesta ordem: `supabase/migrations/20260828_product_ai_seo.sql` e `supabase/migrations/20260828_product_seo_quota_pause.sql`, seguindo `supabase/README.md`. Se a primeira já foi aplicada, execute somente a segunda. São aditivas: não apagam produtos nem substituem SEO. Não execute `supabase db push` neste projeto.
 2. Configure no servidor `GOOGLE_GENAI_API_KEY`, `GOOGLE_GENAI_MODEL` (padrão `gemini-3.6-flash`), `CRON_SECRET` e as variáveis Supabase/NextAuth já usadas pela loja. Nunca use prefixo `NEXT_PUBLIC_` para a chave Gemini. A chave não é incluída no JavaScript do navegador.
 3. Publique a aplicação pelo fluxo Vercel existente. A migração deve preceder a publicação, pois a busca passa a consultar `seo_search_text`.
 4. Abra **Produtos → SEO com IA**. Confira a configuração e processe os primeiros lotes, revisando os resultados nos produtos.
 
 Esta implementação não executa migrações, não publica em produção e não consome a API real durante os testes automatizados. A geração de conteúdo pode ter custos conforme o plano da API.
+
+## Cotas e pausas do Gemini
+
+- A API não é ilimitada. Consulte [uso e limites do projeto no Google](https://ai.dev/rate-limit). O limite observado de 20 requisições diárias é o retornado pelo provedor para aquele projeto/modelo, não uma franquia garantida pelo aplicativo. As ferramentas compartilham a mesma cota.
+- Em erro 429 diário, as gerações aguardam a próxima meia-noite do Pacífico (com margem de um minuto), considerando horário de verão. O atraso curto retornado junto do erro não elimina o bloqueio diário. Limites temporários geram uma pausa de pelo menos um minuto. Consulte as [regras de cotas do Gemini](https://ai.google.dev/gemini-api/docs/rate-limits).
+- A nova tabela `ai_quota_pauses` compartilha a pausa entre instâncias do servidor. Somente o servidor com `service_role` pode acessá-la; sem essa migração, a proteção funciona apenas na instância que observou o erro.
+- A fila não busca novos itens durante a pausa. Tentativas que recebem 429 são devolvidas por RPC, sem apagar falhas anteriores; o item fica disponível após a pausa e será retomado no próximo lote manual ou execução agendada. Requisições que já estavam em andamento ainda podem receber 429.
+- O painel mostra a previsão de retomada; formulários manuais, produtos e SEO existentes continuam disponíveis. Jobs anteriormente esgotados não são reiniciados indiscriminadamente: revise e reenvie pelo painel.
+- Esta proteção não aumenta a cota e não ativa cobrança. Se a conta continuar sem capacidade após a previsão, o provedor poderá retornar outra limitação.
 
 ## Cadastro e revisão
 
@@ -34,9 +43,11 @@ O balão da Home abre o chat já existente. A busca consulta o catálogo ativo p
 
 ## Encomendas STL
 
-Após selecionar um arquivo, clientes autenticados recebem uma pré-análise (até 3 MB / 50 mil triângulos), com seleção de unidade, dimensões e volume geométrico quando as bordas/orientações permitem. Suporta STL ASCII e binário, inclusive cabeçalhos binários começando com `solid`.
+Após selecionar um arquivo, a pré-análise roda **no navegador**, inclusive sem login (até 3 MB / 50 mil triângulos), com seleção de unidade, dimensões e volume geométrico quando as bordas/orientações permitem. Suporta STL ASCII e binário, inclusive cabeçalhos binários começando com `solid`.
 
-O arquivo bruto não vai ao Gemini: apenas o resumo geométrico. Se a IA falhar, as medidas continuam disponíveis. A análise não é fatiamento nem aprovação técnica: não verifica espessuras, auto-interseções, resistência ou segurança; não infere material, consumo real, preço ou tempo. Arquivos maiores continuam no envio manual existente. Limite de 10 análises/hora por usuário/origem.
+O arquivo bruto não é enviado para a pré-análise. Para clientes autenticados, somente formato, dimensões, contagem de triângulos, indicador de bordas fechadas e volume são enviados como JSON para orientação por IA. O endpoint limita o corpo a 2 KB, valida os valores e descarta textos arbitrários. São medidas do cliente, não verificação independente do servidor. O envio posterior do pedido continua usando o fluxo de upload existente.
+
+Se a IA falhar, a rede cair ou a cota acabar, as medidas locais continuam disponíveis. A análise não é fatiamento nem aprovação técnica: não verifica espessuras, auto-interseções, resistência ou segurança; não infere material, consumo real, preço ou tempo. Arquivos maiores continuam no envio manual existente. Limite de 10 orientações por IA/hora por usuário/origem.
 
 ## Depoimentos
 

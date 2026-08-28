@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { geminiClient } from '@/lib/ai/gemini-client';
+import { geminiQuotaResponse } from '@/lib/ai/quota-response';
 import { getBrandVoice } from '@/lib/ai/brand-voice';
 import { getStoreSettings } from '@/lib/store-settings';
 import { FORBIDDEN_TERMS } from '@/lib/ai/prompts';
@@ -98,6 +99,8 @@ Seja um consultor amigável e prestativo. Responda em português. Foque em ajuda
       tokensUsed,
     });
   } catch (error) {
+    const quota = geminiQuotaResponse(error);
+    if (quota) return quota;
     console.error('[chat] Error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to generate response' },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { geminiQuotaResponse } from '@/lib/ai/quota-response';
 import { geminiClient } from '@/lib/ai/gemini-client';
 import { getStoreSettings } from '@/lib/store-settings';
 import { getSupabaseAdmin } from '@/lib/supabase';
@@ -44,7 +45,9 @@ Responda no formato JSON solicitado.`;
     const { text } = await geminiClient.generateContent(messages.at(-1)!.content, prompt, schema,
       history.map(m => ({ role: m.role, parts: [{ text: m.content }] })), { timeoutMs: 30_000, maxOutputTokens: 2048 });
     return NextResponse.json(resolveGiftRecommendations(JSON.parse(text), candidates));
-  } catch {
+  } catch (error) {
+    const quota = geminiQuotaResponse(error);
+    if (quota) return quota;
     return NextResponse.json({ error: 'Não consegui consultar o catálogo agora. Tente novamente ou fale pelo WhatsApp.' }, { status: 502 });
   }
 }

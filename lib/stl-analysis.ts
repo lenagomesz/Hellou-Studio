@@ -6,6 +6,31 @@ export type STLAnalysis = {
   closedMesh: boolean; volumeCm3: number | null; warnings: string[];
 };
 
+export const STL_BASIC_MESSAGE = 'Pré-análise pronta. Confirme as medidas e envie sua encomenda: nossa equipe revisará o arquivo no fatiador antes de confirmar viabilidade, preço e prazo.';
+
+function geometryWarnings(closedMesh: boolean) {
+  const warnings = ['STL não informa unidade: confirme a escala escolhida.', 'Pré-análise geométrica, não aprovação FDM. Paredes finas, encaixes, balanços, auto-interseções e resistência exigem revisão no fatiador.', 'Volume geométrico não equivale a consumo de filamento. Preço e prazo dependem de material, preenchimento, suportes e tempo de impressão.'];
+  if (!closedMesh) warnings.unshift('A malha contém bordas abertas, orientação inconsistente ou faces degeneradas. Volume não calculado; revise/repare no fatiador.');
+  return warnings;
+}
+
+// Browser-supplied measurements are unverified. Whitelist numbers/flags only;
+// never forward filenames, mesh data or arbitrary text to the model.
+export function validateSTLSummary(input: unknown): STLAnalysis {
+  if (!input || typeof input !== 'object') throw new Error('Resumo geométrico inválido');
+  const value = input as Record<string, unknown>;
+  const { format, triangles, dimensionsMm, closedMesh, volumeCm3 } = value;
+  if ((format !== 'binary' && format !== 'ascii')
+    || typeof triangles !== 'number' || !Number.isInteger(triangles) || triangles < 1 || triangles > MAX_TRIANGLES
+    || !Array.isArray(dimensionsMm) || dimensionsMm.length !== 3
+    || !dimensionsMm.every(n => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 50_800_000)
+    || dimensionsMm.every(n => n === 0) || typeof closedMesh !== 'boolean') throw new Error('Resumo geométrico inválido');
+  const boxVolume = dimensionsMm.reduce((a, b) => a * b, 1) / 1000;
+  if (volumeCm3 !== null && (typeof volumeCm3 !== 'number' || !Number.isFinite(volumeCm3)
+    || volumeCm3 <= 0 || !closedMesh || volumeCm3 > boxVolume * 1.000001)) throw new Error('Volume geométrico inválido');
+  return { format, triangles, dimensionsMm: [...dimensionsMm] as Point, closedMesh, volumeCm3, warnings: geometryWarnings(closedMesh) };
+}
+
 export function analyzeSTL(buffer: ArrayBuffer, unit: 'mm' | 'cm' | 'in' = 'mm'): STLAnalysis {
   if (buffer.byteLength === 0 || buffer.byteLength > MAX_STL_ANALYSIS_BYTES) throw new Error('Para análise instantânea, use um STL de até 3 MB. Arquivos maiores podem seguir para análise manual.');
   if (!['mm', 'cm', 'in'].includes(unit)) throw new Error('Unidade inválida');
@@ -64,7 +89,6 @@ export function analyzeSTL(buffer: ArrayBuffer, unit: 'mm' | 'cm' | 'in' = 'mm')
   const volume = Math.abs(signedVolume) / 1000;
   const boxVolume = dimensionsMm.reduce((a, b) => a * b, 1) / 1000;
   const volumeCm3 = closedMesh && volume > 0 && volume <= boxVolume * 1.000001 ? volume : null;
-  const warnings = ['STL não informa unidade: confirme a escala escolhida.', 'Pré-análise geométrica, não aprovação FDM. Paredes finas, encaixes, balanços, auto-interseções e resistência exigem revisão no fatiador.', 'Volume geométrico não equivale a consumo de filamento. Preço e prazo dependem de material, preenchimento, suportes e tempo de impressão.'];
-  if (!closedMesh) warnings.unshift('A malha contém bordas abertas, orientação inconsistente ou faces degeneradas. Volume não calculado; revise/repare no fatiador.');
+  const warnings = geometryWarnings(closedMesh);
   return { format: binary ? 'binary' : 'ascii', triangles, dimensionsMm, closedMesh, volumeCm3, warnings };
 }

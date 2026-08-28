@@ -179,7 +179,11 @@ export function AIHelpWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: nextMessages }),
       });
-      const data = (await response.json()) as { message?: string; error?: string; products?: Product[] };
+      const data = (await response.json()) as { message?: string; error?: string; code?: string; products?: Product[] };
+      if (!response.ok && data.code === 'GEMINI_QUOTA_EXCEEDED') {
+        setMessages([...nextMessages, { role: 'assistant', content: 'Nosso assistente de IA está temporariamente pausado por limite de uso. Você pode ver os produtos populares ou continuar pelo WhatsApp.' }]);
+        return;
+      }
       if (!response.ok || !data.message) throw new Error(data.error || 'Não foi possível responder');
 
       setMessages([...nextMessages, { role: 'assistant', content: cleanFormatting(data.message) }]);
@@ -204,7 +208,7 @@ export function AIHelpWidget() {
       className={`fixed ${
         isOpen
           ? `inset-x-0 px-3 ${hasMobileShopNavigation ? 'bottom-[calc(5rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(0.75rem+env(safe-area-inset-bottom))]'} z-[60] flex justify-end sm:left-auto sm:right-5 sm:px-0 lg:bottom-5`
-          : `${hasMobileShopNavigation ? 'bottom-[calc(5.25rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(1rem+env(safe-area-inset-bottom))]'} right-4 z-50 sm:right-5 lg:bottom-5`
+          : `${hasMobileShopNavigation ? 'bottom-[calc(5.25rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(1rem+env(safe-area-inset-bottom))]'} right-4 z-50 flex max-w-[calc(100vw-2rem)] items-center justify-end gap-2 sm:right-5 lg:bottom-5`
       }`}
     >
       {isOpen && (
@@ -345,9 +349,9 @@ export function AIHelpWidget() {
         </section>
       )}
 
-      {!isOpen && pathname === '/' && <button type="button" onClick={() => setIsOpen(true)} className="mr-2 max-w-36 rounded-2xl border border-pink-200 bg-white px-3 py-2 text-xs font-bold text-pink-700 shadow-md">Não sabe o que presentear?</button>}
+      {!isOpen && pathname === '/' && <button type="button" onClick={() => setIsOpen(true)} className="min-w-0 max-w-36 rounded-2xl border border-pink-200 bg-white px-3 py-2 text-xs font-bold text-pink-700 shadow-md">Não sabe o que presentear?</button>}
       {!isOpen && (
-        <button type="button" onClick={() => setIsOpen(true)} className="group relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[linear-gradient(145deg,var(--store-accent)_0%,var(--store-primary)_48%,var(--store-secondary)_100%)] text-white shadow-[0_12px_30px_-7px_rgba(219,39,119,0.68),0_3px_10px_-4px_rgba(249,115,22,0.55)] ring-1 ring-pink-500/15 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_18px_40px_-8px_rgba(219,39,119,0.78),0_5px_16px_-5px_rgba(249,115,22,0.65)] active:translate-y-0 active:scale-95" aria-label="Abrir assistente virtual" aria-expanded="false">
+        <button type="button" onClick={() => setIsOpen(true)} className="group relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[linear-gradient(145deg,var(--store-accent)_0%,var(--store-primary)_48%,var(--store-secondary)_100%)] text-white shadow-[0_12px_30px_-7px_rgba(219,39,119,0.68),0_3px_10px_-4px_rgba(249,115,22,0.55)] ring-1 ring-pink-500/15 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-[0_18px_40px_-8px_rgba(219,39,119,0.78),0_5px_16px_-5px_rgba(249,115,22,0.65)] active:translate-y-0 active:scale-95" aria-label="Abrir assistente virtual" aria-expanded="false">
           <span aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,rgba(255,255,255,0.55),transparent_34%)] opacity-80 transition-opacity group-hover:opacity-100" />
           <span aria-hidden="true" className="relative flex h-9 w-9 items-center justify-center rounded-[14px] border border-white/45 bg-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_4px_12px_rgba(120,20,70,0.18)] backdrop-blur-sm transition duration-300 group-hover:scale-105 group-hover:bg-white/20">
             <svg viewBox="0 0 32 32" fill="none" className="h-6 w-6 drop-shadow-[0_2px_3px_rgba(120,20,70,0.24)]">

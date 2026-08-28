@@ -3,9 +3,13 @@ import { revalidatePath } from 'next/cache';
 import type { Product } from '@/types/database';
 import { mergeProductSEO, type GeneratedSEO } from './product-content';
 import { generateProductContent, loadProductImages } from './product-generator';
+import { asGeminiQuotaError } from './quota-error';
+import { getGeminiQuotaPause } from './quota-store';
 
 export async function processProductSEO(productId?: string) {
   if (!process.env.GOOGLE_GENAI_API_KEY) throw new Error('Configure GOOGLE_GENAI_API_KEY para processar o SEO.');
+  const pause = await getGeminiQuotaPause();
+  if (pause) return { processed: 0, results: [], pausedUntil: pause.retryAt, message: pause.message };
   const admin = getSupabaseAdmin();
   const { data: jobs, error } = await admin.rpc('claim_product_seo', { p_product_id: productId ?? null, p_limit: productId ? 1 : 3 });
   if (error) throw new Error('Não foi possível acessar a fila de SEO. Confira a migração do banco.');
@@ -29,14 +33,28 @@ export async function processProductSEO(productId?: string) {
         revalidatePath('/');
       }
       return { id: product.id, status: saved ? 'updated' : 'changed', images: loadedUrls.length, skippedImages: [...new Set(urls)].length - loadedUrls.length };
-    } catch {
+    } catch (error) {
+      const quota = asGeminiQuotaError(error);
+      if (quota) {
+        const { data: deferred, error: deferError } = await admin.rpc('defer_product_seo_quota', {
+          p_product_id: job.product_id, p_revision: job.revision,
+          p_retry_at: quota.retryAt, p_message: quota.message,
+        });
+        if (deferError) {
+          // Never claim success if the migration needed to refund this attempt is absent.
+          return { id: job.product_id, status: 'failed', message: 'Não foi possível adiar a tentativa. Confira a migração de cotas no Supabase.' };
+        }
+        if (!deferred) return { id: job.product_id, status: 'changed' };
+        return { id: job.product_id, status: 'deferred', retryAt: quota.retryAt, message: quota.message };
+      }
       // Do not log prompts, customer data or provider errors containing credentials.
       await admin.from('product_seo_jobs').update({ last_error: 'A geração falhou; confira a chave, a cota e as imagens. Nova tentativa após 10 minutos (máximo 3).' })
         .eq('product_id', job.product_id).eq('revision', job.revision);
       return { id: job.product_id, status: 'failed' };
     }
   }));
-  return { processed: results.length, results };
+  const deferred = results.find((r: { retryAt?: string }) => r.retryAt);
+  return { processed: results.length, results, pausedUntil: deferred?.retryAt, message: deferred?.message };
 }
 
 export async function processProductSEOSafely(productId?: string) {

@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { asGeminiQuotaError } from './quota-error';
 
 export function sanitizeManufacturingTerms(text: string): string {
   const bannedTerms = [
@@ -52,6 +53,8 @@ export function validateGeminiResponse(response: string, expectedKeys: string[])
 }
 
 export function formatErrorResponse(error: unknown): string {
+  const quota = asGeminiQuotaError(error);
+  if (quota) return quota.message;
   if (error instanceof Error) {
     console.error('[formatErrorResponse] Full error message:', error.message);
     console.error('[formatErrorResponse] Error stack:', error.stack);

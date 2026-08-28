@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { durableRateLimit } from '@/lib/durable-rate-limit';
 import { processProductSEO } from '@/lib/ai/product-seo-worker';
+import { getGeminiQuotaPause } from '@/lib/ai/quota-store';
 
 export const maxDuration = 60;
 
@@ -12,7 +13,8 @@ export async function GET() {
   const { data, error, count } = await getSupabaseAdmin().from('product_seo_jobs')
     .select('product_id,attempts,available_at,last_error,products(name)', { count: 'exact' }).order('created_at').limit(50);
   if (error) return NextResponse.json({ error: 'Aplique a migração de SEO para ativar a fila.' }, { status: 503 });
-  return NextResponse.json({ jobs: data, total: count, configured: Boolean(process.env.GOOGLE_GENAI_API_KEY) });
+  const pause = await getGeminiQuotaPause();
+  return NextResponse.json({ jobs: data, total: count, configured: Boolean(process.env.GOOGLE_GENAI_API_KEY), pausedUntil: pause?.retryAt ?? null, quotaMessage: pause?.message ?? null });
 }
 
 export async function POST(request: Request) {

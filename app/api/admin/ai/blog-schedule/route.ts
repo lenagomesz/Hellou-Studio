@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { geminiQuotaResponse } from '@/lib/ai/quota-response';
 import { generateBlogPost, getRandomProductId } from '@/lib/ai/blog-generator';
 import { createBlogPost } from '@/lib/blog/blog-service';
 import { logGeneratedContent } from '@/lib/ai/utils';
@@ -95,6 +96,8 @@ export async function POST(request: NextRequest) {
       message: 'Post gerado automaticamente e salvo como rascunho.',
     });
   } catch (error) {
+    const quota = geminiQuotaResponse(error);
+    if (quota) return quota;
     console.error('[blog-schedule] Erro ao gerar post automaticamente:', error);
 
     const errorMessage =

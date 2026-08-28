@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { geminiQuotaResponse } from '@/lib/ai/quota-response';
 import { requirePermission } from '@/lib/api';
 import { buildCatalogImagePrompt, calculateCatalogPrice } from '@/lib/catalog-assistant';
 import { rateLimit } from '@/lib/rate-limit';
@@ -110,6 +111,8 @@ export async function POST(request: Request) {
       imagem_catalogo: `data:${image.type};base64,${imageBase64}`,
     });
   } catch (error) {
+    const quota = geminiQuotaResponse(error);
+    if (quota) return quota;
     console.error('[catalog-assistant] Unexpected error', error);
     return NextResponse.json({ error: 'Não foi possível gerar o catálogo agora.' }, { status: 500 });
   }

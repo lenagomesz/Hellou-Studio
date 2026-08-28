@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { geminiQuotaResponse } from '@/lib/ai/quota-response';
 import { requirePermission } from '@/lib/api';
 import { generateBlogPost, getRandomProductId } from '@/lib/ai/blog-generator';
 import { createBlogPost } from '@/lib/blog/blog-service';
@@ -68,6 +69,8 @@ export async function POST() {
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
+    const quota = geminiQuotaResponse(error);
+    if (quota) return quota;
     console.error('[blog-generation] Erro ao gerar post:', error);
     return NextResponse.json(
       { error: formatErrorResponse(error) },

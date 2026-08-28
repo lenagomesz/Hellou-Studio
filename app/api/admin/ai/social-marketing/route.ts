@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { geminiClient } from '@/lib/ai/gemini-client';
+import { geminiQuotaResponse } from '@/lib/ai/quota-response';
 import { getBrandVoice } from '@/lib/ai/brand-voice';
 import { buildSocialCampaignSystemPrompt } from '@/lib/ai/prompts';
 import { logGeneratedContent, validateGeminiResponse, formatErrorResponse } from '@/lib/ai/utils';
@@ -71,6 +72,8 @@ export async function POST(request: Request) {
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
+    const quota = geminiQuotaResponse(error);
+    if (quota) return quota;
     console.error('[social-marketing] Error:', error);
     return NextResponse.json(
       { error: formatErrorResponse(error) },

@@ -5,6 +5,7 @@ vi.mock('@/lib/api', () => ({ requirePermission: mocks.auth }));
 vi.mock('@/lib/durable-rate-limit', () => ({ durableRateLimit: mocks.limit }));
 vi.mock('@/lib/ai/product-generator', () => ({ generateProductContent: mocks.generate, loadProductImages: mocks.images }));
 import { POST } from '@/app/api/admin/ai/product-content/route';
+import { GeminiQuotaError } from '@/lib/ai/quota-error';
 const request = (body: unknown) => new Request('http://localhost/api/admin/ai/product-content', { method: 'POST', body: JSON.stringify(body) });
 beforeEach(() => {
   vi.clearAllMocks(); vi.stubEnv('GOOGLE_GENAI_API_KEY', 'test');
@@ -14,6 +15,16 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('product content API', () => {
+  it('returns a friendly quota response and Retry-After without provider details', async () => {
+    mocks.generate.mockRejectedValue(new GeminiQuotaError('daily', '2099-01-01T08:01:00.000Z'));
+    const response = await POST(request({ keywords: 'lula' }));
+    expect(response.status).toBe(429);
+    expect(Number(response.headers.get('Retry-After'))).toBeGreaterThan(60);
+    const data = await response.json();
+    expect(data).toMatchObject({ code: 'GEMINI_QUOTA_EXCEEDED', quotaKind: 'daily' });
+    expect(data.error).toContain('cadastro manual continua disponível');
+    expect(data.error).not.toContain('generativelanguage.googleapis');
+  });
   it('requires catalog permissions before calling AI', async () => {
     mocks.auth.mockResolvedValue({ response: NextResponse.json({ error: 'Acesso negado' }, { status: 403 }) });
     expect((await POST(request({ keywords: 'lula' }))).status).toBe(403);

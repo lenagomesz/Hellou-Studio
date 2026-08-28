@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { geminiQuotaResponse } from '@/lib/ai/quota-response';
 import { requirePermission } from '@/lib/api';
 import { durableRateLimit } from '@/lib/durable-rate-limit';
 import { generateProductContent, loadProductImages } from '@/lib/ai/product-generator';
@@ -35,5 +36,5 @@ export async function POST(request: Request) {
     if (body.imageUrl && images.length === 0) return NextResponse.json({ error: 'Não foi possível ler a foto. Envie uma imagem JPG, PNG ou WebP pelo editor ou gere apenas com palavras-chave.' }, { status: 400 });
     const content = await generateProductContent({ keywords: body.keywords, description: body.description ?? '', type: 'physical' }, images);
     return NextResponse.json({ content, imageUrls: loadedUrls, calculation });
-  } catch { return NextResponse.json({ error: 'Não foi possível gerar agora. Seus campos manuais foram mantidos.' }, { status: 502 }); }
+  } catch (error) { return geminiQuotaResponse(error) ?? NextResponse.json({ error: 'Não foi possível gerar agora. Seus campos manuais foram mantidos.' }, { status: 502 }); }
 }
