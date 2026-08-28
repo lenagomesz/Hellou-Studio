@@ -7,6 +7,10 @@ describe('gift recommendations', () => {
     expect(result.budget).toBe(50.9); expect(result.terms).toContain('criaturas');
   });
   it('does not mistake an age for a budget', () => { expect(giftSearchInput([{ role: 'user', content: 'Minha mãe tem 60 anos' }]).budget).toBeNull(); });
+  it('understands an amount replying to the budget question', () => {
+    expect(giftSearchInput([{ role: 'assistant', content: 'Qual é o seu orçamento?' }, { role: 'user', content: '50' }]).budget).toBe(50);
+    expect(giftSearchInput([{ role: 'user', content: 'Uns 80 reais' }]).budget).toBe(80);
+  });
   it('filters digital, private orders, out-of-budget and out-of-stock products', () => {
     expect(availableGiftProducts([product, { ...product, id: 'digital', type: 'digital' }, { ...product, id: 'order', category: 'encomenda' }, { ...product, id: 'expensive', sale_price: null }, { ...product, id: 'stock', fulfillment_mode: 'ready_stock', product_options: [{ stock: 0, price_modifier: 0 }] }], 50).map(p => p.id)).toEqual(['real']);
   });

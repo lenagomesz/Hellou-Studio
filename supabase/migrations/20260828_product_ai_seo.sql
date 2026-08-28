@@ -67,7 +67,7 @@ language sql security definer set search_path = public, pg_temp as $$
     where q.available_at <= now() and q.attempts < 3
       and (p_product_id is null or q.product_id = p_product_id)
     order by q.created_at, q.product_id
-    for update skip locked limit greatest(1, least(p_limit, 3))
+    limit greatest(1, least(p_limit, 3)) for update skip locked
   ) returning j.*;
 $$;
 

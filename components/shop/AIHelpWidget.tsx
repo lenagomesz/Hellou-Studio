@@ -18,6 +18,7 @@ interface Product {
   sale_price: number | null;
   image_url: string | null;
   type?: string;
+  starting_price?: number;
 }
 
 const STORAGE_KEY = 'hellou-chat-history-v1';
@@ -293,7 +294,7 @@ export function AIHelpWidget() {
                             </div>
                             <div className="p-3">
                               <p className="truncate text-xs font-bold text-slate-800">{product.name}</p>
-                              <p className="mt-1 text-xs font-extrabold text-pink-600">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(product.sale_price ?? product.base_price))}</p>
+                              <p className="mt-1 text-xs font-extrabold text-pink-600">A partir de {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(product.starting_price ?? product.sale_price ?? product.base_price))}</p>
                             </div>
                           </Link>
                         ))}

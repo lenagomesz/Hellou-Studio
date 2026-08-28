@@ -9,9 +9,17 @@ export type GiftProduct = {
 
 export function giftSearchInput(messages: Array<{ role: string; content: string }>) {
   const text = normalizeCatalogSearchText(messages.filter(m => m.role === 'user').slice(-6).map(m => m.content).join(' '));
-  const budgets = [...text.matchAll(/(?:ate|orcamento(?:\s+de)?|r\$|tenho)\s*(?:r\$\s*)?(\d+(?:[.,]\d{1,2})?)/g)];
-  const last = budgets.at(-1);
-  const budget = last ? Number(last[1].replace(',', '.')) : null;
+  let budget: number | null = null;
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i].role !== 'user') continue;
+    const current = normalizeCatalogSearchText(messages[i].content);
+    const budgets = [...current.matchAll(/(?:\bate\b|\borcamento(?:\s+de)?|r\$|\btenho\b)\s*(?:r\$\s*)?(\d+(?:[.,]\d{1,2})?)/g)];
+    const explicit = budgets.at(-1)?.[1] ?? current.match(/\b(\d+(?:[.,]\d{1,2})?)\s+reais\b/)?.[1];
+    const previous = messages[i - 1];
+    const replyToBudget = previous?.role === 'assistant' && /orcamento|quanto.*gastar|faixa de (?:preco|valor)/.test(normalizeCatalogSearchText(previous.content));
+    const bareReply = replyToBudget ? current.match(/^(\d+(?:[.,]\d{1,2})?)\s*[.!]?$/)?.[1] : null;
+    if (explicit || bareReply) budget = Number((explicit || bareReply)!.replace(',', '.'));
+  }
   const stop = new Set('quero gostaria encontrar produto produtos presente presentear para minha meu uma que com tem por reais ate orcamento tenho gosta de ela ele voce pode ajudar ajuda escolher nao sei dar algo pessoa anos aniversario amiga amigo mae pai namorada namorado quanto custa'.split(' '));
   const terms = [...new Set(text.replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stop.has(t)))].slice(-8);
   if (terms.includes('fofo') || terms.includes('fofa')) terms.push('criaturas');
@@ -35,7 +43,10 @@ export function resolveGiftRecommendations(value: unknown, candidates: GiftProdu
   if (typeof data.message !== 'string' || !data.message.trim() || !Array.isArray(data.product_ids) || data.product_ids.some(id => typeof id !== 'string')) throw new Error('Resposta inválida');
   const products = [...new Set(data.product_ids)].slice(0, 3).flatMap(id => {
     const p = candidates.find(c => c.id === id);
-    return p ? [{ id: p.id, name: p.name, type: 'physical', base_price: p.base_price, sale_price: p.sale_price, image_url: p.image_url }] : [];
+    if (!p) return [];
+    const options = (p.product_options ?? []).filter(o => o.active !== false && (p.fulfillment_mode !== 'ready_stock' || o.stock > 0));
+    const starting_price = (p.sale_price ?? p.base_price) + (options.length ? Math.min(...options.map(o => o.price_modifier)) : 0);
+    return [{ id: p.id, name: p.name, type: 'physical', base_price: p.base_price, sale_price: p.sale_price, starting_price, image_url: p.image_url }];
   });
   return { message: data.message.replace(/https?:\/\/\S+/g, '').slice(0, 1500), products };
 }
