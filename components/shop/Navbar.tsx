@@ -11,6 +11,7 @@ import { NotificationBell } from '@/components/shop/NotificationBell';
 import { getWhatsAppUrl, type StoreSettings } from '@/lib/store-settings-schema';
 
 const NAV_LINKS = [
+  { href: '/kits', label: 'Kits', icon: 'M3 8h18v4H3V8Zm2 4v9h14v-9M12 8v13M12 8H8a3 3 0 1 1 3-3l1 3Zm0 0h4a3 3 0 1 0-3-3l-1 3Z' },
   {
     href: '/',
     label: 'Home',

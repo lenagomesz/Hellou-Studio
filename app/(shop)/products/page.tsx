@@ -142,6 +142,7 @@ export default async function ProductsCatalogPage(
         </header>
 
         <div className="mb-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <Link href="/kits" className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-1.5 text-sm font-bold text-pink-700 transition hover:bg-pink-100 dark:border-pink-900 dark:bg-pink-950/30 dark:text-pink-300">Kits para combinar ↗</Link>
           {collection && <Link href="/products" className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-1.5 text-sm font-semibold text-pink-700 transition hover:bg-pink-100 dark:border-pink-900 dark:bg-pink-950/30 dark:text-pink-300">← Ver catálogo completo</Link>}
           {wholesale && <Link href="/products" className="shrink-0 rounded-full border border-orange-200 bg-orange-50 px-4 py-1.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-300">← Ver catálogo completo</Link>}
           {categoryTabs.map((cat) => {

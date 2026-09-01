@@ -15,6 +15,9 @@ import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
+import { ProductKits } from '@/components/shop/ProductKits';
+import { getKitCatalog } from '@/lib/kit-catalog';
+import { buildProductKits } from '@/lib/product-kits';
 
 export const metadata: Metadata = {
   title: { absolute: 'Hellou Studio' },
@@ -172,6 +175,11 @@ async function WholesaleProducts() {
   );
 }
 
+async function HomeKits({ threshold }: { threshold: number }) {
+  const kits = buildProductKits(await getKitCatalog());
+  return <div className="bg-[#fffaf7] dark:bg-gray-950"><div className="mx-auto max-w-6xl px-4 sm:px-6"><ProductKits kits={kits} threshold={threshold} preview /></div></div>;
+}
+
 function FeaturedSkeleton() {
   return (
     <section className="bg-white py-12 shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)] sm:bg-white/80 sm:py-20 sm:backdrop-blur-sm dark:bg-gray-950 sm:dark:bg-gray-950/80">
@@ -294,6 +302,10 @@ export default async function HomePage() {
       {/* =========================================== */}
       <Suspense fallback={<FeaturedSkeleton />}>
         <FeaturedProducts />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <HomeKits threshold={storeSettings.commerce.freeShippingThreshold} />
       </Suspense>
 
       <Suspense fallback={null}>

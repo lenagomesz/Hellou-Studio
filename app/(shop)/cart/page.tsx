@@ -1221,9 +1221,9 @@ export default function CartPage() {
       </div>
 
       {/* Sugestões - só mostra no step 1 e abaixo de tudo */}
-      {step === 1 && (
+      {step === 1 && !hasOnlyDigitalProducts && (
         <div className="mx-auto max-w-5xl px-4 pb-12 sm:px-6">
-          <ProductRecommendations title="Aproveite e veja também" />
+          <ProductRecommendations title="Combina com o seu pedido" threshold={storeSettings.commerce.freeShippingThreshold} />
         </div>
       )}
       <ConfirmDialog

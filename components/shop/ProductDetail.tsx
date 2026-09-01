@@ -9,6 +9,7 @@ import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
+import { DEFAULT_STORE_SETTINGS } from '@/lib/store-settings-schema';
 import {
   DEFAULT_CUSTOMIZATION_COPY,
   areRequiredCustomizationSectionsComplete,
@@ -39,10 +40,14 @@ export function ProductDetail({
   product,
   options,
   ownedOrderId = null,
+  onAdded,
+  freeShippingThreshold = DEFAULT_STORE_SETTINGS.commerce.freeShippingThreshold,
 }: Readonly<{
   product: Product;
   options: ProductOption[];
   ownedOrderId?: string | null;
+  onAdded?: () => void;
+  freeShippingThreshold?: number;
 }>) {
   const { addItem, removeItem, status } = useCart();
   const searchParams = useSearchParams();
@@ -52,6 +57,7 @@ export function ProductDetail({
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [shared, setShared] = useState(false);
   const isOwnedDigital = product.type === 'digital' && Boolean(ownedOrderId);
+  const ProductHeading = onAdded ? 'h2' : 'h1';
   const requiresReadyStock = product.fulfillment_mode === 'ready_stock';
 
   const inStockOptions = useMemo(
@@ -120,6 +126,7 @@ export function ProductDetail({
 
   const finalPrice =
     (product.sale_price ?? product.base_price) + (selectedOption?.price_modifier ?? 0);
+  const hasFreeShipping = product.type !== 'digital' && finalPrice >= freeShippingThreshold;
   const originalPrice = product.base_price + (selectedOption?.price_modifier ?? 0);
 
   const currentDisplayImage = selectedOption?.image_url || product.image_url;
@@ -209,6 +216,7 @@ export function ProductDetail({
         return;
       }
       setFeedback('added');
+      onAdded?.();
       globalThis.setTimeout(() => setFeedback('idle'), 2500);
     } catch (error) {
       setFeedbackMessage(error instanceof Error ? error.message : 'Não foi possível adicionar. Tente novamente.');
@@ -229,7 +237,7 @@ export function ProductDetail({
             </div>
           )}
           {/* Badge de frete grátis se aplicável */}
-          {finalPrice >= 99 && (
+          {hasFreeShipping && (
             <span className="absolute top-3 right-3 rounded-full bg-green-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
               Frete grátis
             </span>
@@ -254,7 +262,7 @@ export function ProductDetail({
               </div>
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/50 text-[10px]">🚚</span>
-                <span>Frete grátis acima de R$99</span>
+                <span>Frete grátis a partir de {formatPrice(freeShippingThreshold)}</span>
               </div>
             </div>
           </div>
@@ -270,7 +278,7 @@ export function ProductDetail({
             {isOwnedDigital ? '✓ Adquirido' : 'Em estoque'}
           </span>
         </div>
-        <h1 className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</h1>
+        <ProductHeading className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</ProductHeading>
         <div className="mt-3 flex items-baseline gap-3">
           {isShowingStartingPrice && (
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 sm:text-sm">A partir de</span>
@@ -285,7 +293,7 @@ export function ProductDetail({
           {product.sale_price !== null && product.sale_price < product.base_price && (
             <span className="text-sm text-gray-400 line-through">{formatPrice(originalPrice)}</span>
           )}
-          {finalPrice >= 99 && (
+          {hasFreeShipping && (
             <span className="text-xs text-green-600 font-medium">+ frete grátis</span>
           )}
         </div>

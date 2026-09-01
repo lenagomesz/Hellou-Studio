@@ -162,7 +162,7 @@ export default async function ProductDetailPage(
         <span className="text-gray-900 dark:text-gray-100">{product.name}</span>
       </nav>
 
-      <ProductDetail product={product} options={options} />
+      <ProductDetail product={product} options={options} freeShippingThreshold={storeSettings.commerce.freeShippingThreshold} />
 
       <ProductReviews productId={product.id} isAdmin={user?.role === 'admin'} />
 
