@@ -46,6 +46,8 @@ export function ImagesSection() {
   const [resizedFiles, setResizedFiles] = useState<File[]>([]);
   const [resizeIndex, setResizeIndex] = useState(0);
   const [resizeFile, setResizeFile] = useState<File | null>(null);
+  const [replacementImageIndex, setReplacementImageIndex] = useState<number | null>(null);
+  const [preparingImageIndex, setPreparingImageIndex] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
   const [positionX, setPositionX] = useState(0);
   const [positionY, setPositionY] = useState(0);
@@ -59,10 +61,10 @@ export function ImagesSection() {
     if (resizeUrlRef.current) URL.revokeObjectURL(resizeUrlRef.current);
   }, []);
 
-  const uploadImages = async (files: FileList | File[]) => {
+  const uploadImages = async (files: FileList | File[], replaceIndex: number | null = null) => {
     const selected = Array.from(files);
     if (selected.length === 0) return;
-    if (state.images.length + selected.length > 6) {
+    if (replaceIndex === null && state.images.length + selected.length > 6) {
       setError('Você pode cadastrar até 6 imagens por produto');
       return;
     }
@@ -78,7 +80,14 @@ export function ImagesSection() {
       });
       const data = (await response.json().catch(() => ({}))) as { urls?: string[]; error?: string };
       if (!response.ok || !data.urls) throw new Error(data.error ?? 'Não foi possível enviar as imagens');
-      dispatch({ type: 'SET_IMAGES', images: [...state.images, ...data.urls] });
+      if (replaceIndex === null) {
+        dispatch({ type: 'SET_IMAGES', images: [...state.images, ...data.urls] });
+      } else {
+        dispatch({
+          type: 'SET_IMAGES',
+          images: state.images.map((url, index) => index === replaceIndex ? data.urls![0] : url),
+        });
+      }
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : 'Erro ao enviar imagens');
     } finally {
@@ -99,6 +108,7 @@ export function ImagesSection() {
     setResizedFiles([]);
     setResizeIndex(0);
     setResizeFile(null);
+    setReplacementImageIndex(null);
     setZoom(1);
     setPositionX(0);
     setPositionY(0);
@@ -139,7 +149,31 @@ export function ImagesSection() {
     setResizeFiles(selected);
     setResizedFiles([]);
     setResizeIndex(0);
+    setReplacementImageIndex(null);
     openResizeFile(selected[0]);
+  };
+
+  const resizeExistingImage = async (url: string, index: number) => {
+    setError(null);
+    setPreparingImageIndex(index);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Não foi possível carregar a imagem salva');
+      const blob = await response.blob();
+      if (!blob.type.startsWith('image/')) throw new Error('O arquivo salvo não é uma imagem válida');
+
+      const extension = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
+      const file = new File([blob], `produto-${index + 1}.${extension}`, { type: blob.type });
+      setResizeFiles([file]);
+      setResizedFiles([]);
+      setResizeIndex(0);
+      setReplacementImageIndex(index);
+      openResizeFile(file);
+    } catch (cause) {
+      setError(cause instanceof Error ? `${cause.message}. Envie novamente pelo computador para ajustá-la.` : 'Não foi possível ajustar esta imagem');
+    } finally {
+      setPreparingImageIndex(null);
+    }
   };
 
   const finishCurrentResize = (file: File) => {
@@ -147,8 +181,9 @@ export function ImagesSection() {
     const nextIndex = resizeIndex + 1;
 
     if (nextIndex >= resizeFiles.length) {
+      const replaceIndex = replacementImageIndex;
       closeResize();
-      void uploadImages(completedFiles);
+      void uploadImages(completedFiles, replaceIndex);
       return;
     }
 
@@ -238,6 +273,16 @@ export function ImagesSection() {
                       ←
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => void resizeExistingImage(url, idx)}
+                    disabled={preparingImageIndex !== null || uploadingImages}
+                    className="rounded-full bg-pink-500 p-1.5 text-white hover:bg-pink-600 disabled:opacity-60"
+                    title="Redimensionar imagem"
+                    aria-label={`Redimensionar imagem ${idx + 1}`}
+                  >
+                    {preparingImageIndex === idx ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Crop className="h-3.5 w-3.5" />}
+                  </button>
                   <button
                     type="button"
                     onClick={() => dispatch({ type: 'REMOVE_IMAGE', index: idx })}
