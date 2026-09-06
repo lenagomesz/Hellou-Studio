@@ -19,12 +19,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const { data, error } = await getSupabaseAdmin()
       .from('products')
-      .select('id, type, updated_at, image_url, images')
+      .select('id, name, slug, type, updated_at, image_url, images')
       .eq('active', true)
       .neq('category', 'encomenda');
     if (error) throw error;
 
-    const products = (data ?? []) as Pick<Product, 'id' | 'type' | 'updated_at' | 'image_url' | 'images'>[];
+    const products = (data ?? []) as Pick<Product, 'id' | 'name' | 'slug' | 'type' | 'updated_at' | 'image_url' | 'images'>[];
     return [...staticPages, ...products.map((product) => ({
       url: absoluteUrl(productPath(product)),
       lastModified: product.updated_at,

@@ -18,6 +18,7 @@ import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 import { ProductKits } from '@/components/shop/ProductKits';
 import { getKitCatalog } from '@/lib/kit-catalog';
 import { buildProductKits } from '@/lib/product-kits';
+import { getStoreSettings } from '@/lib/store-settings';
 
 export const metadata: Metadata = {
   title: { absolute: 'Hellou Studio' },
@@ -176,7 +177,8 @@ async function WholesaleProducts() {
 }
 
 async function HomeKits({ threshold }: { threshold: number }) {
-  const kits = buildProductKits(await getKitCatalog());
+  const [products, settings] = await Promise.all([getKitCatalog(), getStoreSettings()]);
+  const kits = buildProductKits(products, settings.kits);
   return <div className="bg-[#fffaf7] dark:bg-gray-950"><div className="mx-auto max-w-6xl px-4 sm:px-6"><ProductKits kits={kits} threshold={threshold} preview /></div></div>;
 }
 

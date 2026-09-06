@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { createProductSlug } from '@/lib/product-commercial';
 
 interface RecommendedProduct {
   id: string;
   name: string;
+  slug?: string | null;
   base_price: number;
   image_url: string | null;
 }
@@ -22,7 +24,7 @@ export function ProductRecommendation({ products }: ProductRecommendationProps) 
         {products.map((product) => (
           <Link
             key={product.id}
-            href={`/products/${product.id}`}
+            href={`/products/${product.slug || createProductSlug(product.name) || product.id}`}
             className="flex items-center gap-4 rounded-lg border border-amber-100 bg-white p-3 transition hover:shadow-md"
           >
             {product.image_url && (

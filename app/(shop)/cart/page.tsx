@@ -22,6 +22,7 @@ import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES } from '@/lib/checkout-rules';
 import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/store-settings-schema';
 import { formatCep, type AddressSearchResult } from '@/lib/address-search';
+import { productIdentifier } from '@/lib/seo';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -1263,7 +1264,7 @@ function CartLine({
   return (
     <li className="group rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-pink-100/60">
       <div className="flex gap-3 sm:gap-4">
-        <Link href={`/products/${item.product.id}` as Route} className="flex-shrink-0">
+        <Link href={`/products/${productIdentifier(item.product)}` as Route} className="flex-shrink-0">
           <div className="h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-xl bg-gradient-to-br from-pink-50 to-orange-50 ring-1 ring-gray-100 transition group-hover:ring-pink-100">
             {item.option?.image_url || item.product.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -1277,7 +1278,7 @@ function CartLine({
         <div className="flex flex-1 flex-col min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <Link href={`/products/${item.product.id}` as Route} className="block truncate text-sm font-semibold text-gray-900 dark:text-white hover:text-pink-600 dark:hover:text-pink-400 transition">
+              <Link href={`/products/${productIdentifier(item.product)}` as Route} className="block truncate text-sm font-semibold text-gray-900 dark:text-white hover:text-pink-600 dark:hover:text-pink-400 transition">
                 {item.product.name}
               </Link>
               {(item.option?.name || item.option?.color) && (
@@ -1304,7 +1305,7 @@ function CartLine({
             </div>
             <div className="flex flex-shrink-0 items-center gap-1">
               <Link
-                href={`/products/${item.product.id}?replace=${item.id}${item.option ? `&option=${item.option.id}` : ''}${item.customization_text ? `&customization=${encodeURIComponent(item.customization_text)}` : ''}` as Route}
+                href={`/products/${productIdentifier(item.product)}?replace=${item.id}${item.option ? `&option=${item.option.id}` : ''}${item.customization_text ? `&customization=${encodeURIComponent(item.customization_text)}` : ''}` as Route}
                 className="rounded-full p-1.5 text-gray-300 transition hover:bg-pink-50 dark:hover:bg-pink-950/30 hover:text-pink-500"
                 aria-label={`Editar ${item.product.name}`}
               >

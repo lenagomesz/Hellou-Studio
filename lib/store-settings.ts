@@ -50,6 +50,7 @@ export function normalizeStoreSettings(input: unknown): StoreSettings {
   const email = objectValue(root.email);
   const fiscal = objectValue(root.fiscal);
   const navigation = objectValue(root.navigation);
+  const rawKits = Array.isArray(root.kits) ? root.kits.slice(0, 12) : DEFAULT_STORE_SETTINGS.kits;
   const rawSlides = Array.isArray(home.heroSlides) ? home.heroSlides.slice(0, 8) : DEFAULT_STORE_SETTINGS.home.heroSlides;
   const rawCollections = Array.isArray(home.collections) ? home.collections.slice(0, 12) : DEFAULT_STORE_SETTINGS.home.collections;
 
@@ -180,6 +181,30 @@ export function normalizeStoreSettings(input: unknown): StoreSettings {
         };
       }),
     },
+    kits: rawKits.map((rawKit, index) => {
+      const kit = objectValue(rawKit);
+      const fallback = DEFAULT_STORE_SETTINGS.kits[index] ?? {
+        slug: `kit-${index + 1}`,
+        title: 'Novo kit',
+        eyebrow: 'Feitos para combinar',
+        description: 'Uma combinação especial de produtos.',
+        tone: 'pink' as const,
+        productIds: [],
+        active: true,
+      };
+      const productIds = Array.isArray(kit.productIds) ? kit.productIds : fallback.productIds;
+      const rawSlug = optionalText(kit.slug, fallback.slug, 80).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const tone: StoreSettings['kits'][number]['tone'] = kit.tone === 'violet' || kit.tone === 'orange' ? kit.tone : 'pink';
+      return {
+        slug: rawSlug || `kit-${index + 1}`,
+        title: textValue(kit.title, fallback.title, 80),
+        eyebrow: textValue(kit.eyebrow, fallback.eyebrow, 100),
+        description: textValue(kit.description, fallback.description, 350),
+        tone,
+        productIds: [...new Set(productIds.filter((id): id is string => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id)))].slice(0, 8),
+        active: typeof kit.active === 'boolean' ? kit.active : true,
+      };
+    }).filter((kit, index, all) => all.findIndex((item) => item.slug === kit.slug) === index),
   };
 }
 

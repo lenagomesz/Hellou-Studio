@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { isCategory, requirePermission } from '@/lib/api';
 import type { Category, Product } from '@/types/database';
+import { createProductSlug } from '@/lib/product-commercial';
 
 export const maxDuration = 300;
 
@@ -13,6 +14,17 @@ const MAX_STL_SIZE = 100 * 1024 * 1024;
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
 const MAX_IMAGES = 6;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+async function uniqueProductSlug(value: string) {
+  const supabase = getSupabaseAdmin();
+  const base = createProductSlug(value) || 'arquivo-stl';
+  for (let suffix = 1; suffix <= 100; suffix += 1) {
+    const candidate = suffix === 1 ? base : `${base.slice(0, 115)}-${suffix}`;
+    const { data } = await supabase.from('products').select('id').eq('slug', candidate).maybeSingle();
+    if (!data) return candidate;
+  }
+  return `${base.slice(0, 108)}-${Date.now().toString(36)}`;
+}
 
 type ProductFields = {
   name: string;
@@ -139,6 +151,7 @@ export async function POST(request: NextRequest) {
     if (!productCategory) return errorResponse('Categoria não encontrada ou inativa');
     const { data: product, error: productError } = await supabase.from('products').insert({
       name: fields.name,
+      slug: await uniqueProductSlug(fields.name),
       description: fields.description,
       category: fields.category,
       type: 'digital',

@@ -23,7 +23,7 @@ describe('complementos no carrinho', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('/api/recommendations?exclude=vaso&remaining=9.1');
     expect(screen.getByText(/Faltam.*9,10/)).toBeVisible();
     expect(screen.getAllByText('Com esta peça, você atinge o frete grátis')).toHaveLength(1);
-    expect(screen.getByRole('link', { name: /Lip Balm/ })).toHaveAttribute('href', '/products/lip');
+    expect(screen.getByRole('link', { name: /Lip Balm/ })).toHaveAttribute('href', '/products/lip-balm');
   });
 
   it('remove imediatamente sugestões adicionadas e atualiza a busca', async () => {

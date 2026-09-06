@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const remaining = Number.isFinite(rawRemaining) ? Math.max(0, Math.min(100000, rawRemaining)) : 0;
   const products = selectComplementaryProducts(await getKitCatalog(), excludedIds, remaining);
   return NextResponse.json({ products: products.map(product => ({
-    id: product.id, name: product.name, image_url: product.image_url,
+    id: product.id, name: product.name, slug: product.slug, image_url: product.image_url,
     starting_price: getStartingPrice(product),
   })) });
 }

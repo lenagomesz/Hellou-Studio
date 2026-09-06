@@ -6,22 +6,27 @@ export const KIT_DEFINITIONS = [
   {
     slug: 'setup-estudo', title: 'Setup & Estudo', eyebrow: 'Uma pausa no seu ritmo',
     description: 'Organize os fones e deixe a mesa com espaço para criar, estudar e brincar.',
-    tone: 'violet',
+    tone: 'violet', productIds: [], active: true,
     items: [['headset 3 em 1', 'headset'], ['fidget espiral', 'infinity cube'], ['chaveiro clicker']],
   },
   {
     slug: 'penteadeira', title: 'Penteadeira com Charme', eyebrow: 'Cuidado em cada detalhe',
     description: 'Seus pequenos favoritos organizados, com uma dose extra de fofura na rotina.',
-    tone: 'pink',
+    tone: 'pink', productIds: [], active: true,
     items: [['organizador coracao', 'organizador de maquiagem'], ['chaveiro lip balm', 'lip balm'], ['mochilhinhas com gatinho', 'mochilhinha com gatinho', 'mochilhinha gatinho']],
   },
   {
     slug: 'decoracao', title: 'Meu Cantinho', eyebrow: 'Um presente para o seu espaço',
     description: 'Uma peça de destaque e um detalhe afetivo para dar personalidade ao dia a dia.',
-    tone: 'orange',
+    tone: 'orange', productIds: [], active: true,
     items: [['vaso curvas modernas', 'vaso curvas'], ['chaveiro lip balm', 'lip balm']],
   },
 ] as const;
+
+export type KitDefinition = {
+  slug: string; title: string; eyebrow: string; description: string;
+  tone: 'violet' | 'pink' | 'orange'; productIds: readonly string[]; active: boolean;
+};
 
 export type ProductKit = {
   slug: string; title: string; eyebrow: string; description: string;
@@ -54,11 +59,19 @@ export function getShippingProgress(total: number, threshold: number) {
   };
 }
 
-export function buildProductKits(products: KitProduct[]): ProductKit[] {
+export function buildProductKits(products: KitProduct[], definitions: readonly KitDefinition[] = KIT_DEFINITIONS): ProductKit[] {
   const available = products.filter(isKitProductAvailable).sort((a, b) => getStartingPrice(a) - getStartingPrice(b) || a.id.localeCompare(b.id));
-  return KIT_DEFINITIONS.flatMap(definition => {
+  return definitions.filter(definition => definition.active).flatMap(definition => {
+    if (definition.productIds.length > 0) {
+      const selected = definition.productIds.map(id => available.find(product => product.id === id)).filter((product): product is KitProduct => Boolean(product));
+      if (selected.length !== definition.productIds.length || selected.length < 2) return [];
+      return [{ ...definition, products: selected, startingPrice: selected.reduce((sum, product) => sum + Math.round(getStartingPrice(product) * 100), 0) / 100 }];
+    }
+
+    const legacyDefinition = KIT_DEFINITIONS.find(item => item.slug === definition.slug);
+    if (!legacyDefinition) return [];
     const selected: KitProduct[] = [];
-    for (const alternatives of definition.items) {
+    for (const alternatives of legacyDefinition.items) {
       let match: KitProduct | undefined;
       for (const name of alternatives) {
         match = available.find(product => !selected.some(item => item.id === product.id) && normalize(product.name).includes(name));

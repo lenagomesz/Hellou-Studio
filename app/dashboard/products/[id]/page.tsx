@@ -7,6 +7,7 @@ import { OptionsManager } from '@/components/admin/OptionsManager';
 import { attachProductTags } from '@/lib/product-tags';
 import type { Product, ProductCategory, ProductOption } from '@/types/database';
 import { isRevenueOrderStatus } from '@/lib/order-analytics';
+import { productPath } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +47,7 @@ export default async function ProductDetailPage(props: { params: Promise<{ id: s
   const { product, category, options, unitsSold, revenue } = result;
   const images = Array.from(new Set([product.image_url, ...(product.images ?? [])].filter((image): image is string => Boolean(image))));
   const totalStock = options.reduce((sum, option) => sum + option.stock, 0);
-  const storefrontHref = product.type === 'digital' ? `/stl/${product.id}` : `/products/${product.id}`;
+  const storefrontHref = productPath(product);
 
   return (
     <div className="w-full space-y-6">

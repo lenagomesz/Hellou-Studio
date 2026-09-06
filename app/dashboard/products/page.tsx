@@ -6,6 +6,7 @@ import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search, Download, Edit3, Ta
 import { useSession } from 'next-auth/react';
 import { ProductCategorySelect, useProductCategories } from '@/components/admin/ProductCategorySelect';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
+import { productPath } from '@/lib/seo';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -14,6 +15,7 @@ function formatPrice(value: number) {
 type ProductRow = {
   id: string;
   name: string;
+  slug?: string | null;
   category: string;
   base_price: number;
   sale_price?: number | null;
@@ -224,7 +226,7 @@ export default function ProductsPage() {
             const margin = product.cost_price != null && product.base_price > 0
               ? Math.round(((product.base_price - product.cost_price) / product.base_price) * 100)
               : null;
-            const storePath = product.type === 'digital' ? `/stl/${product.id}` : `/products/${product.id}`;
+            const storePath = productPath({ ...product, type: product.type === 'digital' ? 'digital' : 'physical' });
 
             return (
               <article key={product.id} className="group overflow-hidden rounded-[26px] border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_18px_45px_rgba(236,72,153,0.12)] dark:border-slate-800 dark:bg-slate-900">

@@ -9,7 +9,7 @@ export interface CartItemView {
   created_at?: string;
   product: Pick<
     Product,
-    'id' | 'name' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'fulfillment_mode' | 'is_wholesale' | 'minimum_order_quantity'
+    'id' | 'name' | 'slug' | 'base_price' | 'sale_price' | 'image_url' | 'category' | 'type' | 'fulfillment_mode' | 'is_wholesale' | 'minimum_order_quantity'
   >;
   option: (Pick<
     ProductOption,

@@ -13,6 +13,6 @@ export default async function KitsPage() {
   return <div className="min-h-screen bg-gradient-to-b from-pink-50/60 to-white dark:from-gray-950 dark:to-gray-950"><div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
     <nav aria-label="Caminho da página" className="text-xs text-gray-500 dark:text-gray-400"><Link href="/">Início</Link><span className="mx-2">/</span><span>Kits</span></nav>
     <h1 className="mt-6 text-sm font-bold uppercase tracking-[0.2em] text-gray-600 dark:text-gray-300">Kits Hellou Studio</h1>
-    <ProductKits kits={buildProductKits(products)} threshold={settings.commerce.freeShippingThreshold} />
+    <ProductKits kits={buildProductKits(products, settings.kits)} threshold={settings.commerce.freeShippingThreshold} />
   </div></div>;
 }

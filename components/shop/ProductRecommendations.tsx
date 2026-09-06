@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { useCart } from '@/components/shop/CartContext';
 import { getShippingProgress } from '@/lib/product-kits';
 import { DEFAULT_STORE_SETTINGS } from '@/lib/store-settings-schema';
+import { createProductSlug } from '@/lib/product-commercial';
 
 interface RecommendedProduct {
   id: string;
   name: string;
+  slug?: string | null;
   starting_price: number;
   image_url: string | null;
 }
@@ -48,7 +50,7 @@ export function ProductRecommendations({ excludeId, title, threshold = DEFAULT_S
         {visibleProducts.map((p) => (
           <Link
             key={p.id}
-            href={`/products/${p.id}`}
+            href={`/products/${p.slug || createProductSlug(p.name) || p.id}`}
             className="group rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden shadow-sm transition hover:shadow-md"
           >
             <div className="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden">

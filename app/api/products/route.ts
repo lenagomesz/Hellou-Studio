@@ -13,7 +13,7 @@ import type { Product } from '@/types/database';
 import { normalizeProductColor } from '@/lib/product-colors';
 import { attachProductTags } from '@/lib/product-tags';
 import { parseOptionalPrice } from '@/lib/product-filters';
-import { normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
+import { createProductSlug, normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
 import {
   normalizeProductCustomizationCopy,
   normalizeProductCustomizationSections,
@@ -21,6 +21,17 @@ import {
 } from '@/lib/product-customization';
 
 export const maxDuration = 60;
+
+async function uniqueProductSlug(value: string) {
+  const admin = getSupabaseAdmin();
+  const base = createProductSlug(value) || 'produto';
+  for (let suffix = 1; suffix <= 100; suffix += 1) {
+    const candidate = suffix === 1 ? base : `${base.slice(0, 115)}-${suffix}`;
+    const { data } = await admin.from('products').select('id').eq('slug', candidate).maybeSingle();
+    if (!data) return candidate;
+  }
+  return `${base.slice(0, 108)}-${Date.now().toString(36)}`;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -167,6 +178,7 @@ export async function POST(request: Request) {
   }
 
   const admin = getSupabaseAdmin();
+  if (!commercialFields.slug) commercialFields.slug = await uniqueProductSlug(name);
   const { data: productCategory } = await admin
     .from('product_categories')
     .select('slug')

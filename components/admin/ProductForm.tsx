@@ -644,7 +644,8 @@ export function ProductForm(props: ProductFormProps) {
           )}
           <div className="flex gap-2">
             <input
-              type="url"
+              type="text"
+              inputMode="url"
               value={newImageUrl}
               onChange={(e) => setNewImageUrl(e.target.value)}
               placeholder="Ou cole uma URL de imagem..."

@@ -39,7 +39,7 @@ export function SEOSection() {
             className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
           />
           <span className="mt-1 block text-[11px] text-gray-400">
-            Será preparado para URLs amigáveis; o link atual por ID continua funcionando.
+            Link público: /products/{state.slug || 'nome-do-produto'}. Se ficar vazio, o endereço será criado automaticamente a partir do nome.
           </span>
         </label>
 

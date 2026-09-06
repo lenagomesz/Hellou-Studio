@@ -150,16 +150,19 @@ export function ImageUploadField({
         </button>
       )}
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => selectFile(event.target.files?.[0])} className="hidden" />
-      <label className="block min-w-0">
-        <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">Ou cole a URL da imagem</span>
-        <input
-          type="url"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder="https://exemplo.com/imagem.jpg"
-          className="mt-1 block min-w-0 w-full max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-pink-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        />
-      </label>
+      {!value && (
+        <label className="block min-w-0">
+          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">Ou cole uma URL (opcional)</span>
+          <input
+            type="text"
+            inputMode="url"
+            value=""
+            onChange={(event) => onChange(event.target.value)}
+            placeholder="https://exemplo.com/imagem.jpg ou /api/product-images/..."
+            className="mt-1 block min-w-0 w-full max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-pink-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+        </label>
+      )}
       {error && <p role="alert" className="text-[11px] font-medium text-red-600">{error}</p>}
 
       {cropFile && (

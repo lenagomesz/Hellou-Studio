@@ -1,4 +1,5 @@
 import type { Product } from '@/types/database';
+import { createProductSlug } from '@/lib/product-commercial';
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://helloustudio.com.br').replace(/\/$/, '');
 export const SITE_NAME = 'Hellou Studio';
@@ -12,8 +13,13 @@ export function plainText(value: string | null | undefined, fallback: string, ma
   return normalized.length <= maxLength ? normalized : `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
 }
 
-export function productPath(product: Pick<Product, 'id' | 'type'>) {
-  return product.type === 'digital' ? `/stl/${product.id}` : `/products/${product.id}`;
+export function productIdentifier(product: Pick<Product, 'id' | 'name' | 'slug'>) {
+  return product.slug?.trim() || createProductSlug(product.name) || product.id;
+}
+
+export function productPath(product: Pick<Product, 'id' | 'name' | 'slug' | 'type'>) {
+  const identifier = productIdentifier(product);
+  return product.type === 'digital' ? `/stl/${identifier}` : `/products/${identifier}`;
 }
 
 export function productImages(product: Pick<Product, 'image_url' | 'image_url_2' | 'images'>) {

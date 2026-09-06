@@ -45,7 +45,7 @@ async function getRelatedProducts(featuredProductId: string | null): Promise<Rec
   const admin = getSupabaseAdmin();
   const { data, error } = await admin
     .from('products')
-    .select('id, name, base_price, image_url')
+    .select('id, name, slug, base_price, image_url')
     .eq('active', true)
     .limit(2);
 

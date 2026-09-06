@@ -97,6 +97,15 @@ export interface StoreSettings {
   navigation: {
     links: Array<{ id: string; label: string; href: string; active: boolean }>;
   };
+  kits: Array<{
+    slug: string;
+    title: string;
+    eyebrow: string;
+    description: string;
+    tone: 'violet' | 'pink' | 'orange';
+    productIds: string[];
+    active: boolean;
+  }>;
 }
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
@@ -195,6 +204,11 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
       { id: 'sobre', label: 'Sobre', href: '/about', active: true },
     ],
   },
+  kits: [
+    { slug: 'setup-estudo', title: 'Setup & Estudo', eyebrow: 'Uma pausa no seu ritmo', description: 'Organize os fones e deixe a mesa com espaço para criar, estudar e brincar.', tone: 'violet', productIds: [], active: true },
+    { slug: 'penteadeira', title: 'Penteadeira com Charme', eyebrow: 'Cuidado em cada detalhe', description: 'Seus pequenos favoritos organizados, com uma dose extra de fofura na rotina.', tone: 'pink', productIds: [], active: true },
+    { slug: 'decoracao', title: 'Meu Cantinho', eyebrow: 'Um presente para o seu espaço', description: 'Uma peça de destaque e um detalhe afetivo para dar personalidade ao dia a dia.', tone: 'orange', productIds: [], active: true },
+  ],
 };
 
 export function getWhatsAppUrl(settings: StoreSettings) {

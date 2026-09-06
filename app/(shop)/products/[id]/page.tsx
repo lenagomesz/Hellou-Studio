@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import { ProductDetail } from '@/components/shop/ProductDetail';
@@ -8,41 +8,38 @@ import { ProductCard } from '@/components/shop/ProductCard';
 import { ProductReviews } from '@/components/shop/ProductReviews';
 import { getCurrentUser } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
-import { absoluteUrl, plainText, productImages, safeJsonLd } from '@/lib/seo';
+import { absoluteUrl, plainText, productIdentifier, productImages, productPath, safeJsonLd } from '@/lib/seo';
 import { attachProductTags } from '@/lib/product-tags';
 import { getStoreSettings } from '@/lib/store-settings';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function loadProductWithOptions(id: string) {
-  const admin = getSupabaseAdmin();
-  const [productRes, optionsRes] = await withTimeout(
-    Promise.all([
-      admin
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .eq('type', 'physical')
-        .eq('active', true)
-        .maybeSingle(),
-      admin
-        .from('product_options')
-        .select('*')
-        .eq('product_id', id)
-        .eq('active', true)
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true }),
-    ]),
-    12000,
-  );
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+async function loadProductWithOptions(identifier: string) {
+  const admin = getSupabaseAdmin();
+  let productQuery = admin.from('products').select('*').eq('type', 'physical').eq('active', true);
+  productQuery = UUID_PATTERN.test(identifier) ? productQuery.eq('id', identifier) : productQuery.eq('slug', identifier);
+  const productRes = await withTimeout(productQuery.maybeSingle(), 12000);
   if (productRes.error) throw productRes.error;
+  let productData = productRes.data as Product | null;
+
+  if (!productData && !UUID_PATTERN.test(identifier)) {
+    const fallback = await withTimeout(admin.from('products').select('*').eq('type', 'physical').eq('active', true).is('slug', null).limit(500), 12000);
+    const matched = (fallback.data ?? []).find(product => productIdentifier(product as Product) === identifier);
+    if (matched) productData = matched as Product;
+  }
+
+  if (!productData) return null;
+
+  const optionsRes = await withTimeout(admin.from('product_options').select('*')
+    .eq('product_id', productData.id).eq('active', true)
+    .order('sort_order', { ascending: true }).order('created_at', { ascending: true }), 12000);
   if (optionsRes.error) throw optionsRes.error;
-  if (!productRes.data) return null;
 
   return {
-    product: productRes.data as Product,
+    product: productData,
     options: (optionsRes.data ?? []) as ProductOption[],
   };
 }
@@ -98,7 +95,7 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
   const title = product.seo_title || product.name;
   const description = plainText(product.seo_description || product.description, `${product.name}, produzido sob demanda pela ${settings.identity.name}.`);
   const images = productImages(product);
-  const canonical = `/products/${product.id}`;
+  const canonical = productPath(product);
   return {
     title,
     description,
@@ -115,6 +112,7 @@ export default async function ProductDetailPage(
   const { id } = await props.params;
   const result = await getProductWithOptions(id);
   if (!result) notFound();
+  if (id !== productIdentifier(result.product)) redirect(productPath(result.product));
 
   const { product: rawProduct, options } = result;
   const storeSettings = await getStoreSettings();
@@ -139,7 +137,7 @@ export default async function ProductDetailPage(
     brand: { '@type': 'Brand', name: storeSettings.identity.name },
     offers: {
       '@type': 'Offer',
-      url: absoluteUrl(`/products/${product.id}`),
+      url: absoluteUrl(productPath(product)),
       priceCurrency: storeSettings.commerce.currency,
       price: price.toFixed(2),
       availability: 'https://schema.org/InStock',

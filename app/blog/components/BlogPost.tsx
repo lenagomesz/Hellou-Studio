@@ -5,6 +5,7 @@ import { ProductRecommendation } from './ProductRecommendation';
 interface RecommendedProduct {
   id: string;
   name: string;
+  slug?: string | null;
   base_price: number;
   image_url: string | null;
 }

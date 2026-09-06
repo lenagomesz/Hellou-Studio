@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import type { Product, ProductCategory } from '@/types/database';
+import { productIdentifier } from '@/lib/seo';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -26,7 +27,7 @@ export function ProductCard({ product, basePath = "/products", category, showcas
 
   return (
     <Link
-      href={`${basePath}/${product.id}`}
+      href={`${basePath}/${productIdentifier(product)}`}
       prefetch={false}
       className={`group overflow-hidden bg-white transition dark:bg-gray-900 dark:hover:shadow-gray-900/50 ${showcase ? 'flex h-full flex-col rounded-2xl border border-pink-100/80 shadow-[0_8px_26px_-20px_rgba(219,39,119,.45)] hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_22px_45px_-24px_rgba(219,39,119,.42)] dark:border-gray-800 dark:hover:border-pink-900' : 'block rounded-2xl border border-gray-100 shadow-sm hover:shadow-md dark:border-gray-800'}`}
     >
