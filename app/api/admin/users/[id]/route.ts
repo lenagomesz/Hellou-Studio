@@ -16,7 +16,6 @@ export async function GET(_req: Request, ctx: RouteCtx) {
     .from('users')
     .select('id, email, name, role, cpf, phone, is_vip, created_at')
     .eq('id', id)
-    .is('deleted_at', null)
     .maybeSingle();
 
   if (!user) return notFound('Usuário não encontrado');
@@ -53,7 +52,6 @@ export async function DELETE(_req: Request, ctx: RouteCtx) {
     .from('users')
     .select('id, role, email, session_version')
     .eq('id', id)
-    .is('deleted_at', null)
     .maybeSingle();
 
   if (!user) return notFound('Usuário não encontrado');
@@ -107,7 +105,6 @@ export async function POST(req: Request, ctx: RouteCtx) {
     .from('users')
     .select('id, email, role, session_version')
     .eq('id', id)
-    .is('deleted_at', null)
     .maybeSingle();
 
   if (!user) return notFound('Usuário não encontrado');

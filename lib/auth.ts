@@ -25,7 +25,6 @@ export const authOptions: NextAuthOptions = {
             'id, email, name, avatar_url, role, admin_access_level, admin_permissions, admin_active, session_version, password_hash, two_fa_enabled, two_fa_secret, two_fa_backup_codes',
           )
           .eq('email', credentials.email.toLowerCase().trim())
-          .is('deleted_at', null)
           .maybeSingle();
 
         if (queryResult.error?.code === '42703') {
@@ -163,11 +162,10 @@ export const authOptions: NextAuthOptions = {
       } else if (token.id) {
         const { data, error } = await getSupabaseAdmin()
           .from('users')
-          .select('session_version, admin_active, avatar_url, deleted_at')
+          .select('session_version, admin_active, avatar_url')
           .eq('id', token.id)
           .maybeSingle();
         if (!error && (!data
-          || data.deleted_at
           || Number(data.session_version ?? 0) !== Number(token.sessionVersion ?? 0)
           || (token.role === 'admin' && data.admin_active === false))) {
           token.revoked = true;

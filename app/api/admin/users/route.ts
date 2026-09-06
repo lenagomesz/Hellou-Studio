@@ -18,20 +18,25 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(100, Math.max(1, Number(req.nextUrl.searchParams.get('limit')) || 25));
   const admin = getSupabaseAdmin();
 
-  let query = admin
-    .from('users')
-    .select('id, email, name, role, is_vip, created_at', { count: 'exact' })
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
-
-  if (search) {
-    query = isExactEmailSearch
-      ? query.ilike('email', search)
-      : query.or(`email.ilike.%${search}%,name.ilike.%${search}%`);
+  const from = (page - 1) * limit;
+  function usersQuery(filterDeleted: boolean) {
+    let query = admin
+      .from('users')
+      .select('id, email, name, role, is_vip, created_at', { count: 'exact' });
+    if (filterDeleted) query = query.is('deleted_at', null);
+    query = query.order('created_at', { ascending: false });
+    if (search) {
+      query = isExactEmailSearch
+        ? query.ilike('email', search)
+        : query.or(`email.ilike.%${search}%,name.ilike.%${search}%`);
+    }
+    return query.range(from, from + limit - 1);
   }
 
-  const from = (page - 1) * limit;
-  const { data, count, error } = await query.range(from, from + limit - 1);
+  let result = await usersQuery(true);
+  // Compatibilidade durante o intervalo entre publicar o código e aplicar a migração.
+  if (result.error?.code === '42703') result = await usersQuery(false);
+  const { data, count, error } = result;
   if (error) return serverError('Erro ao buscar usuários');
 
   const userIds = (data ?? []).map((user) => user.id);
