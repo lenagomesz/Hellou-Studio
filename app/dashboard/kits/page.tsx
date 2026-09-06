@@ -8,9 +8,30 @@ import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/store-settings
 import { createProductSlug } from '@/lib/product-commercial';
 
 type Kit = StoreSettings['kits'][number];
-type ProductChoice = { id: string; name: string; image_url: string | null; type: string; active: boolean };
+type ProductChoice = {
+  id: string;
+  name: string;
+  image_url: string | null;
+  type: string;
+  active: boolean;
+  category: string;
+  is_wholesale?: boolean;
+  fulfillment_mode?: string;
+  product_options?: Array<{ stock: number; active?: boolean }>;
+};
 
 const inputClass = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-950 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-500/10';
+
+function isKitChoiceAvailable(product: ProductChoice) {
+  return product.active && product.type === 'physical' && product.category !== 'encomenda' && !product.is_wholesale
+    && (product.fulfillment_mode !== 'ready_stock' || product.product_options?.some(option => option.active !== false && option.stock > 0));
+}
+
+function unavailableReason(product: ProductChoice) {
+  if (product.is_wholesale) return 'Produto exclusivo de atacado';
+  if (product.fulfillment_mode === 'ready_stock' && !product.product_options?.some(option => option.active !== false && option.stock > 0)) return 'Sem estoque disponível';
+  return 'Produto indisponível para kits';
+}
 
 export default function KitsAdminPage() {
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
@@ -104,6 +125,13 @@ export default function KitsAdminPage() {
       setMessage('Cada kit ativo precisa ter pelo menos dois produtos.');
       return;
     }
+    if (settings.kits.some(kit => kit.active && kit.productIds.some(productId => {
+      const product = products.find(item => item.id === productId);
+      return !product || !isKitChoiceAvailable(product);
+    }))) {
+      setMessage('Um kit ativo contém produto sem estoque ou indisponível. Remova esse produto ou desative o kit.');
+      return;
+    }
     const slugs = settings.kits.map(kit => createProductSlug(kit.slug));
     if (new Set(slugs).size !== slugs.length) {
       setMessage('Os endereços dos kits não podem se repetir.');
@@ -178,7 +206,15 @@ export default function KitsAdminPage() {
             </div>
             <div className="mt-5"><p className="text-xs font-bold text-slate-700">Produtos do kit ({kit.productIds.length})</p><p className="mt-1 text-[11px] text-slate-400">Marque pelo menos dois produtos. A ordem abaixo será usada na apresentação.</p>
               <div className="mt-3 grid max-h-80 gap-2 overflow-y-auto rounded-2xl border border-slate-200 p-2 sm:grid-cols-2">
-                {products.map(product => <label key={product.id} className="flex cursor-pointer items-center gap-3 rounded-xl p-2 hover:bg-pink-50"><input type="checkbox" checked={kit.productIds.includes(product.id)} onChange={event => updateKit(index, { productIds: event.target.checked ? [...kit.productIds, product.id] : kit.productIds.filter(id => id !== product.id) })} className="rounded text-pink-600" />{product.image_url ? <Image src={product.image_url} alt="" width={40} height={40} className="h-10 w-10 rounded-lg object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100"><Gift className="h-4 w-4 text-slate-300" /></span>}<span className="text-sm font-medium text-slate-700">{product.name}</span></label>)}
+                {products.map(product => {
+                  const selected = kit.productIds.includes(product.id);
+                  const available = isKitChoiceAvailable(product);
+                  return <label key={product.id} className={`flex items-center gap-3 rounded-xl p-2 ${available || selected ? 'cursor-pointer hover:bg-pink-50' : 'cursor-not-allowed opacity-55'}`}>
+                    <input type="checkbox" checked={selected} disabled={!available && !selected} onChange={event => updateKit(index, { productIds: event.target.checked ? [...kit.productIds, product.id] : kit.productIds.filter(id => id !== product.id) })} className="rounded text-pink-600" />
+                    {product.image_url ? <Image src={product.image_url} alt="" width={40} height={40} className="h-10 w-10 rounded-lg object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100"><Gift className="h-4 w-4 text-slate-300" /></span>}
+                    <span className="min-w-0"><span className="block truncate text-sm font-medium text-slate-700">{product.name}</span>{!available && <span className="block text-[10px] font-semibold text-amber-700">{unavailableReason(product)}</span>}</span>
+                  </label>;
+                })}
               </div>
             </div>
           </article>

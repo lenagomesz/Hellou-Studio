@@ -302,6 +302,7 @@ export interface User {
   phone: string | null;
   cpf: string | null;
   avatar_url: string | null;
+  deleted_at?: string | null;
   role: 'user' | 'admin';
   created_at: string;
   updated_at: string;
@@ -346,6 +347,7 @@ export interface Database {
           phone?: string | null;
           cpf?: string | null;
           avatar_url?: string | null;
+          deleted_at?: string | null;
           role?: 'user' | 'admin';
           created_at?: string;
           updated_at?: string;
@@ -358,6 +360,7 @@ export interface Database {
           phone?: string | null;
           cpf?: string | null;
           avatar_url?: string | null;
+          deleted_at?: string | null;
           role?: 'user' | 'admin';
           created_at?: string;
           updated_at?: string;

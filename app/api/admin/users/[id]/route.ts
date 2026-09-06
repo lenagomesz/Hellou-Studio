@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requirePermission, badRequest, notFound, serverError } from '@/lib/api';
+import { deletedCustomerPatch } from '@/lib/user-deletion';
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
@@ -15,6 +16,7 @@ export async function GET(_req: Request, ctx: RouteCtx) {
     .from('users')
     .select('id, email, name, role, cpf, phone, is_vip, created_at')
     .eq('id', id)
+    .is('deleted_at', null)
     .maybeSingle();
 
   if (!user) return notFound('Usuário não encontrado');
@@ -49,15 +51,33 @@ export async function DELETE(_req: Request, ctx: RouteCtx) {
 
   const { data: user } = await admin
     .from('users')
-    .select('id, role')
+    .select('id, role, email, session_version')
     .eq('id', id)
+    .is('deleted_at', null)
     .maybeSingle();
 
   if (!user) return notFound('Usuário não encontrado');
   if (user.role === 'admin') return badRequest('Não é possível excluir um administrador');
 
-  const { error } = await admin.from('users').delete().eq('id', id);
+  const deletedAt = new Date().toISOString();
+  const deletedEmail = `deleted.${id}@deleted.invalid`;
+  const { data: deleted, error } = await admin
+    .from('users')
+    .update(deletedCustomerPatch(id, Number(user.session_version ?? 0), deletedAt))
+    .eq('id', id)
+    .is('deleted_at', null)
+    .select('id')
+    .maybeSingle();
   if (error) return serverError('Erro ao excluir usuário');
+  if (!deleted) return notFound('Usuário não encontrado');
+
+  const { error: preferenceError } = await admin
+    .from('email_preferences')
+    .update({ email: deletedEmail, subscribed: false, gdpr_consent: false, unsubscribed_at: deletedAt, updated_at: deletedAt })
+    .eq('user_id', id);
+  if (preferenceError && preferenceError.code !== '42P01') {
+    console.error('[users] Não foi possível anonimizar a preferência de email do cliente excluído.');
+  }
 
   return NextResponse.json({ success: true });
 }
@@ -85,8 +105,9 @@ export async function POST(req: Request, ctx: RouteCtx) {
 
   const { data: user } = await admin
     .from('users')
-    .select('id, email, role')
+    .select('id, email, role, session_version')
     .eq('id', id)
+    .is('deleted_at', null)
     .maybeSingle();
 
   if (!user) return notFound('Usuário não encontrado');
@@ -98,8 +119,25 @@ export async function POST(req: Request, ctx: RouteCtx) {
   );
   if (banError) return serverError('Erro ao banir email');
 
-  const { error: delError } = await admin.from('users').delete().eq('id', id);
+  const deletedAt = new Date().toISOString();
+  const deletedEmail = `deleted.${id}@deleted.invalid`;
+  const { data: deleted, error: delError } = await admin
+    .from('users')
+    .update(deletedCustomerPatch(id, Number(user.session_version ?? 0), deletedAt))
+    .eq('id', id)
+    .is('deleted_at', null)
+    .select('id')
+    .maybeSingle();
   if (delError) return serverError('Erro ao excluir usuário');
+  if (!deleted) return notFound('Usuário não encontrado');
+
+  const { error: preferenceError } = await admin
+    .from('email_preferences')
+    .update({ email: deletedEmail, subscribed: false, gdpr_consent: false, unsubscribed_at: deletedAt, updated_at: deletedAt })
+    .eq('user_id', id);
+  if (preferenceError && preferenceError.code !== '42P01') {
+    console.error('[users] Não foi possível anonimizar a preferência de email do cliente banido.');
+  }
 
   return NextResponse.json({ success: true });
 }

@@ -61,7 +61,9 @@ export async function PUT(request: Request) {
   });
 
   revalidateTag('store-settings', { expire: 0 });
-  revalidatePath('/', 'layout');
+  revalidatePath('/');
+  revalidatePath('/kits');
+  revalidatePath('/kits/[slug]', 'page');
   return NextResponse.json({ settings, updatedAt, updatedBy: auth.user.email });
 }
 

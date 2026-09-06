@@ -37,6 +37,17 @@ describe('kits e complementos do catálogo', () => {
     expect(getShippingProgress(kits[1].startingPrice, 99).eligible).toBe(true);
   });
 
+  it('usa exatamente os produtos e a ordem escolhidos no painel', () => {
+    const products = [kitProduct('Primeiro', 10), kitProduct('Segundo', 20), kitProduct('Terceiro', 30)];
+    const [kit] = buildProductKits(products, [{
+      slug: 'personalizado', title: 'Kit personalizado', eyebrow: 'Escolhido no painel', description: 'Descrição', tone: 'pink',
+      productIds: ['Terceiro', 'Primeiro'], active: true,
+    }]);
+
+    expect(kit.products.map(product => product.id)).toEqual(['Terceiro', 'Primeiro']);
+    expect(kit.startingPrice).toBe(40);
+  });
+
   it('prioriza o complemento mais barato que atinge o frete e exclui itens do carrinho', () => {
     const products = [kitProduct('Boca', 6.9), kitProduct('Lip Balm', 20.9), kitProduct('Vaso', 89.9), kitProduct('STL', 10, { type: 'digital' })];
     expect(selectComplementaryProducts(products, ['Vaso'], 9.1).map(product => product.name)).toEqual(['Lip Balm', 'Boca']);

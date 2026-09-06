@@ -15,7 +15,7 @@ export function ProductKits({ kits, threshold, preview = false }: { kits: Produc
       <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
         <div className="max-w-xl">
           <p className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-pink-600 dark:text-pink-400"><Gift className="h-4 w-4" aria-hidden="true" /> Feitos para combinar</p>
-          <h2 id="kits-title" className="text-3xl font-black tracking-tight text-gray-900 sm:text-4xl dark:text-white">Pequenos favoritos.<br /><span className="text-pink-600 dark:text-pink-400">Um kit com a sua cara.</span></h2>
+          <h2 id="kits-title" className="text-3xl font-black tracking-[-0.045em] text-gray-900 sm:text-4xl md:text-5xl dark:text-white">Pequenos favoritos.<br /><span className="text-pink-600 dark:text-pink-400">Um kit com a sua cara.</span></h2>
           <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">Combinações para presentear ou cuidar do seu cantinho. Escolha as cores e os detalhes de cada peça.</p>
         </div>
         {preview && <Link href="/kits" className="inline-flex items-center gap-2 rounded-full border border-pink-200 bg-white px-5 py-3 text-sm font-bold text-pink-700 transition hover:bg-pink-50 dark:border-pink-900 dark:bg-gray-900 dark:text-pink-300">Explorar kits <ArrowUpRight className="h-4 w-4" aria-hidden="true" /></Link>}

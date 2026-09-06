@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   const admin = getSupabaseAdmin();
   let query = admin
     .from('products')
-    .select('*, product_options(id, name, stock, price_modifier)', { count: 'exact' })
+    .select('*, product_options(id, name, stock, price_modifier, active)', { count: 'exact' })
     .or('category.neq.encomenda,type.eq.digital')
     .order('created_at', { ascending: false });
 

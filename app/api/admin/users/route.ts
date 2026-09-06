@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
   let query = admin
     .from('users')
     .select('id, email, name, role, is_vip, created_at', { count: 'exact' })
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (search) {

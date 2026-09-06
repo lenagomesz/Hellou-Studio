@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Search, Shield, Ban, Trash2, Mail, Star } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -37,6 +37,8 @@ export default function UsersPage() {
   const [vipFilter, setVipFilter] = useState(false);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const removedUserIds = useRef(new Set<string>());
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 0 });
 
@@ -48,7 +50,8 @@ export default function UsersPage() {
     const res = await fetch(`/api/admin/users?${params}`);
     if (res.ok) {
       const data = await res.json();
-      setUsers(Array.isArray(data) ? data : data.users ?? []);
+      const nextUsers = (Array.isArray(data) ? data : data.users ?? []) as UserRow[];
+      setUsers(nextUsers.filter(user => !removedUserIds.current.has(user.id)));
       if (data.pagination) setPagination(data.pagination);
     } else {
       const data = await res.json().catch(() => ({})) as { error?: string };
@@ -65,33 +68,58 @@ export default function UsersPage() {
     void fetchUsers(search, 1);
   }
 
+  function removeFromList(userId: string) {
+    removedUserIds.current.add(userId);
+    setUsers(current => current.filter(user => user.id !== userId));
+    setPagination(current => {
+      const total = Math.max(0, current.total - 1);
+      return { ...current, total, pages: Math.ceil(total / current.limit) };
+    });
+  }
+
   async function banUser(user: UserRow) {
     if (!confirm(`Banir ${user.email}? O usuário será removido e não poderá se cadastrar novamente.`)) return;
-    const res = await fetch(`/api/admin/users/${user.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'ban' }),
-    });
-    if (res.ok) {
-      setUsers(prev => prev.filter(u => u.id !== user.id));
-      setToast(`${user.email} banido`);
-      setTimeout(() => setToast(''), 3000);
-    } else {
-      const data = await res.json().catch(() => ({})) as { error?: string };
-      setError(data.error ?? 'Não foi possível banir o cliente');
+    setRemovingId(user.id);
+    setError('');
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'ban' }),
+      });
+      if (res.ok) {
+        removeFromList(user.id);
+        setToast(`${user.email} banido`);
+        setTimeout(() => setToast(''), 3000);
+      } else {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        setError(data.error ?? 'Não foi possível banir o cliente');
+      }
+    } catch {
+      setError('Não foi possível acessar o servidor para banir o cliente');
+    } finally {
+      setRemovingId(null);
     }
   }
 
   async function deleteUser(user: UserRow) {
     if (!confirm(`Excluir ${user.email}? Esta ação não pode ser desfeita.`)) return;
-    const res = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
-    if (res.ok) {
-      setUsers(prev => prev.filter(u => u.id !== user.id));
-      setToast(`${user.email} removido`);
-      setTimeout(() => setToast(''), 3000);
-    } else {
-      const data = await res.json().catch(() => ({})) as { error?: string };
-      setError(data.error ?? 'Não foi possível excluir o cliente');
+    setRemovingId(user.id);
+    setError('');
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        removeFromList(user.id);
+        setToast(`${user.email} removido`);
+        setTimeout(() => setToast(''), 3000);
+      } else {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        setError(data.error ?? 'Não foi possível excluir o cliente');
+      }
+    } catch {
+      setError('Não foi possível acessar o servidor para excluir o cliente');
+    } finally {
+      setRemovingId(null);
     }
   }
 
@@ -118,6 +146,7 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <UserManagementTabs />
+      {error && <div role="alert" className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Fechar erro">×</button></div>}
       {toast && (
         <div className="fixed left-3 right-3 top-3 z-50 rounded-xl bg-green-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-lg sm:left-auto sm:right-4 sm:top-4">
           {toast}
@@ -175,9 +204,9 @@ export default function UsersPage() {
               </div>
               {user.role !== 'admin' && (
                 <div className="mt-3 grid grid-cols-3 gap-2 border-t border-gray-100 pt-3">
-                  <button type="button" onClick={() => toggleVip(user)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-amber-100 text-xs font-bold text-amber-600"><Star className={`h-4 w-4 ${user.is_vip ? 'fill-amber-500' : ''}`} /> VIP</button>
-                  {canDeleteCustomers && <button type="button" onClick={() => banUser(user)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-orange-100 text-xs font-bold text-orange-600"><Ban className="h-4 w-4" /> Banir</button>}
-                  {canDeleteCustomers && <button type="button" onClick={() => deleteUser(user)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-red-100 text-xs font-bold text-red-600"><Trash2 className="h-4 w-4" /> Excluir</button>}
+                  <button type="button" disabled={removingId === user.id} onClick={() => toggleVip(user)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-amber-100 text-xs font-bold text-amber-600 disabled:opacity-50"><Star className={`h-4 w-4 ${user.is_vip ? 'fill-amber-500' : ''}`} /> VIP</button>
+                  {canDeleteCustomers && <button type="button" disabled={removingId === user.id} onClick={() => banUser(user)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-orange-100 text-xs font-bold text-orange-600 disabled:opacity-50"><Ban className="h-4 w-4" /> Banir</button>}
+                  {canDeleteCustomers && <button type="button" disabled={removingId === user.id} onClick={() => deleteUser(user)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-red-100 text-xs font-bold text-red-600 disabled:opacity-50"><Trash2 className="h-4 w-4" /> {removingId === user.id ? 'Excluindo…' : 'Excluir'}</button>}
                 </div>
               )}
             </article>
@@ -228,6 +257,7 @@ export default function UsersPage() {
                     {user.role !== 'admin' && (
                       <div className="flex items-center justify-end gap-1">
                         <button
+                          disabled={removingId === user.id}
                           onClick={() => toggleVip(user)}
                           className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition ${
                             user.is_vip
@@ -238,10 +268,10 @@ export default function UsersPage() {
                         >
                           <Star className={`h-3.5 w-3.5 ${user.is_vip ? 'fill-amber-500' : ''}`} />
                         </button>
-                        {canDeleteCustomers && <button onClick={() => banUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-orange-600 hover:bg-orange-50 transition" title="Banir">
+                        {canDeleteCustomers && <button disabled={removingId === user.id} onClick={() => banUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-orange-600 hover:bg-orange-50 transition disabled:opacity-50" title="Banir">
                           <Ban className="h-3.5 w-3.5" />
                         </button>}
-                        {canDeleteCustomers && <button onClick={() => deleteUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition" title="Excluir">
+                        {canDeleteCustomers && <button disabled={removingId === user.id} onClick={() => deleteUser(user)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-50" title="Excluir">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>}
                       </div>
@@ -254,7 +284,6 @@ export default function UsersPage() {
         </div>
         </>
       )}
-      {error && <div role="alert" className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Fechar erro">×</button></div>}
       {!loading && pagination.pages > 1 && <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 text-sm sm:flex-row sm:items-center sm:justify-between"><span className="text-gray-500">Página {pagination.page} de {pagination.pages}</span><div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"><button disabled={page <= 1} onClick={() => { const next = Math.max(1, page - 1); setPage(next); void fetchUsers(search, next); }} className="rounded-lg border px-3 py-2 disabled:opacity-40">Anterior</button><button disabled={page >= pagination.pages} onClick={() => { const next = Math.min(pagination.pages, page + 1); setPage(next); void fetchUsers(search, next); }} className="rounded-lg bg-slate-950 px-3 py-2 text-white disabled:opacity-40">Próxima</button></div></div>}
     </div>
   );
