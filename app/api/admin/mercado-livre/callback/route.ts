@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
 import { exchangeMercadoLivreCode, saveMercadoLivreConnection } from '@/lib/mercado-livre';
@@ -34,7 +34,10 @@ export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
   const state = request.nextUrl.searchParams.get('state');
   const storedState = request.cookies.get('hellou_ml_oauth_state')?.value;
-  if (!code || !state || !storedState || !matchesState(state, storedState)) {
+  if (!code) {
+    return dashboardRedirect(request, 'ml_error', 'Código de autorização ausente. O Mercado Livre não enviou o código necessário para gerar o token.');
+  }
+  if (!state || !storedState || !matchesState(state, storedState)) {
     return dashboardRedirect(request, 'ml_error', 'Retorno de autorização inválido ou expirado. Inicie a conexão novamente.');
   }
 

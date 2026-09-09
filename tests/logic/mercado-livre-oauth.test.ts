@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   decryptMercadoLivreToken,
   encryptMercadoLivreToken,
+  explainMercadoLivreTokenError,
   getMercadoLivreConfig,
 } from '@/lib/mercado-livre';
 
@@ -27,5 +28,15 @@ describe('Mercado Livre OAuth', () => {
 
     expect(getMercadoLivreConfig('http://localhost:3000/anything').redirectUri)
       .toBe('https://helloustudio.com.br/api/admin/mercado-livre/callback');
+  });
+
+  it('identifies invalid client credentials clearly', () => {
+    expect(explainMercadoLivreTokenError({ error: 'invalid_client' }, 'authorization_code'))
+      .toContain('App ID (Client ID) ou Client Secret inválido');
+  });
+
+  it('distinguishes an expired refresh token', () => {
+    expect(explainMercadoLivreTokenError({ error: 'invalid_grant' }, 'refresh_token'))
+      .toContain('Refresh token expirado');
   });
 });

@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
 import { getMercadoLivreConfig } from '@/lib/mercado-livre';

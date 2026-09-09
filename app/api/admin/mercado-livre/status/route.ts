@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
-import { getMercadoLivreConnection } from '@/lib/mercado-livre';
+import { getMercadoLivreConfig, getMercadoLivreConnection } from '@/lib/mercado-livre';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -10,6 +10,7 @@ export async function GET() {
   if (auth.response) return auth.response;
 
   try {
+    getMercadoLivreConfig('https://helloustudio.com.br/api/admin/mercado-livre/status');
     const connection = await getMercadoLivreConnection(auth.user.id);
     return NextResponse.json({
       connected: Boolean(connection),

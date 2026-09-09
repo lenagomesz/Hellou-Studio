@@ -48,6 +48,7 @@
   height: 86mm;
   padding: 4mm 4mm 20mm;
   background: #fff;
+  box-shadow: inset 0 0 0 0.25mm #262626;
 }
 
 .photoWindow {
@@ -72,18 +73,6 @@
   object-fit: contain;
   background: white;
 }
-
-.cropMark {
-  position: absolute;
-  width: 4mm;
-  height: 4mm;
-  pointer-events: none;
-}
-
-.topLeft { left: 0; top: 0; border-left: 0.25mm solid #111; border-top: 0.25mm solid #111; }
-.topRight { right: 0; top: 0; border-right: 0.25mm solid #111; border-top: 0.25mm solid #111; }
-.bottomLeft { left: 0; bottom: 0; border-left: 0.25mm solid #111; border-bottom: 0.25mm solid #111; }
-.bottomRight { right: 0; bottom: 0; border-right: 0.25mm solid #111; border-bottom: 0.25mm solid #111; }
 
 @page {
   size: A4 portrait;

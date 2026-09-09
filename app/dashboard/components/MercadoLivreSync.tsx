@@ -49,7 +49,7 @@ export function MercadoLivreSync() {
       const response = await fetch('/api/admin/mercado-livre/sync', { method: 'POST' });
       const data = await response.json() as SyncResult;
       setResult(response.ok ? data : { error: data.error ?? 'Erro ao sincronizar.' });
-      if (/conecte sua conta/i.test(data.error ?? '')) await loadStatus();
+      if (/token de acesso ausente|conecte sua conta/i.test(data.error ?? '')) await loadStatus();
     } catch (error) {
       setResult({ error: error instanceof Error ? error.message : 'Erro de comunicação com o servidor.' });
     } finally {

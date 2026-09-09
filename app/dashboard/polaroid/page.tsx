@@ -346,10 +346,6 @@ export default function PolaroidPage() {
                 <div key={pageIndex} className={styles.a4Page} aria-label={`Folha ${pageIndex + 1} de ${pages.length}`}>
                   {page.map((photo, photoIndex) => (
                     <div key={photo.id} className={styles.polaroid}>
-                      <span className={`${styles.cropMark} ${styles.topLeft}`} />
-                      <span className={`${styles.cropMark} ${styles.topRight}`} />
-                      <span className={`${styles.cropMark} ${styles.bottomLeft}`} />
-                      <span className={`${styles.cropMark} ${styles.bottomRight}`} />
                       <div className={styles.photoWindow}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={photo.url} alt={`Polaroid ${pageIndex * 9 + photoIndex + 1}`} style={getImageStyle(photo)} className={photo.fit === 'cover' ? styles.cover : styles.contain} />
