@@ -11,9 +11,32 @@ export const PRODUCT_PHOTO_ANGLES = {
 export type ProductPhotoAngle = keyof typeof PRODUCT_PHOTO_ANGLES;
 export type ProductPhotoFraming = 'same' | 'closer' | 'wider';
 export type ProductPhotoLighting = 'preserve' | 'soft' | 'bright';
+export type ProductPhotoAspectRatio = '1:1' | '4:5' | '3:4';
+export type ProductPhotoQuality = '1K' | '2K' | '4K';
 
 export const MAX_PRODUCT_IMAGES = 10;
 export const MAX_GENERATIONS_PER_BATCH = 4;
+
+const GEMINI_ASPECT_RATIOS: Record<ProductPhotoAspectRatio, string> = {
+  '1:1': 'ASPECT_RATIO_ONE_BY_ONE',
+  '4:5': 'ASPECT_RATIO_FOUR_BY_FIVE',
+  '3:4': 'ASPECT_RATIO_THREE_BY_FOUR',
+};
+
+const GEMINI_IMAGE_SIZES: Record<ProductPhotoQuality, string> = {
+  '1K': 'IMAGE_SIZE_ONE_K',
+  '2K': 'IMAGE_SIZE_TWO_K',
+  '4K': 'IMAGE_SIZE_FOUR_K',
+};
+
+export function geminiImageResponseFormat(aspectRatio: ProductPhotoAspectRatio, quality: ProductPhotoQuality) {
+  return {
+    image: {
+      aspectRatio: GEMINI_ASPECT_RATIOS[aspectRatio],
+      imageSize: GEMINI_IMAGE_SIZES[quality],
+    },
+  };
+}
 
 export function isProductPhotoAngle(value: unknown): value is ProductPhotoAngle {
   return typeof value === 'string' && value in PRODUCT_PHOTO_ANGLES;

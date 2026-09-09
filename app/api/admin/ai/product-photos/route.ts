@@ -5,10 +5,13 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { loadProductImages } from '@/lib/ai/product-generator';
 import {
   buildProductPhotoPrompt,
+  geminiImageResponseFormat,
   isProductPhotoAngle,
   productGallery,
+  type ProductPhotoAspectRatio,
   type ProductPhotoFraming,
   type ProductPhotoLighting,
+  type ProductPhotoQuality,
 } from '@/lib/ai/product-photo';
 
 export const runtime = 'nodejs';
@@ -35,8 +38,8 @@ async function requestGeneratedImage(input: {
   model: string;
   prompt: string;
   source: { mimeType: string; data: string };
-  aspectRatio: string;
-  quality: '1K' | '2K' | '4K';
+  aspectRatio: ProductPhotoAspectRatio;
+  quality: ProductPhotoQuality;
 }) {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(input.model)}:generateContent`,
@@ -50,7 +53,7 @@ async function requestGeneratedImage(input: {
         ] }],
         generationConfig: {
           responseModalities: ['TEXT', 'IMAGE'],
-          responseFormat: { image: { aspectRatio: input.aspectRatio, imageSize: input.quality } },
+          responseFormat: geminiImageResponseFormat(input.aspectRatio, input.quality),
         },
       }),
       signal: AbortSignal.timeout(150_000),
@@ -84,8 +87,8 @@ export async function POST(request: Request) {
   const sourceImageUrl = typeof body.sourceImageUrl === 'string' ? body.sourceImageUrl : '';
   const framing = FRAMINGS.has(body.framing as ProductPhotoFraming) ? body.framing as ProductPhotoFraming : 'same';
   const lighting = LIGHTINGS.has(body.lighting as ProductPhotoLighting) ? body.lighting as ProductPhotoLighting : 'preserve';
-  const aspectRatio = typeof body.aspectRatio === 'string' && ASPECT_RATIOS.has(body.aspectRatio) ? body.aspectRatio : '1:1';
-  const quality = body.quality === '1K' || body.quality === '4K' ? body.quality : '2K';
+  const aspectRatio = (typeof body.aspectRatio === 'string' && ASPECT_RATIOS.has(body.aspectRatio) ? body.aspectRatio : '1:1') as ProductPhotoAspectRatio;
+  const quality = (body.quality === '1K' || body.quality === '4K' ? body.quality : '2K') as ProductPhotoQuality;
   const instructions = typeof body.instructions === 'string' ? body.instructions : '';
   if (!productId || productId.length > 100 || !sourceImageUrl || sourceImageUrl.length > 2000 || !isProductPhotoAngle(body.angle)) {
     return NextResponse.json({ error: 'Produto, imagem-base e ângulo são obrigatórios.' }, { status: 400 });
