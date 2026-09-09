@@ -70,7 +70,7 @@ async function requestToken(body: URLSearchParams): Promise<MercadoLivreTokenRes
   return data;
 }
 
-export async function exchangeMercadoLivreCode(code: string, requestUrl: string) {
+export async function exchangeMercadoLivreCode(code: string, requestUrl: string, codeVerifier: string) {
   const config = getMercadoLivreConfig(requestUrl);
   return requestToken(new URLSearchParams({
     grant_type: 'authorization_code',
@@ -78,6 +78,7 @@ export async function exchangeMercadoLivreCode(code: string, requestUrl: string)
     client_secret: config.clientSecret,
     code,
     redirect_uri: config.redirectUri,
+    code_verifier: codeVerifier,
   }));
 }
 

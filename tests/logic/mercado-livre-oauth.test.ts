@@ -29,4 +29,9 @@ describe('Mercado Livre OAuth', () => {
     expect(explainMercadoLivreTokenError({ error: 'invalid_grant' }, 'refresh_token'))
       .toContain('Refresh token expirado');
   });
+
+  it('explains a missing PKCE verifier', () => {
+    expect(explainMercadoLivreTokenError({ error_description: 'code_verifier is a required parameter' }, 'authorization_code'))
+      .toContain('verificador PKCE');
+  });
 });

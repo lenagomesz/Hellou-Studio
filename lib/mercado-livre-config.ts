@@ -28,6 +28,9 @@ export function getMercadoLivreConfig(requestUrl?: string) {
 export function explainMercadoLivreTokenError(error: MercadoLivreApiError, grantType: string) {
   const code = error.error?.toLowerCase() ?? '';
   const details = `${error.error_description ?? ''} ${error.message ?? ''}`.toLowerCase();
+  if (/code_verifier/.test(details)) {
+    return 'O Mercado Livre exige o verificador PKCE. Inicie uma nova conexão pelo botão do painel; não abra o callback diretamente.';
+  }
   if (code === 'invalid_client' || /client.+(invalid|incorrect)|invalid.+client/.test(details)) {
     return 'App ID (Client ID) ou Client Secret inválido. Confira as duas credenciais no painel de aplicativos do Mercado Livre.';
   }
