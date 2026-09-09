@@ -94,7 +94,7 @@ function editorReducer(
       return { ...state, images: action.images };
 
     case 'ADD_IMAGE':
-      if (state.images.length >= 6 || state.images.includes(action.url)) return state;
+      if (state.images.length >= 10 || state.images.includes(action.url)) return state;
       return { ...state, images: [...state.images, action.url] };
 
     case 'REMOVE_IMAGE':

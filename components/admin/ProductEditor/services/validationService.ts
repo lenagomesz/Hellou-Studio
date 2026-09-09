@@ -33,8 +33,8 @@ export const validationService = {
     if (state.images.length === 0) {
       return { sectionName: 'images', isValid: false, error: 'Adicione pelo menos 1 imagem' };
     }
-    if (state.images.length > 6) {
-      return { sectionName: 'images', isValid: false, error: 'Máximo 6 imagens permitidas' };
+    if (state.images.length > 10) {
+      return { sectionName: 'images', isValid: false, error: 'Máximo 10 imagens permitidas' };
     }
     return { sectionName: 'images', isValid: true };
   },

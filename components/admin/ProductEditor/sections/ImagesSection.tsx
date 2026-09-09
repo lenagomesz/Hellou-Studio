@@ -64,8 +64,8 @@ export function ImagesSection() {
   const uploadImages = async (files: FileList | File[], replaceIndex: number | null = null) => {
     const selected = Array.from(files);
     if (selected.length === 0) return;
-    if (replaceIndex === null && state.images.length + selected.length > 6) {
-      setError('Você pode cadastrar até 6 imagens por produto');
+    if (replaceIndex === null && state.images.length + selected.length > 10) {
+      setError('Você pode cadastrar até 10 imagens por produto');
       return;
     }
 
@@ -139,8 +139,8 @@ export function ImagesSection() {
   const selectImagesForResize = (files: FileList | File[]) => {
     const selected = Array.from(files);
     if (selected.length === 0) return;
-    if (state.images.length + selected.length > 6) {
-      setError('Você pode cadastrar até 6 imagens por produto');
+    if (state.images.length + selected.length > 10) {
+      setError('Você pode cadastrar até 10 imagens por produto');
       if (imageInputRef.current) imageInputRef.current.value = '';
       return;
     }
@@ -228,7 +228,7 @@ export function ImagesSection() {
             setImageDragOver(false);
             selectImagesForResize(e.dataTransfer.files);
           }}
-          disabled={uploadingImages || state.images.length >= 6}
+          disabled={uploadingImages || state.images.length >= 10}
           className={`mb-4 flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed p-7 text-center transition ${
             imageDragOver
               ? 'border-pink-500 bg-pink-50'
@@ -243,7 +243,7 @@ export function ImagesSection() {
           <span className="mt-2 text-sm font-bold text-gray-800 dark:text-white">
             {uploadingImages ? 'Enviando imagens...' : 'Arraste imagens aqui ou clique para escolher e ajustar'}
           </span>
-          <span className="mt-1 text-xs text-gray-500">JPG, PNG ou WebP · máximo de 6 imagens · ajuste para 1000 × 1000 px antes do envio</span>
+          <span className="mt-1 text-xs text-gray-500">JPG, PNG ou WebP · máximo de 10 imagens · ajuste para 1000 × 1000 px antes do envio</span>
         </button>
         <input
           ref={imageInputRef}
@@ -331,7 +331,7 @@ export function ImagesSection() {
                 setNewImageUrl('');
               }
             }}
-            disabled={!newImageUrl.trim() || state.images.length >= 6}
+            disabled={!newImageUrl.trim() || state.images.length >= 10}
             className="rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition"
           >
             Adicionar

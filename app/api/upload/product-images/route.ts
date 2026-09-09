@@ -4,7 +4,7 @@ import { requirePermission } from '@/lib/api';
 
 const BUCKET = 'products';
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
-const MAX_IMAGES = 6;
+const MAX_IMAGES = 10;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 function safeFileName(name: string) {

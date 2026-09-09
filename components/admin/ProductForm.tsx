@@ -106,8 +106,8 @@ export function ProductForm(props: ProductFormProps) {
   async function uploadImages(files: FileList | File[]) {
     const selected = Array.from(files);
     if (selected.length === 0) return;
-    if (images.length + selected.length > 6) {
-      setError('Você pode cadastrar até 6 imagens por produto');
+    if (images.length + selected.length > 10) {
+      setError('Você pode cadastrar até 10 imagens por produto');
       return;
     }
 
@@ -579,12 +579,12 @@ export function ProductForm(props: ProductFormProps) {
             onDragOver={(event) => { event.preventDefault(); setImageDragOver(true); }}
             onDragLeave={() => setImageDragOver(false)}
             onDrop={(event) => { event.preventDefault(); setImageDragOver(false); void uploadImages(event.dataTransfer.files); }}
-            disabled={uploadingImages || images.length >= 6}
+            disabled={uploadingImages || images.length >= 10}
             className={`mb-4 flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed p-7 text-center transition ${imageDragOver ? 'border-pink-500 bg-pink-50' : 'border-gray-300 bg-gray-50/60 hover:border-pink-400 hover:bg-pink-50/50 dark:border-gray-700 dark:bg-gray-800/40'} disabled:cursor-not-allowed disabled:opacity-60`}
           >
             {uploadingImages ? <Loader2 className="h-8 w-8 animate-spin text-pink-500" /> : <Upload className="h-8 w-8 text-pink-500" />}
             <span className="mt-2 text-sm font-bold text-gray-800 dark:text-white">{uploadingImages ? 'Enviando imagens...' : 'Arraste imagens aqui ou clique para escolher'}</span>
-            <span className="mt-1 text-xs text-gray-500">JPG, PNG ou WebP · máximo de 6 imagens · 8 MB cada · armazenamento automático</span>
+            <span className="mt-1 text-xs text-gray-500">JPG, PNG ou WebP · máximo de 10 imagens · 8 MB cada · armazenamento automático</span>
           </button>
           <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => event.target.files && void uploadImages(event.target.files)} className="hidden" />
           {images.length > 0 && (

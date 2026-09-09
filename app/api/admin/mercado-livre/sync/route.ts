@@ -24,6 +24,7 @@ interface MLProduct {
     value_name?: string;
   }>;
   variations?: Array<{
+    id?: string | number;
     attribute_combinations: Array<{ id: string; value_id?: string; value_name?: string }>;
     price: number;
     available_quantity: number;
@@ -63,10 +64,16 @@ type UploadResult =
 
 type ExistingMLItem = {
   id: string;
+  category_id?: string;
   title?: string;
   permalink?: string;
   seller_custom_field?: string | null;
   attributes?: Array<{ id?: string; value_name?: string | null }>;
+  variations?: Array<{
+    id?: string | number;
+    attribute_combinations?: Array<{ id?: string; value_id?: string; value_name?: string }>;
+    attributes?: Array<{ id?: string; value_name?: string | null }>;
+  }>;
 };
 
 type MLCategoryAttribute = {
@@ -223,6 +230,7 @@ function buildProductVariations(
   specifications: MLCategoryAttribute[],
   requestUrl: string,
   minimumPrice: number,
+  existingVariations: ExistingMLItem['variations'] = [],
 ) {
   const options = (product.product_options ?? []).filter((option) => option.active);
   if (options.length === 0) return { variations: undefined, variationAttributeId: null };
@@ -249,8 +257,16 @@ function buildProductVariations(
     const optionImage = option.image_url ? new URL(option.image_url, requestUrl).toString() : null;
     const fallbackImage = uniqueProductImages(product, requestUrl)[0];
     const optionSku = product.sku ? `${product.sku}-${index + 1}` : `${product.id.slice(0, 8)}-${index + 1}`;
+    const existingVariation = existingVariations?.find((variation) => {
+      const combination = variation.attribute_combinations?.find((attribute) => attribute.id === variationAttribute.id);
+      const existingValue = combination?.value_name ?? combination?.value_id;
+      const existingSku = variation.attributes?.find((attribute) => attribute.id === 'SELLER_SKU')?.value_name;
+      return normalizeMatchValue(existingValue) === normalizeMatchValue(valueName)
+        || normalizeMatchValue(existingSku) === normalizeMatchValue(optionSku);
+    });
 
     return {
+      ...(existingVariation?.id ? { id: existingVariation.id } : {}),
       attribute_combinations: [{ id: variationAttribute.id, ...selectedValue }],
       price: Math.max(
         Math.round(((product.sale_price || product.base_price) + option.price_modifier) * 100) / 100,
@@ -291,19 +307,39 @@ function mercadoLivreFailure(product: Product, data: MLResponse, responseStatus:
 }
 
 async function predictBrazilianCategory(product: ProductWithOptions) {
-  const query = [product.name, product.category, product.description]
-    .filter(Boolean)
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .slice(0, 250);
-  const url = new URL('https://api.mercadolibre.com/sites/MLB/domain_discovery/search');
-  url.searchParams.set('limit', '1');
-  url.searchParams.set('q', query);
-  const response = await fetch(url, { cache: 'no-store' });
-  const data = await response.json() as Array<{ category_id?: string }>;
-  const categoryId = data[0]?.category_id;
-  if (!response.ok || !categoryId) throw new Error(`Categoria brasileira não encontrada para "${product.name}".`);
-  return categoryId;
+  const clean = (value: string | null | undefined, size: number) => (value ?? '').replace(/\s+/g, ' ').trim().slice(0, size);
+  const searchableText = normalizeMatchValue(`${product.name} ${product.category ?? ''} ${product.description ?? ''}`);
+  const categoryHints = [
+    ...(searchableText.includes('mochila') ? ['mochila infantil'] : []),
+    ...(searchableText.includes('macarronada') ? ['alimentos de brinquedo infantil'] : []),
+    ...(searchableText.includes('lula') && searchableText.includes('articulad') ? ['figura de ação animal articulada'] : []),
+  ];
+  const queries = [...new Set([
+    `${clean(product.name, 80)} ${clean(product.description, 120)}`.trim(),
+    clean(product.description, 180),
+    `${clean(product.name, 100)} ${clean(product.category, 60)}`.trim(),
+    clean(product.name, 120),
+    ...categoryHints,
+  ].filter(Boolean))];
+
+  for (const query of queries) {
+    const url = new URL('https://api.mercadolibre.com/sites/MLB/domain_discovery/search');
+    url.searchParams.set('limit', '1');
+    url.searchParams.set('q', query);
+    const response = await fetch(url, { cache: 'no-store' });
+    const data = await response.json() as Array<{ category_id?: string }>;
+    const categoryId = data[0]?.category_id;
+    if (response.ok && categoryId) return categoryId;
+  }
+  throw new Error(`Categoria brasileira não encontrada para "${product.name}".`);
+}
+
+async function getExistingMLItem(accessToken: string, listingId: string) {
+  const response = await fetch(`https://api.mercadolibre.com/items/${encodeURIComponent(listingId)}?include_attributes=all`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+  return response.ok ? response.json() as Promise<ExistingMLItem> : null;
 }
 
 async function uploadToMercadoLivre(
@@ -314,8 +350,10 @@ async function uploadToMercadoLivre(
   existingListingId?: string,
 ) : Promise<UploadResult> {
   let categoryId: string;
+  let existingItem: ExistingMLItem | null = null;
   try {
-    categoryId = await predictBrazilianCategory(product);
+    existingItem = existingListingId ? await getExistingMLItem(accessToken, existingListingId) : null;
+    categoryId = existingItem?.category_id ?? await predictBrazilianCategory(product);
   } catch (error) {
     return {
       ok: false,
@@ -347,6 +385,7 @@ async function uploadToMercadoLivre(
     categoryRules.specifications,
     requestUrl,
     categoryRules.minimumPrice,
+    existingItem?.variations,
   );
   const activeOptions = (product.product_options ?? []).filter((option) => option.active);
   const mlProduct: MLProduct = {
@@ -366,9 +405,9 @@ async function uploadToMercadoLivre(
     listing_type_id: 'gold_special',
     condition: 'new',
     attributes: [
-      { id: 'BRAND', value_name: 'Hellou Studio' },
-      { id: 'MODEL', value_name: product.name.substring(0, 255) },
-      ...(product.sku ? [{ id: 'SELLER_SKU', value_name: product.sku }] : []),
+      ...(variationData.variationAttributeId === 'BRAND' ? [] : [{ id: 'BRAND', value_name: 'Hellou Studio' }]),
+      ...(variationData.variationAttributeId === 'MODEL' ? [] : [{ id: 'MODEL', value_name: product.name.substring(0, 255) }]),
+      ...(product.sku && !variationData.variations ? [{ id: 'SELLER_SKU', value_name: product.sku }] : []),
       ...categoryRules.requiredAttributes.filter((attribute) => (
         !['BRAND', 'MODEL', 'SELLER_SKU', variationData.variationAttributeId].includes(attribute.id)
       )),
@@ -383,7 +422,7 @@ async function uploadToMercadoLivre(
     const updatePayload = {
       title: mlProduct.title,
       price: mlProduct.price,
-      available_quantity: mlProduct.available_quantity,
+      ...(!mlProduct.variations ? { available_quantity: mlProduct.available_quantity } : {}),
       pictures: mlProduct.pictures,
       attributes: mlProduct.attributes,
       ...(mlProduct.variations ? { variations: mlProduct.variations } : {}),
