@@ -25,6 +25,7 @@ type SyncResult = {
   total?: number;
   message?: string;
   error?: string;
+  products?: Array<{ id: string; name: string; mlListingId: string; variations?: number }>;
   failures?: SyncFailure[];
   errorSummary?: Array<{ message: string; count: number }>;
 };
@@ -157,6 +158,11 @@ export function MercadoLivreSync() {
             <div className="min-w-0 flex-1">
               <h3 className="font-bold">{result.error ? 'Erro na sincronização' : result.failed ? 'Sincronização concluída com erros' : 'Sincronização concluída'}</h3>
               <p className="mt-1 text-sm">{result.error ?? `${result.synced ?? 0} de ${result.total ?? 0} produtos sincronizados.${result.failed ? ` ${result.failed} tiveram erro.` : ''}`}</p>
+              {!result.error && (result.products ?? []).some((product) => (product.variations ?? 0) > 0) && (
+                <p className="mt-1 text-xs font-semibold text-emerald-700">
+                  {(result.products ?? []).reduce((total, product) => total + (product.variations ?? 0), 0)} variações de produtos incluídas.
+                </p>
+              )}
 
               {result.errorSummary && result.errorSummary.length > 0 && (
                 <div className="mt-4 rounded-xl border border-red-200 bg-white/70 p-4">

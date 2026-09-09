@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getValidMercadoLivreToken } from '@/lib/mercado-livre';
-import type { Product } from '@/types/database';
+import type { Product, ProductOption } from '@/types/database';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -23,6 +23,13 @@ interface MLProduct {
     value_id?: string;
     value_name?: string;
   }>;
+  variations?: Array<{
+    attribute_combinations: Array<{ id: string; value_id?: string; value_name?: string }>;
+    price: number;
+    available_quantity: number;
+    picture_ids: string[];
+    attributes?: Array<{ id: string; value_name: string }>;
+  }>;
 }
 
 interface MLResponse {
@@ -37,6 +44,8 @@ interface MLResponse {
     type?: string;
   }>;
 }
+
+type ProductWithOptions = Omit<Product, 'product_options'> & { product_options?: ProductOption[] };
 
 type SyncFailure = {
   productId: string;
@@ -64,21 +73,28 @@ type MLCategoryAttribute = {
   id: string;
   value_type?: string;
   values?: Array<{ id?: string; name?: string }>;
-  tags?: { required?: boolean; catalog_required?: boolean; catalog_listing_required?: boolean };
+  allowed_units?: Array<{ id?: string; name?: string }>;
+  default_unit?: string;
+  tags?: {
+    required?: boolean;
+    catalog_required?: boolean;
+    catalog_listing_required?: boolean;
+    allow_variations?: boolean;
+  };
 };
 
 const ATTRIBUTE_DEFAULTS: Record<string, string[]> = {
   MANUFACTURER: ['Hellou Studio'],
   MATERIAL: ['PLA', 'Plástico', 'Outro'],
   MAIN_MATERIAL: ['PLA', 'Plástico', 'Outro'],
-  OCCASIONS: ['Todas as ocasiões', 'Outros', 'Outro'],
-  SOUVENIR_FORMAT: ['Outro', 'Outros'],
+  OCCASIONS: ['Aniversário', 'Empresarial', 'Natal'],
+  SOUVENIR_FORMAT: ['Chaveiro', 'Pingente', 'Caixa'],
   IS_EDIBLE: ['Não', 'No'],
   SALES_UNIT: ['Unidade', 'Unit'],
   YIELD_OF_SALES_UNIT: ['1'],
   COLOR: ['Multicolorido', 'Rosa', 'Azul', 'Preto', 'Branco'],
   SIZE: ['Único', 'Unico', 'U'],
-  GENDER: ['Sem gênero', 'Unissex', 'Genderless'],
+  GENDER: ['Sem gênero infantil', 'Sem gênero', 'Unissex', 'Genderless'],
 };
 
 function normalizeMatchValue(value: string | null | undefined) {
@@ -154,6 +170,10 @@ async function recoverExistingListings(
 }
 
 function chooseAttributeValue(attribute: MLCategoryAttribute, candidates: string[]) {
+  if (attribute.value_type === 'number_unit') {
+    const unit = attribute.default_unit ?? attribute.allowed_units?.[0]?.id ?? attribute.allowed_units?.[0]?.name;
+    return { value_name: unit ? `${candidates[0]} ${unit}` : candidates[0] };
+  }
   if (!attribute.values?.length) return { value_name: candidates[0] };
   for (const candidate of candidates) {
     const candidateValue = normalizeMatchValue(candidate);
@@ -163,13 +183,16 @@ function chooseAttributeValue(attribute: MLCategoryAttribute, candidates: string
   return null;
 }
 
-async function getCategoryRules(categoryId: string, accessToken: string, product: Product) {
+async function getCategoryRules(categoryId: string, accessToken: string, product: ProductWithOptions) {
   const headers = { Authorization: `Bearer ${accessToken}` };
   const [categoryResponse, attributesResponse] = await Promise.all([
     fetch(`https://api.mercadolibre.com/categories/${encodeURIComponent(categoryId)}`, { headers, cache: 'no-store' }),
     fetch(`https://api.mercadolibre.com/categories/${encodeURIComponent(categoryId)}/attributes`, { headers, cache: 'no-store' }),
   ]);
-  const category = categoryResponse.ok ? await categoryResponse.json() as { minimum_price?: number } : {};
+  const category = categoryResponse.ok ? await categoryResponse.json() as {
+    minimum_price?: number;
+    settings?: { minimum_price?: number };
+  } : {};
   const specifications = attributesResponse.ok ? await attributesResponse.json() as MLCategoryAttribute[] : [];
   const productColor = ['rosa', 'laranja', 'azul', 'amarela', 'amarelo', 'vermelha', 'vermelho', 'verde', 'preto', 'branco']
     .find((color) => normalizeMatchValue(product.name).includes(color));
@@ -188,14 +211,65 @@ async function getCategoryRules(categoryId: string, accessToken: string, product
     const selected = chooseAttributeValue(attribute, candidates);
     return selected ? [{ id: attribute.id, ...selected }] : [];
   });
-  return { minimumPrice: category.minimum_price ?? 0, requiredAttributes };
+  return {
+    minimumPrice: category.minimum_price ?? category.settings?.minimum_price ?? 0,
+    requiredAttributes,
+    specifications,
+  };
 }
 
-function uniqueProductImages(product: Product, requestUrl: string) {
+function buildProductVariations(
+  product: ProductWithOptions,
+  specifications: MLCategoryAttribute[],
+  requestUrl: string,
+  minimumPrice: number,
+) {
+  const options = (product.product_options ?? []).filter((option) => option.active);
+  if (options.length === 0) return { variations: undefined, variationAttributeId: null };
+
+  const variationSpecifications = specifications.filter((attribute) => attribute.tags?.allow_variations);
+  const hasColorForEveryOption = options.every((option) => option.color_name || option.color);
+  const variationAttribute = (hasColorForEveryOption
+    ? variationSpecifications.find((attribute) => attribute.id === 'COLOR')
+    : null)
+    ?? variationSpecifications.find((attribute) => attribute.id === 'MODEL')
+    ?? variationSpecifications.find((attribute) => ['string', 'list'].includes(attribute.value_type ?? ''));
+  if (!variationAttribute) return { variations: undefined, variationAttributeId: null };
+
+  const usedValues = new Set<string>();
+  const variations = options.map((option, index) => {
+    const baseValue = variationAttribute.id === 'COLOR'
+      ? option.color_name || option.color || option.name
+      : option.name;
+    let valueName = baseValue;
+    const normalized = normalizeMatchValue(valueName);
+    if (usedValues.has(normalized)) valueName = `${valueName} ${index + 1}`;
+    usedValues.add(normalizeMatchValue(valueName));
+    const selectedValue = chooseAttributeValue(variationAttribute, [valueName]) ?? { value_name: valueName };
+    const optionImage = option.image_url ? new URL(option.image_url, requestUrl).toString() : null;
+    const fallbackImage = uniqueProductImages(product, requestUrl)[0];
+    const optionSku = product.sku ? `${product.sku}-${index + 1}` : `${product.id.slice(0, 8)}-${index + 1}`;
+
+    return {
+      attribute_combinations: [{ id: variationAttribute.id, ...selectedValue }],
+      price: Math.max(
+        Math.round(((product.sale_price || product.base_price) + option.price_modifier) * 100) / 100,
+        minimumPrice,
+      ),
+      available_quantity: Math.max(0, option.stock),
+      picture_ids: [optionImage ?? fallbackImage].filter((value): value is string => Boolean(value)),
+      attributes: [{ id: 'SELLER_SKU', value_name: optionSku }],
+    };
+  });
+  return { variations, variationAttributeId: variationAttribute.id };
+}
+
+function uniqueProductImages(product: ProductWithOptions, requestUrl: string) {
   return [...new Set([
     product.image_url,
     product.image_url_2,
     ...(product.images ?? []),
+    ...(product.product_options ?? []).map((option) => option.image_url),
   ].filter((value): value is string => Boolean(value?.trim())))]
     .map((value) => new URL(value, requestUrl).toString());
 }
@@ -216,28 +290,32 @@ function mercadoLivreFailure(product: Product, data: MLResponse, responseStatus:
   };
 }
 
-async function predictBrazilianCategory(title: string) {
+async function predictBrazilianCategory(product: ProductWithOptions) {
+  const query = [product.name, product.category, product.description]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .slice(0, 250);
   const url = new URL('https://api.mercadolibre.com/sites/MLB/domain_discovery/search');
   url.searchParams.set('limit', '1');
-  url.searchParams.set('q', title);
+  url.searchParams.set('q', query);
   const response = await fetch(url, { cache: 'no-store' });
   const data = await response.json() as Array<{ category_id?: string }>;
   const categoryId = data[0]?.category_id;
-  if (!response.ok || !categoryId) throw new Error(`Categoria brasileira não encontrada para "${title}".`);
+  if (!response.ok || !categoryId) throw new Error(`Categoria brasileira não encontrada para "${product.name}".`);
   return categoryId;
 }
 
 async function uploadToMercadoLivre(
-  product: Product,
+  product: ProductWithOptions,
   accessToken: string,
   userId: string,
   requestUrl: string,
   existingListingId?: string,
 ) : Promise<UploadResult> {
-  if (existingListingId) return { ok: true, mlListingId: existingListingId };
   let categoryId: string;
   try {
-    categoryId = await predictBrazilianCategory(product.name);
+    categoryId = await predictBrazilianCategory(product);
   } catch (error) {
     return {
       ok: false,
@@ -264,6 +342,13 @@ async function uploadToMercadoLivre(
     };
   }
   const categoryRules = await getCategoryRules(categoryId, accessToken, product);
+  const variationData = buildProductVariations(
+    product,
+    categoryRules.specifications,
+    requestUrl,
+    categoryRules.minimumPrice,
+  );
+  const activeOptions = (product.product_options ?? []).filter((option) => option.active);
   const mlProduct: MLProduct = {
     title: product.name.substring(0, 60),
     category_id: categoryId,
@@ -272,7 +357,9 @@ async function uploadToMercadoLivre(
       categoryRules.minimumPrice,
     ),
     currency_id: 'BRL',
-    available_quantity: product.type === 'digital' ? 999 : 10,
+    available_quantity: activeOptions.length > 0
+      ? activeOptions.reduce((total, option) => total + Math.max(0, option.stock), 0)
+      : product.type === 'digital' ? 999 : 10,
     buying_mode: 'buy_it_now',
     description: product.description || product.name,
     pictures,
@@ -282,18 +369,32 @@ async function uploadToMercadoLivre(
       { id: 'BRAND', value_name: 'Hellou Studio' },
       { id: 'MODEL', value_name: product.name.substring(0, 255) },
       ...(product.sku ? [{ id: 'SELLER_SKU', value_name: product.sku }] : []),
-      ...categoryRules.requiredAttributes.filter((attribute) => !['BRAND', 'MODEL', 'SELLER_SKU'].includes(attribute.id)),
+      ...categoryRules.requiredAttributes.filter((attribute) => (
+        !['BRAND', 'MODEL', 'SELLER_SKU', variationData.variationAttributeId].includes(attribute.id)
+      )),
     ],
+    variations: variationData.variations,
   };
 
   try {
-    const response = await fetch('https://api.mercadolibre.com/items', {
-      method: 'POST',
+    const publicationUrl = existingListingId
+      ? `https://api.mercadolibre.com/items/${encodeURIComponent(existingListingId)}`
+      : 'https://api.mercadolibre.com/items';
+    const updatePayload = {
+      title: mlProduct.title,
+      price: mlProduct.price,
+      available_quantity: mlProduct.available_quantity,
+      pictures: mlProduct.pictures,
+      attributes: mlProduct.attributes,
+      ...(mlProduct.variations ? { variations: mlProduct.variations } : {}),
+    };
+    const response = await fetch(publicationUrl, {
+      method: existingListingId ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`,
       },
-      body: JSON.stringify(mlProduct),
+      body: JSON.stringify(existingListingId ? updatePayload : mlProduct),
     });
 
     const data = await response.json() as MLResponse;
@@ -304,7 +405,9 @@ async function uploadToMercadoLivre(
       return { ok: false, failure };
     }
 
-    if (!data.id || !data.permalink) {
+    const listingId = data.id ?? existingListingId;
+    const permalink = data.permalink ?? (listingId ? `https://produto.mercadolivre.com.br/${listingId}` : null);
+    if (!listingId || !permalink) {
       return {
         ok: false,
         failure: {
@@ -319,9 +422,9 @@ async function uploadToMercadoLivre(
     const admin = getSupabaseAdmin();
     const { error: listingError } = await admin.from('mercado_livre_listings').upsert({
       product_id: product.id,
-      ml_listing_id: data.id,
+      ml_listing_id: listingId,
       ml_user_id: userId,
-      ml_permalink: data.permalink,
+      ml_permalink: permalink,
       synced_at: new Date().toISOString(),
     }, { onConflict: 'product_id,ml_user_id' });
     if (listingError) {
@@ -331,12 +434,12 @@ async function uploadToMercadoLivre(
           productId: product.id,
           productName: product.name,
           stage: 'database',
-          message: `Anúncio ${data.id} criado, mas não foi possível salvar o vínculo: ${listingError.message}`,
+          message: `Anúncio ${listingId} sincronizado, mas não foi possível salvar o vínculo: ${listingError.message}`,
         },
       };
     }
 
-    return { ok: true, mlListingId: data.id };
+    return { ok: true, mlListingId: listingId };
   } catch (error) {
     console.error('[ML Sync] Exception uploading product:', error);
     return {
@@ -372,7 +475,7 @@ export async function POST(request: Request) {
 
     const { data: products, error } = await admin
       .from('products')
-      .select('*')
+      .select('*, product_options(*)')
       .eq('active', true)
       .limit(50);
 
@@ -389,11 +492,11 @@ export async function POST(request: Request) {
 
     const syncedProducts = [];
     const failures: SyncFailure[] = [];
-    const existingListings = await recoverExistingListings(products as Product[], accessToken, userId);
+    const existingListings = await recoverExistingListings(products as ProductWithOptions[], accessToken, userId);
     let successCount = 0;
     let errorCount = 0;
 
-    for (const product of products as Product[]) {
+    for (const product of products as ProductWithOptions[]) {
       const uploadResult = await uploadToMercadoLivre(
         product,
         accessToken,
@@ -407,6 +510,7 @@ export async function POST(request: Request) {
           id: product.id,
           name: product.name,
           mlListingId: uploadResult.mlListingId,
+          variations: (product.product_options ?? []).filter((option) => option.active).length,
         });
       } else {
         errorCount++;
