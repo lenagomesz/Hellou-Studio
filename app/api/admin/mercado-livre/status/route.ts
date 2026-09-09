@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
-import { getMercadoLivreConfig, getMercadoLivreConnection } from '@/lib/mercado-livre';
+import { getMercadoLivreConnection } from '@/lib/mercado-livre';
+import { getMercadoLivreConfig } from '@/lib/mercado-livre-config';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';

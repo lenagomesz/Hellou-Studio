@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
-import { getMercadoLivreConfig } from '@/lib/mercado-livre';
+import { getMercadoLivreConfig } from '@/lib/mercado-livre-config';
 
 export const runtime = 'nodejs';
 
