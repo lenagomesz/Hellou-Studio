@@ -52,6 +52,145 @@ type UploadResult =
   | { ok: true; mlListingId: string }
   | { ok: false; failure: SyncFailure };
 
+type ExistingMLItem = {
+  id: string;
+  title?: string;
+  permalink?: string;
+  seller_custom_field?: string | null;
+  attributes?: Array<{ id?: string; value_name?: string | null }>;
+};
+
+type MLCategoryAttribute = {
+  id: string;
+  value_type?: string;
+  values?: Array<{ id?: string; name?: string }>;
+  tags?: { required?: boolean; catalog_required?: boolean; catalog_listing_required?: boolean };
+};
+
+const ATTRIBUTE_DEFAULTS: Record<string, string[]> = {
+  MANUFACTURER: ['Hellou Studio'],
+  MATERIAL: ['PLA', 'Plástico', 'Outro'],
+  MAIN_MATERIAL: ['PLA', 'Plástico', 'Outro'],
+  OCCASIONS: ['Todas as ocasiões', 'Outros', 'Outro'],
+  SOUVENIR_FORMAT: ['Outro', 'Outros'],
+  IS_EDIBLE: ['Não', 'No'],
+  SALES_UNIT: ['Unidade', 'Unit'],
+  YIELD_OF_SALES_UNIT: ['1'],
+  COLOR: ['Multicolorido', 'Rosa', 'Azul', 'Preto', 'Branco'],
+  SIZE: ['Único', 'Unico', 'U'],
+  GENDER: ['Sem gênero', 'Unissex', 'Genderless'],
+};
+
+function normalizeMatchValue(value: string | null | undefined) {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+async function recoverExistingListings(
+  products: Product[],
+  accessToken: string,
+  userId: string,
+) {
+  const admin = getSupabaseAdmin();
+  const { data: savedListings, error: savedError } = await admin
+    .from('mercado_livre_listings')
+    .select('product_id, ml_listing_id')
+    .eq('ml_user_id', userId);
+  if (savedError) throw new Error(`Não foi possível consultar os vínculos existentes: ${savedError.message}`);
+
+  const byProductId = new Map<string, string>(
+    (savedListings ?? []).map((listing) => [String(listing.product_id), String(listing.ml_listing_id)]),
+  );
+  const searchUrl = new URL(`https://api.mercadolibre.com/users/${encodeURIComponent(userId)}/items/search`);
+  searchUrl.searchParams.set('status', 'active');
+  searchUrl.searchParams.set('orders', 'start_time_desc');
+  searchUrl.searchParams.set('limit', '100');
+  const searchResponse = await fetch(searchUrl, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+  if (!searchResponse.ok) return byProductId;
+  const searchData = await searchResponse.json() as { results?: string[] };
+  const itemIds = (searchData.results ?? []).slice(0, 100);
+
+  for (let index = 0; index < itemIds.length; index += 10) {
+    const batch = itemIds.slice(index, index + 10);
+    const items = await Promise.all(batch.map(async (itemId): Promise<ExistingMLItem | null> => {
+      const response = await fetch(`https://api.mercadolibre.com/items/${encodeURIComponent(itemId)}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: 'no-store',
+      });
+      return response.ok ? response.json() as Promise<ExistingMLItem> : null;
+    }));
+
+    for (const item of items) {
+      if (!item?.id) continue;
+      const sellerSku = item.attributes?.find((attribute) => attribute.id === 'SELLER_SKU')?.value_name
+        ?? item.seller_custom_field;
+      const modelName = item.attributes?.find((attribute) => attribute.id === 'MODEL')?.value_name;
+      const product = products.find((candidate) => {
+        if (candidate.sku && sellerSku && normalizeMatchValue(candidate.sku) === normalizeMatchValue(sellerSku)) return true;
+        const candidateName = normalizeMatchValue(candidate.name.substring(0, 60));
+        return candidateName === normalizeMatchValue(modelName) || candidateName === normalizeMatchValue(item.title);
+      });
+      if (!product || byProductId.has(product.id)) continue;
+
+      const { error } = await admin.from('mercado_livre_listings').upsert({
+        product_id: product.id,
+        ml_listing_id: item.id,
+        ml_user_id: userId,
+        ml_permalink: item.permalink ?? `https://produto.mercadolivre.com.br/${item.id}`,
+        synced_at: new Date().toISOString(),
+        last_updated_at: new Date().toISOString(),
+      }, { onConflict: 'product_id,ml_user_id' });
+      if (!error) byProductId.set(product.id, item.id);
+    }
+  }
+  return byProductId;
+}
+
+function chooseAttributeValue(attribute: MLCategoryAttribute, candidates: string[]) {
+  if (!attribute.values?.length) return { value_name: candidates[0] };
+  for (const candidate of candidates) {
+    const candidateValue = normalizeMatchValue(candidate);
+    const match = attribute.values.find((value) => normalizeMatchValue(value.name) === candidateValue);
+    if (match) return match.id ? { value_id: match.id } : { value_name: match.name ?? candidate };
+  }
+  return null;
+}
+
+async function getCategoryRules(categoryId: string, accessToken: string, product: Product) {
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const [categoryResponse, attributesResponse] = await Promise.all([
+    fetch(`https://api.mercadolibre.com/categories/${encodeURIComponent(categoryId)}`, { headers, cache: 'no-store' }),
+    fetch(`https://api.mercadolibre.com/categories/${encodeURIComponent(categoryId)}/attributes`, { headers, cache: 'no-store' }),
+  ]);
+  const category = categoryResponse.ok ? await categoryResponse.json() as { minimum_price?: number } : {};
+  const specifications = attributesResponse.ok ? await attributesResponse.json() as MLCategoryAttribute[] : [];
+  const productColor = ['rosa', 'laranja', 'azul', 'amarela', 'amarelo', 'vermelha', 'vermelho', 'verde', 'preto', 'branco']
+    .find((color) => normalizeMatchValue(product.name).includes(color));
+  const defaults: Record<string, string[]> = {
+    ...ATTRIBUTE_DEFAULTS,
+    COLOR: productColor ? [productColor, ...ATTRIBUTE_DEFAULTS.COLOR] : ATTRIBUTE_DEFAULTS.COLOR,
+    SIZE: product.length_cm && product.width_cm
+      ? [`${product.length_cm} x ${product.width_cm} cm`, ...ATTRIBUTE_DEFAULTS.SIZE]
+      : ATTRIBUTE_DEFAULTS.SIZE,
+  };
+
+  const requiredAttributes = specifications.flatMap((attribute) => {
+    const required = attribute.tags?.required || attribute.tags?.catalog_required || attribute.tags?.catalog_listing_required;
+    const candidates = defaults[attribute.id];
+    if (!required || !candidates) return [];
+    const selected = chooseAttributeValue(attribute, candidates);
+    return selected ? [{ id: attribute.id, ...selected }] : [];
+  });
+  return { minimumPrice: category.minimum_price ?? 0, requiredAttributes };
+}
+
 function uniqueProductImages(product: Product, requestUrl: string) {
   return [...new Set([
     product.image_url,
@@ -93,7 +232,9 @@ async function uploadToMercadoLivre(
   accessToken: string,
   userId: string,
   requestUrl: string,
+  existingListingId?: string,
 ) : Promise<UploadResult> {
+  if (existingListingId) return { ok: true, mlListingId: existingListingId };
   let categoryId: string;
   try {
     categoryId = await predictBrazilianCategory(product.name);
@@ -122,10 +263,14 @@ async function uploadToMercadoLivre(
       },
     };
   }
+  const categoryRules = await getCategoryRules(categoryId, accessToken, product);
   const mlProduct: MLProduct = {
     title: product.name.substring(0, 60),
     category_id: categoryId,
-    price: Math.round((product.sale_price || product.base_price) * 100) / 100,
+    price: Math.max(
+      Math.round((product.sale_price || product.base_price) * 100) / 100,
+      categoryRules.minimumPrice,
+    ),
     currency_id: 'BRL',
     available_quantity: product.type === 'digital' ? 999 : 10,
     buying_mode: 'buy_it_now',
@@ -137,6 +282,7 @@ async function uploadToMercadoLivre(
       { id: 'BRAND', value_name: 'Hellou Studio' },
       { id: 'MODEL', value_name: product.name.substring(0, 255) },
       ...(product.sku ? [{ id: 'SELLER_SKU', value_name: product.sku }] : []),
+      ...categoryRules.requiredAttributes.filter((attribute) => !['BRAND', 'MODEL', 'SELLER_SKU'].includes(attribute.id)),
     ],
   };
 
@@ -213,6 +359,17 @@ export async function POST(request: Request) {
     const { accessToken, userId } = await getValidMercadoLivreToken(auth.user.id, request.url);
     const admin = getSupabaseAdmin();
 
+    const { error: listingTableError } = await admin
+      .from('mercado_livre_listings')
+      .select('id')
+      .limit(1);
+    if (listingTableError) {
+      return NextResponse.json({
+        error: "A tabela 'mercado_livre_listings' não existe no Supabase. Aplique a migration 20260909_mercado_livre_listings_recovery.sql antes de sincronizar novamente. Nenhum novo anúncio foi criado nesta tentativa.",
+        code: 'MERCADO_LIVRE_LISTINGS_TABLE_MISSING',
+      }, { status: 503 });
+    }
+
     const { data: products, error } = await admin
       .from('products')
       .select('*')
@@ -232,11 +389,18 @@ export async function POST(request: Request) {
 
     const syncedProducts = [];
     const failures: SyncFailure[] = [];
+    const existingListings = await recoverExistingListings(products as Product[], accessToken, userId);
     let successCount = 0;
     let errorCount = 0;
 
     for (const product of products as Product[]) {
-      const uploadResult = await uploadToMercadoLivre(product, accessToken, userId, request.url);
+      const uploadResult = await uploadToMercadoLivre(
+        product,
+        accessToken,
+        userId,
+        request.url,
+        existingListings.get(product.id),
+      );
       if (uploadResult.ok) {
         successCount++;
         syncedProducts.push({
