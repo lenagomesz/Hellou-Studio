@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getValidMercadoLivreToken } from '@/lib/mercado-livre';
 import type { Product } from '@/types/database';
 
 export const runtime = 'nodejs';
@@ -29,18 +30,15 @@ interface MLResponse {
   error?: string;
 }
 
-const CATEGORY_MAPPING: Record<string, string> = {
-  'Produtos 3D': 'MCO429800',
-  'Chaveiros': 'MCO181594',
-  'Canecas': 'MCO181600',
-  'Acessórios': 'MCO181594',
-  'Impressão 3D': 'MCO429800',
-  'Arquivos STL': 'MCO429800',
-  'default': 'MCO429800',
-};
-
-function mapCategoryToML(category: string): string {
-  return CATEGORY_MAPPING[category] || CATEGORY_MAPPING['default'];
+async function predictBrazilianCategory(title: string) {
+  const url = new URL('https://api.mercadolibre.com/sites/MLB/domain_discovery/search');
+  url.searchParams.set('limit', '1');
+  url.searchParams.set('q', title);
+  const response = await fetch(url, { cache: 'no-store' });
+  const data = await response.json() as Array<{ category_id?: string }>;
+  const categoryId = data[0]?.category_id;
+  if (!response.ok || !categoryId) throw new Error(`Categoria brasileira não encontrada para "${title}".`);
+  return categoryId;
 }
 
 async function uploadToMercadoLivre(
@@ -48,11 +46,12 @@ async function uploadToMercadoLivre(
   accessToken: string,
   userId: string,
 ) {
+  const categoryId = await predictBrazilianCategory(product.name);
   const mlProduct: MLProduct = {
     title: product.name.substring(0, 60),
-    category_id: mapCategoryToML(product.category),
+    category_id: categoryId,
     price: Math.round((product.sale_price || product.base_price) * 100) / 100,
-    currency_id: 'COP',
+    currency_id: 'BRL',
     available_quantity: product.type === 'digital' ? 999 : 10,
     description: product.description || product.name,
     pictures: product.image_url
@@ -99,19 +98,8 @@ export async function POST(request: Request) {
   const auth = await requirePermission('settings.manage');
   if (auth.response) return auth.response;
 
-  const { accessToken, userId } = await request.json() as {
-    accessToken?: string;
-    userId?: string;
-  };
-
-  if (!accessToken || !userId) {
-    return NextResponse.json(
-      { error: 'É necessário accessToken e userId do Mercado Livre' },
-      { status: 400 }
-    );
-  }
-
   try {
+    const { accessToken, userId } = await getValidMercadoLivreToken(auth.user.id, request.url);
     const admin = getSupabaseAdmin();
 
     const { data: products, error } = await admin
