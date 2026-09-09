@@ -9,7 +9,25 @@ type ConnectionStatus = {
   error?: string;
 };
 
-type SyncResult = { synced?: number; failed?: number; total?: number; message?: string; error?: string };
+type SyncFailure = {
+  productId: string;
+  productName: string;
+  stage: 'category' | 'publication' | 'database' | 'unexpected';
+  status?: number;
+  code?: string;
+  message: string;
+  details?: string[];
+};
+
+type SyncResult = {
+  synced?: number;
+  failed?: number;
+  total?: number;
+  message?: string;
+  error?: string;
+  failures?: SyncFailure[];
+  errorSummary?: Array<{ message: string; count: number }>;
+};
 
 export function MercadoLivreSync() {
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
@@ -132,7 +150,41 @@ export function MercadoLivreSync() {
         </div>
       </section>
 
-      {result && <div className={`rounded-2xl border p-5 ${result.error ? 'border-red-200 bg-red-50 text-red-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'}`}><div className="flex items-start gap-3">{result.error ? <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" /> : <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />}<div><h3 className="font-bold">{result.error ? 'Erro na sincronização' : 'Sincronização concluída'}</h3><p className="mt-1 text-sm">{result.error ?? `${result.synced ?? 0} de ${result.total ?? 0} produtos sincronizados.${result.failed ? ` ${result.failed} tiveram erro.` : ''}`}</p></div></div></div>}
+      {result && (
+        <section className={`rounded-2xl border p-5 ${result.error || result.failed ? 'border-red-200 bg-red-50 text-red-950' : 'border-emerald-200 bg-emerald-50 text-emerald-950'}`}>
+          <div className="flex items-start gap-3">
+            {result.error || result.failed ? <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" /> : <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />}
+            <div className="min-w-0 flex-1">
+              <h3 className="font-bold">{result.error ? 'Erro na sincronização' : result.failed ? 'Sincronização concluída com erros' : 'Sincronização concluída'}</h3>
+              <p className="mt-1 text-sm">{result.error ?? `${result.synced ?? 0} de ${result.total ?? 0} produtos sincronizados.${result.failed ? ` ${result.failed} tiveram erro.` : ''}`}</p>
+
+              {result.errorSummary && result.errorSummary.length > 0 && (
+                <div className="mt-4 rounded-xl border border-red-200 bg-white/70 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-red-700">Principais motivos</p>
+                  <ul className="mt-2 space-y-2 text-sm">
+                    {result.errorSummary.map((item) => <li key={item.message} className="flex items-start gap-2"><span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">{item.count}×</span><span>{item.message}</span></li>)}
+                  </ul>
+                </div>
+              )}
+
+              {result.failures && result.failures.length > 0 && (
+                <details className="mt-3 rounded-xl border border-red-200 bg-white/70">
+                  <summary className="cursor-pointer px-4 py-3 text-sm font-bold text-red-800">Ver erro de cada produto ({result.failures.length})</summary>
+                  <div className="max-h-96 space-y-2 overflow-y-auto border-t border-red-100 p-3">
+                    {result.failures.map((failure) => (
+                      <article key={failure.productId} className="rounded-lg bg-white p-3 text-sm shadow-sm">
+                        <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-bold text-slate-900">{failure.productName}</p><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-600">{failure.stage}{failure.status ? ` · HTTP ${failure.status}` : ''}</span></div>
+                        <p className="mt-1 text-xs leading-5 text-red-700">{failure.message}</p>
+                        {failure.code && <p className="mt-1 font-mono text-[10px] text-slate-500">Código: {failure.code}</p>}
+                      </article>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
