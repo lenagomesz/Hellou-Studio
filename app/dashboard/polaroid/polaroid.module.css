@@ -1,0 +1,170 @@
+.workspace {
+  min-width: 0;
+}
+
+.previewScroller {
+  overflow-x: auto;
+  border-radius: 1rem;
+  background:
+    linear-gradient(45deg, #e8e5df 25%, transparent 25%),
+    linear-gradient(-45deg, #e8e5df 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e8e5df 75%),
+    linear-gradient(-45deg, transparent 75%, #e8e5df 75%);
+  background-color: #f1efeb;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-size: 16px 16px;
+  padding: 1.5rem;
+}
+
+.printArea {
+  display: grid;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.printSection {
+  min-width: 0;
+}
+
+.a4Page {
+  box-sizing: border-box;
+  display: grid;
+  width: 210mm;
+  height: 297mm;
+  flex: none;
+  grid-template-columns: repeat(3, 62mm);
+  grid-template-rows: repeat(3, 86mm);
+  place-content: center;
+  gap: 4mm;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 16px 50px rgb(15 23 42 / 16%);
+}
+
+.polaroid {
+  position: relative;
+  box-sizing: border-box;
+  width: 62mm;
+  height: 86mm;
+  padding: 4mm 4mm 20mm;
+  background: #fff;
+}
+
+.photoWindow {
+  position: relative;
+  width: 54mm;
+  height: 62mm;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.photoWindow img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cover {
+  object-fit: cover;
+}
+
+.contain {
+  object-fit: contain;
+  background: white;
+}
+
+.cropMark {
+  position: absolute;
+  width: 4mm;
+  height: 4mm;
+  pointer-events: none;
+}
+
+.topLeft { left: 0; top: 0; border-left: 0.25mm solid #111; border-top: 0.25mm solid #111; }
+.topRight { right: 0; top: 0; border-right: 0.25mm solid #111; border-top: 0.25mm solid #111; }
+.bottomLeft { left: 0; bottom: 0; border-left: 0.25mm solid #111; border-bottom: 0.25mm solid #111; }
+.bottomRight { right: 0; bottom: 0; border-right: 0.25mm solid #111; border-bottom: 0.25mm solid #111; }
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  :global(html),
+  :global(body) {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  :global(body *) {
+    visibility: hidden !important;
+  }
+
+  :global(.admin-shell) {
+    min-height: 0 !important;
+    background: none !important;
+  }
+
+  :global(.admin-shell > aside),
+  :global(.admin-shell > div > header) {
+    display: none !important;
+  }
+
+  :global(.admin-shell main) {
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .workspace > * {
+    display: none !important;
+  }
+
+  .workspace > .printSection {
+    display: block !important;
+    height: 0 !important;
+  }
+
+  .previewScroller {
+    display: block !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+
+  .printArea,
+  .printArea * {
+    visibility: visible !important;
+  }
+
+  .printArea {
+    position: absolute;
+    inset: 0 auto auto 0;
+    display: block;
+  }
+
+  .a4Page {
+    margin: 0;
+    box-shadow: none;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .a4Page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .previewScroller {
+    padding: 0.75rem;
+  }
+
+  .a4Page {
+    transform-origin: top left;
+  }
+}
