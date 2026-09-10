@@ -1,0 +1,109 @@
+.workspace {
+  min-width: 0;
+}
+
+.previewScroller {
+  overflow: auto;
+  border-radius: 1rem;
+  background:
+    linear-gradient(45deg, #e8e5df 25%, transparent 25%),
+    linear-gradient(-45deg, #e8e5df 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e8e5df 75%),
+    linear-gradient(-45deg, transparent 75%, #e8e5df 75%);
+  background-color: #f1efeb;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-size: 16px 16px;
+  padding: 1rem;
+}
+
+.printStage {
+  display: flex;
+  min-width: max-content;
+  justify-content: center;
+}
+
+.sheet {
+  display: block;
+  max-width: min(100%, 900px);
+  height: auto;
+  background: white;
+  box-shadow: 0 16px 50px rgb(15 23 42 / 16%);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.assemblyGuide {
+  border: 1px solid rgb(226 232 240);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 72%);
+  padding: 1.25rem;
+}
+
+@media print {
+  :global(html),
+  :global(body) {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  :global(body *) {
+    visibility: hidden !important;
+  }
+
+  :global(.admin-shell) {
+    min-height: 0 !important;
+    background: none !important;
+  }
+
+  :global(.admin-shell > aside),
+  :global(.admin-shell > div > header) {
+    display: none !important;
+  }
+
+  :global(.admin-shell main) {
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .workspace > * {
+    display: none !important;
+  }
+
+  .workspace > .printSection {
+    display: block !important;
+    border: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .workspace > .printSection > aside {
+    display: none !important;
+  }
+
+  .previewScroller,
+  .printStage,
+  .printStage * {
+    visibility: visible !important;
+  }
+
+  .previewScroller {
+    position: fixed;
+    inset: 0;
+    display: block !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+
+  .printStage {
+    display: block;
+  }
+
+  .sheet {
+    max-width: none;
+    box-shadow: none;
+  }
+}

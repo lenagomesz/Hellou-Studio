@@ -83,6 +83,7 @@ export const ADMIN_NAVIGATION: AdminNavigationSection[] = [
       { href: '/dashboard/coupons', label: 'Cupons', description: 'Descontos, bônus e promoções', icon: Tag, permission: 'marketing.manage', keywords: 'ofertas códigos' },
       { href: '/dashboard/calculadora', label: 'Calculadora', description: 'Custos, preços e análise de mercado', icon: Calculator, permission: 'settings.manage', keywords: 'margem lucro ia' },
       { href: '/dashboard/polaroid', label: 'Polaroid', description: 'Monte folhas A4 com fotos e marcas de corte', icon: Images, permission: 'settings.manage', keywords: 'foto impressão brinde a4 recorte' },
+      { href: '/dashboard/packaging', label: 'Embalagens A4', description: 'Imprima moldes de caixas com fundo de encaixe', icon: Package, permission: 'products.manage', keywords: 'caixa embalagem molde corte dobra chaveiro imprimir' },
       { href: '/dashboard/product-photos', label: 'Fotos com IA', description: 'Gere novos ângulos fiéis aos produtos', icon: Camera, permission: 'products.manage', keywords: 'foto imagem ângulo fundo galeria inteligência artificial' },
     ],
   },
