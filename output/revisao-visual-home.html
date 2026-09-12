@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Revisão visual — Hellou Studio</title>
+  <style>
+    :root{--pink:#f72585;--pink2:#ff477e;--orange:#ff8a1f;--ink:#17121a;--muted:#6f6872;--cream:#fff9f5;--line:#f1e4df;--card:#fff;--green:#17885d}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f7f5f3;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    button,a{font:inherit}a{color:inherit;text-decoration:none}.gradient-text{background:linear-gradient(90deg,var(--pink),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .reviewbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 22px;background:rgba(24,18,26,.94);color:#fff;backdrop-filter:blur(18px);box-shadow:0 12px 34px #18121a26}
+    .review-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:850}.review-dot{width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange));box-shadow:0 0 0 5px #f7258520}
+    .controls{display:flex;gap:8px}.control{border:1px solid #ffffff24;border-radius:10px;background:#ffffff0d;color:#fff;padding:8px 12px;font-size:11px;font-weight:800;cursor:pointer}.control.active{border-color:#ff7dad;background:#f7258522}.control:hover{background:#ffffff18}
+    .audit{max-width:1180px;margin:28px auto 20px;padding:0 20px}.audit-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:16px}.eyebrow{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--pink)}.audit h1{margin:7px 0 0;font-size:clamp(28px,4vw,48px);line-height:1;letter-spacing:-.055em}.audit p{max-width:580px;margin:0;color:var(--muted);font-size:14px;line-height:1.65}.scores{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.score{background:#fff;border:1px solid #eee5e1;border-radius:16px;padding:16px;box-shadow:0 8px 24px #39251908}.score b{display:block;font-size:24px;letter-spacing:-.04em}.score span{font-size:11px;color:#7e747e}.score.good b{color:var(--green)}.score.warn b{color:#d55f12}.score.focus{background:linear-gradient(135deg,#fff0f7,#fff7ed);border-color:#ffd0df}.score.focus b{color:var(--pink)}
+    .frame{max-width:1240px;margin:24px auto 80px;padding:0 20px}.browser{overflow:hidden;border:1px solid #e8ded9;border-radius:24px;background:#fff;box-shadow:0 28px 80px #42261c1a;transition:max-width .4s ease;margin:auto}.browser.mobile{max-width:390px}.chrome{height:42px;display:flex;align-items:center;gap:7px;padding:0 15px;border-bottom:1px solid #eee5e1;background:#fbfaf9}.chrome i{width:9px;height:9px;border-radius:50%;background:#ff7a7a}.chrome i:nth-child(2){background:#ffc45a}.chrome i:nth-child(3){background:#64d38b}.address{margin-left:8px;flex:1;height:24px;border-radius:7px;background:#f1eeeb;text-align:center;font-size:10px;color:#999;line-height:24px}
+    .site{background:white}.top-offer{padding:9px 16px;text-align:center;background:linear-gradient(90deg,var(--pink),#ff536a,var(--orange));color:white;font-size:11px;font-weight:800;letter-spacing:.01em}.nav{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px clamp(18px,4vw,52px);border-bottom:1px solid #f3e9e5;background:#fff}.brand{font-size:22px;font-weight:950;letter-spacing:-.06em}.navlinks{display:flex;align-items:center;gap:7px}.navlinks a{padding:9px 11px;border-radius:10px;font-size:11px;font-weight:750;color:#544d56}.navlinks a:first-child{background:#fff0f6;color:#d91b6e}.navtools{display:flex;gap:7px}.iconbtn{display:grid;place-items:center;width:34px;height:34px;border:1px solid #eadfda;border-radius:10px;background:white;font-size:14px}.mobile .navlinks{display:none}.mobile .nav{padding:12px 16px}.mobile .top-offer{font-size:9px}.mobile .iconbtn:first-child{display:none}
+    .hero{position:relative;display:grid;grid-template-columns:1.02fr .98fr;min-height:510px;overflow:hidden;background:linear-gradient(135deg,#fffaf7 0%,#fff2f6 55%,#fff5e9 100%)}.hero-copy{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;padding:54px 36px 52px clamp(24px,6vw,78px)}.badge{display:inline-flex;align-items:center;gap:8px;width:max-content;padding:8px 11px;border:1px solid #f9c9db;border-radius:999px;background:#fff;color:#c51b64;font-size:9px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;box-shadow:0 8px 24px #e6487b12}.badge:before{content:"";width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange))}.hero h2{max-width:620px;margin:17px 0 16px;font-size:clamp(38px,5.2vw,72px);line-height:.96;letter-spacing:-.065em}.hero p{max-width:540px;margin:0;color:#625a64;font-size:15px;line-height:1.65}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}.primary,.secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:45px;padding:0 18px;border-radius:13px;font-size:11px;font-weight:900}.primary{background:linear-gradient(90deg,var(--pink),var(--orange));color:#fff;box-shadow:0 12px 25px #f7258530}.secondary{border:1px solid #e7d9d4;background:#fff;color:#332d35}.trustline{display:flex;flex-wrap:wrap;gap:14px;margin-top:22px;color:#5e565f;font-size:10px;font-weight:750}.trustline span:before{content:"✓";display:inline-grid;place-items:center;width:17px;height:17px;margin-right:5px;border-radius:50%;background:#e7f8ef;color:var(--green);font-weight:900}.hero-art{position:relative;min-height:510px}.hero-art img{width:100%;height:100%;object-fit:cover;object-position:66% center}.hero-art:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#fff3f7 0%,transparent 24%)}.floating-review{position:absolute;z-index:3;right:24px;bottom:24px;max-width:245px;padding:13px 15px;border:1px solid #ffffffaa;border-radius:16px;background:#ffffffeb;box-shadow:0 18px 40px #5c233a25;backdrop-filter:blur(10px)}.stars{color:#ff9b20;font-size:11px;letter-spacing:1px}.floating-review b{display:block;margin-top:5px;font-size:11px}.floating-review small{color:#746b74;font-size:9px}.mobile .hero{display:block;min-height:auto}.mobile .hero-copy{padding:36px 21px 24px;text-align:center;align-items:center}.mobile .hero h2{font-size:42px}.mobile .hero p{font-size:13px}.mobile .hero-art{min-height:310px}.mobile .hero-art:before{background:linear-gradient(180deg,#fff2f6 0%,transparent 25%)}.mobile .floating-review{right:13px;bottom:13px;left:13px;max-width:none}.mobile .trustline{justify-content:center}.mobile .actions{width:100%}.mobile .primary,.mobile .secondary{flex:1}
+    .intent{padding:34px clamp(18px,5vw,62px);background:#fff}.section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:16px}.section-head h3{margin:5px 0 0;font-size:24px;letter-spacing:-.045em}.section-head p{margin:0;max-width:460px;color:#796f78;font-size:11px;line-height:1.5}.intent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.intent-card{position:relative;overflow:hidden;min-height:150px;padding:20px;border:1px solid #f0e3df;border-radius:18px;background:#fff8f5}.intent-card:nth-child(2){background:#fff0f6}.intent-card:nth-child(3){background:#fff7e9}.intent-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#fff;box-shadow:0 8px 18px #4c273012;font-size:18px}.intent-card h4{margin:14px 0 5px;font-size:15px}.intent-card p{margin:0;max-width:220px;color:#766c75;font-size:10px;line-height:1.5}.intent-card a{display:inline-block;margin-top:12px;color:#cc2069;font-size:10px;font-weight:900}.mobile .intent{padding:28px 16px}.mobile .section-head{display:block}.mobile .section-head p{margin-top:7px}.mobile .intent-grid{grid-template-columns:1fr}.mobile .intent-card{min-height:128px}
+    .products{padding:38px clamp(18px,5vw,62px);background:var(--cream)}.product-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.product{overflow:hidden;border:1px solid #eee2dd;border-radius:18px;background:#fff;box-shadow:0 10px 28px #5532280a}.product-image{position:relative;height:170px;background:linear-gradient(135deg,#ffe2ee,#fff0dc);overflow:hidden}.product-image img{width:100%;height:100%;object-fit:cover;transition:transform .3s}.product:hover img{transform:scale(1.035)}.tag{position:absolute;top:10px;left:10px;padding:5px 7px;border-radius:999px;background:#fff;color:#d2216d;font-size:8px;font-weight:900;box-shadow:0 5px 16px #6925371a}.heart{position:absolute;right:9px;top:9px;display:grid;place-items:center;width:28px;height:28px;border:0;border-radius:50%;background:#ffffffdf}.product-body{padding:13px}.product-body h4{margin:0 0 5px;font-size:12px}.product-body p{margin:0;color:#8a7f87;font-size:9px}.price{display:flex;align-items:center;justify-content:space-between;margin-top:11px}.price strong{font-size:13px}.quick{border:0;border-radius:9px;background:#1d1820;color:#fff;padding:7px 9px;font-size:8px;font-weight:900}.mobile .products{padding:28px 16px}.mobile .product-grid{grid-template-columns:repeat(2,1fr);gap:8px}.mobile .product-image{height:130px}.mobile .product:nth-child(n+3){display:none}
+    .proof{display:grid;grid-template-columns:.8fr 1.2fr;gap:22px;padding:44px clamp(18px,5vw,62px);background:#fff}.proof-copy{padding:15px 0}.proof h3{margin:7px 0 10px;font-size:30px;line-height:1.05;letter-spacing:-.05em}.proof p{color:#766d75;font-size:12px;line-height:1.6}.proof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}.proof-stats div{padding:12px;border-radius:13px;background:#fff5f8}.proof-stats b{display:block;color:#d91e6d;font-size:18px}.proof-stats span{font-size:8px;color:#7d727b}.quotes{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.quote{padding:18px;border:1px solid #eee3df;border-radius:17px;background:#fff;box-shadow:0 10px 25px #44271e0a}.quote:last-child{grid-column:1/-1}.quote p{margin:7px 0 12px;color:#4d464e}.quote small{font-size:9px;color:#8a8088}.mobile .proof{grid-template-columns:1fr;padding:32px 16px}.mobile .quotes{grid-template-columns:1fr}.mobile .quote:last-child{grid-column:auto}.mobile .proof h3{font-size:26px}
+    .notes{max-width:1180px;margin:0 auto 80px;padding:0 20px;display:none}.notes.show{display:block}.notes h2{margin:0 0 16px;font-size:28px;letter-spacing:-.045em}.note-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.note{padding:18px;border:1px solid #e8ddd8;border-radius:16px;background:#fff}.note-number{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;font-size:11px;font-weight:900}.note h3{margin:13px 0 6px;font-size:14px}.note p{margin:0;color:#766d75;font-size:11px;line-height:1.55}.priority{display:inline-block;margin-top:10px;padding:4px 7px;border-radius:999px;background:#fff0f5;color:#d01e68;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+    .callout{position:absolute;z-index:9;display:none;width:24px;height:24px;border:3px solid white;border-radius:50%;background:var(--pink);color:#fff;font-size:10px;font-weight:900;place-items:center;box-shadow:0 7px 18px #7f153b44}.show-hotspots .callout{display:grid}.hero .c1{left:26px;top:24px}.hero .c2{right:25px;top:25px}.intent .c3{right:26px;top:18px}.intent{position:relative}.products{position:relative}.products .c4{right:25px;top:20px}
+    @media(max-width:760px){.audit-head{display:block}.audit p{margin-top:12px}.scores{grid-template-columns:repeat(2,1fr)}.reviewbar{padding:10px 12px}.review-title span:last-child{display:none}.control{padding:7px 9px}.note-grid{grid-template-columns:1fr}.navlinks{display:none}.hero{display:block}.hero-copy{padding:40px 22px 28px;text-align:center;align-items:center}.hero-art{min-height:340px}.intent-grid{grid-template-columns:1fr}.product-grid{grid-template-columns:repeat(2,1fr)}.product:nth-child(n+3){display:none}.proof{grid-template-columns:1fr}.quotes{grid-template-columns:1fr}.quote:last-child{grid-column:auto}}
+  </style>
+</head>
+<body>
+  <div class="reviewbar">
+    <div class="review-title"><span class="review-dot"></span><span>Hellou Studio</span><span style="opacity:.55">/ revisão visual da home</span></div>
+    <div class="controls">
+      <button class="control" id="hotspots">Mostrar decisões</button>
+      <button class="control" id="viewport">Ver no celular</button>
+      <button class="control" id="notes">Ver diagnóstico</button>
+    </div>
+  </div>
+
+  <section class="audit">
+    <div class="audit-head">
+      <div><span class="eyebrow">Diagnóstico de conversão</span><h1>Mais produto.<br><span class="gradient-text">Menos espaço vazio.</span></h1></div>
+      <p>A identidade já é simpática e consistente. A maior oportunidade é apresentar produtos, confiança e caminhos de compra antes que o visitante precise rolar.</p>
+    </div>
+    <div class="scores">
+      <div class="score good"><b>8/10</b><span>Identidade visual</span></div>
+      <div class="score warn"><b>5/10</b><span>Clareza imediata</span></div>
+      <div class="score warn"><b>4/10</b><span>Prova de produto</span></div>
+      <div class="score focus"><b>Alta</b><span>Oportunidade de conversão</span></div>
+    </div>
+  </section>
+
+  <main class="frame">
+    <div class="browser" id="browser">
+      <div class="chrome"><i></i><i></i><i></i><div class="address">helloustudio.com.br — proposta visual</div></div>
+      <div class="site">
+        <div class="top-offer">🚚 FRETE GRÁTIS ACIMA DE R$ 99 &nbsp;·&nbsp; 🎉 10% OFF NA PRIMEIRA COMPRA</div>
+        <nav class="nav">
+          <a class="brand gradient-text" href="#">helloustudio</a>
+          <div class="navlinks"><a href="#">Produtos</a><a href="#">Personalize</a><a href="#">Kits</a><a href="#">Arquivos STL</a><a href="#">Sobre</a></div>
+          <div class="navtools"><button class="iconbtn" aria-label="Buscar">⌕</button><button class="iconbtn" aria-label="Carrinho">♡</button><button class="iconbtn" aria-label="Carrinho">🛍</button></div>
+        </nav>
+
+        <section class="hero">
+          <span class="callout c1">1</span><span class="callout c2">2</span>
+          <div class="hero-copy">
+            <span class="badge">peças que têm a sua cara</span>
+            <h2>Seu mundo, mais <span class="gradient-text">fofo e único.</span></h2>
+            <p>Presentes, decoração e acessórios personalizados, feitos sob demanda com cuidado em cada detalhe.</p>
+            <div class="actions"><a class="primary" href="#">Ver produtos mais amados →</a><a class="secondary" href="#">Criar algo personalizado</a></div>
+            <div class="trustline"><span>Produção em até 5 dias</span><span>Envio rastreado</span><span>Compra segura</span></div>
+          </div>
+          <div class="hero-art">
+            <img src="/public/images/home-hero-catalogo.png" alt="Coleção de produtos coloridos da Hellou Studio">
+            <div class="floating-review"><span class="stars">★★★★★</span><b>“Chegou lindo e muito bem acabado!”</b><small>Cliente verificada · avaliação real</small></div>
+          </div>
+        </section>
+
+        <section class="intent">
+          <span class="callout c3">3</span>
+          <div class="section-head"><div><span class="eyebrow">comece por aqui</span><h3>O que você quer criar hoje?</h3></div><p>Três caminhos claros reduzem a dúvida de quem chega procurando coisas diferentes.</p></div>
+          <div class="intent-grid">
+            <article class="intent-card"><span class="intent-icon">🎁</span><h4>Quero escolher um presente</h4><p>Peças prontas para personalizar e encantar.</p><a href="#">Explorar presentes →</a></article>
+            <article class="intent-card"><span class="intent-icon">✨</span><h4>Tenho uma ideia personalizada</h4><p>Conte sua ideia e receba uma orientação rápida.</p><a href="#">Começar meu projeto →</a></article>
+            <article class="intent-card"><span class="intent-icon">📥</span><h4>Quero arquivos STL</h4><p>Modelos digitais prontos para sua impressora.</p><a href="#">Ver arquivos →</a></article>
+          </div>
+        </section>
+
+        <section class="products">
+          <span class="callout c4">4</span>
+          <div class="section-head"><div><span class="eyebrow">favoritos da comunidade</span><h3>Os mais amados</h3></div><p>Produtos reais aparecem cedo, com preço, benefício e ação rápida.</p></div>
+          <div class="product-grid">
+            <article class="product"><div class="product-image"><span class="tag">MAIS VENDIDO</span><button class="heart">♡</button><img src="/public/images/home-hero-catalogo.png" alt="Chaveiro personalizado"></div><div class="product-body"><h4>Chaveiro personalizado</h4><p>Escolha nome e cor</p><div class="price"><strong>R$ 24,90</strong><button class="quick">VER OPÇÕES</button></div></div></article>
+            <article class="product"><div class="product-image"><span class="tag">PERSONALIZÁVEL</span><button class="heart">♡</button><img src="/public/images/home-hero-personalizaveis.png" alt="Miniatura colorida"></div><div class="product-body"><h4>Miniatura do seu jeito</h4><p>Disponível em várias cores</p><div class="price"><strong>R$ 39,90</strong><button class="quick">VER OPÇÕES</button></div></div></article>
+            <article class="product"><div class="product-image"><span class="tag">PRESENTEÁVEL</span><button class="heart">♡</button><img src="/public/images/home-hero-catalogo.png" alt="Porta-trecos criativo"></div><div class="product-body"><h4>Porta-trecos criativo</h4><p>Organização com personalidade</p><div class="price"><strong>R$ 49,90</strong><button class="quick">VER OPÇÕES</button></div></div></article>
+            <article class="product"><div class="product-image"><span class="tag">NOVIDADE</span><button class="heart">♡</button><img src="/public/images/home-hero-personalizaveis.png" alt="Kit de miniaturas"></div><div class="product-body"><h4>Kit mini favoritos</h4><p>Monte sua combinação</p><div class="price"><strong>R$ 59,90</strong><button class="quick">VER OPÇÕES</button></div></div></article>
+          </div>
+        </section>
+
+        <section class="proof">
+          <div class="proof-copy"><span class="eyebrow">feito por pessoas, para pessoas</span><h3>Carinho que aparece <span class="gradient-text">em cada detalhe.</span></h3><p>Trocar promessas genéricas por avaliações, fotos de clientes e números reais deixa a qualidade visível.</p><div class="proof-stats"><div><b>4,9</b><span>nota média</span></div><div><b>+500</b><span>pedidos enviados</span></div><div><b>98%</b><span>recomendariam</span></div></div></div>
+          <div class="quotes"><article class="quote"><span class="stars">★★★★★</span><p>“A personalização ficou exatamente como imaginei.”</p><small>Marina · compra verificada</small></article><article class="quote"><span class="stars">★★★★★</span><p>“Embalagem linda e acabamento impecável.”</p><small>Camila · compra verificada</small></article><article class="quote"><span class="stars">★★★★★</span><p>“Atendimento rápido e muito atencioso. Já quero pedir outro!”</p><small>Larissa · compra verificada</small></article></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <section class="notes" id="diagnosis">
+    <span class="eyebrow">O que eu alteraria primeiro</span><h2>Plano de melhoria por impacto</h2>
+    <div class="note-grid">
+      <article class="note"><span class="note-number">1</span><h3>Hero com produto real</h3><p>Reduzir a altura e usar a arte que já existe. Hoje a primeira tela é quase toda texto e não prova o que a loja vende.</p><span class="priority">Impacto alto</span></article>
+      <article class="note"><span class="note-number">2</span><h3>Uma mensagem principal</h3><p>Manter uma proposta de valor estável no topo. O carrossel com quatro mensagens divide atenção e troca o CTA antes da decisão.</p><span class="priority">Impacto alto</span></article>
+      <article class="note"><span class="note-number">3</span><h3>Entradas por intenção</h3><p>Separar presente, personalização e STL logo após o hero para atender públicos diferentes sem transformar a home em um menu longo.</p><span class="priority">Impacto alto</span></article>
+      <article class="note"><span class="note-number">4</span><h3>Produtos antes das explicações</h3><p>Trazer os mais vendidos para cima e usar cards com preço, personalização e ação. O visitante deve conseguir começar a comprar rapidamente.</p><span class="priority">Impacto alto</span></article>
+      <article class="note"><span class="note-number">5</span><h3>Confiança comprovável</h3><p>Substituir “qualidade premium” por avaliações reais, fotos, prazo, rastreio e política de compra. Números só devem entrar quando forem verdadeiros.</p><span class="priority">Impacto médio</span></article>
+      <article class="note"><span class="note-number">6</span><h3>Não mostrar seções vazias</h3><p>Ocultar o bloco de kits enquanto não houver combinações. “Estamos preparando” ocupa espaço e leva o visitante a um beco sem saída.</p><span class="priority">Correção rápida</span></article>
+      <article class="note"><span class="note-number">7</span><h3>Menu mais focado</h3><p>Priorizar Produtos e Personalize. Blog e páginas secundárias podem ir para “Mais” no desktop e permanecer no rodapé.</p><span class="priority">Impacto médio</span></article>
+      <article class="note"><span class="note-number">8</span><h3>CTA e chat sem competição</h3><p>Manter um CTA primário dominante. O chat flutuante pode aparecer após alguns segundos ou depois da primeira rolagem.</p><span class="priority">Teste A/B</span></article>
+      <article class="note"><span class="note-number">9</span><h3>Validar com dados</h3><p>Medir clique no hero, visualização de produto, início de personalização e compra. A proposta deve ser confirmada com conversão real.</p><span class="priority">Medição</span></article>
+    </div>
+  </section>
+
+  <script>
+    const browser=document.getElementById('browser');
+    const hotspotButton=document.getElementById('hotspots');
+    const viewportButton=document.getElementById('viewport');
+    const notesButton=document.getElementById('notes');
+    const diagnosis=document.getElementById('diagnosis');
+    hotspotButton.addEventListener('click',()=>{browser.classList.toggle('show-hotspots');hotspotButton.classList.toggle('active');hotspotButton.textContent=browser.classList.contains('show-hotspots')?'Ocultar decisões':'Mostrar decisões'});
+    viewportButton.addEventListener('click',()=>{browser.classList.toggle('mobile');viewportButton.classList.toggle('active');viewportButton.textContent=browser.classList.contains('mobile')?'Ver no computador':'Ver no celular';browser.scrollIntoView({behavior:'smooth',block:'start'})});
+    notesButton.addEventListener('click',()=>{diagnosis.classList.toggle('show');notesButton.classList.toggle('active');notesButton.textContent=diagnosis.classList.contains('show')?'Ocultar diagnóstico':'Ver diagnóstico';if(diagnosis.classList.contains('show'))diagnosis.scrollIntoView({behavior:'smooth',block:'start'})});
+  </script>
+</body>
+</html>

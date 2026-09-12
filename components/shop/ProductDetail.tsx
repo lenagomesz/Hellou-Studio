@@ -10,6 +10,7 @@ import { ImageGallery } from '@/components/shop/ImageGallery';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 import { DEFAULT_STORE_SETTINGS } from '@/lib/store-settings-schema';
+import { FavoriteButton } from '@/components/shop/FavoriteButton';
 import {
   DEFAULT_CUSTOMIZATION_COPY,
   areRequiredCustomizationSectionsComplete,
@@ -228,6 +229,7 @@ export function ProductDetail({
     <div className="grid gap-2 sm:gap-6 lg:grid-cols-2 lg:gap-8">
       <div className="space-y-6">
         <div className="group relative">
+          <FavoriteButton productId={product.id} productName={product.name} className="absolute right-3 top-3 z-20 sm:right-4 sm:top-4" />
           {galleryImages.length > 0 ? (
             <ImageGallery images={galleryImages} alt={product.name} altTexts={product.image_alt_texts} activeImage={currentDisplayImage} activeImageKey={gallerySelectionVersion} overlay={tagOverlay} />
           ) : (
@@ -238,7 +240,7 @@ export function ProductDetail({
           )}
           {/* Badge de frete grátis se aplicável */}
           {hasFreeShipping && (
-            <span className="absolute top-3 right-3 rounded-full bg-green-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+            <span className="absolute right-3 top-14 rounded-full bg-green-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm sm:right-4 sm:top-16">
               Frete grátis
             </span>
           )}

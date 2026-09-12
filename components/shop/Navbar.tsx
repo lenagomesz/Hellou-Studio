@@ -107,9 +107,11 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
     ? [
         { href: '/dashboard', label: 'Painel Admin', icon: 'M4.75 4.75h5.5v5.5h-5.5v-5.5Zm9 0h5.5v5.5h-5.5v-5.5Zm-9 9h5.5v5.5h-5.5v-5.5Zm9 0h5.5v5.5h-5.5v-5.5Z' },
         { href: '/account', label: 'Minha conta', icon: 'M15.75 7a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20a7.5 7.5 0 0 1 15 0' },
+        { href: '/account/favorites', label: 'Meus favoritos', icon: 'M21.435 2.582a5.5 5.5 0 0 0-7.778 0L12 4.239l-1.657-1.657a5.5 5.5 0 0 0-7.778 7.778L12 19.795l9.435-9.435a5.5 5.5 0 0 0 0-7.778Z' },
       ]
     : [
         { href: '/account', label: 'Minha conta', icon: 'M15.75 7a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20a7.5 7.5 0 0 1 15 0' },
+        { href: '/account/favorites', label: 'Meus favoritos', icon: 'M21.435 2.582a5.5 5.5 0 0 0-7.778 0L12 4.239l-1.657-1.657a5.5 5.5 0 0 0-7.778 7.778L12 19.795l9.435-9.435a5.5 5.5 0 0 0 0-7.778Z' },
         { href: '/account/orders', label: 'Meus pedidos', icon: 'm12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm-8 4.5 8 4.5 8-4.5M12 12v9' },
         { href: '/account/bonus', label: 'Meus bônus', icon: 'M4 10.25h16v10H4v-10Zm-1-4h18v4H3v-4ZM12 6.25v14M12 6.25H8.75A2.25 2.25 0 1 1 11 4v2.25m1 0h3.25A2.25 2.25 0 1 0 13 4v2.25' },
       ];

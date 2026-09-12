@@ -96,6 +96,13 @@ export interface CartItem {
   created_at: string;
 }
 
+export interface ProductFavorite {
+  id: string;
+  user_id: string;
+  product_id: string;
+  created_at: string;
+}
+
 export interface Order {
   id: string;
   user_id: string;

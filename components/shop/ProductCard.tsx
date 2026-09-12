@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import type { Product, ProductCategory } from '@/types/database';
 import { productIdentifier } from '@/lib/seo';
+import { FavoriteButton } from '@/components/shop/FavoriteButton';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -26,11 +27,8 @@ export function ProductCard({ product, basePath = "/products", category, showcas
   ) ?? false;
 
   return (
-    <Link
-      href={`${basePath}/${productIdentifier(product)}`}
-      prefetch={false}
-      className={`group overflow-hidden bg-white transition dark:bg-gray-900 dark:hover:shadow-gray-900/50 ${showcase ? 'flex h-full flex-col rounded-2xl border border-pink-100/80 shadow-[0_8px_26px_-20px_rgba(219,39,119,.45)] hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_22px_45px_-24px_rgba(219,39,119,.42)] dark:border-gray-800 dark:hover:border-pink-900' : 'block rounded-2xl border border-gray-100 shadow-sm hover:shadow-md dark:border-gray-800'}`}
-    >
+    <article className={`group relative overflow-hidden bg-white transition dark:bg-gray-900 dark:hover:shadow-gray-900/50 ${showcase ? 'flex h-full flex-col rounded-2xl border border-pink-100/80 shadow-[0_8px_26px_-20px_rgba(219,39,119,.45)] hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_22px_45px_-24px_rgba(219,39,119,.42)] dark:border-gray-800 dark:hover:border-pink-900' : 'block rounded-2xl border border-gray-100 shadow-sm hover:shadow-md dark:border-gray-800'}`}>
+      <Link href={`${basePath}/${productIdentifier(product)}`} prefetch={false} className={showcase ? 'flex h-full flex-col' : 'block'}>
       <div className={`relative aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700 ${showcase ? 'm-1.5 mb-0 rounded-[13px]' : ''}`}>
         {(product.is_wholesale || product.is_best_seller) && (
           <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1 sm:left-3 sm:top-3">
@@ -84,6 +82,8 @@ export function ProductCard({ product, basePath = "/products", category, showcas
           {showcase && <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-sm transition group-hover:scale-105 group-hover:shadow-md"><ArrowUpRight className="h-3.5 w-3.5" /></span>}
         </div>
       </div>
-    </Link>
+      </Link>
+      <FavoriteButton productId={product.id} productName={product.name} className="absolute right-2 top-2 z-20 sm:right-3 sm:top-3" />
+    </article>
   );
 }

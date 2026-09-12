@@ -33,6 +33,10 @@ function BoxNet({ template, x, y, instance }: { template: PackagingTemplate; x: 
   const tongueStart = frontX + (face - tongueWidth) / 2;
   const slotWidth = face * 0.38;
   const slotStart = backX + (face - slotWidth) / 2;
+  const titleAreaX = frontX + face * 0.08;
+  const titleAreaY = bodyY + height * 0.31;
+  const titleAreaWidth = face * 0.84;
+  const titleAreaHeight = height * 0.38;
   const id = `${template.id}-${instance}`;
 
   const topFlaps = [
@@ -98,7 +102,25 @@ function BoxNet({ template, x, y, instance }: { template: PackagingTemplate; x: 
       {topFlaps.map((shape, index) => <polygon key={`top-${index}`} points={points(shape)} fill={BRAND_PINK} />)}
       {bottomFlaps.map((shape, index) => <polygon key={`bottom-${index}`} points={points(shape)} fill={BRAND_PINK} />)}
 
-      <svg x={frontX + face * 0.14} y={bodyY + height * 0.36} width={face * 0.72} height={height * 0.28} viewBox="499 723 1001 545" preserveAspectRatio="xMidYMid meet">
+      <rect
+        x={titleAreaX}
+        y={titleAreaY}
+        width={titleAreaWidth}
+        height={titleAreaHeight}
+        rx={Math.min(5, face * 0.08)}
+        fill="#FFFFFF"
+        stroke="#FFD1E3"
+        strokeWidth="0.45"
+      />
+      <svg
+        x={frontX + face * 0.15}
+        y={bodyY + height * 0.355}
+        width={face * 0.7}
+        height={height * 0.29}
+        viewBox="499 723 1001 545"
+        preserveAspectRatio="xMidYMid meet"
+        aria-label="Hellou Studio"
+      >
         <image href="/logo.png" width="2000" height="2000" />
       </svg>
 

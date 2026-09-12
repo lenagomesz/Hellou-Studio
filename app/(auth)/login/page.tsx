@@ -14,6 +14,7 @@ function LoginForm() {
     ? requestedCallbackUrl
     : '/';
   const isOrderAccess = callbackUrl.startsWith('/pedido/') || callbackUrl.startsWith('/account/orders/');
+  const isFavoriteAccess = searchParams.get('reason') === 'favorite';
 
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -150,17 +151,19 @@ function LoginForm() {
               </button>
             </div>
 
-            {callbackUrl && callbackUrl !== '/' && (
+            {(isFavoriteAccess || (callbackUrl && callbackUrl !== '/')) && (
               <div className="mb-6 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-4 flex gap-3">
                 <div className="flex-shrink-0 mt-0.5">
                   <ShieldCheck className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-orange-900 dark:text-orange-200 mb-1">
-                    {isOrderAccess ? 'Entre para visualizar seu pedido' : 'Conta necessária para comprar'}
+                    {isFavoriteAccess ? 'Crie uma conta para salvar seus favoritos' : isOrderAccess ? 'Entre para visualizar seu pedido' : 'Conta necessária para comprar'}
                   </p>
                   <p className="text-xs text-orange-800 dark:text-orange-300">
-                    {isOrderAccess
+                    {isFavoriteAccess
+                      ? 'Ao entrar ou criar sua conta, seus produtos favoritos ficam salvos no perfil. Você também recebe acesso a descontos e ofertas exclusivas.'
+                      : isOrderAccess
                       ? 'Após o login, você será direcionado automaticamente para o pedido mencionado no e-mail.'
                       : 'Para realizar compras ou encomendas, você precisa ter uma conta. Isso nos permite rastrear seus pedidos e manter contato com você sobre suas solicitações.'}
                   </p>
@@ -329,7 +332,7 @@ function LoginForm() {
             {/* Link para registro */}
             <p className="text-center text-sm text-gray-500 dark:text-gray-400">
               Não tem uma conta?{' '}
-              <Link href="/register" className="font-semibold text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition">
+              <Link href={`/register?callbackUrl=${encodeURIComponent(callbackUrl)}${isFavoriteAccess ? '&reason=favorite' : ''}`} className="font-semibold text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition">
                 Criar agora
               </Link>
             </p>

@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 
 const NAV_ITEMS = [
   { href: '/account', label: 'Minha Conta', mobileLabel: 'Conta', icon: 'user' },
+  { href: '/account/favorites', label: 'Meus Favoritos', mobileLabel: 'Favoritos', icon: 'favorites' },
   { href: '/account/orders', label: 'Meus Pedidos', mobileLabel: 'Pedidos', icon: 'orders' },
   { href: '/account/requests', label: 'Minhas Solicitações', mobileLabel: 'Encomendas', icon: 'requests' },
   { href: '/account/bonus', label: 'Meus Bônus', mobileLabel: 'Bônus', icon: 'bonus' },
@@ -25,6 +26,13 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
     return (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={cls}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" />
+      </svg>
+    );
+  }
+  if (name === 'favorites') {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={cls}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21.435 2.582a5.5 5.5 0 0 0-7.778 0L12 4.239l-1.657-1.657a5.5 5.5 0 0 0-7.778 7.778L12 19.795l9.435-9.435a5.5 5.5 0 0 0 0-7.778Z" />
       </svg>
     );
   }
@@ -136,14 +144,14 @@ export function AccountMobileNav() {
   }
 
   return (
-    <nav className="flex rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 shadow-sm lg:hidden">
+    <nav className="flex max-w-full gap-0.5 overflow-x-auto rounded-2xl border border-gray-100 bg-white p-1 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden dark:border-gray-800 dark:bg-gray-900 lg:hidden">
       {NAV_ITEMS.map((item) => {
         const active = isActive(item.href);
         return (
           <Link
             key={item.href}
             href={item.href}
-            className={`flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center transition ${
+            className={`flex min-w-[4.5rem] flex-1 flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center transition ${
               active
                 ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 ring-1 ring-pink-200/60 dark:ring-pink-500/20'
                 : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300'

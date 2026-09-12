@@ -115,7 +115,11 @@ export default function RegisterPage() {
         return;
       }
 
-      window.location.href = '/';
+      const requestedCallbackUrl = new URLSearchParams(window.location.search).get('callbackUrl');
+      const callbackUrl = requestedCallbackUrl?.startsWith('/') && !requestedCallbackUrl.startsWith('//')
+        ? requestedCallbackUrl
+        : '/';
+      window.location.href = callbackUrl;
     } finally {
       setLoading(false);
     }
