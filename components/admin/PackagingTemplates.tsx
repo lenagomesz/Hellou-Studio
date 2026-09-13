@@ -13,14 +13,14 @@ import {
 import styles from '@/app/dashboard/packaging/packaging.module.css';
 
 const FOLD = '#F97316';
-const BRAND_PINK = '#FF4090';
+const BRAND_PINK = '#FF378C';
 const CREAM = '#FFFAF7';
 
 function points(values: Array<[number, number]>) {
   return values.map(([x, y]) => `${x},${y}`).join(' ');
 }
 
-function BoxNet({ template, x, y, instance }: { template: PackagingTemplate; x: number; y: number; instance: number }) {
+function BoxNet({ template, x, y }: { template: PackagingTemplate; x: number; y: number }) {
   const { width: face, depth, height, glueTab, topDepth, bottomDepth } = template;
   const bodyY = topDepth;
   const bottomY = bodyY + height;
@@ -33,11 +33,6 @@ function BoxNet({ template, x, y, instance }: { template: PackagingTemplate; x: 
   const tongueStart = frontX + (face - tongueWidth) / 2;
   const slotWidth = face * 0.38;
   const slotStart = backX + (face - slotWidth) / 2;
-  const titleAreaX = frontX + face * 0.08;
-  const titleAreaY = bodyY + height * 0.31;
-  const titleAreaWidth = face * 0.84;
-  const titleAreaHeight = height * 0.38;
-  const id = `${template.id}-${instance}`;
 
   const topFlaps = [
     [[0, bodyY], [depth, bodyY], [depth - dustInset, 0], [dustInset, 0]],
@@ -61,80 +56,24 @@ function BoxNet({ template, x, y, instance }: { template: PackagingTemplate; x: 
 
   return (
     <g transform={`translate(${x} ${y})`}>
-      <defs>
-        <linearGradient id={`brand-${id}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#FF2F91" />
-          <stop offset="0.55" stopColor="#FF5F68" />
-          <stop offset="1" stopColor="#FF982B" />
-        </linearGradient>
-        <linearGradient id={`wave-${id}`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#FF4090" stopOpacity="0.74" />
-          <stop offset="0.52" stopColor="#FB7185" stopOpacity="0.57" />
-          <stop offset="1" stopColor="#F97316" stopOpacity="0.52" />
-        </linearGradient>
-        <clipPath id={`body-${id}`}>
-          <rect width={totalBodyWidth} height={height} x="0" y={bodyY} />
-        </clipPath>
-      </defs>
-
       <rect x="0" y={bodyY} width={totalBodyWidth} height={height} fill={CREAM} />
-      <rect x={totalBodyWidth} y={bodyY + 4} width={glueTab} height={height - 8} fill="#FFF1F5" />
-
-      <g clipPath={`url(#body-${id})`}>
-        <path d={`M -4 ${bodyY + 25} C ${totalBodyWidth * 0.18} ${bodyY + 4}, ${totalBodyWidth * 0.3} ${bodyY + 42}, ${totalBodyWidth * 0.48} ${bodyY + 21} S ${totalBodyWidth * 0.8} ${bodyY + 4}, ${totalBodyWidth + 5} ${bodyY + 28} L ${totalBodyWidth + 5} ${bodyY + 43} C ${totalBodyWidth * 0.78} ${bodyY + 22}, ${totalBodyWidth * 0.66} ${bodyY + 48}, ${totalBodyWidth * 0.46} ${bodyY + 34} S ${totalBodyWidth * 0.18} ${bodyY + 47}, -4 ${bodyY + 39} Z`} fill={`url(#wave-${id})`} />
-        <path d={`M -4 ${bottomY - 22} C ${totalBodyWidth * 0.18} ${bottomY - 42}, ${totalBodyWidth * 0.35} ${bottomY - 7}, ${totalBodyWidth * 0.53} ${bottomY - 27} S ${totalBodyWidth * 0.82} ${bottomY - 39}, ${totalBodyWidth + 5} ${bottomY - 16} L ${totalBodyWidth + 5} ${bottomY + 4} L -4 ${bottomY + 4} Z`} fill={`url(#wave-${id})`} opacity="0.78" />
-        <path d={`M -2 ${bodyY + 30} C ${totalBodyWidth * 0.2} ${bodyY + 9}, ${totalBodyWidth * 0.35} ${bodyY + 44}, ${totalBodyWidth * 0.52} ${bodyY + 24} S ${totalBodyWidth * 0.82} ${bodyY + 10}, ${totalBodyWidth + 2} ${bodyY + 33}`} fill="none" stroke="#FFFFFF" strokeOpacity="0.75" strokeWidth="0.8" />
-        {[
-          [depth * 0.38, bodyY + 16, 2.2],
-          [xs[2] + depth * 0.64, bodyY + 18, 2.8],
-          [backX + face * 0.78, bodyY + 46, 2.3],
-          [depth * 0.74, bottomY - 18, 2.5],
-          [xs[2] + depth * 0.38, bottomY - 14, 2.1],
-        ].map(([cx, cy, r], index) => (
-          <g key={index}>
-            <circle cx={cx} cy={cy} r={r + 0.8} fill="#FB7185" opacity="0.18" />
-            <circle cx={cx} cy={cy} r={r} fill={index % 2 ? '#F97316' : '#FB7185'} opacity="0.68" />
-            <circle cx={cx - r * 0.28} cy={cy - r * 0.28} r={r * 0.24} fill="white" opacity="0.8" />
-          </g>
-        ))}
-      </g>
+      <image href="/images/packaging/panel-side-left.png" x="0" y={bodyY} width={depth} height={height} preserveAspectRatio="none" />
+      <image href="/images/packaging/panel-front.png" x={frontX} y={bodyY} width={face} height={height} preserveAspectRatio="none" />
+      <image href="/images/packaging/panel-side-right.png" x={xs[2]} y={bodyY} width={depth} height={height} preserveAspectRatio="none" />
+      <image href="/images/packaging/panel-back.png" x={backX} y={bodyY} width={face} height={height} preserveAspectRatio="none" />
+      <image href="/images/packaging/panel-glue.png" x={totalBodyWidth} y={bodyY + 4} width={glueTab} height={height - 8} preserveAspectRatio="none" />
 
       {topFlaps.map((shape, index) => <polygon key={`top-${index}`} points={points(shape)} fill={BRAND_PINK} />)}
       {bottomFlaps.map((shape, index) => <polygon key={`bottom-${index}`} points={points(shape)} fill={BRAND_PINK} />)}
 
-      <rect
-        x={titleAreaX}
-        y={titleAreaY}
-        width={titleAreaWidth}
-        height={titleAreaHeight}
-        rx={Math.min(5, face * 0.08)}
-        fill="#FFFFFF"
-        stroke="#FFD1E3"
-        strokeWidth="0.45"
-      />
-      <svg
-        x={frontX + face * 0.15}
-        y={bodyY + height * 0.355}
-        width={face * 0.7}
-        height={height * 0.29}
-        viewBox="499 723 1001 545"
+      <image
+        href="/images/packaging/hellou-logo-transparent.png"
+        x={frontX + face * 0.18}
+        y={bodyY + height * 0.37}
+        width={face * 0.64}
+        height={height * 0.26}
         preserveAspectRatio="xMidYMid meet"
-        aria-label="Hellou Studio"
-      >
-        <image href="/logo.png" width="2000" height="2000" />
-      </svg>
-
-      <g fill="#DB2777" textAnchor="middle" fontFamily="Sora, Arial, sans-serif" fontWeight="800">
-        <text x={depth / 2} y={bodyY + height * 0.55} fontSize={Math.max(3.2, depth * 0.14)}>feito com</text>
-        <text x={depth / 2} y={bodyY + height * 0.61} fontSize={Math.max(3.2, depth * 0.14)}>carinho</text>
-        <text x={depth / 2} y={bodyY + height * 0.69} fontSize={depth * 0.23}>♥</text>
-        <text x={backX + face / 2} y={bodyY + height * 0.58} fontSize={Math.max(4, face * 0.085)}>feito com carinho</text>
-        <text x={backX + face / 2} y={bodyY + height * 0.66} fontSize={face * 0.12}>♥</text>
-      </g>
-
-      <g fill="#F97316">
-        <path d={`M ${xs[2] + depth * 0.5} ${bodyY + height * 0.27 - 3} L ${xs[2] + depth * 0.5 + 1} ${bodyY + height * 0.27 - 1} L ${xs[2] + depth * 0.5 + 3} ${bodyY + height * 0.27} L ${xs[2] + depth * 0.5 + 1} ${bodyY + height * 0.27 + 1} L ${xs[2] + depth * 0.5} ${bodyY + height * 0.27 + 3} L ${xs[2] + depth * 0.5 - 1} ${bodyY + height * 0.27 + 1} L ${xs[2] + depth * 0.5 - 3} ${bodyY + height * 0.27} L ${xs[2] + depth * 0.5 - 1} ${bodyY + height * 0.27 - 1} Z`} />
-      </g>
+      />
 
       <g fill="none" stroke={FOLD} strokeWidth="0.3" strokeDasharray="2 1.4">
         {xs.slice(1).map((panelX) => <path key={panelX} d={`M ${panelX} ${bodyY} V ${bottomY}`} />)}
@@ -162,7 +101,7 @@ function PrintSheet({ template }: { template: PackagingTemplate }) {
     >
       <rect width={sheet.width} height={sheet.height} fill="white" />
       {placements.map((placement, index) => (
-        <BoxNet key={index} template={template} x={placement.x} y={placement.y} instance={index} />
+        <BoxNet key={index} template={template} x={placement.x} y={placement.y} />
       ))}
     </svg>
   );
@@ -310,6 +249,7 @@ export function PackagingTemplates() {
           </div>
           <div className="space-y-2 rounded-xl bg-slate-50 p-4 text-xs text-slate-700">
             <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-emerald-500" /> Fundo com encaixe, sem fita</p>
+            <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-pink-500" /> Arte acetinada do modelo aprovado</p>
             <p className="flex gap-2"><Scissors className="h-4 w-4 shrink-0 text-pink-500" /> Sem contorno de recorte impresso</p>
             <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-orange-500" /> Dobra tracejada em laranja</p>
             <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-pink-500" /> Fenda branca de encaixe preservada</p>
