@@ -73,7 +73,10 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
           ? { method: 'DELETE' }
           : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId }) },
       );
-      if (!response.ok) throw new Error('Não foi possível atualizar seus favoritos.');
+      if (!response.ok) {
+        const data = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(data?.error ?? 'Não foi possível atualizar seus favoritos.');
+      }
       toast.success(wasFavorite ? `${productName} foi removido dos favoritos.` : `${productName} foi salvo nos favoritos.`);
     } catch (error) {
       setFavoriteIds((current) => {

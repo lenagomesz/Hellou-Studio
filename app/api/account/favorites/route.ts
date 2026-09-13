@@ -42,7 +42,12 @@ export async function POST(request: Request) {
     { user_id: auth.user.id, product_id: productId },
     { onConflict: 'user_id,product_id', ignoreDuplicates: true },
   );
-  if (error) return serverError('Não foi possível salvar o favorito.');
+  if (error) {
+    if (error.code === '42P01' || error.code === 'PGRST205') {
+      return serverError('Os favoritos ainda não estão disponíveis. Tente novamente em instantes.');
+    }
+    return serverError('Não foi possível salvar o favorito.');
+  }
   return NextResponse.json({ favorite: true }, { status: 201 });
 }
 
