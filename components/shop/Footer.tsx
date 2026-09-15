@@ -42,7 +42,7 @@ export function Footer({ settings }: { settings: StoreSettings }) {
       <div className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-orange-300/20 blur-3xl dark:bg-orange-500/10" />
 
       <div className="relative mx-auto max-w-[1400px] px-4 pt-5 sm:px-6 sm:pt-8 lg:px-10">
-        <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-pink-600 via-rose-500 to-orange-500 px-5 py-6 shadow-2xl shadow-pink-950/30 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:px-8 sm:py-8 lg:px-10">
+        <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-pink-600 via-rose-500 to-orange-500 px-5 py-6 text-white shadow-2xl shadow-pink-950/30 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:px-8 sm:py-8 lg:px-10">
           <div className="pointer-events-none absolute -right-10 -top-20 h-56 w-56 rounded-full border-[32px] border-white/10" />
           <div className="relative max-w-2xl">
             <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/75">Feito para ter a sua cara</p>

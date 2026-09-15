@@ -24,16 +24,16 @@ describe('product photo helpers', () => {
       .toEqual(['/a', '/b', '/c']);
   });
 
-  it('converts UI labels to the enum names required by the REST API', () => {
+  it('uses the aspect ratio and image size values accepted by the REST API', () => {
     expect(geminiImageResponseFormat('1:1', '2K')).toEqual({
       image: {
-        aspectRatio: 'ASPECT_RATIO_ONE_BY_ONE',
-        imageSize: 'IMAGE_SIZE_TWO_K',
+        aspectRatio: '1:1',
+        imageSize: '2K',
       },
     });
     expect(geminiImageResponseFormat('4:5', '4K').image).toEqual({
-      aspectRatio: 'ASPECT_RATIO_FOUR_BY_FIVE',
-      imageSize: 'IMAGE_SIZE_FOUR_K',
+      aspectRatio: '4:5',
+      imageSize: '4K',
     });
   });
 });

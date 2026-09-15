@@ -27,6 +27,17 @@ type GeminiImageResponse = {
   error?: { code?: number; message?: string; status?: string };
 };
 
+class GeminiImageRequestError extends Error {
+  constructor(
+    message: string,
+    readonly httpStatus: number,
+    readonly apiStatus?: string,
+  ) {
+    super(message);
+    this.name = 'GeminiImageRequestError';
+  }
+}
+
 function imageExtension(mimeType: string) {
   if (mimeType === 'image/jpeg') return 'jpg';
   if (mimeType === 'image/webp') return 'webp';
@@ -63,7 +74,11 @@ async function requestGeneratedImage(input: {
   const data = await response.json().catch(() => ({})) as GeminiImageResponse;
   if (!response.ok) {
     const detail = data.error?.message?.slice(0, 500);
-    throw new Error(detail || `A IA recusou a geração (HTTP ${response.status}).`);
+    throw new GeminiImageRequestError(
+      detail || `A IA recusou a geração (HTTP ${response.status}).`,
+      response.status,
+      data.error?.status,
+    );
   }
   const parts = data.candidates?.flatMap((candidate) => candidate.content?.parts ?? []) ?? [];
   const image = parts.find((part) => part.inlineData?.data)?.inlineData;
@@ -95,8 +110,14 @@ export async function POST(request: Request) {
   }
   if (instructions.length > 600) return NextResponse.json({ error: 'A orientação adicional deve ter até 600 caracteres.' }, { status: 400 });
 
-  const limit = await durableRateLimit(request, `product-photo:${auth.user.id}`, { maxRequests: 16, windowMs: 3600_000 });
-  if (!limit.success) return NextResponse.json({ error: 'Limite de 16 fotos geradas por hora atingido. Tente novamente mais tarde.' }, { status: 429 });
+  const limit = await durableRateLimit(request, `product-photo:${auth.user.id}`, { maxRequests: 60, windowMs: 3600_000 });
+  if (!limit.success) {
+    return NextResponse.json({
+      error: 'O limite de segurança do site (60 fotos por hora) foi atingido. Isso não representa falta de créditos no Gemini.',
+      code: 'APP_RATE_LIMIT',
+      retryAt: new Date(limit.resetAt).toISOString(),
+    }, { status: 429 });
+  }
 
   const supabase = getSupabaseAdmin();
   const { data: product, error: productError } = await supabase
@@ -149,9 +170,41 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Falha desconhecida na geração.';
-    const quota = /quota|resource_exhausted|429/i.test(message);
-    console.error('[product-photos] generation failed:', message);
-    return NextResponse.json({ error: quota ? 'A cota de imagens do Gemini foi atingida. Aguarde a renovação da cota.' : `Não foi possível gerar a foto: ${message}` }, { status: quota ? 429 : 502 });
+    console.error('[product-photos] generation failed:', {
+      message,
+      httpStatus: error instanceof GeminiImageRequestError ? error.httpStatus : undefined,
+      apiStatus: error instanceof GeminiImageRequestError ? error.apiStatus : undefined,
+    });
+
+    if (error instanceof GeminiImageRequestError) {
+      if (error.httpStatus === 429) {
+        return NextResponse.json({
+          error: 'O projeto do Gemini atingiu um limite temporário de geração. Seus créditos podem estar disponíveis, mas o Google também aplica limites por minuto, por dia e por modelo. Aguarde um pouco e tente novamente.',
+          code: 'GEMINI_RATE_LIMIT',
+          detail: message,
+        }, { status: 429 });
+      }
+      if (error.httpStatus === 403) {
+        return NextResponse.json({
+          error: 'A chave configurada não tem acesso à geração de imagens neste projeto do Gemini. Confira se a chave pertence ao projeto com faturamento ativo.',
+          code: 'GEMINI_ACCESS_DENIED',
+          detail: message,
+        }, { status: 502 });
+      }
+      if (error.httpStatus === 404) {
+        return NextResponse.json({
+          error: 'O modelo de imagem configurado não está disponível para esta chave ou projeto do Gemini.',
+          code: 'GEMINI_MODEL_UNAVAILABLE',
+          detail: message,
+        }, { status: 502 });
+      }
+      return NextResponse.json({
+        error: `O Gemini recusou a configuração da imagem: ${message}`,
+        code: 'GEMINI_REQUEST_REJECTED',
+      }, { status: 502 });
+    }
+
+    return NextResponse.json({ error: `Não foi possível gerar a foto: ${message}`, code: 'GENERATION_FAILED' }, { status: 502 });
   }
 }
 

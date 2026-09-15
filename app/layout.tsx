@@ -8,6 +8,7 @@ import { CookieConsentBanner } from '@/components/privacy/CookieConsentBanner';
 import { AIHelpWidget } from '@/components/shop/AIHelpWidget';
 import { absoluteUrl, safeJsonLd, SITE_URL } from '@/lib/seo';
 import { getStoreSettings, storeThemeStyle } from '@/lib/store-settings';
+import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 
 const inter = Inter({

@@ -475,3 +475,36 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) {
   .admin-shell main > * { animation: none; }
 }
+
+/* Notifications: branded, readable and clear of the mobile bottom navigation. */
+.hellou-toast-container {
+  z-index: 100 !important;
+}
+
+.hellou-toast {
+  min-height: 4rem !important;
+  padding: 0.85rem 0.9rem !important;
+}
+
+.hellou-toast .Toastify__toast-icon {
+  width: 1.35rem;
+}
+
+.hellou-toast .Toastify__close-button {
+  color: currentColor;
+  opacity: 0.45;
+}
+
+@media (max-width: 640px) {
+  .hellou-toast-container.Toastify__toast-container--top-center {
+    top: calc(env(safe-area-inset-top) + 4.75rem) !important;
+    left: 50% !important;
+    width: calc(100vw - 1.5rem) !important;
+    padding: 0 !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .hellou-toast {
+    margin-bottom: 0.65rem !important;
+  }
+}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search, Download, Edit3, Tags, Boxes, ExternalLink, Sparkles } from 'lucide-react';
+import { Package, Plus, Eye, EyeOff, Pencil, Trash2, Search, Download, Edit3, Tags, Boxes, ExternalLink, Sparkles, FileUp } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { ProductCategorySelect, useProductCategories } from '@/components/admin/ProductCategorySelect';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
@@ -152,6 +152,9 @@ export default function ProductsPage() {
           </Link>
           <Link href="/dashboard/products/new" className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-2.5 text-xs font-medium text-white transition hover:opacity-90 sm:px-4 sm:text-sm">
             <Plus className="h-4 w-4" /> Novo produto
+          </Link>
+          <Link href="/dashboard/products/stl" className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-pink-200 bg-pink-50 px-3 py-2.5 text-xs font-bold text-pink-700 transition hover:border-pink-300 hover:bg-pink-100 dark:border-pink-800 dark:bg-pink-950/30 dark:text-pink-300 sm:px-4 sm:text-sm">
+            <FileUp className="h-4 w-4" /> Novo arquivo STL
           </Link>
         </div>
       </header>

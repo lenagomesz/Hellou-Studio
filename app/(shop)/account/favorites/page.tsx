@@ -49,17 +49,17 @@ export default async function FavoritesPage() {
 
   return (
     <div className="space-y-6">
-      <header className="relative overflow-hidden rounded-3xl bg-gray-950 px-5 py-6 text-white shadow-xl shadow-pink-950/10 sm:px-8 sm:py-8">
-        <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-pink-500/25 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-52 w-52 rounded-full bg-orange-500/20 blur-3xl" />
+      <header className="relative overflow-hidden rounded-3xl border border-pink-100 bg-gradient-to-br from-white via-pink-50 to-orange-50 px-5 py-6 text-slate-950 shadow-xl shadow-pink-950/10 dark:border-white/10 dark:bg-gray-950 dark:bg-none dark:text-white sm:px-8 sm:py-8">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-pink-300/30 blur-3xl dark:bg-pink-500/25" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-52 w-52 rounded-full bg-orange-300/25 blur-3xl dark:bg-orange-500/20" />
         <div className="relative flex items-start gap-4">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 shadow-lg shadow-pink-900/30">
             <Heart className="h-5 w-5 fill-white" />
           </span>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-pink-300">Sua seleção</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-pink-600 dark:text-pink-300">Sua seleção</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Meus favoritos</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-gray-300">
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 dark:text-gray-300">
               {products.length === 0 ? 'Guarde aqui as peças que mais combinam com você.' : `${products.length} ${products.length === 1 ? 'produto salvo' : 'produtos salvos'} para encontrar quando quiser.`}
             </p>
           </div>

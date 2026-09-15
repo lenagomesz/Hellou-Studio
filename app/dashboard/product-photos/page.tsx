@@ -154,8 +154,12 @@ export default function ProductPhotosPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId, sourceImageUrl, angle, framing, lighting, aspectRatio, quality, instructions }),
         });
-        const data = await response.json().catch(() => ({})) as { image?: Omit<GeneratedPhoto, 'id' | 'approved'>; error?: string };
-        if (!response.ok || !data.image) throw new Error(data.error ?? 'A geração não devolveu uma imagem.');
+        const data = await response.json().catch(() => ({})) as { image?: Omit<GeneratedPhoto, 'id' | 'approved'>; error?: string; code?: string };
+        if (!response.ok || !data.image) {
+          errors.push(`${ANGLE_DESCRIPTIONS[angle]}: ${data.error ?? 'A geração não devolveu uma imagem.'}`);
+          if (response.status === 429) break;
+          continue;
+        }
         results.push({ ...data.image, id: crypto.randomUUID(), approved: false });
       } catch (cause) {
         errors.push(`${ANGLE_DESCRIPTIONS[angle]}: ${cause instanceof Error ? cause.message : 'falhou'}`);
