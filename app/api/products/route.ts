@@ -134,7 +134,7 @@ export async function POST(request: Request) {
     is_wholesale?: boolean;
     minimum_order_quantity?: number;
     is_customizable?: boolean;
-    options?: Array<{ name: string; dimensions?: string | null; notes?: string | null; color?: string | null; color_name?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number; active?: boolean }>;
+    options?: Array<{ id?: string; name: string; dimensions?: string | null; notes?: string | null; color?: string | null; color_name?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number; active?: boolean }>;
     customization_sections?: unknown;
   } & ProductCommercialInput & ProductCustomizationCopyInput;
 
@@ -216,6 +216,7 @@ export async function POST(request: Request) {
   const validOptions = (options ?? []).filter((option) => option.name?.trim() || option.color?.trim());
   if (validOptions.length > 0) {
     const { error: optionsError } = await admin.from('product_options').insert(validOptions.map((option, index) => ({
+      ...(option.id ? { id: option.id } : {}),
       product_id: data.id,
       name: option.name?.trim() || '',
       dimensions: option.dimensions?.trim() || null,

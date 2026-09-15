@@ -3,7 +3,6 @@
 import { useProductEditor } from '../hooks/useProductEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
-import { CustomizationSectionsEditor } from '@/components/admin/CustomizationSectionsEditor';
 import { DEFAULT_CUSTOMIZATION_COPY } from '@/lib/product-customization';
 
 export function BasicInfoSection() {
@@ -236,14 +235,6 @@ export function BasicInfoSection() {
             </section>
           )}
 
-          {state.isCustomizable && (
-            <div id="personalizacao-produto" className="scroll-mt-24">
-              <CustomizationSectionsEditor
-                value={state.customizationSections}
-                onChange={(sections) => handleSetField('customizationSections', sections)}
-              />
-            </div>
-          )}
         </div>
       </CollapsibleSection>
     </>

@@ -18,6 +18,7 @@ import {
   findOptionByCharacterCount,
   formatProductCustomizationSelections,
   getOptionCharacterCount,
+  getVisibleCustomizationSections,
   normalizeProductCustomizationSections,
   parseProductCustomizationSelections,
   type ProductCustomizationSelection,
@@ -100,7 +101,13 @@ export function ProductDetail({
   const [uploadingPhotoSection, setUploadingPhotoSection] = useState<string | null>(null);
   const [photoUploadError, setPhotoUploadError] = useState<Record<string, string>>({});
   const [gallerySelectionVersion, setGallerySelectionVersion] = useState(0);
-  const automaticPricingSection = customizationSections.find(
+  const customizationVisibilityContext = { productOptionId: selectedOptionId };
+  const visibleCustomizationSections = getVisibleCustomizationSections(
+    customizationSections,
+    customizationSelections,
+    customizationVisibilityContext,
+  );
+  const automaticPricingSection = visibleCustomizationSections.find(
     (section) => section.autoSelectOptionByCharacterCount,
   ) ?? null;
   const automaticLetterCount = automaticPricingSection
@@ -147,7 +154,11 @@ export function ProductDetail({
   const maxQuantity = requiresReadyStock ? Math.min(selectedOption?.stock ?? 50, product.is_wholesale ? 1000 : 50) : product.is_wholesale ? 1000 : 50;
   const wholesaleQuantityPresets = product.is_wholesale ? [1, 20, 50, 100] : [];
   const quantityIsAllowed = !product.is_wholesale || quantity === 1 || quantity >= minimumQuantity;
-  const structuredCustomizationText = formatProductCustomizationSelections(customizationSections, customizationSelections);
+  const structuredCustomizationText = formatProductCustomizationSelections(
+    customizationSections,
+    customizationSelections,
+    customizationVisibilityContext,
+  );
   const finalCustomizationText = customizationSections.length > 0
     ? structuredCustomizationText
     : customizationText.trim();
@@ -156,8 +167,12 @@ export function ProductDetail({
     : finalCustomizationText;
   const hasRequiredCustomization = !product.is_customizable || (
     customizationSections.length > 0
-      ? areRequiredCustomizationSectionsComplete(customizationSections, customizationSelections)
-        && finalCustomizationText.length > 0
+      ? areRequiredCustomizationSectionsComplete(
+          customizationSections,
+          customizationSelections,
+          customizationVisibilityContext,
+        )
+        && (visibleCustomizationSections.length === 0 || finalCustomizationText.length > 0)
         && finalCustomizationText.length <= 4000
       : customizationText.trim().length > 0
   );
@@ -414,7 +429,7 @@ export function ProductDetail({
           </div>
         )}
 
-        {product.is_customizable && customizationSections.length > 0 && (
+        {product.is_customizable && visibleCustomizationSections.length > 0 && (
           <div className="mt-6 space-y-4 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50/60 p-4 dark:border-pink-900/60 dark:from-pink-950/30 dark:to-orange-950/20 sm:p-5">
             <div>
               <h2 className="text-sm font-bold text-gray-900 dark:text-white">{customizationQuestion}</h2>
@@ -423,7 +438,7 @@ export function ProductDetail({
               )}
             </div>
 
-            {customizationSections.map((section) => {
+            {visibleCustomizationSections.map((section) => {
               const selection = customizationSelections[section.id] ?? {};
               const needsColor = section.type === 'color' || section.type === 'color_text';
               const needsText = section.type === 'text' || section.type === 'color_text' || section.type === 'option_text';

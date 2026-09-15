@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProductOption } from '@/types/database';
 import { ArrowDown, ArrowUp, Loader2 } from 'lucide-react';
@@ -47,10 +47,12 @@ export function OptionsManager({
   productId,
   initialOptions,
   basePrice,
+  onOptionsChange,
 }: {
   productId: string;
   initialOptions: ProductOption[];
   basePrice: number;
+  onOptionsChange?: (options: ProductOption[]) => void;
 }) {
   const router = useRouter();
   const [options, setOptions] = useState<ProductOption[]>(() =>
@@ -74,6 +76,10 @@ export function OptionsManager({
   const [pendingDelete, setPendingDelete] = useState<ProductOption | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [reordering, setReordering] = useState(false);
+
+  useEffect(() => {
+    onOptionsChange?.(options);
+  }, [onOptionsChange, options]);
 
   const hasSizes = options.some(
     (o) => ['P', 'M', 'G'].includes(o.name.toUpperCase()),

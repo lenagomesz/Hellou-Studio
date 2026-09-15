@@ -8,6 +8,7 @@ import {
   areRequiredCustomizationSectionsComplete,
   countCustomizationLetters,
   getOptionCharacterCount,
+  getVisibleCustomizationSections,
   normalizeProductCustomizationSections,
   parseProductCustomizationSelections,
 } from '@/lib/product-customization';
@@ -165,15 +166,16 @@ export async function POST(request: Request) {
       return serverError('Não foi possível verificar seus arquivos adquiridos. Tente novamente.');
     }
   }
-  if (product.is_customizable && !normalizedCustomization) {
-    return badRequest('Preencha a personalização antes de adicionar ao carrinho');
-  }
-
   let automaticLetterCount: number | null = null;
   try {
     const sections = normalizeProductCustomizationSections(product.customization_sections);
     const selections = parseProductCustomizationSelections(sections, normalizedCustomization);
-    if (product.is_customizable && sections.length > 0 && !areRequiredCustomizationSectionsComplete(sections, selections)) {
+    const visibilityContext = { productOptionId: optionId };
+    const visibleSections = getVisibleCustomizationSections(sections, selections, visibilityContext);
+    if (product.is_customizable && !normalizedCustomization && (sections.length === 0 || visibleSections.length > 0)) {
+      return badRequest('Preencha a personalização antes de adicionar ao carrinho');
+    }
+    if (product.is_customizable && sections.length > 0 && !areRequiredCustomizationSectionsComplete(sections, selections, visibilityContext)) {
       return badRequest('Complete todas as personalizações obrigatórias');
     }
     for (const section of sections.filter((item) => item.type === 'images')) {
@@ -182,7 +184,7 @@ export async function POST(request: Request) {
         return badRequest('Uma das fotos enviadas é inválida');
       }
     }
-    const automaticSection = sections.find((section) => section.autoSelectOptionByCharacterCount);
+    const automaticSection = visibleSections.find((section) => section.autoSelectOptionByCharacterCount);
     if (automaticSection) {
       automaticLetterCount = countCustomizationLetters(selections[automaticSection.id]?.text ?? '');
       if (automaticLetterCount < 1) {

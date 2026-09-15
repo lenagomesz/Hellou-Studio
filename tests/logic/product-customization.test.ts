@@ -5,6 +5,7 @@ import {
   countCustomizationLetters,
   findOptionByCharacterCount,
   formatProductCustomizationSelections,
+  getVisibleCustomizationSections,
   normalizeProductCustomizationCopy,
   normalizeProductCustomizationSections,
   parseProductCustomizationSelections,
@@ -197,5 +198,61 @@ describe('product customization copy', () => {
     expect(() => normalizeProductCustomizationSections([{
       id: 'photos', label: 'Fotos', type: 'images', imageCount: 21,
     }])).toThrow('1 a 20 fotos');
+  });
+
+  it('mostra subvariações de foto, texto e cor somente após a resposta configurada', () => {
+    const sections = normalizeProductCustomizationSections([
+      {
+        id: 'finish',
+        label: 'Modelo',
+        type: 'option',
+        options: [
+          { id: 'with-photo', label: 'Com foto' },
+          { id: 'without-photo', label: 'Sem foto' },
+        ],
+      },
+      {
+        id: 'photo',
+        label: 'Envie sua foto',
+        type: 'images',
+        imageCount: 1,
+        showWhen: { source: 'section_option', sectionId: 'finish', optionId: 'with-photo' },
+      },
+      {
+        id: 'caption',
+        label: 'Legenda',
+        type: 'text',
+        showWhen: { source: 'section_option', sectionId: 'finish', optionId: 'with-photo' },
+      },
+      {
+        id: 'frame-color',
+        label: 'Cor da moldura',
+        type: 'color',
+        colors: [{ id: 'pink', label: 'Rosa', value: '#ff6699' }],
+        showWhen: { source: 'section_option', sectionId: 'finish', optionId: 'with-photo' },
+      },
+    ]);
+
+    const withoutPhoto = { finish: { optionId: 'without-photo' } };
+    const withPhoto = { finish: { optionId: 'with-photo' } };
+
+    expect(getVisibleCustomizationSections(sections, withoutPhoto).map((section) => section.id)).toEqual(['finish']);
+    expect(getVisibleCustomizationSections(sections, withPhoto).map((section) => section.id)).toEqual([
+      'finish', 'photo', 'caption', 'frame-color',
+    ]);
+    expect(areRequiredCustomizationSectionsComplete(sections, withoutPhoto)).toBe(true);
+    expect(areRequiredCustomizationSectionsComplete(sections, withPhoto)).toBe(false);
+  });
+
+  it('permite condicionar qualquer seção a uma variação comercial existente', () => {
+    const sections = normalizeProductCustomizationSections([{
+      id: 'message',
+      label: 'Mensagem',
+      type: 'text',
+      showWhen: { source: 'product_option', optionId: 'commercial-with-photo' },
+    }]);
+
+    expect(getVisibleCustomizationSections(sections, {}, { productOptionId: 'commercial-without-photo' })).toEqual([]);
+    expect(getVisibleCustomizationSections(sections, {}, { productOptionId: 'commercial-with-photo' })).toHaveLength(1);
   });
 });

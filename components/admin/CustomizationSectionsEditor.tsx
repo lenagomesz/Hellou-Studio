@@ -1,11 +1,13 @@
 'use client';
 
-import { ArrowDown, ArrowUp, Images, ListChecks, Palette, Plus, Trash2, Type } from 'lucide-react';
+import { useEffect } from 'react';
+import { ArrowDown, ArrowUp, GitBranch, Images, ListChecks, Palette, Plus, Trash2, Type } from 'lucide-react';
 import type {
   ProductCustomizationColor,
   ProductCustomizationOption,
   ProductCustomizationSection,
   ProductCustomizationSectionType,
+  ProductCustomizationVisibility,
 } from '@/lib/product-customization';
 import { PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
@@ -67,17 +69,47 @@ function usesOptions(type: ProductCustomizationSectionType) {
   return type === 'option' || type === 'option_text';
 }
 
+function sanitizeConditionalSections(sections: ProductCustomizationSection[]) {
+  return sections.map((section, sectionIndex) => {
+    const condition = section.showWhen;
+    if (condition?.source !== 'section_option') return section;
+    const sourceIndex = sections.findIndex((candidate) => candidate.id === condition.sectionId);
+    const source = sections[sourceIndex];
+    const valid = sourceIndex >= 0
+      && sourceIndex < sectionIndex
+      && usesOptions(source.type)
+      && source.options.some((option) => option.id === condition.optionId);
+    return valid ? section : { ...section, showWhen: undefined };
+  });
+}
+
 export function CustomizationSectionsEditor({
   value,
   onChange,
+  productOptions = [],
 }: {
   value: ProductCustomizationSection[];
   onChange: (sections: ProductCustomizationSection[]) => void;
+  productOptions?: Array<{ id: string; name: string }>;
 }) {
-  function updateSection(index: number, patch: Partial<ProductCustomizationSection>) {
-    onChange(value.map((section, currentIndex) => (
-      currentIndex === index ? { ...section, ...patch } : section
+  useEffect(() => {
+    const productOptionIds = new Set(productOptions.map((option) => option.id));
+    const hasRemovedCondition = value.some((section) => (
+      section.showWhen?.source === 'product_option'
+      && !productOptionIds.has(section.showWhen.optionId)
+    ));
+    if (!hasRemovedCondition) return;
+    onChange(value.map((section) => (
+      section.showWhen?.source === 'product_option' && !productOptionIds.has(section.showWhen.optionId)
+        ? { ...section, showWhen: undefined }
+        : section
     )));
+  }, [onChange, productOptions, value]);
+
+  function updateSection(index: number, patch: Partial<ProductCustomizationSection>) {
+    onChange(sanitizeConditionalSections(value.map((section, currentIndex) => (
+      currentIndex === index ? { ...section, ...patch } : section
+    ))));
   }
 
   function moveSection(index: number, direction: -1 | 1) {
@@ -85,7 +117,11 @@ export function CustomizationSectionsEditor({
     if (destination < 0 || destination >= value.length) return;
     const next = [...value];
     [next[index], next[destination]] = [next[destination], next[index]];
-    onChange(next);
+    onChange(sanitizeConditionalSections(next));
+  }
+
+  function removeSection(index: number) {
+    onChange(sanitizeConditionalSections(value.filter((_, currentIndex) => currentIndex !== index)));
   }
 
   function updateColor(sectionIndex: number, colorIndex: number, patch: Partial<ProductCustomizationColor>) {
@@ -104,6 +140,23 @@ export function CustomizationSectionsEditor({
         currentIndex === optionIndex ? { ...option, ...patch } : option
       )),
     });
+  }
+
+  function conditionValue(condition?: ProductCustomizationVisibility) {
+    if (!condition) return '';
+    return condition.source === 'product_option'
+      ? `product:${condition.optionId}`
+      : `section:${condition.sectionId}:${condition.optionId}`;
+  }
+
+  function parseCondition(value: string): ProductCustomizationVisibility | undefined {
+    if (!value) return undefined;
+    const [source, firstId, secondId] = value.split(':');
+    if (source === 'product' && firstId) return { source: 'product_option', optionId: firstId };
+    if (source === 'section' && firstId && secondId) {
+      return { source: 'section_option', sectionId: firstId, optionId: secondId };
+    }
+    return undefined;
   }
 
   return (
@@ -133,7 +186,13 @@ export function CustomizationSectionsEditor({
         </div>
       ) : (
         <div className="mt-4 space-y-4">
-          {value.map((section, sectionIndex) => (
+          {value.map((section, sectionIndex) => {
+            const earlierOptionSections = value
+              .slice(0, sectionIndex)
+              .filter((candidate) => usesOptions(candidate.type));
+            const hasConditionalSources = productOptions.length > 0 || earlierOptionSections.some((candidate) => candidate.options.length > 0);
+
+            return (
             <article key={section.id} className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm dark:border-violet-900/60 dark:bg-slate-900">
               <div className="flex items-center justify-between gap-3">
                 <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
@@ -146,7 +205,7 @@ export function CustomizationSectionsEditor({
                   <button type="button" onClick={() => moveSection(sectionIndex, 1)} disabled={sectionIndex === value.length - 1} aria-label="Mover seção para baixo" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 disabled:opacity-30 dark:hover:bg-slate-800">
                     <ArrowDown className="h-4 w-4" />
                   </button>
-                  <button type="button" onClick={() => onChange(value.filter((_, index) => index !== sectionIndex))} aria-label="Excluir seção" className="rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30">
+                  <button type="button" onClick={() => removeSection(sectionIndex)} aria-label="Excluir seção" className="rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -199,6 +258,42 @@ export function CustomizationSectionsEditor({
                 />
                 Cliente precisa preencher esta seção
               </label>
+
+              <div className="mt-4 rounded-xl border border-violet-100 bg-violet-50/60 p-3 dark:border-violet-900/50 dark:bg-violet-950/20">
+                <label className="block">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <GitBranch className="h-4 w-4 text-violet-500" />
+                    Quando esta subvariação deve aparecer?
+                  </span>
+                  <select
+                    value={conditionValue(section.showWhen)}
+                    onChange={(event) => updateSection(sectionIndex, { showWhen: parseCondition(event.target.value) })}
+                    className="mt-2 w-full rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm dark:border-violet-900 dark:bg-slate-950"
+                  >
+                    <option value="">Sempre visível</option>
+                    {productOptions.map((option) => (
+                      <option key={`product-${option.id}`} value={`product:${option.id}`}>
+                        Quando a variação comercial for “{option.name || 'Sem nome'}”
+                      </option>
+                    ))}
+                    {earlierOptionSections.flatMap((sourceSection) => sourceSection.options.map((option) => (
+                      <option key={`section-${sourceSection.id}-${option.id}`} value={`section:${sourceSection.id}:${option.id}`}>
+                        Quando “{sourceSection.label || 'Seção anterior'}” for “{option.label}”
+                      </option>
+                    )))}
+                  </select>
+                </label>
+                {!hasConditionalSources && (
+                  <p className="mt-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
+                    Para criar uma subvariação, adicione antes uma variação comercial ou uma seção do tipo opção.
+                  </p>
+                )}
+                {section.showWhen && (
+                  <p className="mt-2 text-[11px] font-medium leading-4 text-violet-700 dark:text-violet-300">
+                    Esta seção ficará oculta até o cliente escolher a resposta configurada acima.
+                  </p>
+                )}
+              </div>
 
               <label className="mt-4 block">
                 <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Orientação opcional</span>
@@ -380,7 +475,7 @@ export function CustomizationSectionsEditor({
                 </div>
               )}
             </article>
-          ))}
+          );})}
         </div>
       )}
     </section>

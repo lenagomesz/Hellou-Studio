@@ -24,6 +24,17 @@ export type ProductCustomizationOption = {
   imageUrl?: string;
 };
 
+export type ProductCustomizationVisibility =
+  | {
+      source: 'section_option';
+      sectionId: string;
+      optionId: string;
+    }
+  | {
+      source: 'product_option';
+      optionId: string;
+    };
+
 export type ProductCustomizationSection = {
   id: string;
   label: string;
@@ -33,6 +44,7 @@ export type ProductCustomizationSection = {
   helpText: string;
   placeholder: string;
   imageCount?: number;
+  showWhen?: ProductCustomizationVisibility;
   colors: ProductCustomizationColor[];
   options: ProductCustomizationOption[];
 };
@@ -45,6 +57,10 @@ export type ProductCustomizationSelection = {
   optionLabel?: string;
   text?: string;
   imageUrls?: string[];
+};
+
+export type ProductCustomizationVisibilityContext = {
+  productOptionId?: string | null;
 };
 
 const FIELD_LIMITS = {
@@ -180,6 +196,30 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
       throw new Error(`Adicione pelo menos uma opção em "${label}"`);
     }
 
+    const rawShowWhen = section.showWhen;
+    let showWhen: ProductCustomizationVisibility | undefined;
+    if (rawShowWhen && typeof rawShowWhen === 'object') {
+      const condition = rawShowWhen as Record<string, unknown>;
+      if (condition.source === 'product_option') {
+        showWhen = {
+          source: 'product_option',
+          optionId: normalizeIdentifier(condition.optionId, ''),
+        };
+        if (!showWhen.optionId) throw new Error(`Revise a condição de exibição de "${label}"`);
+      } else if (condition.source === 'section_option') {
+        showWhen = {
+          source: 'section_option',
+          sectionId: normalizeIdentifier(condition.sectionId, ''),
+          optionId: normalizeIdentifier(condition.optionId, ''),
+        };
+        if (!showWhen.sectionId || !showWhen.optionId) {
+          throw new Error(`Revise a condição de exibição de "${label}"`);
+        }
+      } else {
+        throw new Error(`Revise a condição de exibição de "${label}"`);
+      }
+    }
+
     return {
       id,
       label,
@@ -191,6 +231,7 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
       helpText,
       placeholder,
       ...(needsImages ? { imageCount } : {}),
+      ...(showWhen ? { showWhen } : {}),
       colors,
       options,
     };
@@ -200,14 +241,49 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
     throw new Error('Apenas uma seção pode definir o preço pela quantidade de letras');
   }
 
+  for (const [sectionIndex, section] of normalizedSections.entries()) {
+    const condition = section.showWhen;
+    if (condition?.source !== 'section_option') continue;
+    const sourceIndex = normalizedSections.findIndex((candidate) => candidate.id === condition.sectionId);
+    const source = normalizedSections[sourceIndex];
+    if (
+      sourceIndex < 0
+      || sourceIndex >= sectionIndex
+      || (source.type !== 'option' && source.type !== 'option_text')
+      || !source.options.some((option) => option.id === condition.optionId)
+    ) {
+      throw new Error(`A condição de exibição de "${section.label}" deve usar uma opção de uma seção anterior`);
+    }
+  }
+
   return normalizedSections;
+}
+
+export function getVisibleCustomizationSections(
+  sections: ProductCustomizationSection[],
+  selections: Record<string, ProductCustomizationSelection>,
+  context: ProductCustomizationVisibilityContext = {},
+) {
+  const visibleIds = new Set<string>();
+  return sections.filter((section) => {
+    const condition = section.showWhen;
+    const visible = !condition || (
+      condition.source === 'product_option'
+        ? context.productOptionId === condition.optionId
+        : visibleIds.has(condition.sectionId)
+          && selections[condition.sectionId]?.optionId === condition.optionId
+    );
+    if (visible) visibleIds.add(section.id);
+    return visible;
+  });
 }
 
 export function formatProductCustomizationSelections(
   sections: ProductCustomizationSection[],
   selections: Record<string, ProductCustomizationSelection>,
+  context: ProductCustomizationVisibilityContext = {},
 ) {
-  return sections
+  return getVisibleCustomizationSections(sections, selections, context)
     .map((section) => {
       const selection = selections[section.id] ?? {};
       const parts: string[] = [];
@@ -234,8 +310,9 @@ export function formatProductCustomizationSelections(
 export function areRequiredCustomizationSectionsComplete(
   sections: ProductCustomizationSection[],
   selections: Record<string, ProductCustomizationSelection>,
+  context: ProductCustomizationVisibilityContext = {},
 ) {
-  return sections.every((section) => {
+  return getVisibleCustomizationSections(sections, selections, context).every((section) => {
     if (!section.required) return true;
     const selection = selections[section.id] ?? {};
     const hasColor = Boolean(selection.colorId && section.colors.some((color) => color.id === selection.colorId));

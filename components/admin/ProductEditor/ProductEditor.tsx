@@ -17,6 +17,7 @@ import { TagsSection } from './sections/TagsSection';
 import { AIAssistantSection } from './sections/AIAssistantSection';
 import { ProductLivePreview } from '../ProductLivePreview';
 import { OptionsManager } from '../OptionsManager';
+import { CustomizationSectionsEditor } from '../CustomizationSectionsEditor';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { replaceProductTags } from '@/components/admin/ProductTagSelect';
 
@@ -34,6 +35,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
   const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [managedProductOptions, setManagedProductOptions] = useState<ProductOption[]>(productOptions ?? []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -60,6 +62,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
     const normalizedVariations = state.variations
       .filter((v) => v.name.trim() || v.color?.trim())
       .map((v, idx: number) => ({
+        id: v.id,
         name: v.name.trim(),
         dimensions: v.dimensions?.trim() || null,
         notes: v.notes?.trim() || null,
@@ -178,24 +181,54 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
           <BasicInfoSection />
           <PricingSection />
           <ImagesSection />
-          {mode === 'create' ? (
-            <VariationsSection />
-          ) : (
-            <section className="scroll-mt-24 rounded-2xl border border-violet-200 bg-violet-50/40 p-4 dark:border-violet-900/50 dark:bg-violet-950/10 sm:p-5" id="variacoes-produto">
-              <div className="mb-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600">Variações cadastradas</p>
-                <h2 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">Cores, modelos, tamanhos e imagens</h2>
-                <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                  As opções existentes aparecem abaixo. Clique em “Editar” para trocar nome, cor, imagem, preço ou estoque.
-                </p>
+          <section className="scroll-mt-24 space-y-5 rounded-2xl border border-violet-200 bg-violet-50/40 p-4 dark:border-violet-900/50 dark:bg-violet-950/10 sm:p-5" id="variacoes-produto">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600">Variações unificadas</p>
+              <h2 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">Escolhas, subvariações, cores, tamanhos e fotos</h2>
+              <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                Configure no mesmo lugar as escolhas personalizadas do cliente e as variações que alteram preço ou estoque. Os cadastros antigos continuam compatíveis.
+              </p>
+            </div>
+
+            {state.isCustomizable ? (
+              <CustomizationSectionsEditor
+                value={state.customizationSections}
+                onChange={(sections) => dispatch({ type: 'SET_FIELD', field: 'customizationSections', value: sections })}
+                productOptions={(mode === 'edit' ? managedProductOptions : state.variations).map((option) => ({
+                  id: option.id,
+                  name: option.name || (
+                    'colorName' in option
+                      ? option.colorName ?? ''
+                      : 'color_name' in option
+                        ? option.color_name ?? ''
+                        : ''
+                  ),
+                }))}
+              />
+            ) : (
+              <div className="rounded-xl border border-dashed border-violet-200 bg-white/70 p-4 text-xs leading-5 text-slate-500 dark:border-violet-900 dark:bg-slate-900/50 dark:text-slate-400">
+                Ative “Produto personalizado?” em Identidade para criar escolhas e subvariações condicionais de foto, texto, cor ou opção.
               </div>
+            )}
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900 sm:p-5">
+              <div className="mb-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Preço e estoque</p>
+                <h3 className="mt-1 text-base font-bold text-slate-900 dark:text-white">Variações comerciais</h3>
+                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Use para tamanho, modelo ou cor que tenha estoque, imagem ou preço adicional próprio.</p>
+              </div>
+              {mode === 'create' ? (
+                <VariationsSection />
+              ) : (
               <OptionsManager
                 productId={product!.id}
-                initialOptions={productOptions ?? []}
+                initialOptions={managedProductOptions}
                 basePrice={state.salePrice || state.basePrice || 0}
+                onOptionsChange={setManagedProductOptions}
               />
-            </section>
-          )}
+              )}
+            </div>
+          </section>
           <SEOSection />
           <TagsSection />
 
