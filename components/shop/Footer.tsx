@@ -41,26 +41,26 @@ export function Footer({ settings }: { settings: StoreSettings }) {
       <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-pink-300/20 blur-3xl dark:bg-pink-600/10" />
       <div className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-orange-300/20 blur-3xl dark:bg-orange-500/10" />
 
-      <div className="relative mx-auto max-w-[1400px] px-4 pt-5 sm:px-6 sm:pt-8 lg:px-10">
-        <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-pink-600 via-rose-500 to-orange-500 px-5 py-6 text-white shadow-2xl shadow-pink-950/30 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:px-8 sm:py-8 lg:px-10">
-          <div className="pointer-events-none absolute -right-10 -top-20 h-56 w-56 rounded-full border-[32px] border-white/10" />
-          <div className="relative max-w-2xl">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/75">Feito para ter a sua cara</p>
-            <h2 className="mt-2 text-2xl font-black tracking-[-0.035em] sm:text-3xl">Encontrou uma peça que amou?</h2>
-            <p className="mt-2 text-sm leading-6 text-white/85">Salve nos favoritos, monte sua lista e acompanhe ofertas exclusivas na sua conta.</p>
+      <div className="relative mx-auto max-w-[1400px] px-3 pt-4 min-[380px]:px-4 sm:px-6 sm:pt-6 lg:px-10">
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-600 via-rose-500 to-orange-500 px-4 py-4 text-white shadow-xl shadow-pink-950/25 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:rounded-3xl sm:px-6 sm:py-5 lg:px-8">
+          <div className="pointer-events-none absolute -right-10 -top-20 h-48 w-48 rounded-full border-[28px] border-white/10" />
+          <div className="relative min-w-0 max-w-2xl">
+            <p className="hidden text-[9px] font-black uppercase tracking-[0.22em] text-white/75 min-[380px]:block">Feito para ter a sua cara</p>
+            <h2 className="text-lg font-black leading-tight tracking-[-0.03em] min-[380px]:mt-1 sm:text-xl">Encontrou uma peça que amou?</h2>
+            <p className="mt-1.5 text-xs leading-5 text-white/85 sm:text-sm">Salve nos favoritos e acompanhe ofertas exclusivas na sua conta.</p>
           </div>
-          <Link href={favoritesHref} className="relative mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-black text-pink-600 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:mt-0 sm:w-auto sm:shrink-0">
-            <Heart className="h-4 w-4 fill-current" /> Ver favoritos <ArrowUpRight className="h-4 w-4" />
+          <Link href={favoritesHref} className="relative mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-black text-pink-600 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:mt-0 sm:w-auto sm:shrink-0 sm:text-sm">
+            <Heart className="h-3.5 w-3.5 fill-current sm:h-4 sm:w-4" /> Ver favoritos <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Link>
         </section>
 
-        <div className="grid gap-10 py-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_0.8fr_0.8fr_1.1fr] lg:gap-12 lg:py-14">
-          <div>
+        <div className="grid grid-cols-2 gap-x-5 gap-y-8 py-8 sm:gap-x-8 sm:gap-y-10 sm:py-10 lg:grid-cols-[1.5fr_0.8fr_0.8fr_1.1fr] lg:gap-12 lg:py-12">
+          <div className="col-span-2 min-w-0 lg:col-span-1">
             <Link href="/" className="inline-flex text-2xl font-black tracking-tight" aria-label={`${settings.identity.name} — página inicial`}>
               {settings.identity.logoUrl ? <img src={settings.identity.logoUrl} alt={settings.identity.name} className="h-10 max-w-52 object-contain object-left dark:brightness-0 dark:invert" /> : <span className="bg-gradient-to-r from-pink-500 to-orange-500 bg-clip-text text-transparent dark:from-pink-400 dark:to-orange-400">{settings.identity.shortName}</span>}
             </Link>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-600 dark:text-gray-400">{settings.identity.description}</p>
-            <div className="mt-6 flex flex-wrap gap-2">
+            <p className="mt-3 max-w-md text-sm leading-6 text-gray-600 dark:text-gray-400">{settings.identity.description}</p>
+            <div className="mt-4 flex flex-wrap gap-2 sm:mt-5">
               {whatsappUrl && (
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-pink-200 bg-white/70 px-4 text-xs font-bold text-gray-700 transition hover:border-emerald-300 hover:bg-emerald-50 dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:hover:border-emerald-400/40 dark:hover:bg-emerald-400/10">
                   <MessageCircle className="h-4 w-4 text-emerald-500 dark:text-emerald-400" /> Fale conosco
@@ -82,9 +82,9 @@ export function Footer({ settings }: { settings: StoreSettings }) {
           <FooterColumn title="Descobrir" links={NAVIGATION_LINKS} />
           <FooterColumn title="Sua conta" links={ACCOUNT_LINKS} />
 
-          <div>
+          <div className="col-span-2 min-w-0 lg:col-span-1">
             <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-500/80 dark:text-white/45">Compra tranquila</h2>
-            <ul className="mt-5 space-y-4">
+            <ul className="mt-4 grid gap-3 min-[520px]:grid-cols-3 lg:grid-cols-1">
               {TRUST_ITEMS.map(({ icon: Icon, label }) => (
                 <li key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500/15 to-orange-500/15 text-pink-500 ring-1 ring-pink-200 dark:text-pink-300 dark:ring-white/10"><Icon className="h-4 w-4" /></span>
@@ -95,13 +95,13 @@ export function Footer({ settings }: { settings: StoreSettings }) {
           </div>
         </div>
 
-        <div className="border-t border-pink-200/70 py-6 dark:border-white/10">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="border-t border-pink-200/70 py-5 dark:border-white/10 sm:py-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[9px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-white/35">Pagamento</span>
               {['PIX', 'Visa', 'Mastercard', 'Elo'].map((method) => <span key={method} className="rounded-lg border border-pink-200 bg-white/70 px-2.5 py-1 text-[10px] font-bold text-gray-500 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-400">{method}</span>)}
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500 dark:text-gray-500">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-gray-500 dark:text-gray-500 sm:text-xs">
               <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_PRIVACY_EVENT))} className="transition hover:text-pink-600 dark:hover:text-white">Cookies</button>
               <Link href="/terms#privacidade" className="transition hover:text-pink-600 dark:hover:text-white">Privacidade</Link>
               <span>© {new Date().getFullYear()} {settings.identity.shortName}</span>
@@ -115,9 +115,9 @@ export function Footer({ settings }: { settings: StoreSettings }) {
 
 function FooterColumn({ title, links }: { title: string; links: ReadonlyArray<{ href: string; label: string }> }) {
   return (
-    <div>
+    <div className="min-w-0">
       <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-500/80 dark:text-white/45">{title}</h2>
-      <ul className="mt-5 space-y-3.5">
+      <ul className="mt-4 space-y-3 sm:mt-5 sm:space-y-3.5">
         {links.map((link) => <li key={link.href}><Link href={link.href} className={footerLink}>{link.label}</Link></li>)}
       </ul>
     </div>
