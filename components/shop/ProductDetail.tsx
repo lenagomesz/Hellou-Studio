@@ -97,6 +97,8 @@ export function ProductDetail({
   const [customizationSelections, setCustomizationSelections] = useState<Record<string, ProductCustomizationSelection>>(
     () => parseProductCustomizationSelections(customizationSections, initialCustomizationText),
   );
+  const [uploadingPhotoSection, setUploadingPhotoSection] = useState<string | null>(null);
+  const [photoUploadError, setPhotoUploadError] = useState<Record<string, string>>({});
   const [gallerySelectionVersion, setGallerySelectionVersion] = useState(0);
   const automaticPricingSection = customizationSections.find(
     (section) => section.autoSelectOptionByCharacterCount,
@@ -156,7 +158,7 @@ export function ProductDetail({
     customizationSections.length > 0
       ? areRequiredCustomizationSectionsComplete(customizationSections, customizationSelections)
         && finalCustomizationText.length > 0
-        && finalCustomizationText.length <= 500
+        && finalCustomizationText.length <= 4000
       : customizationText.trim().length > 0
   );
   const customizationQuestion = product.customization_question?.trim() || DEFAULT_CUSTOMIZATION_COPY.question;
@@ -222,6 +224,39 @@ export function ProductDetail({
     } catch (error) {
       setFeedbackMessage(error instanceof Error ? error.message : 'Não foi possível adicionar. Tente novamente.');
       setFeedback('error');
+    }
+  };
+
+  const handleCustomizationPhotoUpload = async (sectionId: string, files: FileList | null, imageCount: number) => {
+    if (!files?.length) return;
+    const currentUrls = customizationSelections[sectionId]?.imageUrls ?? [];
+    const selectedFiles = Array.from(files);
+    if (currentUrls.length + selectedFiles.length > imageCount) {
+      setPhotoUploadError((current) => ({ ...current, [sectionId]: `Envie exatamente ${imageCount} ${imageCount === 1 ? 'foto' : 'fotos'}.` }));
+      return;
+    }
+
+    setUploadingPhotoSection(sectionId);
+    setPhotoUploadError((current) => ({ ...current, [sectionId]: '' }));
+    try {
+      const formData = new FormData();
+      selectedFiles.forEach((file) => formData.append('images', file));
+      const response = await fetch('/api/upload/customization-images', { method: 'POST', body: formData });
+      const data = await response.json().catch(() => ({})) as { urls?: string[]; error?: string };
+      if (!response.ok || !data.urls) {
+        throw new Error(response.status === 401 ? 'Entre na sua conta para enviar as fotos.' : data.error ?? 'Não foi possível enviar as fotos.');
+      }
+      setCustomizationSelections((current) => ({
+        ...current,
+        [sectionId]: {
+          ...current[sectionId],
+          imageUrls: [...(current[sectionId]?.imageUrls ?? []), ...data.urls!],
+        },
+      }));
+    } catch (error) {
+      setPhotoUploadError((current) => ({ ...current, [sectionId]: error instanceof Error ? error.message : 'Não foi possível enviar as fotos.' }));
+    } finally {
+      setUploadingPhotoSection(null);
     }
   };
 
@@ -393,6 +428,7 @@ export function ProductDetail({
               const needsColor = section.type === 'color' || section.type === 'color_text';
               const needsText = section.type === 'text' || section.type === 'color_text' || section.type === 'option_text';
               const needsOption = section.type === 'option' || section.type === 'option_text';
+              const needsImages = section.type === 'images';
               const hasOptionImages = needsOption && section.options.some((option) => option.imageUrl);
               return (
                 <div
@@ -559,6 +595,61 @@ export function ProductDetail({
                       )}
                     </div>
                   )}
+
+                  {needsImages && (() => {
+                    const imageCount = section.imageCount ?? 1;
+                    const imageUrls = selection.imageUrls ?? [];
+                    const remaining = imageCount - imageUrls.length;
+                    return (
+                      <div>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {imageUrls.map((url, imageIndex) => (
+                            <div key={url} className="relative aspect-square overflow-hidden rounded-xl border border-pink-100 bg-pink-50 dark:border-pink-900 dark:bg-pink-950/20">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={url} alt={`Foto ${imageIndex + 1} de ${imageCount}`} className="h-full w-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => setCustomizationSelections((current) => ({
+                                  ...current,
+                                  [section.id]: {
+                                    ...current[section.id],
+                                    imageUrls: (current[section.id]?.imageUrls ?? []).filter((imageUrl) => imageUrl !== url),
+                                  },
+                                }))}
+                                aria-label={`Remover foto ${imageIndex + 1}`}
+                                className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-sm font-bold text-red-600 shadow"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        {remaining > 0 && (
+                          <label className="mt-3 flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed border-pink-200 bg-pink-50/60 px-4 py-5 text-center transition hover:border-pink-400 dark:border-pink-900 dark:bg-pink-950/20">
+                            <span className="text-sm font-bold text-pink-700 dark:text-pink-300">
+                              {uploadingPhotoSection === section.id ? 'Enviando fotos…' : `Selecionar ${remaining} ${remaining === 1 ? 'foto' : 'fotos'}`}
+                            </span>
+                            <span className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">JPG, PNG ou WebP · até 10 MB por imagem</span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              multiple={remaining > 1}
+                              disabled={uploadingPhotoSection === section.id}
+                              onChange={(event) => {
+                                void handleCustomizationPhotoUpload(section.id, event.target.files, imageCount);
+                                event.target.value = '';
+                              }}
+                              className="sr-only"
+                            />
+                          </label>
+                        )}
+                        <p className={`mt-2 text-xs font-medium ${imageUrls.length === imageCount ? 'text-green-600 dark:text-green-400' : 'text-pink-700 dark:text-pink-300'}`}>
+                          {imageUrls.length} de {imageCount} {imageCount === 1 ? 'foto enviada' : 'fotos enviadas'}
+                        </p>
+                        {photoUploadError[section.id] && <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">{photoUploadError[section.id]}</p>}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -567,7 +658,7 @@ export function ProductDetail({
               <span className={hasRequiredCustomization ? 'text-green-600 dark:text-green-400' : 'text-pink-700 dark:text-pink-300'}>
                 {hasRequiredCustomization ? 'Personalização completa' : 'Complete as escolhas obrigatórias'}
               </span>
-              {finalCustomizationText.length > 500 && <span className="font-semibold text-red-600">Respostas muito longas</span>}
+              {finalCustomizationText.length > 4000 && <span className="font-semibold text-red-600">Personalização muito longa</span>}
             </div>
           </div>
         )}

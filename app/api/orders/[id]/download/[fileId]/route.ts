@@ -7,6 +7,7 @@ import {
   normalizeProductRelation,
   type ProductRelation,
 } from '@/lib/stl-download';
+import { getDigitalDownloadFileName, getDigitalFileContentType } from '@/lib/digital-files';
 
 interface DigitalOrderItem {
   product_id: string;
@@ -111,11 +112,11 @@ export async function GET(
     });
 
     // Stream file
-    const downloadFileName = `${product.name.replace(/\s+/g, '_')}.stl`;
+    const downloadFileName = getDigitalDownloadFileName(product.name, product.file_path);
     return new NextResponse(fileData, {
       headers: {
         'Content-Disposition': `attachment; filename="${downloadFileName}"`,
-        'Content-Type': 'application/octet-stream',
+        'Content-Type': getDigitalFileContentType(product.file_path),
       },
     });
   } catch (error) {

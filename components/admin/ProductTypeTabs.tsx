@@ -16,8 +16,8 @@ const tabs = [
   {
     type: 'digital' as const,
     href: '/dashboard/products/stl',
-    label: 'Arquivo STL',
-    description: 'Produto digital com download após a compra',
+    label: 'Arquivo STL ou 3MF',
+    description: 'Produto digital enviado por e-mail e liberado após a compra',
     icon: FileBox,
   },
 ];

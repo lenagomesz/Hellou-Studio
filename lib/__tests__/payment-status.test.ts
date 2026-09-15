@@ -5,7 +5,7 @@ describe('regras de status do Mercado Pago', () => {
   it.each(['approved', 'authorized'])('considera %s como pagamento aprovado', (status) => {
     expect(isMercadoPagoApproved(status)).toBe(true);
     expect(mapMercadoPagoOrderStatus(status, false)).toBe('processing');
-    expect(mapMercadoPagoOrderStatus(status, true)).toBe('approved');
+    expect(mapMercadoPagoOrderStatus(status, true)).toBe('delivered');
   });
 
   it.each(['pending', 'in_process', 'in_mediation'])('mantém %s aguardando pagamento', (status) => {

@@ -5,6 +5,7 @@ import type { CartItemView } from '@/lib/cart';
 import type { CartItem, Product, ProductOption } from '@/types/database';
 import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
 import {
+  areRequiredCustomizationSectionsComplete,
   countCustomizationLetters,
   getOptionCharacterCount,
   normalizeProductCustomizationSections,
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
 
   const optionId = product_option_id ?? null;
   const normalizedCustomization = typeof customization_text === 'string' ? customization_text.trim() : '';
-  if (normalizedCustomization.length > 500) return badRequest('A personalização deve ter no máximo 500 caracteres');
+  if (normalizedCustomization.length > 4000) return badRequest('A personalização deve ter no máximo 4.000 caracteres');
   const requestedQty =
     typeof quantity === 'number' && Number.isFinite(quantity)
       ? Math.floor(quantity)
@@ -171,9 +172,18 @@ export async function POST(request: Request) {
   let automaticLetterCount: number | null = null;
   try {
     const sections = normalizeProductCustomizationSections(product.customization_sections);
+    const selections = parseProductCustomizationSelections(sections, normalizedCustomization);
+    if (product.is_customizable && sections.length > 0 && !areRequiredCustomizationSectionsComplete(sections, selections)) {
+      return badRequest('Complete todas as personalizações obrigatórias');
+    }
+    for (const section of sections.filter((item) => item.type === 'images')) {
+      const imageUrls = selections[section.id]?.imageUrls ?? [];
+      if (imageUrls.some((url) => !url.startsWith(`/api/customization-images/${auth.user.id}/`))) {
+        return badRequest('Uma das fotos enviadas é inválida');
+      }
+    }
     const automaticSection = sections.find((section) => section.autoSelectOptionByCharacterCount);
     if (automaticSection) {
-      const selections = parseProductCustomizationSelections(sections, normalizedCustomization);
       automaticLetterCount = countCustomizationLetters(selections[automaticSection.id]?.text ?? '');
       if (automaticLetterCount < 1) {
         return badRequest('Digite o nome para calcular a variação e o preço');

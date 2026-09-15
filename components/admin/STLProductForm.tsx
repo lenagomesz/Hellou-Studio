@@ -9,6 +9,7 @@ import type { Product } from '@/types/database';
 import { ProductCategorySelect } from '@/components/admin/ProductCategorySelect';
 import { ProductLivePreview } from '@/components/admin/ProductLivePreview';
 import { ProductTagSelect, replaceProductTags } from '@/components/admin/ProductTagSelect';
+import { isSupportedDigitalFile } from '@/lib/digital-files';
 
 const MAX_STL_SIZE = 100 * 1024 * 1024;
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
@@ -57,8 +58,8 @@ export function STLProductForm({ mode, product }: Props) {
   }, [imageFiles]);
 
   function validateSTL(selectedFile: File) {
-    if (!selectedFile.name.toLowerCase().endsWith('.stl')) return 'Apenas arquivos .stl são aceitos';
-    if (selectedFile.size > MAX_STL_SIZE) return 'O arquivo STL deve ter no máximo 100 MB';
+    if (!isSupportedDigitalFile(selectedFile.name)) return 'Apenas arquivos .stl ou .3mf são aceitos';
+    if (selectedFile.size > MAX_STL_SIZE) return 'O arquivo digital deve ter no máximo 100 MB';
     return null;
   }
 
@@ -71,7 +72,7 @@ export function STLProductForm({ mode, product }: Props) {
     }
     setError('');
     setFile(selectedFile);
-    if (!name) setName(selectedFile.name.replace(/\.stl$/i, '').replace(/[_-]/g, ' '));
+    if (!name) setName(selectedFile.name.replace(/\.(?:stl|3mf)$/i, '').replace(/[_-]/g, ' '));
   }
 
   function addImages(files: FileList | null) {
@@ -102,7 +103,7 @@ export function STLProductForm({ mode, product }: Props) {
     setError('');
     setSuccess('');
 
-    if (mode === 'create' && !file) return setError('Selecione um arquivo STL');
+    if (mode === 'create' && !file) return setError('Selecione um arquivo STL ou 3MF');
     if (!name.trim()) return setError('Nome do produto é obrigatório');
     if (!price || !Number.isFinite(Number(price)) || Number(price) <= 0) return setError('O preço deve ser maior que zero');
 
@@ -124,7 +125,7 @@ export function STLProductForm({ mode, product }: Props) {
         body: formData,
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string; product?: Product };
-      if (!response.ok || !data.product) throw new Error(data.error ?? 'Não foi possível salvar o produto STL');
+      if (!response.ok || !data.product) throw new Error(data.error ?? 'Não foi possível salvar o produto digital');
 
       await replaceProductTags(data.product.id, tagIds);
 
@@ -134,7 +135,7 @@ export function STLProductForm({ mode, product }: Props) {
         return;
       }
 
-      setSuccess('Alterações salvas. O produto STL já foi atualizado na loja.');
+      setSuccess('Alterações salvas. O produto digital já foi atualizado na loja.');
       setLoading(false);
       router.refresh();
     } catch (submitError) {
@@ -165,8 +166,8 @@ export function STLProductForm({ mode, product }: Props) {
         <div className="space-y-6">
       <section className="rounded-[26px] border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-8">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">01 · Arquivo digital</p>
-        <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Arquivo STL</h2>
-        <p className="mt-1 text-sm text-gray-500">{mode === 'edit' && product.file_path ? 'O arquivo atual será mantido. Selecione outro somente para substituí-lo.' : 'Envie o arquivo que o cliente receberá após a compra.'}</p>
+        <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Arquivo STL ou 3MF</h2>
+        <p className="mt-1 text-sm text-gray-500">{mode === 'edit' && product.file_path ? 'O arquivo atual será mantido. Selecione outro somente para substituí-lo.' : 'Envie o arquivo que será liberado em Meus Pedidos e informado ao cliente por e-mail após a aprovação do pagamento.'}</p>
         <div
           onDrop={(event) => { event.preventDefault(); setDragOver(false); selectSTL(event.dataTransfer.files[0]); }}
           onDragOver={(event) => { event.preventDefault(); setDragOver(true); }}
@@ -174,15 +175,15 @@ export function STLProductForm({ mode, product }: Props) {
           onClick={() => !file && stlInputRef.current?.click()}
           className={`mt-5 cursor-pointer rounded-xl border-2 border-dashed p-7 text-center transition ${dragOver ? 'border-pink-500 bg-pink-50' : file ? 'border-green-400 bg-green-50 dark:bg-green-900/10' : 'border-gray-300 hover:border-pink-400 dark:border-gray-600'}`}
         >
-          <input ref={stlInputRef} type="file" accept=".stl" onChange={(event) => selectSTL(event.target.files?.[0])} className="hidden" />
+          <input ref={stlInputRef} type="file" accept=".stl,.3mf" onChange={(event) => selectSTL(event.target.files?.[0])} className="hidden" />
           {file ? (
             <div className="flex items-center justify-center gap-4">
               <FileUp className="h-9 w-9 text-green-500" />
               <div className="text-left"><p className="font-medium text-gray-900 dark:text-white">{file.name}</p><p className="text-sm text-gray-500">{formatFileSize(file.size)}</p></div>
-              <button type="button" aria-label="Remover arquivo STL" onClick={(event) => { event.stopPropagation(); setFile(null); if (stlInputRef.current) stlInputRef.current.value = ''; }} className="rounded-full p-2 text-red-500 hover:bg-red-100"><X className="h-5 w-5" /></button>
+              <button type="button" aria-label="Remover arquivo digital" onClick={(event) => { event.stopPropagation(); setFile(null); if (stlInputRef.current) stlInputRef.current.value = ''; }} className="rounded-full p-2 text-red-500 hover:bg-red-100"><X className="h-5 w-5" /></button>
             </div>
           ) : (
-            <div><Upload className="mx-auto h-11 w-11 text-gray-400" /><p className="mt-3 font-medium text-gray-700 dark:text-gray-300">{mode === 'edit' && product.file_path ? 'Clique ou arraste para substituir o STL' : 'Clique ou arraste o arquivo STL aqui'}</p><p className="mt-1 text-sm text-gray-500">Máximo de 100 MB</p></div>
+            <div><Upload className="mx-auto h-11 w-11 text-gray-400" /><p className="mt-3 font-medium text-gray-700 dark:text-gray-300">{mode === 'edit' && product.file_path ? 'Clique ou arraste para substituir o arquivo' : 'Clique ou arraste o arquivo STL ou 3MF aqui'}</p><p className="mt-1 text-sm text-gray-500">STL ou 3MF · máximo de 100 MB</p></div>
           )}
         </div>
       </section>
@@ -241,7 +242,7 @@ export function STLProductForm({ mode, product }: Props) {
       </div>
 
       <div className="sticky bottom-4 z-20 flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-        <button type="submit" disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-500 px-6 py-3 font-semibold text-white shadow-lg disabled:opacity-50">{loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}{loading ? 'Salvando...' : mode === 'edit' ? 'Salvar alterações' : 'Criar produto STL'}</button>
+        <button type="submit" disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-orange-500 px-6 py-3 font-semibold text-white shadow-lg disabled:opacity-50">{loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}{loading ? 'Salvando...' : mode === 'edit' ? 'Salvar alterações' : 'Criar produto digital'}</button>
         <Link href={product ? `/dashboard/products/${product.id}` : '/dashboard/products'} className="rounded-xl border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300">Cancelar</Link>
       </div>
     </form>

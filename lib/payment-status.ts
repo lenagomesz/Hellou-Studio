@@ -11,7 +11,7 @@ export function mapMercadoPagoOrderStatus(
   digitalOnly: boolean,
   currentStatus: OrderStatus = 'awaiting_payment',
 ): OrderStatus {
-  if (isMercadoPagoApproved(providerStatus)) return digitalOnly ? 'approved' : 'processing';
+  if (isMercadoPagoApproved(providerStatus)) return digitalOnly ? 'delivered' : 'processing';
   if (providerStatus === 'cancelled') return 'canceled';
   if (providerStatus === 'refunded') return 'refunded';
   if (providerStatus === 'rejected' || providerStatus === 'declined') return 'rejected';

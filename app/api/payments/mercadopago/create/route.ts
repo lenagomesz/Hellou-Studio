@@ -497,7 +497,7 @@ export async function POST(request: Request) {
             user.id,
             'order_status',
             'Pagamento aprovado! ✅',
-            `Seu arquivo STL está pronto para download em #${order.id.slice(0, 8).toUpperCase()}.`,
+            `Seu arquivo digital está pronto para download em #${order.id.slice(0, 8).toUpperCase()}.`,
             { order_id: order.id, event: 'card_approved' },
           );
         } else {
@@ -516,7 +516,7 @@ export async function POST(request: Request) {
       // Create admin alert for real-time notification
       createAdminAlert({
         type: 'new_order',
-        title: `Novo pedido: ${isDigitalOrder ? 'STL' : 'Produto físico'}`,
+        title: `Novo pedido: ${isDigitalOrder ? 'Arquivo digital' : 'Produto físico'}`,
         body: `Cliente: ${userData?.name || user.email} | Total: R$ ${totalAmount.toFixed(2)}`,
         priority: isDigitalOrder ? 'normal' : 'high',
         related_order_id: order.id,
@@ -559,7 +559,7 @@ export async function POST(request: Request) {
               user.id,
               'order_status',
               'Seu arquivo está pronto! ✨',
-              `Acesse seu pedido #${order.id.slice(0, 8).toUpperCase()} para baixar os arquivos STL.`,
+              `Acesse seu pedido #${order.id.slice(0, 8).toUpperCase()} para baixar os arquivos digitais.`,
               { order_id: order.id, event: 'stl_delivered' },
             );
           } catch (e) {
@@ -571,8 +571,8 @@ export async function POST(request: Request) {
             await createNotification(
               user.id,
               'order_status',
-              'Arquivo STL disponível! 📥',
-              `Seu arquivo STL já está disponível para download em #${order.id.slice(0, 8).toUpperCase()}, enquanto preparamos seu pedido.`,
+              'Arquivo digital disponível! 📥',
+              `Seu arquivo digital já está disponível para download em #${order.id.slice(0, 8).toUpperCase()}, enquanto preparamos seu pedido.`,
               { order_id: order.id, event: 'stl_available' },
             );
           } catch (e) {
@@ -583,7 +583,7 @@ export async function POST(request: Request) {
         // Send STL delivery email with file info automatically
         if (stlItems.length > 0 && isPaymentApproved) {
           for (const stlItem of stlItems) {
-            const fileName = (stlItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo STL';
+            const fileName = (stlItem.product_snapshot as Record<string, unknown>)?.name as string || 'Arquivo digital';
 
             sendSTLDeliveryEmail({
               email: userData?.email || user.email,

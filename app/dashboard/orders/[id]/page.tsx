@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import type { OrderStatus } from '@/types/database';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 import { ShipmentTracking } from '@/components/orders/ShipmentTracking';
+import { CustomizationSummary } from '@/components/shop/CustomizationSummary';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_payment: 'Aguardando Pagamento',
@@ -391,7 +392,7 @@ export default function OrderDetailPage() {
                     })()}
                     {item.customization_text && (
                       <div className="mt-2 min-w-0 whitespace-pre-wrap break-all rounded-xl border border-pink-100 bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:border-pink-900/50 dark:bg-pink-500/10 dark:text-pink-200">
-                        <span className="font-semibold">Personalização solicitada:</span> {item.customization_text}
+                        <CustomizationSummary value={item.customization_text} title="Personalização solicitada:" />
                       </div>
                     )}
                     {item.product?.type === 'digital' && (
@@ -411,7 +412,9 @@ export default function OrderDetailPage() {
                             const blob = await res.blob();
                             const link = document.createElement('a');
                             link.href = URL.createObjectURL(blob);
-                            link.download = `${item.product.name}.stl`;
+                            const disposition = res.headers.get('Content-Disposition');
+                            const responseFileName = disposition?.match(/filename="([^"]+)"/i)?.[1];
+                            link.download = responseFileName || item.product.name;
                             document.body.appendChild(link);
                             link.click();
                             link.remove();
@@ -468,7 +471,7 @@ export default function OrderDetailPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-green-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L3 3m0 0h18M3 3l4.72 4.72a.75.75 0 0 0 1.28-.531V3H7.5m13.5 0v4.191a.75.75 0 0 0 1.28.531L21 3" />
                 </svg>
-                <span className="text-xs font-semibold text-green-700">Entregar Arquivo STL</span>
+                <span className="text-xs font-semibold text-green-700">Entregar arquivo digital</span>
               </div>
               <p className="text-xs text-green-600 mb-3">Enviar email de entrega e marcar pedido como entregue</p>
               <button
@@ -482,7 +485,7 @@ export default function OrderDetailPage() {
                     });
                     if (res.ok) {
                       setOrder({ ...order, status: 'delivered' });
-                      setSaveMsg('Email STL enviado e pedido marcado como entregue!');
+                      setSaveMsg('E-mail de entrega enviado e pedido marcado como entregue!');
                     } else {
                       const err = await res.json();
                       setSaveMsg(err.error || 'Erro ao enviar email');
@@ -579,7 +582,7 @@ export default function OrderDetailPage() {
             {/* Outros status */}
             <div className="border-t border-gray-100 pt-4">
               <p className="text-xs font-medium text-gray-500 mb-2">
-                {isDigitalOnly ? 'Apenas STL - Status limitado:' : 'Ir para status:'}
+                {isDigitalOnly ? 'Apenas arquivos digitais — status limitado:' : 'Ir para status:'}
               </p>
               <div className="flex flex-wrap gap-2">
                 {isDigitalOnly ? (

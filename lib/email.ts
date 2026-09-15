@@ -3,6 +3,7 @@ import { sendTrackedEmail } from '@/lib/email-delivery';
 import { structuredLog } from '@/lib/observability';
 import { buildEmailUrl, normalizeEmailBaseUrl } from '@/lib/email-links';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
+import { summarizeProductCustomization } from '@/lib/product-customization';
 
 let cached: Resend | null = null;
 let warned = false;
@@ -568,7 +569,7 @@ export async function sendOrderConfirmationEmail(params: {
                 <p style="color: #888; margin: 0; font-size: 13px;">
                   Quantidade: ${item.quantidade} × ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.precoUnitario)}
                 </p>
-                ${item.personalizacao ? `<p style="color:#9d174d;margin:8px 0 0;font-size:13px;line-height:1.5;"><strong>Personalização:</strong> ${item.personalizacao.replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character] ?? character)}</p>` : ''}
+                ${item.personalizacao ? `<p style="color:#9d174d;margin:8px 0 0;font-size:13px;line-height:1.5;"><strong>Personalização:</strong> ${summarizeProductCustomization(item.personalizacao).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character] ?? character)}</p>` : ''}
               </div>
             `).join('')}
           </div>
@@ -1045,12 +1046,12 @@ export async function sendSTLOrderConfirmationEmail(params: {
     const res = await sendTrackedEmail(resend, {
       from: getFrom(),
       to: params.email,
-      subject: `Seu arquivo STL está pronto! #${params.orderId.slice(0, 8).toUpperCase()}`,
+      subject: `Seu arquivo digital está pronto! #${params.orderId.slice(0, 8).toUpperCase()}`,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
           <h2 style="color: #111;">Olá${params.nome ? `, ${params.nome}` : ''}! ✨</h2>
           <p style="color: #555; line-height: 1.6;">
-            Seu arquivo STL <strong>"${params.fileName}"</strong> está pronto para download!
+            Seu arquivo digital <strong>"${params.fileName}"</strong> está pronto para download!
           </p>
           <div style="margin: 20px 0; padding: 16px; background: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
             <p style="margin: 0; color: #15803D; font-size: 14px;">
@@ -1147,7 +1148,7 @@ export async function sendSTLDeliveryEmail(params: {
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
           <h2 style="color: #111;">Olá${params.nome ? `, ${params.nome}` : ''}! ✨</h2>
           <p style="color: #555; line-height: 1.6;">
-            Seu arquivo STL <strong>"${params.fileName}"</strong> está pronto para download!
+            Seu arquivo digital <strong>"${params.fileName}"</strong> está pronto para download!
           </p>
           <div style="margin: 20px 0; padding: 16px; background: #F0FDF4; border-radius: 8px; border: 1px solid #BBF7D0;">
             <p style="margin: 0; color: #15803D; font-size: 14px;">

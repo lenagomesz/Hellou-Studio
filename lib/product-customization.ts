@@ -10,7 +10,7 @@ export type ProductCustomizationCopyInput = {
   customization_placeholder?: string | null;
 };
 
-export type ProductCustomizationSectionType = 'color' | 'text' | 'color_text' | 'option' | 'option_text';
+export type ProductCustomizationSectionType = 'color' | 'text' | 'color_text' | 'option' | 'option_text' | 'images';
 
 export type ProductCustomizationColor = {
   id: string;
@@ -32,6 +32,7 @@ export type ProductCustomizationSection = {
   autoSelectOptionByCharacterCount: boolean;
   helpText: string;
   placeholder: string;
+  imageCount?: number;
   colors: ProductCustomizationColor[];
   options: ProductCustomizationOption[];
 };
@@ -43,6 +44,7 @@ export type ProductCustomizationSelection = {
   optionId?: string;
   optionLabel?: string;
   text?: string;
+  imageUrls?: string[];
 };
 
 const FIELD_LIMITS = {
@@ -73,7 +75,7 @@ export function normalizeProductCustomizationCopy(
   return normalized;
 }
 
-const SECTION_TYPES = new Set<ProductCustomizationSectionType>(['color', 'text', 'color_text', 'option', 'option_text']);
+const SECTION_TYPES = new Set<ProductCustomizationSectionType>(['color', 'text', 'color_text', 'option', 'option_text', 'images']);
 
 function normalizeIdentifier(value: unknown, fallback: string) {
   if (typeof value !== 'string') return fallback;
@@ -113,6 +115,11 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
     }
 
     const needsColors = type === 'color' || type === 'color_text';
+    const needsImages = type === 'images';
+    const imageCount = needsImages ? Number(section.imageCount ?? 1) : 1;
+    if (needsImages && (!Number.isInteger(imageCount) || imageCount < 1 || imageCount > 20)) {
+      throw new Error(`Informe uma quantidade de 1 a 20 fotos em "${label}"`);
+    }
     const rawColors = Array.isArray(section.colors) ? section.colors : [];
     if (rawColors.length > 20) throw new Error(`Cadastre no máximo 20 cores em "${label}"`);
 
@@ -183,6 +190,7 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
         && section.autoSelectOptionByCharacterCount === true,
       helpText,
       placeholder,
+      ...(needsImages ? { imageCount } : {}),
       colors,
       options,
     };
@@ -214,6 +222,9 @@ export function formatProductCustomizationSelections(
       if ((section.type === 'text' || section.type === 'color_text' || section.type === 'option_text') && selection.text?.trim()) {
         parts.push(`Texto: ${selection.text.trim()}`);
       }
+      if (section.type === 'images' && selection.imageUrls?.length) {
+        parts.push(`Fotos: ${selection.imageUrls.join(',')}`);
+      }
       return parts.length > 0 ? `${section.label}: ${parts.join(' · ')}` : '';
     })
     .filter(Boolean)
@@ -230,10 +241,12 @@ export function areRequiredCustomizationSectionsComplete(
     const hasColor = Boolean(selection.colorId && section.colors.some((color) => color.id === selection.colorId));
     const hasText = Boolean(selection.text?.trim());
     const hasOption = Boolean(selection.optionId && section.options.some((option) => option.id === selection.optionId));
+    const imageCount = selection.imageUrls?.length ?? 0;
     if (section.type === 'color') return hasColor;
     if (section.type === 'text') return hasText;
     if (section.type === 'option') return hasOption;
     if (section.type === 'option_text') return hasOption && hasText;
+    if (section.type === 'images') return imageCount === (section.imageCount ?? 1);
     return hasColor && hasText;
   });
 }
@@ -250,6 +263,7 @@ export function parseProductCustomizationSelections(
     const colorMatch = /(?:^| · )Cor: ([^·]+)/.exec(content);
     const textMatch = /(?:^| · )Texto: (.+)$/.exec(content);
     const optionMatch = /(?:^| · )Opção: ([^·]+)/.exec(content);
+    const imagesMatch = /(?:^| · )Fotos: (.+)$/.exec(content);
     const colorLabel = colorMatch?.[1]?.trim();
     const color = colorLabel
       ? section.colors.find((item) => item.label.toLocaleLowerCase('pt-BR') === colorLabel.toLocaleLowerCase('pt-BR'))
@@ -262,6 +276,7 @@ export function parseProductCustomizationSelections(
       ...(color ? { colorId: color.id, colorLabel: color.label, colorValue: color.value } : {}),
       ...(textMatch?.[1] ? { text: textMatch[1].trim() } : {}),
       ...(option ? { optionId: option.id, optionLabel: option.label } : {}),
+      ...(imagesMatch?.[1] ? { imageUrls: imagesMatch[1].split(',').map((url) => url.trim()).filter(Boolean) } : {}),
     };
   }
   return selections;
@@ -276,6 +291,13 @@ export function getOptionCharacterCount(optionName: string) {
   if (!match) return null;
   const count = Number(match[1]);
   return Number.isInteger(count) && count > 0 ? count : null;
+}
+
+export function summarizeProductCustomization(value: string) {
+  return value.replace(/^(.*?): Fotos: ([^\n]+)$/gm, (_line, label: string, urls: string) => {
+    const count = urls.split(',').map((url) => url.trim()).filter(Boolean).length;
+    return `${label}: ${count} ${count === 1 ? 'foto enviada' : 'fotos enviadas'}`;
+  });
 }
 
 export function findOptionByCharacterCount<T extends { name: string }>(

@@ -42,15 +42,13 @@ export function Footer({ settings }: { settings: StoreSettings }) {
       <div className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-orange-300/20 blur-3xl dark:bg-orange-500/10" />
 
       <div className="relative mx-auto max-w-[1400px] px-3 pt-4 min-[380px]:px-4 sm:px-6 sm:pt-6 lg:px-10">
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-600 via-rose-500 to-orange-500 px-4 py-4 text-white shadow-xl shadow-pink-950/25 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:rounded-3xl sm:px-6 sm:py-5 lg:px-8">
-          <div className="pointer-events-none absolute -right-10 -top-20 h-48 w-48 rounded-full border-[28px] border-white/10" />
-          <div className="relative min-w-0 max-w-2xl">
-            <p className="hidden text-[9px] font-black uppercase tracking-[0.22em] text-white/75 min-[380px]:block">Feito para ter a sua cara</p>
-            <h2 className="text-lg font-black leading-tight tracking-[-0.03em] min-[380px]:mt-1 sm:text-xl">Encontrou uma peça que amou?</h2>
-            <p className="mt-1.5 text-xs leading-5 text-white/85 sm:text-sm">Salve nos favoritos e acompanhe ofertas exclusivas na sua conta.</p>
+        <section className="rounded-2xl border border-pink-200/70 bg-white/55 px-4 py-3 text-gray-700 shadow-sm backdrop-blur-sm sm:flex sm:items-center sm:justify-between sm:gap-6 sm:px-5 dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-200">
+          <div className="min-w-0 max-w-2xl">
+            <h2 className="text-sm font-bold leading-tight sm:text-base">Encontrou uma peça que amou?</h2>
+            <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Salve para encontrar facilmente depois.</p>
           </div>
-          <Link href={favoritesHref} className="relative mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-black text-pink-600 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:mt-0 sm:w-auto sm:shrink-0 sm:text-sm">
-            <Heart className="h-3.5 w-3.5 fill-current sm:h-4 sm:w-4" /> Ver favoritos <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <Link href={favoritesHref} className="mt-2.5 inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-pink-200 bg-white/70 px-3 text-xs font-semibold text-pink-600 transition hover:border-pink-300 hover:bg-pink-50 sm:mt-0 sm:w-auto sm:shrink-0 dark:border-white/10 dark:bg-white/[0.04] dark:text-pink-300 dark:hover:bg-white/[0.08]">
+            <Heart className="h-3.5 w-3.5" /> Ver favoritos <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </section>
 

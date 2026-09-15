@@ -120,7 +120,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
       return serverError('Erro ao atualizar pedido');
     }
 
-    // Send STL delivery email
+    // Send the digital-file delivery email
     try {
       const { data: userData } = await admin
         .from('users')
@@ -133,7 +133,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
           product_snapshot?: { name?: string };
           product?: { name?: string };
         }> | undefined)?.[0];
-        const fileName = firstItem?.product_snapshot?.name ?? firstItem?.product?.name ?? 'Arquivo STL';
+        const fileName = firstItem?.product_snapshot?.name ?? firstItem?.product?.name ?? 'Arquivo digital';
         await sendSTLDeliveryEmail({
           email: userData.email,
           nome: userData.name || null,

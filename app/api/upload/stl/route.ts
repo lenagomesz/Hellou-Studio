@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { isCategory, requirePermission } from '@/lib/api';
 import type { Category, Product } from '@/types/database';
 import { createProductSlug } from '@/lib/product-commercial';
+import { isSupportedDigitalFile } from '@/lib/digital-files';
 
 export const maxDuration = 300;
 
@@ -69,8 +70,8 @@ function parseFormData(formData: FormData): ProductFields | string {
   if (!name) return 'Nome do produto é obrigatório';
   if (!Number.isFinite(price) || price <= 0) return 'Preço inválido';
   if (!isCategory(category)) return 'Categoria inválida';
-  if (stlFile && (!stlFile.name.toLowerCase().endsWith('.stl') || stlFile.size > MAX_STL_SIZE)) {
-    return stlFile.size > MAX_STL_SIZE ? 'O arquivo STL deve ter no máximo 100 MB' : 'Apenas arquivos .stl são aceitos';
+  if (stlFile && (!isSupportedDigitalFile(stlFile.name) || stlFile.size > MAX_STL_SIZE)) {
+    return stlFile.size > MAX_STL_SIZE ? 'O arquivo digital deve ter no máximo 100 MB' : 'Apenas arquivos .stl ou .3mf são aceitos';
   }
   if (existingImages.length + imageFiles.length > MAX_IMAGES) return `Cadastre no máximo ${MAX_IMAGES} imagens`;
   for (const image of imageFiles) {
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
       const statusAuth = await requirePermission('products.status.manage');
       if (statusAuth.response) return statusAuth.response;
     }
-    if (!fields.stlFile) return errorResponse('Arquivo STL é obrigatório');
+    if (!fields.stlFile) return errorResponse('Arquivo STL ou 3MF é obrigatório');
 
     const supabase = getSupabaseAdmin();
     const { data: productCategory } = await supabase.from('product_categories').select('slug').eq('slug', fields.category).eq('active', true).maybeSingle();
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
     if (uploadedSTL.error) {
       if (uploadedImages.paths.length > 0) await supabase.storage.from(IMAGE_BUCKET).remove(uploadedImages.paths);
       await supabase.from('products').delete().eq('id', product.id);
-      return errorResponse('Erro ao enviar o arquivo STL', 500);
+      return errorResponse('Erro ao enviar o arquivo digital', 500);
     }
 
     const images = [...fields.existingImages, ...uploadedImages.urls];
@@ -210,7 +211,7 @@ export async function PATCH(request: NextRequest) {
     const supabase = getSupabaseAdmin();
     const { data: currentProduct } = await supabase.from('products').select('*').eq('id', productId).maybeSingle();
     if (!currentProduct) return errorResponse('Produto não encontrado', 404);
-    if (currentProduct.type !== 'digital') return errorResponse('Este produto não é um arquivo STL');
+    if (currentProduct.type !== 'digital') return errorResponse('Este produto não é um arquivo digital');
     if (fields.activeProvided && fields.active !== currentProduct.active) {
       const statusAuth = await requirePermission('products.status.manage');
       if (statusAuth.response) return statusAuth.response;
@@ -226,7 +227,7 @@ export async function PATCH(request: NextRequest) {
       const uploadedSTL = await uploadSTL(productId, fields.stlFile);
       if (uploadedSTL.error) {
         if (uploadedImages.paths.length > 0) await supabase.storage.from(IMAGE_BUCKET).remove(uploadedImages.paths);
-        return errorResponse('Erro ao enviar o novo arquivo STL', 500);
+        return errorResponse('Erro ao enviar o novo arquivo digital', 500);
       }
       newSTLPath = uploadedSTL.path;
     }
@@ -247,7 +248,7 @@ export async function PATCH(request: NextRequest) {
     if (updateError || !savedProduct) {
       if (newSTLPath) await supabase.storage.from(STL_BUCKET).remove([newSTLPath]);
       if (uploadedImages.paths.length > 0) await supabase.storage.from(IMAGE_BUCKET).remove(uploadedImages.paths);
-      return errorResponse('Erro ao atualizar o produto STL', 500);
+      return errorResponse('Erro ao atualizar o produto digital', 500);
     }
 
     if (newSTLPath && currentProduct.file_path && !String(currentProduct.file_path).startsWith('http')) {

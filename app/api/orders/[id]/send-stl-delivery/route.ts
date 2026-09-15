@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
     (item) => item.product?.type === 'digital',
   );
   if (!stlItems.length) {
-    return NextResponse.json({ error: 'Este pedido não contém arquivos STL' }, { status: 400 });
+    return NextResponse.json({ error: 'Este pedido não contém arquivos digitais' }, { status: 400 });
   }
 
   // Send emails for each STL item
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
       order.user?.id,
       'order_status',
       'Seu arquivo está pronto! ✨',
-      `Acesse seu pedido #${id.slice(0, 8).toUpperCase()} para baixar os arquivos STL.`,
+      `Acesse seu pedido #${id.slice(0, 8).toUpperCase()} para baixar os arquivos digitais.`,
       { order_id: id, event: 'stl_delivered_manual' },
     );
   } catch (e) {
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
 
   return NextResponse.json({
     success: true,
-    message: `Email enviado para ${stlItems.length} arquivo(s) STL`,
+    message: `E-mail enviado para ${stlItems.length} arquivo(s) digital(is)`,
     status: 'delivered',
   });
 }

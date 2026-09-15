@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDown, ArrowUp, ListChecks, Palette, Plus, Trash2, Type } from 'lucide-react';
+import { ArrowDown, ArrowUp, Images, ListChecks, Palette, Plus, Trash2, Type } from 'lucide-react';
 import type {
   ProductCustomizationColor,
   ProductCustomizationOption,
@@ -49,6 +49,7 @@ function createSection(): ProductCustomizationSection {
     autoSelectOptionByCharacterCount: false,
     helpText: '',
     placeholder: '',
+    imageCount: 1,
     colors: createPresetColors(),
     options: [],
   };
@@ -184,6 +185,7 @@ export function CustomizationSectionsEditor({
                     <option value="color_text">Cor + texto</option>
                     <option value="option">Somente opção</option>
                     <option value="option_text">Opção + texto</option>
+                    <option value="images">Somente envio de fotos</option>
                   </select>
                 </label>
               </div>
@@ -307,6 +309,25 @@ export function CustomizationSectionsEditor({
                     </span>
                   </label>
                 </div>
+              )}
+
+              {section.type === 'images' && (
+                <label className="mt-4 block rounded-xl border border-pink-100 bg-pink-50/70 p-3 dark:border-pink-900/50 dark:bg-pink-950/20">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <Images className="h-4 w-4 text-pink-500" />
+                    Quantidade de fotos que o cliente deve enviar
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    step="1"
+                    value={section.imageCount ?? 1}
+                    onChange={(event) => updateSection(sectionIndex, { imageCount: Number(event.target.value) })}
+                    className="mt-2 w-28 rounded-lg border border-pink-200 bg-white px-3 py-2 text-sm dark:border-pink-900 dark:bg-slate-950"
+                  />
+                  <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">de 1 a 20 imagens</span>
+                </label>
               )}
 
               {usesOptions(section.type) && (

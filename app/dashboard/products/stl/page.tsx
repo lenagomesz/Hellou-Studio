@@ -10,7 +10,7 @@ export default function STLUploadPage() {
           &larr; Voltar para produtos
         </Link>
         <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-pink-600">Catálogo digital</p>
-        <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Cadastrar produto STL</h1>
+        <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Cadastrar arquivo STL ou 3MF</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
           Envie o arquivo para download, adicione as imagens de apresentação e configure as informações de venda.
         </p>

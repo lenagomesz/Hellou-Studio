@@ -112,9 +112,9 @@ export async function POST(request: Request) {
         .select('product_id, product:products(type)')
         .eq('order_id', order.id);
 
-      const isDigitalOrder = orderItemsForType?.every(
+      const isDigitalOrder = Boolean(orderItemsForType?.length && orderItemsForType.every(
         (item) => (item.product as unknown as { type: string } | null)?.type === 'digital'
-      ) ?? false;
+      ));
 
       newStatus = mapMercadoPagoOrderStatus(mpStatus, isDigitalOrder, order.status as import('@/types/database').OrderStatus);
     }
@@ -231,7 +231,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if ((newStatus === 'approved' || newStatus === 'processing') && order.status === 'awaiting_payment') {
+    if ((newStatus === 'delivered' || newStatus === 'processing') && order.status === 'awaiting_payment') {
       const { data: items } = await admin
         .from('order_items')
         .select('*, option:product_options(*), product:products(*)')
@@ -246,7 +246,7 @@ export async function POST(request: Request) {
         let notifBody = '';
 
         if (hasDigital && !hasPhysical) {
-          notifTitle = '✨ Seu arquivo STL está pronto!';
+          notifTitle = '✨ Seu arquivo digital está pronto!';
           notifBody = 'Acesse sua conta para fazer download do arquivo';
         } else if (!hasDigital && hasPhysical) {
           notifTitle = '🎉 Pedido aprovado!';
@@ -352,7 +352,7 @@ export async function POST(request: Request) {
                    (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
         );
 
-        if (hasDigitalItems && newStatus === 'approved') {
+        if (hasDigitalItems && (newStatus === 'delivered' || newStatus === 'processing')) {
           const digitalItem = (items || []).find(
             (item) => (item.product as Record<string, unknown>)?.type === 'digital' ||
                      (item.product_snapshot as Record<string, unknown>)?.type === 'digital'
@@ -360,8 +360,8 @@ export async function POST(request: Request) {
           const fileName = digitalItem
             ? ((digitalItem.product as Record<string, unknown>)?.name as string || 
                (digitalItem.product_snapshot as Record<string, unknown>)?.name as string || 
-               'Arquivo STL')
-            : 'Arquivo STL';
+               'Arquivo digital')
+            : 'Arquivo digital';
 
           await sendSTLOrderConfirmationEmail({
             email: userData.email,

@@ -84,7 +84,7 @@ export function ProductLivePreview({
         <div className="flex flex-col p-6 sm:p-8">
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: categoryColor, backgroundColor: `${categoryColor}18` }}>{categoryName || 'Categoria'}</span>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">{type === 'digital' ? 'Arquivo STL' : 'Produto físico'}</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">{type === 'digital' ? 'Arquivo 3D digital' : 'Produto físico'}</span>
           </div>
           <h3 className="mt-4 text-2xl font-black leading-tight text-slate-950 dark:text-white">{name.trim() || 'Nome do produto'}</h3>
           <p className="mt-3 line-clamp-4 whitespace-pre-line text-sm leading-6 text-slate-600 dark:text-slate-300">{description.trim() || 'A descrição do produto aparecerá neste espaço.'}</p>
@@ -110,7 +110,7 @@ export function ProductLivePreview({
 
           <button type="button" disabled className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3.5 text-sm font-bold text-white opacity-90 dark:bg-white dark:text-slate-950">
             {type === 'digital' ? <Download className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
-            {type === 'digital' ? 'Comprar arquivo STL' : 'Adicionar ao carrinho'}
+            {type === 'digital' ? 'Comprar arquivo 3D' : 'Adicionar ao carrinho'}
           </button>
           {type === 'physical' && <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-slate-400"><Package className="h-3.5 w-3.5" /> Prazo e frete calculados no checkout</p>}
         </div>

@@ -23,6 +23,7 @@ import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES } from '@/lib
 import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/store-settings-schema';
 import { formatCep, type AddressSearchResult } from '@/lib/address-search';
 import { productIdentifier } from '@/lib/seo';
+import { CustomizationSummary } from '@/components/shop/CustomizationSummary';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -1296,9 +1297,9 @@ function CartLine({
                 </div>
               )}
               {item.customization_text && (
-                <p className="mt-1 whitespace-pre-line text-xs leading-5 text-pink-700 dark:text-pink-300">
-                  <span className="font-semibold">Personalização:</span> {item.customization_text}
-                </p>
+                <div className="mt-1 text-xs leading-5 text-pink-700 dark:text-pink-300">
+                  <CustomizationSummary value={item.customization_text} />
+                </div>
               )}
               <p className="mt-0.5 text-xs text-gray-400">{formatPrice(unit)} un.</p>
               {item.product.is_wholesale && <p className="mt-1 text-xs font-semibold text-orange-600 dark:text-orange-400">1 un. no varejo ou atacado a partir de {minimum}</p>}

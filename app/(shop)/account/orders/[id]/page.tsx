@@ -12,6 +12,7 @@ import RatingPrompt from './RatingPrompt';
 import ProductReviewSuggestion from './ProductReviewSuggestion';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 import { ShipmentTracking } from '@/components/orders/ShipmentTracking';
+import { CustomizationSummary } from '@/components/shop/CustomizationSummary';
 
 export const dynamic = 'force-dynamic';
 
@@ -226,7 +227,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 )}
                 {item.customization_text && (
                   <div className="mt-2 whitespace-pre-line rounded-xl bg-pink-50 px-3 py-2 text-xs leading-5 text-pink-800 dark:bg-pink-500/10 dark:text-pink-200">
-                    <span className="font-semibold">Personalização:</span> {item.customization_text}
+                    <CustomizationSummary value={item.customization_text} />
                   </div>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400">

@@ -8,6 +8,7 @@ import {
   normalizeProductCustomizationCopy,
   normalizeProductCustomizationSections,
   parseProductCustomizationSelections,
+  summarizeProductCustomization,
 } from '@/lib/product-customization';
 
 describe('product customization copy', () => {
@@ -170,5 +171,31 @@ describe('product customization copy', () => {
         text: 'HELENA',
       },
     });
+  });
+
+  it('exige a quantidade configurada de fotos e preserva os arquivos enviados', () => {
+    const sections = normalizeProductCustomizationSections([{
+      id: 'polaroids',
+      label: 'Fotos do porta-retrato',
+      type: 'images',
+      required: true,
+      imageCount: 2,
+      helpText: 'Envie duas fotos em boa qualidade',
+    }]);
+    const incomplete = { polaroids: { imageUrls: ['/api/customization-images/user/foto-1.webp'] } };
+    const complete = { polaroids: { imageUrls: ['/api/customization-images/user/foto-1.webp', '/api/customization-images/user/foto-2.webp'] } };
+    const formatted = formatProductCustomizationSelections(sections, complete);
+
+    expect(sections[0]).toMatchObject({ type: 'images', imageCount: 2, colors: [], options: [] });
+    expect(areRequiredCustomizationSectionsComplete(sections, incomplete)).toBe(false);
+    expect(areRequiredCustomizationSectionsComplete(sections, complete)).toBe(true);
+    expect(parseProductCustomizationSelections(sections, formatted)).toEqual(complete);
+    expect(summarizeProductCustomization(formatted)).toBe('Fotos do porta-retrato: 2 fotos enviadas');
+  });
+
+  it('limita seções de fotos a no máximo vinte imagens', () => {
+    expect(() => normalizeProductCustomizationSections([{
+      id: 'photos', label: 'Fotos', type: 'images', imageCount: 21,
+    }])).toThrow('1 a 20 fotos');
   });
 });

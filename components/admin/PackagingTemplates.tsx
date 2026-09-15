@@ -12,7 +12,6 @@ import {
 } from '@/lib/packaging-templates';
 import styles from '@/app/dashboard/packaging/packaging.module.css';
 
-const FOLD = '#F97316';
 const BRAND_PINK = '#FF378C';
 const CREAM = '#FFFAF7';
 
@@ -29,11 +28,6 @@ function BoxNet({ template, x, y }: { template: PackagingTemplate; x: number; y:
   const frontX = xs[1];
   const backX = xs[3];
   const dustInset = Math.min(4, depth * 0.12);
-  const tongueWidth = face * 0.34;
-  const tongueStart = frontX + (face - tongueWidth) / 2;
-  const slotWidth = face * 0.38;
-  const slotStart = backX + (face - slotWidth) / 2;
-
   const topFlaps = [
     [[0, bodyY], [depth, bodyY], [depth - dustInset, 0], [dustInset, 0]],
     [[frontX, bodyY], [frontX + face, bodyY], [frontX + face - 4, 0], [frontX + 4, 0]],
@@ -43,25 +37,19 @@ function BoxNet({ template, x, y }: { template: PackagingTemplate; x: number; y:
 
   const bottomFlaps = [
     [[0, bottomY], [depth, bottomY], [depth - dustInset, bottomY + bottomDepth * 0.72], [dustInset, bottomY + bottomDepth]],
-    [
-      [frontX, bottomY], [frontX + face, bottomY], [frontX + face - 4, bottomY + bottomDepth - 3],
-      [tongueStart + tongueWidth, bottomY + bottomDepth - 3],
-      [tongueStart + tongueWidth - 2.5, bottomY + bottomDepth],
-      [tongueStart + 2.5, bottomY + bottomDepth],
-      [tongueStart, bottomY + bottomDepth - 3], [frontX + 4, bottomY + bottomDepth - 3],
-    ],
+    [[frontX, bottomY], [frontX + face, bottomY], [frontX + face - 4, bottomY + bottomDepth], [frontX + 4, bottomY + bottomDepth]],
     [[xs[2], bottomY], [xs[3], bottomY], [xs[3] - dustInset, bottomY + bottomDepth], [xs[2] + dustInset, bottomY + bottomDepth * 0.72]],
-    [[backX, bottomY], [backX + face, bottomY], [backX + face - 4, bottomY + bottomDepth - 3], [backX + 4, bottomY + bottomDepth - 3]],
+    [[backX, bottomY], [backX + face, bottomY], [backX + face - 4, bottomY + bottomDepth], [backX + 4, bottomY + bottomDepth]],
   ] as Array<Array<[number, number]>>;
 
   return (
     <g transform={`translate(${x} ${y})`}>
       <rect x="0" y={bodyY} width={totalBodyWidth} height={height} fill={CREAM} />
-      <image href="/images/packaging/panel-side-left.png" x="0" y={bodyY} width={depth} height={height} preserveAspectRatio="none" />
-      <image href="/images/packaging/panel-front.png" x={frontX} y={bodyY} width={face} height={height} preserveAspectRatio="none" />
-      <image href="/images/packaging/panel-side-right.png" x={xs[2]} y={bodyY} width={depth} height={height} preserveAspectRatio="none" />
-      <image href="/images/packaging/panel-back.png" x={backX} y={bodyY} width={face} height={height} preserveAspectRatio="none" />
-      <image href="/images/packaging/panel-glue.png" x={totalBodyWidth} y={bodyY + 4} width={glueTab} height={height - 8} preserveAspectRatio="none" />
+      <image href="/images/packaging/panel-side-left-clean.png" x="0" y={bodyY} width={depth} height={height} preserveAspectRatio="none" />
+      <image href="/images/packaging/panel-front-clean.png" x={frontX} y={bodyY} width={face} height={height} preserveAspectRatio="none" />
+      <image href="/images/packaging/panel-side-right-clean.png" x={xs[2]} y={bodyY} width={depth} height={height} preserveAspectRatio="none" />
+      <image href="/images/packaging/panel-back-clean.png" x={backX} y={bodyY} width={face} height={height} preserveAspectRatio="none" />
+      <rect x={totalBodyWidth} y={bodyY + 4} width={glueTab} height={height - 8} fill={CREAM} />
 
       {topFlaps.map((shape, index) => <polygon key={`top-${index}`} points={points(shape)} fill={BRAND_PINK} />)}
       {bottomFlaps.map((shape, index) => <polygon key={`bottom-${index}`} points={points(shape)} fill={BRAND_PINK} />)}
@@ -75,13 +63,6 @@ function BoxNet({ template, x, y }: { template: PackagingTemplate; x: number; y:
         preserveAspectRatio="xMidYMid meet"
       />
 
-      <g fill="none" stroke={FOLD} strokeWidth="0.3" strokeDasharray="2 1.4">
-        {xs.slice(1).map((panelX) => <path key={panelX} d={`M ${panelX} ${bodyY} V ${bottomY}`} />)}
-        <path d={`M 0 ${bodyY} H ${totalBodyWidth}`} />
-        <path d={`M 0 ${bottomY} H ${totalBodyWidth}`} />
-      </g>
-
-      <path d={`M ${slotStart} ${bottomY + bottomDepth * 0.62} h ${slotWidth}`} fill="none" stroke="#FFFFFF" strokeWidth="0.75" strokeLinecap="round" />
     </g>
   );
 }
@@ -129,8 +110,8 @@ function AssemblyDrawing({ step }: { step: 1 | 2 | 3 | 4 }) {
       {step === 2 && (
         <>
           <rect x="34" y="25" width="112" height="70" rx="2" {...shared} />
-          {[62, 90, 118].map((x) => <path key={x} d={`M${x} 25v70`} stroke="#F97316" strokeWidth="2" strokeDasharray="5 4" />)}
-          <path d="M34 43h112M34 77h112" stroke="#F97316" strokeWidth="2" strokeDasharray="5 4" />
+          {[62, 90, 118].map((x) => <path key={x} d={`M${x} 25v70`} stroke="#94A3B8" strokeWidth="1.5" />)}
+          <path d="M34 43h112M34 77h112" stroke="#94A3B8" strokeWidth="1.5" />
           <path d="M49 15v15M76 105V90M104 15v15M132 105V90" stroke="#F97316" strokeWidth="2.5" markerEnd={`url(#arrow-${step})`} />
         </>
       )}
@@ -157,9 +138,9 @@ function AssemblyDrawing({ step }: { step: 1 | 2 | 3 | 4 }) {
 
 function AssemblyGuide({ template }: { template: PackagingTemplate }) {
   const steps = [
-    ['Recorte a forma', 'Siga somente a borda externa do papel. Não corte as linhas tracejadas.'],
-    ['Marque as dobras', 'Vinque e dobre todas as divisões tracejadas para dentro.'],
-    ['Trave o fundo', 'Feche as abas laterais, sobreponha as abas maiores e passe a lingueta pela fenda branca.'],
+    ['Recorte a forma', 'Siga somente a borda externa do papel.'],
+    ['Marque as dobras', 'Use as mudanças entre os painéis como referência para vincar e dobrar para dentro.'],
+    ['Cole o fundo', 'Feche as abas laterais, sobreponha as abas maiores e fixe bem com cola ou fita.'],
     ['Feche a tampa', 'Dobre as abas laterais primeiro e finalize com as duas abas maiores.'],
   ] as const;
 
@@ -200,13 +181,13 @@ export function PackagingTemplates() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-pink-700">
-            <PackageOpen className="h-3.5 w-3.5" /> Fundo com encaixe
+            <PackageOpen className="h-3.5 w-3.5" /> Fundo para colagem
           </div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-950">
             <Box className="h-6 w-6 text-pink-600" /> Embalagens A4
           </h1>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-            Escolha o tamanho, confira a prévia e imprima o molde. O fundo fecha por lingueta e fenda, sem fita ou cola.
+            Escolha o tamanho, confira a prévia e imprima o molde. O fundo tem abas lisas para fechar com fita ou cola.
           </p>
         </div>
         <button type="button" onClick={() => window.print()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-950/15 transition hover:bg-pink-600">
@@ -248,11 +229,11 @@ export function PackagingTemplates() {
             <p className="mt-1 text-xs leading-5 text-slate-500">Molde aberto: {net.width} × {net.height} mm · A4 {selected.orientation === 'portrait' ? 'retrato' : 'paisagem'}.</p>
           </div>
           <div className="space-y-2 rounded-xl bg-slate-50 p-4 text-xs text-slate-700">
-            <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-emerald-500" /> Fundo com encaixe, sem fita</p>
-            <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-pink-500" /> Arte acetinada do modelo aprovado</p>
+            <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-emerald-500" /> Fundo liso para fita ou cola</p>
+            <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-pink-500" /> Arte limpa em alta qualidade</p>
             <p className="flex gap-2"><Scissors className="h-4 w-4 shrink-0 text-pink-500" /> Sem contorno de recorte impresso</p>
-            <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-orange-500" /> Dobra tracejada em laranja</p>
-            <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-pink-500" /> Fenda branca de encaixe preservada</p>
+            <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-pink-500" /> Sem pontilhados laranja impressos</p>
+            <p className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-pink-500" /> Sem abertura ou fenda no fundo</p>
             <p className="flex gap-2"><Printer className="h-4 w-4 shrink-0 text-blue-500" /> Escala real em milímetros</p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
