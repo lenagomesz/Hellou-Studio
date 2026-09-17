@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import { ProductDetail } from '@/components/shop/ProductDetail';
+import { MetaProductView } from '@/components/analytics/MetaProductView';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { ProductReviews } from '@/components/shop/ProductReviews';
 import { getCurrentUser } from '@/lib/api';
@@ -161,6 +162,7 @@ export default async function ProductDetailPage(
       </nav>
 
       <ProductDetail product={product} options={options} freeShippingThreshold={storeSettings.commerce.freeShippingThreshold} />
+      <MetaProductView id={product.id} name={product.name} value={price} />
 
       <ProductReviews productId={product.id} isAdmin={user?.role === 'admin'} />
 

@@ -4,6 +4,7 @@ import { SessionProvider } from '@/components/auth/SessionProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import { UserActivityTracker } from '@/components/analytics/UserActivityTracker';
+import { MetaPageTracker } from '@/components/analytics/MetaPageTracker';
 import { CookieConsentBanner } from '@/components/privacy/CookieConsentBanner';
 import { AIHelpWidget } from '@/components/shop/AIHelpWidget';
 import { absoluteUrl, safeJsonLd, SITE_URL } from '@/lib/seo';
@@ -99,6 +100,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <SessionProvider>
             <UserActivityTracker />
+            <MetaPageTracker />
             {children}
             <AIHelpWidget />
             <CookieConsentBanner />

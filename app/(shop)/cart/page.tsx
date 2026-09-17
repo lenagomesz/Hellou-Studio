@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
@@ -24,6 +24,8 @@ import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/store-settings
 import { formatCep, type AddressSearchResult } from '@/lib/address-search';
 import { productIdentifier } from '@/lib/seo';
 import { CustomizationSummary } from '@/components/shop/CustomizationSummary';
+import { trackMetaEvent } from '@/lib/meta-pixel';
+import { PRIVACY_CHANGED_EVENT } from '@/lib/privacy';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -75,6 +77,7 @@ export default function CartPage() {
   const router = useRouter();
 
   const [step, setStep] = useState(1);
+  const checkoutTracked = useRef(false);
 
   const hasOnlyDigitalProducts = items.length > 0 && items.every(item => item.product?.type === 'digital');
 
@@ -114,6 +117,23 @@ export default function CartPage() {
 
   const isLoading = status === 'loading';
   const isSyncing = status === 'syncing';
+
+  useEffect(() => {
+    if (step < 2 || items.length === 0 || paymentCompleted) return;
+    const track = () => {
+      if (checkoutTracked.current) return;
+      checkoutTracked.current = trackMetaEvent('InitiateCheckout', {
+        content_ids: [...new Set(items.map((item) => item.product_id))],
+        content_type: 'product',
+        value: Number(total.toFixed(2)),
+        currency: 'BRL',
+        num_items: items.reduce((sum, item) => sum + item.quantity, 0),
+      });
+    };
+    track();
+    window.addEventListener(PRIVACY_CHANGED_EVENT, track);
+    return () => window.removeEventListener(PRIVACY_CHANGED_EVENT, track);
+  }, [step, items, total, paymentCompleted]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getSupabaseAdmin, withTimeout } from '@/lib/supabase';
 import { ProductDetail } from '@/components/shop/ProductDetail';
+import { MetaProductView } from '@/components/analytics/MetaProductView';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { ProductReviews } from '@/components/shop/ProductReviews';
 import { getCurrentUser } from '@/lib/api';
@@ -156,6 +157,7 @@ export default async function STLProductDetailPage(
       </nav>
 
       <ProductDetail product={product} options={options} ownedOrderId={ownedOrderId} />
+      <MetaProductView id={product.id} name={product.name} value={price} />
 
       <ProductReviews productId={product.id} isAdmin={user?.role === 'admin'} />
 

@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { useSession } from 'next-auth/react';
+import { trackMetaEvent } from '@/lib/meta-pixel';
 import {
   LOCAL_CART_STORAGE_KEY,
   computeCartCount,
@@ -228,6 +229,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const stockLimit = getCartStockLimit(product, option);
       const safeQuantity = normalizeCartQuantity(quantity, stockLimit, product);
       const normalizedCustomization = customization_text?.trim() || null;
+      const existing = findExistingItem(items, product.id, option?.id ?? null, normalizedCustomization);
+      const previousQuantity = existing?.quantity ?? 0;
+      const trackAdded = (addedQuantity: number) => {
+        if (addedQuantity <= 0) return;
+        trackMetaEvent('AddToCart', {
+          content_ids: [product.id],
+          content_name: product.name,
+          content_type: 'product',
+          value: Number(((product.sale_price ?? product.base_price) + (option?.price_modifier ?? 0)) * addedQuantity).toFixed(2),
+          currency: 'BRL',
+          quantity: addedQuantity,
+        });
+      };
 
       if (isAuthed) {
         setStatus('syncing');
@@ -235,6 +249,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           await postServerItem({ product, option, quantity: safeQuantity, customization_text: normalizedCustomization });
           const server = await fetchServerCart();
           setItems(server);
+          const saved = findExistingItem(server, product.id, option?.id ?? null, normalizedCustomization);
+          trackAdded((saved?.quantity ?? 0) - previousQuantity);
           setStatus('idle');
         } catch (error) {
           setStatus('error');
@@ -243,13 +259,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      const addedQuantity = existing
+        ? normalizeCartQuantity(existing.quantity + safeQuantity, stockLimit, product) - existing.quantity
+        : safeQuantity;
       setItems((prev) => {
-        const existing = findExistingItem(
-          prev,
-          product.id,
-          option?.id ?? null,
-          normalizedCustomization,
-        );
+        const existing = findExistingItem(prev, product.id, option?.id ?? null, normalizedCustomization);
         if (existing) {
           const newQty = normalizeCartQuantity(
             existing.quantity + safeQuantity,
@@ -271,8 +285,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         };
         return [...prev, next];
       });
+      trackAdded(addedQuantity);
     },
-    [isAuthed],
+    [isAuthed, items],
   );
 
   const updateQuantity = useCallback(

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ClearCartOnMount } from '@/components/shop/ClearCartOnMount';
+import { MetaPurchase } from '@/components/analytics/MetaPurchase';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { isDigitalOnly, hasDigitalItems, hasPhysicalItems, type OrderItemWithProduct } from '@/lib/order-helpers';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
@@ -66,6 +67,7 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
       <ClearCartOnMount />
+      {orderId && <MetaPurchase orderId={orderId} />}
       {/* Celebration icon */}
       <div className="relative mx-auto h-24 w-24">
         <div className="absolute inset-0 animate-ping rounded-full bg-green-100 dark:bg-green-800 opacity-20" />
