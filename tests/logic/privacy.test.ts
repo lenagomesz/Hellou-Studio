@@ -17,14 +17,16 @@ describe('privacy consent', () => {
     expect(normalizePrivacyConsent({ version: 'old', analytics: true, marketing: true })).toBeNull();
   });
 
-  it('reads the encoded cookie and rejects malformed values', () => {
-    const raw = encodeURIComponent(JSON.stringify({
+  it('reads current and legacy encoded cookies and rejects malformed values', () => {
+    const json = JSON.stringify({
       version: PRIVACY_CONSENT_VERSION,
       analytics: false,
       marketing: false,
       decidedAt: '2026-07-14T12:00:00.000Z',
-    }));
-    expect(parsePrivacyCookie(raw)?.analytics).toBe(false);
+    });
+    expect(parsePrivacyCookie(json)?.analytics).toBe(false);
+    expect(parsePrivacyCookie(encodeURIComponent(json))?.analytics).toBe(false);
+    expect(parsePrivacyCookie(encodeURIComponent(encodeURIComponent(json)))?.analytics).toBe(false);
     expect(parsePrivacyCookie('%invalid')).toBeNull();
   });
 });

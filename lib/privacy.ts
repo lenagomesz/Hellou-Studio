@@ -26,11 +26,22 @@ export function normalizePrivacyConsent(value: unknown): PrivacyConsent | null {
 
 export function parsePrivacyCookie(raw: string | undefined | null) {
   if (!raw) return null;
-  try {
-    return normalizePrivacyConsent(JSON.parse(decodeURIComponent(raw)));
-  } catch {
-    return null;
+  let value = raw;
+  for (let decodeCount = 0; decodeCount <= 2; decodeCount += 1) {
+    try {
+      return normalizePrivacyConsent(JSON.parse(value));
+    } catch {
+      if (decodeCount === 2) return null;
+      try {
+        const decoded = decodeURIComponent(value);
+        if (decoded === value) return null;
+        value = decoded;
+      } catch {
+        return null;
+      }
+    }
   }
+  return null;
 }
 
 export function readClientPrivacyConsent() {

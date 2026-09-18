@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   if (!consent) return NextResponse.json({ error: 'Preferências inválidas.' }, { status: 400 });
 
   const response = NextResponse.json({ consent });
-  response.cookies.set(PRIVACY_COOKIE_NAME, encodeURIComponent(JSON.stringify(consent)), {
+  response.cookies.set(PRIVACY_COOKIE_NAME, JSON.stringify(consent), {
     path: '/',
     maxAge: 365 * 24 * 60 * 60,
     sameSite: 'lax',
