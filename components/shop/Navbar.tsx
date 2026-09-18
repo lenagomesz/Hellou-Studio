@@ -187,6 +187,14 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
             : 'border-gray-100 dark:border-gray-900'
         }`}
       >
+        <div className="relative flex min-h-9 items-center justify-center overflow-hidden bg-gradient-to-r from-pink-600 via-rose-500 to-orange-500 px-3 py-1.5 text-white shadow-inner shadow-pink-950/10">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,rgba(255,255,255,.22),transparent_30%),radial-gradient(circle_at_85%_100%,rgba(255,255,255,.18),transparent_30%)]" />
+          <p className="relative flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-center text-[10px] font-medium leading-4 tracking-[0.01em] min-[360px]:text-[11px] sm:text-xs">
+            <span><strong className="font-extrabold">Frete grátis</strong> acima de {settings.commerce.freeShippingThreshold.toLocaleString(settings.commerce.locale, { style: 'currency', currency: settings.commerce.currency, maximumFractionDigits: 0 })}</span>
+            <span aria-hidden="true" className="hidden text-white/60 min-[360px]:inline">✦</span>
+            <span><strong className="font-extrabold">{settings.commerce.firstOrderDiscount}% OFF</strong> na primeira compra</span>
+          </p>
+        </div>
         <div
           className="w-full px-4 py-3 sm:px-6 lg:px-8"
         >
@@ -478,7 +486,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
         </div>
       </header>
 
-      <div aria-hidden="true" className="hidden h-16 lg:block" />
+      <div aria-hidden="true" className="hidden h-[100px] lg:block" />
 
       <nav className="fixed inset-x-0 bottom-0 z-50 grid h-[calc(4.25rem+env(safe-area-inset-bottom))] grid-cols-5 border-t border-pink-100 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_36px_-24px_rgba(107,33,65,.45)] dark:border-gray-800 dark:bg-gray-950 lg:hidden" aria-label="Navegação rápida">
         {bottomNavigationLinks.slice(0, 2).map((link) => {

@@ -12,20 +12,22 @@ describe('Melhor Envio shipping quotes', () => {
     ]);
   });
 
-  it('ignores unavailable services and includes other Melhor Envio carriers by their real name', () => {
+  it('ignores unavailable services and keeps Jadlog quotes', () => {
     expect(parseMelhorEnvioQuotes([
       { id: 1, name: 'PAC', error: 'Serviço indisponível' },
       { id: 3, name: '.Package', custom_price: '18.00', custom_delivery_time: 5, company: { name: 'Jadlog' } },
     ])).toEqual([{ id: 'melhor-envio-3', name: 'Jadlog .Package', price: 18, days_min: 5, days_max: 5, delivery_label: 'Até 5 dias úteis', service_type: 'carrier' }]);
   });
 
-  it('keeps the cheapest quote when the API returns duplicate services', () => {
+  it('only offers Jadlog, Correios PAC and Correios SEDEX', () => {
     const options = parseMelhorEnvioQuotes([
       { id: 1, name: 'PAC', custom_price: '25.00', custom_delivery_time: 6 },
       { id: 2, name: 'PAC Mini', custom_price: '19.90', custom_delivery_time: 8 },
+      { id: 3, name: 'SEDEX', custom_price: '32.00', custom_delivery_time: 3, company: { name: 'Correios' } },
+      { id: 4, name: 'Mini Envios', custom_price: '17.00', custom_delivery_time: 8, company: { name: 'Loggi' } },
+      { id: 5, name: '.Package', custom_price: '22.00', custom_delivery_time: 5, company: { name: 'Jadlog' } },
     ]);
-    expect(options).toHaveLength(2);
-    expect(options[1]).toMatchObject({ id: 'melhor-envio-2', name: 'PAC Mini', price: 19.9 });
+    expect(options.map((option) => option.id)).toEqual(['melhor-envio-1', 'melhor-envio-3', 'melhor-envio-5']);
   });
 });
 

@@ -11,6 +11,7 @@ import { getProductColorName, getProductColorValue } from '@/lib/product-colors'
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 import { DEFAULT_STORE_SETTINGS } from '@/lib/store-settings-schema';
 import { FavoriteButton } from '@/components/shop/FavoriteButton';
+import { ProductRatingSummary } from '@/components/shop/ProductRatingSummary';
 import {
   DEFAULT_CUSTOMIZATION_COPY,
   areRequiredCustomizationSectionsComplete,
@@ -331,6 +332,7 @@ export function ProductDetail({
           </span>
         </div>
         <ProductHeading className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</ProductHeading>
+        <ProductRatingSummary productId={product.id} />
         <div className="mt-3 flex items-baseline gap-3">
           {isShowingStartingPrice && (
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 sm:text-sm">A partir de</span>

@@ -72,6 +72,7 @@ export function ProductReviews({ productId, isAdmin }: { productId: string; isAd
       setAlreadyReviewed(true);
       setRating(0);
       setComment('');
+      window.dispatchEvent(new CustomEvent('product-review-updated', { detail: productId }));
     }
     setSubmitting(false);
   }
@@ -89,7 +90,7 @@ export function ProductReviews({ productId, isAdmin }: { productId: string; isAd
     : 0;
 
   return (
-    <div className="mt-10">
+    <div id="product-reviews" className="mt-10 scroll-mt-32">
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Avaliações</h2>
         {reviews.length > 0 && (

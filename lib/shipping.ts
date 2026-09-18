@@ -80,8 +80,15 @@ export function parseMelhorEnvioQuotes(quotes: MelhorEnvioQuote[]): ShippingOpti
   for (const quote of quotes) {
     if (quote.error) continue;
     const serviceName = String(quote.name ?? '').trim();
-    const normalizedName = serviceName.toUpperCase();
-    const serviceType = /\bSEDEX\b/.test(normalizedName) ? 'sedex' : /\bPAC\b/.test(normalizedName) ? 'pac' : 'carrier';
+    const company = String(quote.company?.name ?? '').trim();
+    const isCorreios = !company || /^correios$/i.test(company);
+    const isJadlog = /^jadlog$/i.test(company);
+    const serviceType = isCorreios && /^SEDEX$/i.test(serviceName)
+      ? 'sedex'
+      : isCorreios && /^PAC$/i.test(serviceName)
+        ? 'pac'
+        : 'carrier';
+    if (!isJadlog && serviceType === 'carrier') continue;
     const quoteId = Number(quote.id);
     if (!Number.isInteger(quoteId) || quoteId <= 0 || !serviceName) continue;
     const id = `melhor-envio-${quoteId}`;
@@ -90,7 +97,6 @@ export function parseMelhorEnvioQuotes(quotes: MelhorEnvioQuote[]): ShippingOpti
     const days = parsePositiveNumber(quote.custom_delivery_time) ?? parsePositiveNumber(quote.delivery_time);
     if (price === null || days === null) continue;
 
-    const company = String(quote.company?.name ?? '').trim();
     const option: ShippingOption = {
       id,
       name: company && !serviceName.toUpperCase().includes(company.toUpperCase()) ? `${company} ${serviceName}` : serviceName,
@@ -219,7 +225,8 @@ export async function calculateShipping(rawCep: string, packageOverride?: Partia
 
   const options = quotedOptions.filter((option) => {
     if (option.service_type === 'sedex') return settings.shipping.sedexEnabled;
-    return settings.shipping.pacEnabled;
+    if (option.service_type === 'pac') return settings.shipping.pacEnabled;
+    return true;
   });
   if (options.length === 0) throw new Error('Nenhuma modalidade de frete está disponível para este CEP.');
 
