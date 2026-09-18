@@ -14,11 +14,15 @@ declare global {
 
 const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
 let consentGranted = true;
+let sdkState: 'idle' | 'loading' | 'ready' = 'idle';
+let flushingEvents = false;
+const pendingEvents: Array<{ event: MetaEvent; parameters?: Record<string, unknown> }> = [];
 
 export function syncMetaConsent() {
   if (typeof window === 'undefined' || !pixelId) return false;
   const allowed = readClientPrivacyConsent()?.marketing === true;
   if (!allowed) {
+    pendingEvents.length = 0;
     if (window.fbq && consentGranted) {
       window.fbq('consent', 'revoke');
       consentGranted = false;
@@ -32,8 +36,30 @@ export function syncMetaConsent() {
   return true;
 }
 
-export function trackMetaEvent(event: MetaEvent, parameters?: Record<string, unknown>) {
-  if (!pixelId || !syncMetaConsent()) return false;
+function flushMetaEvents() {
+  if (typeof window === 'undefined' || sdkState !== 'ready' || flushingEvents || !syncMetaConsent()) return;
+
+  const fbq = window.fbq;
+  if (!fbq?.callMethod) return;
+
+  flushingEvents = true;
+  try {
+    for (const { event, parameters } of pendingEvents.splice(0)) {
+      fbq('track', event, parameters);
+    }
+  } finally {
+    flushingEvents = false;
+  }
+}
+
+function loadMetaPixel() {
+  if (typeof window === 'undefined' || !pixelId) return false;
+
+  if (window.fbq?.callMethod) {
+    sdkState = 'ready';
+    flushMetaEvents();
+    return true;
+  }
 
   if (!window.fbq) {
     const fbq = function (...args: unknown[]) {
@@ -46,13 +72,36 @@ export function trackMetaEvent(event: MetaEvent, parameters?: Record<string, unk
     window.fbq = fbq;
     window._fbq = fbq;
     fbq('init', pixelId);
-
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = 'https://connect.facebook.net/en_US/fbevents.js';
-    document.head.appendChild(script);
   }
 
-  window.fbq('track', event, parameters);
+  if (sdkState !== 'idle') return true;
+
+  sdkState = 'loading';
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://connect.facebook.net/en_US/fbevents.js';
+  script.onload = () => {
+    if (window.fbq?.callMethod) {
+      sdkState = 'ready';
+      flushMetaEvents();
+    } else {
+      sdkState = 'idle';
+    }
+  };
+  script.onerror = () => {
+    sdkState = 'idle';
+  };
+  document.head.appendChild(script);
+  return true;
+}
+
+export function trackMetaEvent(event: MetaEvent, parameters?: Record<string, unknown>) {
+  if (!pixelId || !syncMetaConsent()) return false;
+
+  pendingEvents.push({ event, parameters });
+  if (!loadMetaPixel()) return false;
+  if (sdkState === 'ready') {
+    flushMetaEvents();
+  }
   return true;
 }
