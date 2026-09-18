@@ -96,5 +96,5 @@ async function loadBestSellerProductIds(): Promise<string[]> {
 export const getBestSellerProductIds = unstable_cache(
   loadBestSellerProductIds,
   ['best-selling-products-by-category-v2'],
-  { revalidate: 60 },
+  { revalidate: 3600 },
 );

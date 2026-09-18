@@ -100,7 +100,7 @@ const getFeaturedProducts = unstable_cache(
     ).catch((err) => { console.error('[home/page] withTimeout catch:', err); return [] as Product[]; });
   },
   ['featured-products-limit-10'],
-  { revalidate: 60 },
+  { revalidate: 3600 },
 );
 
 async function FeaturedProducts() {
@@ -141,7 +141,7 @@ const getWholesaleProducts = unstable_cache(
     }
   },
   ['wholesale-products-home'],
-  { revalidate: 60 },
+  { revalidate: 3600 },
 );
 
 async function WholesaleProducts() {
