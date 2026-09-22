@@ -105,6 +105,7 @@ const DEEP_COMMANDS: AdminNavigationItem[] = [
   { href: '/dashboard/products/import', label: 'Importar produtos', description: 'Cadastre vários produtos por planilha', icon: FileUp, permission: 'products.manage', keywords: 'csv planilha lote', featureKey: 'import_csv' },
   { href: '/dashboard/products/bulk-edit', label: 'Editar produtos em lote', description: 'Altere preços, categorias e status', icon: PackageSearch, permission: 'products.manage', keywords: 'massa catálogo', featureKey: 'bulk_edit' },
   { href: '/dashboard/products/categories', label: 'Categorias e tags', description: 'Organize a descoberta dos produtos', icon: Tags, permission: 'products.manage', keywords: 'etiquetas coleção' },
+  { href: '/dashboard/products/color-presets', label: 'Cores e variações', description: 'Cadastre grupos de cores reutilizáveis', icon: Palette, permission: 'products.manage', keywords: 'cores variações paleta lote' },
   { href: '/dashboard/inventory/materials', label: 'Filamentos', description: 'Controle peso, custo, cor e reposição', icon: Warehouse, permission: 'inventory.manage', keywords: 'materiais bobinas' },
   { href: '/dashboard/inventory/costs', label: 'Gastos do estoque', description: 'Registre custos operacionais', icon: ReceiptText, permission: 'inventory.manage', keywords: 'despesas compras' },
   { href: '/dashboard/inventory/forecast', label: 'Previsão de demanda', description: 'Antecipe consumo e reposição', icon: TrendingUp, permission: 'inventory.manage', keywords: 'projeção' },

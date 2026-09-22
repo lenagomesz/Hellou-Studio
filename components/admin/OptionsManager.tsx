@@ -4,17 +4,17 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProductOption } from '@/types/database';
 import { ArrowDown, ArrowUp, Loader2 } from 'lucide-react';
-import { getProductColorName, getProductColorValue, PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
+import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
+import { useColorPresets } from '@/components/admin/useColorPresets';
+import type { ProductColorPresetItem } from '@/lib/product-color-presets';
 
-const COLOR_PALETTE = PRODUCT_COLOR_PALETTE;
-
-function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function ColorPicker({ value, onChange, colors }: { value: string; onChange: (v: string) => void; colors: ProductColorPresetItem[] }) {
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-1.5">
-        {COLOR_PALETTE.map((c) => (
+        {colors.map((c) => (
           <button
             key={c.hex}
             type="button"
@@ -76,6 +76,10 @@ export function OptionsManager({
   const [pendingDelete, setPendingDelete] = useState<ProductOption | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [reordering, setReordering] = useState(false);
+  const { presets, loading: presetsLoading } = useColorPresets();
+  const [selectedPresetId, setSelectedPresetId] = useState('');
+  const selectedPreset = presets.find((preset) => preset.id === selectedPresetId) ?? presets[0];
+  const presetColors = selectedPreset?.items ?? [];
 
   useEffect(() => {
     onOptionsChange?.(options);
@@ -172,9 +176,9 @@ export function OptionsManager({
 
   async function handleAddBulk() {
     setError(null);
-    const selectedColors = Object.entries(bulkColors)
-      .filter(([_, v]) => v.selected)
-      .map(([name, v]) => ({ name, imageUrl: v.imageUrl }));
+    const selectedColors = presetColors
+      .filter((presetColor) => bulkColors[presetColor.id]?.selected)
+      .map((presetColor) => ({ color: presetColor, imageUrl: bulkColors[presetColor.id]?.imageUrl ?? '' }));
 
     if (selectedColors.length === 0) {
       setError('Selecione pelo menos uma cor');
@@ -193,16 +197,15 @@ export function OptionsManager({
     }
 
     setBulkSubmitting(true);
-    for (const { name: colorName, imageUrl: colorImageUrl } of selectedColors) {
-      const paletteColor = COLOR_PALETTE.find((item) => item.name === colorName);
+    for (const { color: presetColor, imageUrl: colorImageUrl } of selectedColors) {
       const res = await fetch('/api/product-options', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           product_id: productId,
           name: '',
-          color: paletteColor?.hex ?? colorName,
-          color_name: colorName,
+          color: presetColor.hex,
+          color_name: presetColor.name,
           price_modifier: modifier,
           stock: stockValue,
           image_url: colorImageUrl.trim() || undefined,
@@ -293,6 +296,7 @@ export function OptionsManager({
               key={option.id}
               option={option}
               basePrice={basePrice}
+              colors={presetColors}
               onUpdate={(patch) => handleUpdate(option, patch)}
               onDelete={() => setPendingDelete(option)}
               onMoveUp={() => handleMove(index, -1)}
@@ -331,15 +335,20 @@ export function OptionsManager({
           <div className="space-y-2">
             <p className="text-xs font-medium text-blue-800 dark:text-blue-300">Selecione as cores:</p>
             <div className="grid gap-3 sm:grid-cols-2">
-              {COLOR_PALETTE.map((c) => (
+              <label className="block text-xs font-medium text-blue-800 dark:text-blue-300">Tipo de variação
+                <select value={selectedPreset?.id ?? ''} onChange={(event) => { setSelectedPresetId(event.target.value); setBulkColors({}); }} disabled={presetsLoading} className="mt-1 w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-blue-700 dark:bg-gray-800 dark:text-white">
+                  {presets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
+                </select>
+              </label>
+              {presetColors.map((c) => (
                 <label key={c.hex} className="flex items-start gap-2 cursor-pointer p-2 rounded hover:bg-white/50 dark:hover:bg-gray-900/50">
                   <input
                     type="checkbox"
-                    checked={bulkColors[c.name]?.selected ?? false}
+                    checked={bulkColors[c.id]?.selected ?? false}
                     onChange={(e) => {
                       setBulkColors((prev) => ({
                         ...prev,
-                        [c.name]: { selected: e.target.checked, imageUrl: prev[c.name]?.imageUrl ?? '' },
+                        [c.id]: { selected: e.target.checked, imageUrl: prev[c.id]?.imageUrl ?? '' },
                       }));
                     }}
                     className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500 mt-0.5"
@@ -348,8 +357,7 @@ export function OptionsManager({
                     <span
                       className="h-5 w-5 rounded-full border border-gray-300"
                       style={{
-                        backgroundColor: c.hex === 'transparent' ? 'transparent' : c.hex,
-                        background: c.hex === 'transparent' ? 'linear-gradient(135deg, white 25%, transparent 25%, transparent 75%, white 75%)' : undefined,
+                        backgroundColor: c.hex,
                       }}
                     />
                     <span className="text-sm text-blue-900 dark:text-blue-200">{c.name}</span>
@@ -383,14 +391,14 @@ export function OptionsManager({
             </div>
           </div>
 
-          {Object.entries(bulkColors)
-            .filter(([_, v]) => v.selected)
-            .map(([colorName, _]) => (
-              <div key={colorName}>
+          {presetColors
+            .filter((color) => bulkColors[color.id]?.selected)
+            .map((color) => (
+              <div key={color.id}>
                 <label className="block text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">
-                  Imagem para {colorName} (opcional)
+                  Imagem para {color.name} (opcional)
                 </label>
-                <ImageUploadField compact value={bulkColors[colorName]?.imageUrl ?? ''} onChange={(imageUrl) => setBulkColors((prev) => ({ ...prev, [colorName]: { selected: true, imageUrl } }))} />
+                <ImageUploadField compact value={bulkColors[color.id]?.imageUrl ?? ''} onChange={(imageUrl) => setBulkColors((prev) => ({ ...prev, [color.id]: { selected: true, imageUrl } }))} />
               </div>
             ))}
 
@@ -422,8 +430,8 @@ export function OptionsManager({
         <button
           type="button"
           onClick={() => {
-            const initialColors = COLOR_PALETTE.reduce(
-              (acc, c) => ({ ...acc, [c.name]: { selected: false, imageUrl: '' } }),
+            const initialColors = presetColors.reduce(
+              (acc, c) => ({ ...acc, [c.id]: { selected: false, imageUrl: '' } }),
               {} as Record<string, { selected: boolean; imageUrl: string }>,
             );
             setBulkColors(initialColors);
@@ -484,7 +492,7 @@ export function OptionsManager({
         </p>
         <div>
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Cor (opcional)</p>
-          <ColorPicker value={color} onChange={setColor} />
+          <ColorPicker value={color} onChange={setColor} colors={presetColors} />
           {color && (
             <input
               type="text"
@@ -518,6 +526,7 @@ export function OptionsManager({
 function OptionRow({
   option,
   basePrice,
+  colors,
   onUpdate,
   onDelete,
   onMoveUp,
@@ -527,6 +536,7 @@ function OptionRow({
 }: {
   option: ProductOption;
   basePrice: number;
+  colors: ProductColorPresetItem[];
   onUpdate: (patch: Partial<ProductOption>) => Promise<boolean> | boolean;
   onDelete: () => Promise<void> | void;
   onMoveUp: () => Promise<void> | void;
@@ -627,7 +637,7 @@ function OptionRow({
         </p>
         <div className="mt-2">
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Cor</p>
-          <ColorPicker value={color} onChange={setColor} />
+          <ColorPicker value={color} onChange={setColor} colors={colors} />
           {color && (
             <input
               type="text"

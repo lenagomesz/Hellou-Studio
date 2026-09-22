@@ -73,9 +73,9 @@ export function ProductCard({ product, basePath = "/products", category, showcas
             {product.fulfillment_mode === 'ready_stock' && <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[8px] font-bold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">Pronta entrega</span>}
           </div>
         )}
-        <div className={`${showcase ? 'mt-auto min-h-12 pt-2' : 'mt-2'} flex items-end justify-between gap-2`}>
+        <div className={`${showcase ? 'mt-auto min-h-12 pt-2' : 'mt-2 min-h-6'} flex items-end justify-between gap-2`}>
           <div className="flex min-w-0 flex-wrap items-baseline gap-1.5">
-            {hasAdditionalPriceOptions && <span className="w-full text-[8px] font-bold uppercase tracking-wide text-pink-500 dark:text-pink-400 sm:text-[9px]">A partir de</span>}
+            {hasAdditionalPriceOptions && <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide text-pink-500 dark:text-pink-400 sm:text-[9px]">A partir de</span>}
             <p className={`${showcase ? 'font-black tracking-tight' : 'font-semibold'} text-sm text-gray-900 sm:text-base dark:text-white`}>{formatPrice(currentPrice)}</p>
             {product.sale_price !== null && product.sale_price < product.base_price && <span className="text-[9px] text-gray-400 line-through sm:text-[10px]">{formatPrice(product.base_price)}</span>}
           </div>

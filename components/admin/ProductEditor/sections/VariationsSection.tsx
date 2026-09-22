@@ -5,6 +5,7 @@ import { Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { useProductEditor } from '../hooks/useProductEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { getProductColorName, getProductColorValue, PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
+import { useColorPresets } from '@/components/admin/useColorPresets';
 
 export function VariationsSection() {
   const { state, dispatch } = useProductEditor();
@@ -15,6 +16,28 @@ export function VariationsSection() {
   const [formPrice, setFormPrice] = useState('0');
   const [formStock, setFormStock] = useState('0');
   const [formDimensions, setFormDimensions] = useState('');
+  const { presets } = useColorPresets();
+  const [selectedPresetId, setSelectedPresetId] = useState('');
+  const selectedPreset = presets.find((preset) => preset.id === selectedPresetId) ?? presets[0];
+
+  const addPresetColors = () => {
+    if (!selectedPreset) return;
+    const currentColors = new Set(state.variations.map((variation) => variation.color?.toUpperCase()).filter(Boolean));
+    selectedPreset.items
+      .filter((color) => !currentColors.has(color.hex.toUpperCase()))
+      .forEach((color) => dispatch({
+        type: 'ADD_VARIATION',
+        variation: {
+          id: crypto.randomUUID(),
+          name: '',
+          color: color.hex,
+          colorName: color.name,
+          priceModifier: 0,
+          stock: 0,
+          _isDirty: false,
+        },
+      }));
+  };
 
   const handleAddVariation = () => {
     const id = crypto.randomUUID();
@@ -121,6 +144,17 @@ export function VariationsSection() {
             ))}
           </div>
         )}
+
+        <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-900 dark:bg-blue-950/20">
+          <p className="text-sm font-bold text-blue-950 dark:text-blue-100">Aplicar cores já cadastradas</p>
+          <p className="mt-1 text-xs leading-5 text-blue-800 dark:text-blue-300">Adiciona somente as cores que ainda não existem neste produto. Estoque e ajuste de preço começam em zero.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <select value={selectedPreset?.id ?? ''} onChange={(event) => setSelectedPresetId(event.target.value)} className="min-w-48 flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-blue-800 dark:bg-slate-900 dark:text-white">
+              {presets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
+            </select>
+            <button type="button" onClick={addPresetColors} disabled={!selectedPreset} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50">Adicionar {selectedPreset?.items.length ?? 0} cores</button>
+          </div>
+        </div>
 
         {showForm && (
           <div className="space-y-3 border-t pt-4">
