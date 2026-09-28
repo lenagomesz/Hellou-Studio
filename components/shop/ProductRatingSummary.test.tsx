@@ -25,7 +25,7 @@ describe('resumo das avaliações do produto', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     render(<ProductRatingSummary productId="produto-1" />);
-    expect(await screen.findByText('Ainda sem avaliações')).toBeVisible();
+    expect(await screen.findByText('Compre e conte como foi')).toBeVisible();
     window.dispatchEvent(new CustomEvent('product-review-updated', { detail: 'produto-1' }));
     await waitFor(() => expect(screen.getByRole('link', { name: 'Ver 1 avaliação, nota média 5.0 de 5' })).toHaveTextContent('5,0 · 1 avaliação'));
   });

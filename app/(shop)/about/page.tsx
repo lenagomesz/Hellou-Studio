@@ -1,346 +1,86 @@
-'use client';
-
-import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 
-function seededRandom(seed: number) {
-  const x = Math.sin(seed + 1) * 10000;
-  return x - Math.floor(x);
-}
+const STEPS = [
+  { number: '01', title: 'Você escolhe', text: 'Encontre uma peça no catálogo ou envie uma imagem, arquivo STL ou link de referência.' },
+  { number: '02', title: 'Nós produzimos', text: 'Cada pedido é preparado com cuidado, cor escolhida e atenção aos detalhes da personalização.' },
+  { number: '03', title: 'Você acompanha', text: 'Depois da produção, enviamos com rastreio para você acompanhar a chegada da sua peça.' },
+];
 
-function Confetti() {
-  const particles = useMemo(() => {
-    return Array.from({ length: 18 }).map((_, i) => {
-      const size = 4 + seededRandom(i * 4) * 6;
-      const left = seededRandom(i * 4 + 1) * 100;
-      const delay = seededRandom(i * 4 + 2) * 12;
-      const duration = 10 + seededRandom(i * 4 + 3) * 8;
-      const color = ['#ec4899', '#f97316', '#fb923c', '#f472b6', '#fdba74'][i % 5];
-      const shape = i % 3 === 0 ? 'rounded-full' : i % 3 === 1 ? 'rounded-sm rotate-45' : 'rounded-full scale-x-50';
-      return { size, left, delay, duration, color, shape };
-    });
-  }, []);
-
-  return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-      {particles.map((p, i) => (
-        <span
-          key={i}
-          className={`absolute opacity-40 ${p.shape}`}
-          style={{
-            width: p.size,
-            height: p.size,
-            left: `${p.left}%`,
-            top: `-${p.size + 10}px`,
-            backgroundColor: p.color,
-            animation: `confetti-fall ${p.duration}s ${p.delay}s linear infinite`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-let trailCounter = 0;
-
-function MouseTrail() {
-  const [trail, setTrail] = useState<{ x: number; y: number; id: number }[]>([]);
-
-  useEffect(() => {
-    function handleMove(e: MouseEvent) {
-      const id = ++trailCounter;
-      setTrail(prev => [...prev.slice(-12), { x: e.clientX, y: e.clientY, id }]);
-    }
-    window.addEventListener('mousemove', handleMove);
-    return () => window.removeEventListener('mousemove', handleMove);
-  }, []);
-
-  useEffect(() => {
-    if (trail.length === 0) return;
-    const timeout = setTimeout(() => {
-      setTrail(prev => prev.slice(1));
-    }, 150);
-    return () => clearTimeout(timeout);
-  }, [trail]);
-
-  return (
-    <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden" aria-hidden="true">
-      {trail.map((dot, i) => (
-        <span
-          key={dot.id}
-          className="absolute rounded-full bg-gradient-to-r from-pink-400 to-orange-400"
-          style={{
-            left: dot.x - 3,
-            top: dot.y - 3,
-            width: 6 + i * 0.5,
-            height: 6 + i * 0.5,
-            opacity: (i + 1) / trail.length * 0.6,
-            transform: `scale(${0.5 + (i / trail.length) * 0.5})`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function ParallaxCard({ children, className }: { children: React.ReactNode; className?: string }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState('');
-
-  function handleMouseMove(e: React.MouseEvent) {
-    const card = cardRef.current;
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setTransform(`perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg)`);
-  }
-
-  function handleMouseLeave() {
-    setTransform('');
-  }
-
-  return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={`transition-transform duration-200 ${className ?? ''}`}
-      style={{ transform }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function RevealOnScroll({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold: 0.2 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className={`transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  );
-}
+const FAQS = [
+  { question: 'Quanto tempo leva para produzir?', answer: `As peças do catálogo são produzidas em ${DEFAULT_PRODUCTION_LEAD_TIME}. Encomendas personalizadas recebem um prazo no orçamento, conforme o modelo e a quantidade.` },
+  { question: 'Posso escolher a cor?', answer: 'Sim. As cores disponíveis aparecem nas opções de cada produto. Em uma encomenda, conte qual cor ou acabamento você imagina.' },
+  { question: 'Como funciona uma encomenda?', answer: 'Você envia uma imagem, STL ou link. Avaliamos a viabilidade e a licença comercial quando houver modelo de terceiros, então enviamos o orçamento antes de produzir.' },
+  { question: 'O que é PLA?', answer: 'É o material usado na maior parte das peças. Ele vem de fontes renováveis, tem bom acabamento e é indicado para o uso cotidiano da peça.' },
+  { question: 'Vocês enviam para todo o Brasil?', answer: 'Sim. O frete é calculado no carrinho e o pedido segue com rastreio após a produção.' },
+];
 
 export default function AboutPage() {
-  const [hearts, setHearts] = useState<{ id: number; x: number; y: number; size: number }[]>([]);
-  const [bannerHue, setBannerHue] = useState(0);
-
-  useEffect(() => {
-    let frame: number;
-    function animate() {
-      setBannerHue(prev => (prev + 0.3) % 360);
-      frame = requestAnimationFrame(animate);
-    }
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  function spawnHeart(e: React.MouseEvent) {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const id = Date.now();
-    const size = 12 + (id % 10);
-    setHearts(prev => [...prev.slice(-20), { id, x, y, size }]);
-    setTimeout(() => setHearts(prev => prev.filter(h => h.id !== id)), 1200);
-  }
-
   return (
-    <div className="relative overflow-hidden">
-      <Confetti />
-      <MouseTrail />
-
-      {/* Banner animado */}
-      <div
-        className="relative flex h-40 flex-col items-center justify-center overflow-hidden px-6 py-4 text-center sm:h-44 sm:px-10"
-        style={{
-          background: `linear-gradient(135deg, hsl(${330 + bannerHue * 0.1}, 80%, 55%), hsl(${25 + bannerHue * 0.1}, 90%, 55%))`,
-        }}
-      >
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-3 left-[12%] text-4xl animate-spin" style={{ animationDuration: '12s' }}>✦</div>
-          <div className="absolute top-6 right-[18%] text-3xl animate-spin" style={{ animationDuration: '8s', animationDirection: 'reverse' }}>✧</div>
-          <div className="absolute bottom-3 left-[45%] text-2xl animate-spin" style={{ animationDuration: '10s' }}>✦</div>
-          <div className="absolute bottom-5 right-[25%] text-xl animate-spin" style={{ animationDuration: '15s' }}>✧</div>
+    <div className="bg-[#fffaf8] text-gray-900 dark:bg-gray-950 dark:text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-pink-600 via-pink-500 to-orange-400 px-4 py-16 text-center text-white sm:px-6 sm:py-24">
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-white/15 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 top-0 h-64 w-64 rounded-full bg-orange-100/30 blur-3xl" />
+        <div className="relative mx-auto max-w-3xl">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-white/80">Por trás da Hellou Studio</p>
+          <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-6xl">Feito em camadas,<br />pensado para o seu cantinho.</h1>
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-white/90 sm:text-lg">Peças impressas em 3D para presentear, organizar e deixar a rotina com mais personalidade.</p>
         </div>
-        <h2 className="relative text-2xl font-bold text-white sm:text-3xl">
-          Sobre a helloustudio
-        </h2>
-        <p className="relative mx-auto mt-2 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
-          Onde criatividade vira peça 3D.
-        </p>
-      </div>
+      </section>
 
-      <div className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <Link href="/" className="relative z-10 text-sm text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transition">
-          ← Voltar
-        </Link>
+      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20">
+        <Link href="/" className="text-sm font-semibold text-pink-600 transition hover:text-orange-500 dark:text-pink-400">← Voltar para a loja</Link>
 
-        {/* Card principal com parallax e corações */}
-        <RevealOnScroll>
-          <ParallaxCard className="relative z-10 mt-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
-            <div onClick={spawnHeart} className="relative cursor-default">
-              {hearts.map(h => (
-                <span
-                  key={h.id}
-                  className="absolute pointer-events-none text-pink-400 animate-[heart-float_1.2s_ease-out_forwards]"
-                  style={{ left: h.x, top: h.y, fontSize: h.size }}
-                >
-                  ♥
-                </span>
-              ))}
-
-              <div className="space-y-5 text-gray-700 dark:text-gray-300 leading-relaxed">
-                <p className="text-base">
-                  Oie! Eu sou a <span className="font-semibold text-gray-900 dark:text-white">Helena</span> e essa aqui é a
-                  {' '}<span className="font-semibold bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">helloustudio</span>.
-                </p>
-
-                <p>
-                  Eu faço peças em impressão 3D, desde chaveiros até bichinhos e coisas de escritório.
-                  Tudo feito aqui por mim, uma de cada vez. Também aceito encomendas personalizadas,
-                  é só mandar seu arquivo .stl que eu orço rapidinho.
-                </p>
-              </div>
-            </div>
-          </ParallaxCard>
-        </RevealOnScroll>
-
-        {/* Como funciona - cada card aparece com delay */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          {[
-            { emoji: '🎨', text: 'Você escolhe ou envia o modelo', color: 'from-pink-100 to-pink-50' },
-            { emoji: '🖨️', text: 'Imprimo com cuidado e qualidade', color: 'from-orange-100 to-orange-50' },
-            { emoji: '📦', text: 'Envio pra qualquer lugar do Brasil', color: 'from-amber-100 to-amber-50' },
-          ].map((item, i) => (
-            <RevealOnScroll key={i} delay={i * 150}>
-              <ParallaxCard className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gradient-to-br dark:from-gray-900 dark:to-gray-900 p-5 shadow-sm text-center hover:shadow-md transition-shadow">
-                <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${item.color} text-2xl shadow-sm transition-transform duration-300 hover:scale-110 hover:rotate-6`}>
-                  {item.emoji}
-                </div>
-                <p className="mt-3 text-sm font-medium text-gray-800 dark:text-gray-200">{item.text}</p>
-              </ParallaxCard>
-            </RevealOnScroll>
-          ))}
-        </div>
-
-        {/* O que é impressão 3D */}
-        <RevealOnScroll delay={100}>
-          <div className="mt-10 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">O que é impressão 3D?</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              É uma tecnologia que cria objetos físicos camada por camada a partir de um modelo digital.
-              A impressora derrete um filamento plástico (PLA) e vai desenhando a peça de baixo pra cima,
-              como se fosse um glacê de bolo bem preciso. O resultado é uma peça única, sólida e durável.
-            </p>
-          </div>
-        </RevealOnScroll>
-
-        {/* Materiais */}
-        <RevealOnScroll delay={150}>
-          <div className="mt-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Material que eu uso</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl bg-green-50 dark:bg-green-950/50 border border-green-100 dark:border-green-900 p-4 transition-transform duration-300 hover:scale-[1.02]">
-                <p className="text-sm font-semibold text-green-800 dark:text-green-300">PLA (Ácido Polilático)</p>
-                <p className="mt-1 text-xs text-green-700 dark:text-green-400">Plástico biodegradável feito de amido de milho. Não é tóxico, não tem cheiro forte e tem um acabamento liso bonito.</p>
-              </div>
-              <div className="rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900 p-4 transition-transform duration-300 hover:scale-[1.02]">
-                <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Acabamento</p>
-                <p className="mt-1 text-xs text-blue-700 dark:text-blue-400">Cada peça sai com camadas visíveis (faz parte do charme!). Posso lixar sob encomenda se quiser algo mais liso.</p>
-              </div>
+        <section className="grid gap-8 py-10 sm:py-14 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-pink-600 dark:text-pink-400">Oi, eu sou a Helena</p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Ideias que saem da tela e viram parte da sua história.</h2>
+            <div className="mt-5 space-y-4 text-sm leading-7 text-gray-600 dark:text-gray-300 sm:text-base">
+              <p>A Hellou Studio nasceu para transformar impressão 3D em peças que fazem sentido no dia a dia: um presente com nome, um detalhe para a mesa, um organizador ou aquela ideia que você queria tirar do papel.</p>
+              <p>Cada pedido é produzido com cuidado, uma camada por vez. Você escolhe os detalhes; eu cuido de transformar isso em uma peça bonita, útil e com a sua cara.</p>
             </div>
           </div>
-        </RevealOnScroll>
-
-        {/* Curiosidades */}
-        <RevealOnScroll delay={200}>
-          <div className="mt-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Curiosidades</h2>
-            <div className="space-y-3">
-              {[
-                { icon: '⏱️', text: 'Um chaveiro leva de 30 min a 2 horas pra imprimir' },
-                { icon: '🌡️', text: 'O bico da impressora chega a 200°C pra derreter o filamento' },
-                { icon: '📐', text: 'A precisão é de 0.4mm por camada' },
-                { icon: '♻️', text: 'O PLA é biodegradável e vem de fontes renováveis' },
-                { icon: '🧵', text: '1kg de filamento rende entre 50 e 100 peças pequenas' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-3 group cursor-default">
-                  <span className="text-lg transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12">{item.icon}</span>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{item.text}</p>
-                </div>
-              ))}
-            </div>
+          <div className="rounded-3xl border border-pink-100 bg-gradient-to-br from-pink-50 to-orange-50 p-7 shadow-[0_20px_50px_-35px_rgba(219,39,119,.7)] dark:border-pink-900/60 dark:from-pink-950/30 dark:to-orange-950/20 sm:p-9">
+            <span className="text-4xl" aria-hidden="true">🖨️</span>
+            <h3 className="mt-5 text-xl font-black">Impressão 3D com intenção</h3>
+            <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">A impressão cria cada objeto camada por camada a partir de um modelo digital. Por isso, as pequenas marcas das camadas fazem parte da história de uma peça produzida especialmente para você.</p>
           </div>
-        </RevealOnScroll>
+        </section>
 
-        {/* Perguntas frequentes */}
-        <RevealOnScroll delay={250}>
-          <div className="mt-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Perguntas frequentes</h2>
-            <div className="space-y-4">
-              {[
-                { q: 'Quanto tempo demora pra fazer meu pedido?', a: `Peças do catálogo são produzidas em ${DEFAULT_PRODUCTION_LEAD_TIME}. Encomendas personalizadas dependem da complexidade, mas geralmente de 3 a 7 dias.` },
-                { q: 'Posso escolher a cor?', a: 'Sim! Cada produto tem opções de cor disponíveis. Pra encomendas, é só me dizer qual cor você prefere.' },
-                { q: 'A peça é resistente?', a: 'Sim, PLA é bem resistente pra uso normal. Só não deixa no sol forte por muito tempo porque pode amolecer.' },
-                { q: 'O que é um arquivo .stl?', a: 'É o formato padrão de modelos 3D pra impressão. Se você já tem um modelo pronto, é só enviar. Se não tem, me descreve a ideia que eu vejo o que dá pra fazer.' },
-                { q: 'Envia pra todo o Brasil?', a: 'Sim! Envio pelos Correios com rastreamento. Frete grátis acima de R$99.' },
-              ].map((item, i) => (
-                <details key={i} className="group rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-                  <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                    {item.q}
-                    <span className="text-gray-400 transition-transform duration-200 group-open:rotate-45 text-lg">+</span>
-                  </summary>
-                  <p className="px-4 pb-3 text-sm text-gray-600 dark:text-gray-400">{item.a}</p>
-                </details>
-              ))}
-            </div>
+        <section className="border-y border-pink-100 py-12 dark:border-gray-800 sm:py-16">
+          <div className="max-w-2xl">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-pink-600 dark:text-pink-400">Como funciona</p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Do seu jeito, do começo ao fim.</h2>
           </div>
-        </RevealOnScroll>
-
-        {/* CTA final */}
-        <RevealOnScroll delay={300}>
-          <div className="mt-8 text-center">
-            <Link
-              href="/request-print"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/30 transition-all hover:shadow-xl hover:scale-105 active:scale-95"
-            >
-              Fazer uma encomenda personalizada →
-            </Link>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3 sm:gap-6">
+            {STEPS.map((step) => <article key={step.number} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+              <span className="text-sm font-black text-pink-500">{step.number}</span>
+              <h3 className="mt-5 text-lg font-bold">{step.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{step.text}</p>
+            </article>)}
           </div>
-        </RevealOnScroll>
-      </div>
+        </section>
 
-      <style>{`
-        @keyframes confetti-fall {
-          0% { transform: translateY(0) rotate(0deg); opacity: 0.5; }
-          100% { transform: translateY(105vh) rotate(540deg); opacity: 0; }
-        }
-        @keyframes heart-float {
-          0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-          50% { transform: translateY(-30px) scale(1.3) rotate(-10deg); opacity: 0.8; }
-          100% { transform: translateY(-70px) scale(0.8) rotate(10deg); opacity: 0; }
-        }
-      `}</style>
+        <section className="grid gap-4 py-12 sm:grid-cols-3 sm:py-16">
+          <article className="rounded-2xl border border-green-100 bg-green-50/70 p-5 dark:border-green-900/60 dark:bg-green-950/20"><span aria-hidden="true">♻️</span><h2 className="mt-3 font-bold">Material PLA</h2><p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">Material de fontes renováveis, com acabamento agradável e ideal para a maior parte dos usos do dia a dia.</p></article>
+          <article className="rounded-2xl border border-orange-100 bg-orange-50/70 p-5 dark:border-orange-900/60 dark:bg-orange-950/20"><span aria-hidden="true">⏱️</span><h2 className="mt-3 font-bold">Feito sob demanda</h2><p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">A produção começa depois da confirmação do pedido, para preparar suas escolhas com atenção.</p></article>
+          <article className="rounded-2xl border border-blue-100 bg-blue-50/70 p-5 dark:border-blue-900/60 dark:bg-blue-950/20"><span aria-hidden="true">📦</span><h2 className="mt-3 font-bold">Envio acompanhado</h2><p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">Depois de pronto, o pedido segue com rastreio para qualquer lugar do Brasil.</p></article>
+        </section>
+
+        <section className="mx-auto max-w-3xl pb-12 sm:pb-16">
+          <p className="text-center text-xs font-black uppercase tracking-[0.18em] text-pink-600 dark:text-pink-400">Dúvidas frequentes</p>
+          <h2 className="mt-3 text-center text-3xl font-black tracking-tight sm:text-4xl">Tudo o que você precisa saber antes de pedir.</h2>
+          <div className="mt-8 space-y-3">
+            {FAQS.map((faq) => <details key={faq.question} className="group rounded-2xl border border-gray-100 bg-white px-5 dark:border-gray-800 dark:bg-gray-900 sm:px-6"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-sm font-bold sm:text-base">{faq.question}<span className="text-xl text-pink-500 transition-transform group-open:rotate-45">+</span></summary><p className="pb-5 text-sm leading-6 text-gray-600 dark:text-gray-300">{faq.answer}</p></details>)}
+          </div>
+        </section>
+
+        <section className="rounded-3xl bg-gray-950 px-6 py-10 text-center text-white dark:bg-pink-950 sm:px-10 sm:py-14">
+          <h2 className="text-3xl font-black tracking-tight">Tem uma ideia diferente?</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-300">Envie uma imagem, STL ou link. Antes de produzir, analisamos a viabilidade e enviamos seu orçamento.</p>
+          <Link href="/request-print" className="mt-6 inline-flex rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-black text-white transition hover:scale-[1.02]">Pedir um orçamento →</Link>
+        </section>
+      </main>
     </div>
   );
 }

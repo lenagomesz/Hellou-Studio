@@ -49,6 +49,8 @@ export function ProductCard({ product, basePath = "/products", category, showcas
           <img
             src={product.image_url}
             alt={product.image_alt_texts?.[product.image_url] || product.name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.03]"
           />
         ) : (

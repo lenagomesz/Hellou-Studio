@@ -32,6 +32,14 @@ const CATEGORY_LABELS: Record<string, string> = {
   decoracao: 'Decoração',
 };
 
+const DESCRIPTION_PREVIEW_LENGTH = 240;
+
+function previewDescription(description: string) {
+  if (description.length <= DESCRIPTION_PREVIEW_LENGTH) return description;
+  const end = description.lastIndexOf(' ', DESCRIPTION_PREVIEW_LENGTH);
+  return `${description.slice(0, end > 0 ? end : DESCRIPTION_PREVIEW_LENGTH).trimEnd()}…`;
+}
+
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -59,9 +67,17 @@ export function ProductDetail({
   const [feedback, setFeedback] = useState<'idle' | 'added' | 'error'>('idle');
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [shared, setShared] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const isOwnedDigital = product.type === 'digital' && Boolean(ownedOrderId);
   const ProductHeading = onAdded ? 'h2' : 'h1';
   const requiresReadyStock = product.fulfillment_mode === 'ready_stock';
+  const availability = isOwnedDigital
+    ? { label: '✓ Adquirido', className: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300' }
+    : product.type === 'digital'
+      ? { label: 'Download imediato', className: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300' }
+      : requiresReadyStock
+        ? { label: 'Pronta entrega', className: 'bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-400' }
+        : { label: 'Feito sob demanda', className: 'bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300' };
 
   const inStockOptions = useMemo(
     () => options.filter((option) => !requiresReadyStock || option.stock > 0),
@@ -327,8 +343,8 @@ export function ProductDetail({
           <p className="text-xs font-medium uppercase tracking-wider text-pink-600 dark:text-pink-400">
             {CATEGORY_LABELS[product.category] ?? product.category}
           </p>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${isOwnedDigital ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300' : 'bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-400'}`}>
-            {isOwnedDigital ? '✓ Adquirido' : 'Em estoque'}
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${availability.className}`}>
+            {availability.label}
           </span>
         </div>
         <ProductHeading className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</ProductHeading>
@@ -400,11 +416,17 @@ export function ProductDetail({
           );
         })()}
 
-        {product.description ? (
-          <p className="mt-4 whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-            {product.description}
-          </p>
-        ) : null}
+        {product.description ? (() => {
+          const truncated = product.description.length > DESCRIPTION_PREVIEW_LENGTH;
+          return <div className="mt-4">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+              {descriptionExpanded ? product.description : previewDescription(product.description)}
+            </p>
+            {truncated && <button type="button" onClick={() => setDescriptionExpanded((current) => !current)} className="mt-2 text-sm font-bold text-pink-600 transition hover:text-orange-500 dark:text-pink-400">
+              {descriptionExpanded ? 'Mostrar menos' : 'Ver detalhes da peça'}
+            </button>}
+          </div>;
+        })() : null}
 
         {product.is_customizable && customizationSections.length === 0 && (
           <div className="mt-6 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50/60 p-4 dark:border-pink-900/60 dark:from-pink-950/30 dark:to-orange-950/20 sm:p-5">

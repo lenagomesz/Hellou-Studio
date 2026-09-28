@@ -400,20 +400,32 @@ export default function CartPage() {
 
   if (items.length === 0 && !paymentCompleted) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6 sm:py-20">
         <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-10 w-10 text-pink-400">
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.5l.41 2.05M6 6h14.25l-1.5 9H7.5L6 6Zm0 0L5.16 1.95M9 19.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm9 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
           </svg>
         </div>
         <h1 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Seu carrinho está vazio</h1>
-        <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">Explore nosso catálogo e encontre peças impressas em 3D feitas para você.</p>
+        <p className="mt-3 max-w-sm text-sm text-gray-500 dark:text-gray-400 mx-auto">Escolha uma peça pronta para personalizar ou nos mostre uma ideia para criar algo do seu jeito.</p>
         <Link href="/products" className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/30 transition hover:opacity-90 hover:shadow-xl">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
           </svg>
           Explorar catálogo
         </Link>
+        <div className="mx-auto mt-8 grid max-w-xl gap-3 text-left sm:grid-cols-2">
+          <Link href="/products" className="rounded-2xl border border-pink-100 bg-pink-50/60 p-4 transition hover:-translate-y-0.5 hover:border-pink-300 hover:bg-pink-50 dark:border-pink-900/60 dark:bg-pink-950/20">
+            <span className="text-xl" aria-hidden="true">✨</span>
+            <span className="mt-2 block text-sm font-bold text-gray-900 dark:text-white">Encontrar um presente</span>
+            <span className="mt-1 block text-xs leading-5 text-gray-600 dark:text-gray-300">Veja peças criativas para escolher, personalizar e presentear.</span>
+          </Link>
+          <Link href="/request-print" className="rounded-2xl border border-orange-100 bg-orange-50/60 p-4 transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 dark:border-orange-900/60 dark:bg-orange-950/20">
+            <span className="text-xl" aria-hidden="true">🧩</span>
+            <span className="mt-2 block text-sm font-bold text-gray-900 dark:text-white">Criar uma encomenda</span>
+            <span className="mt-1 block text-xs leading-5 text-gray-600 dark:text-gray-300">Envie uma imagem, STL ou link e receba um orçamento.</span>
+          </Link>
+        </div>
       </div>
     );
   }

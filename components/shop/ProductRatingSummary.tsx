@@ -43,7 +43,7 @@ export function ProductRatingSummary({ productId }: { productId: string }) {
         ★★★★★
         <span className="absolute inset-0 overflow-hidden whitespace-nowrap text-amber-400" style={{ width: `${summary.average * 20}%` }}>★★★★★</span>
       </span>
-      {summary.count ? <span><strong className="text-gray-900 dark:text-white">{summary.average.toFixed(1).replace('.', ',')}</strong> · {summary.count} {summary.count === 1 ? 'avaliação' : 'avaliações'}</span> : <span>Ainda sem avaliações</span>}
+      {summary.count ? <span><strong className="text-gray-900 dark:text-white">{summary.average.toFixed(1).replace('.', ',')}</strong> · {summary.count} {summary.count === 1 ? 'avaliação' : 'avaliações'}</span> : <span>Compre e conte como foi</span>}
       <span aria-hidden="true" className="text-pink-500">→</span>
     </a>
   );

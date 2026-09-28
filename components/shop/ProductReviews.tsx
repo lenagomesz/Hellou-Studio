@@ -140,7 +140,7 @@ export function ProductReviews({ productId, isAdmin }: { productId: string; isAd
           <div className="h-16 rounded-lg bg-gray-100 dark:bg-gray-800" />
         </div>
       ) : reviews.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma avaliação ainda. Seja o primeiro!</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Ainda não há avaliações deste produto. Depois de receber seu pedido, conte como foi a sua experiência.</p>
       ) : (
         <div className="space-y-4">
           {reviews.map((review) => (

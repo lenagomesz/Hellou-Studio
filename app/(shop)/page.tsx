@@ -5,7 +5,6 @@ import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, isSupabaseAdminConfigured, withTimeout } from '@/lib/supabase';
 import { FeaturedProductsClient } from '@/components/shop/FeaturedProducts';
 import { ProductCard } from '@/components/shop/ProductCard';
-import { HeroCarousel } from '@/components/shop/HeroCarousel';
 import { HomeHeroCarousel } from '@/components/shop/HomeHeroCarousel';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 // import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
@@ -286,17 +285,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* =========================================== */}
-      {/* CAROUSEL BANNER */}
-      {/* =========================================== */}
-      <section className="bg-white dark:bg-gray-950 py-8 sm:py-16">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <ScrollReveal direction="scale">
-            <HeroCarousel />
-          </ScrollReveal>
-        </div>
-      </section>
-
       <Suspense fallback={null}>
         <HomeKits threshold={storeSettings.commerce.freeShippingThreshold} />
       </Suspense>
@@ -418,8 +406,8 @@ export default async function HomePage() {
             </div>
           </ScrollReveal>
 
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-12 sm:gap-5 lg:grid-cols-4">
-            {FEATURES.map((feat, i) => (
+          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-3 sm:mt-12 sm:grid-cols-3 sm:gap-5">
+            {FEATURES.slice(0, 3).map((feat, i) => (
               <ScrollReveal key={feat.title} delay={i * 120} direction={i < 2 ? 'left' : 'right'} className="h-full">
                 <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-orange-100/60 bg-gradient-to-br from-orange-50/50 to-pink-50/30 p-4 text-center transition-all duration-500 hover:-translate-y-2 hover:border-pink-200 hover:bg-white hover:shadow-xl sm:rounded-3xl sm:p-7 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900 dark:hover:border-pink-800 dark:hover:bg-gray-800">
                   <div className="absolute inset-0 bg-gradient-to-br from-pink-500/0 to-orange-400/0 transition-all duration-500 group-hover:from-pink-500/[0.03] group-hover:to-orange-400/[0.05]" />
@@ -630,7 +618,7 @@ export default async function HomePage() {
                     Impressão sob demanda
                   </h3>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                    Envie seu arquivo .STL e receba um orçamento grátis. Imprimimos qualquer modelo 3D nas cores que quiser.
+                    Envie uma imagem, arquivo STL ou link de referência e receba um orçamento grátis. Nós analisamos a viabilidade antes de produzir.
                   </p>
                   <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-500 dark:text-orange-400 transition-colors group-hover:text-pink-500">
                     Solicitar impressão
