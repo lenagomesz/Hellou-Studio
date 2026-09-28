@@ -290,14 +290,17 @@ export default async function HomePage() {
         <WholesaleProducts />
       </Suspense>
 
-      <section className="border-y border-pink-100 bg-pink-50/60 py-5 dark:border-pink-950/60 dark:bg-pink-950/15 sm:py-6">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-pink-600 dark:text-pink-400">Para makers</p>
-            <h2 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">Prefere imprimir em casa?</h2>
-            <p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-300">Veja os arquivos digitais disponíveis para baixar depois da compra.</p>
+      <section className="border-y border-pink-100 bg-gradient-to-r from-pink-50 via-rose-50 to-orange-50 py-5 dark:border-pink-950/60 dark:from-pink-950/25 dark:via-gray-950 dark:to-orange-950/20 sm:py-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-xl shadow-sm ring-1 ring-pink-100 dark:bg-gray-900 dark:ring-pink-900" aria-hidden="true">🖨️</span>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-pink-600 dark:text-pink-400">Para makers</p>
+              <h2 className="mt-1 text-lg font-black tracking-tight text-gray-900 dark:text-white">Prefere imprimir em casa?</h2>
+              <p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-300">Baixe o modelo após o pagamento e imprima do seu jeito.</p>
+            </div>
           </div>
-          <Link href="/stl" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-pink-600 shadow-sm ring-1 ring-pink-200 transition hover:-translate-y-0.5 hover:text-orange-500 hover:shadow-md dark:bg-gray-900 dark:text-pink-400 dark:ring-pink-900">
+          <Link href="/stl" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-pink-600 px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_-10px_rgba(219,39,119,.8)] transition hover:-translate-y-0.5 hover:bg-pink-700 hover:shadow-md dark:bg-pink-500 dark:hover:bg-pink-400">
             Ver arquivos STL <span aria-hidden="true">→</span>
           </Link>
         </div>

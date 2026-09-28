@@ -2,6 +2,22 @@ import * as Sentry from '@sentry/nextjs';
 
 const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
+function isMercadoLivreResourceLoadFailure(event: Sentry.ErrorEvent, hint: Sentry.EventHint) {
+  const originalMessage = hint.originalException instanceof Error
+    ? hint.originalException.message
+    : '';
+  const exceptionMessage = event.exception?.values
+    ?.map((exception) => exception.value ?? '')
+    .join(' ') ?? '';
+  const frameUrls = event.exception?.values
+    ?.flatMap((exception) => exception.stacktrace?.frames ?? [])
+    .map((frame) => frame.filename ?? '')
+    .join(' ') ?? '';
+  const message = `${originalMessage} ${exceptionMessage}`;
+
+  return /load failed/i.test(message) && /mercadolibre\.com/i.test(`${message} ${frameUrls}`);
+}
+
 Sentry.init({
   dsn: sentryDsn,
   environment: process.env.NODE_ENV,
@@ -19,6 +35,12 @@ Sentry.init({
 
   // Ignore errors from extensions and scripts
   beforeSend(event, hint) {
+    // A página pública não carrega recursos do Mercado Livre. Alguns browsers
+    // registram falhas de recursos externos como uma rejeição global genérica.
+    if (isMercadoLivreResourceLoadFailure(event, hint)) {
+      return null;
+    }
+
     // Ignore errors from extensions
     if (
       event.request?.url?.includes('extension://') ||
