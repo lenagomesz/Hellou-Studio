@@ -18,16 +18,15 @@ vi.mock('@/emails/pedido-confirmado', () => ({
   PedidoConfirmadoEmail: () => 'mock',
 }));
 
-// Mock Resend at module level
-const mockSend = vi.fn();
+// Keep email tests isolated from the database-backed delivery log. The email
+// module delegates delivery through this helper in production.
+const { mockSendTrackedEmail } = vi.hoisted(() => ({
+  mockSendTrackedEmail: vi.fn(),
+}));
 
-vi.mock('resend', () => {
-  return {
-    Resend: class MockResend {
-      emails = { send: mockSend };
-    },
-  };
-});
+vi.mock('@/lib/email-delivery', () => ({
+  sendTrackedEmail: mockSendTrackedEmail,
+}));
 
 // Import AFTER mocks are set up
 import * as emailModule from '../email';
@@ -35,7 +34,7 @@ import * as emailModule from '../email';
 describe('STL Order Emails', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSend.mockResolvedValue({ error: null, data: { id: 'msg_123' } });
+    mockSendTrackedEmail.mockResolvedValue({ error: null, data: { id: 'msg_123' } });
   });
 
   describe('sendSTLOrderConfirmationEmail', () => {
@@ -55,7 +54,7 @@ describe('STL Order Emails', () => {
       ).resolves.toBeUndefined();
 
       // No email should have been sent
-      expect(mockSend).not.toHaveBeenCalled();
+      expect(mockSendTrackedEmail).not.toHaveBeenCalled();
     });
 
     it('sends email to customer with download link', async () => {
@@ -70,17 +69,21 @@ describe('STL Order Emails', () => {
         price: 29.99,
       });
 
-      expect(mockSend).toHaveBeenCalledWith(
+      expect(mockSendTrackedEmail).toHaveBeenCalledWith(
+        expect.anything(),
         expect.objectContaining({
           to: 'customer@example.com',
           subject: expect.stringContaining('ORDER-12'),
         }),
-        expect.objectContaining({ idempotencyKey: expect.stringContaining('hellou-stl_order_confirmation-') }),
+        expect.objectContaining({
+          emailType: 'stl_order_confirmation',
+          orderId: 'order-123',
+        }),
       );
     });
 
     it('logs error on email send failure', async () => {
-      mockSend.mockResolvedValue({
+      mockSendTrackedEmail.mockResolvedValue({
         error: { message: 'API error' },
       });
 
@@ -96,7 +99,9 @@ describe('STL Order Emails', () => {
         price: 19.99,
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"event":"email.send_failed"'));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('"event":"email.provider_response_error"'),
+      );
 
       if (originalVerboseLogs === undefined) delete process.env.TEST_VERBOSE_LOGS;
       else process.env.TEST_VERBOSE_LOGS = originalVerboseLogs;
@@ -117,12 +122,16 @@ describe('STL Order Emails', () => {
         price: 29.99,
       });
 
-      expect(mockSend).toHaveBeenCalledWith(
+      expect(mockSendTrackedEmail).toHaveBeenCalledWith(
+        expect.anything(),
         expect.objectContaining({
           to: 'admin@example.com',
           subject: expect.stringContaining('Novo pedido digital'),
         }),
-        expect.objectContaining({ idempotencyKey: expect.stringContaining('hellou-stl_admin_notification-') }),
+        expect.objectContaining({
+          emailType: 'stl_admin_notification',
+          orderId: 'order-123',
+        }),
       );
     });
 
@@ -138,7 +147,7 @@ describe('STL Order Emails', () => {
         price: 19.99,
       });
 
-      const callArgs = mockSend.mock.calls[0][0];
+      const callArgs = mockSendTrackedEmail.mock.calls[0][1];
       expect(callArgs).toBeDefined();
       expect(callArgs.to).toBe('admin@example.com');
     });
