@@ -80,6 +80,7 @@ export interface ProductOption {
   notes: string | null;
   color: string | null;
   color_name: string | null;
+  color_preset_item_id?: string | null;
   image_url: string | null;
   sort_order: number;
   active: boolean;

@@ -6,11 +6,11 @@ import { ArrowLeft, Check, Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { FALLBACK_PRODUCT_COLOR_PRESET, type ProductColorPreset, type ProductColorPresetItem } from '@/lib/product-color-presets';
 
-type EditableColor = Pick<ProductColorPresetItem, 'name' | 'hex'> & { id: string };
-const newColor = (): EditableColor => ({ id: crypto.randomUUID(), name: '', hex: '#EC4899' });
+type EditableColor = Pick<ProductColorPresetItem, 'name' | 'hex' | 'active'> & { id: string };
+const newColor = (): EditableColor => ({ id: `new-${crypto.randomUUID()}`, name: '', hex: '#EC4899', active: true });
 
 function toEditable(preset: ProductColorPreset) {
-  return preset.items.map((item) => ({ id: item.id, name: item.name, hex: item.hex }));
+  return preset.items.map((item) => ({ id: item.id, name: item.name, hex: item.hex, active: item.active !== false }));
 }
 
 export function ColorPresetManager() {
@@ -60,7 +60,7 @@ export function ColorPresetManager() {
     setError('');
     setMessage('');
     const normalizedItems = items
-      .map((item) => ({ name: item.name.trim(), hex: item.hex.trim().toUpperCase() }))
+      .map((item) => ({ ...(item.id.startsWith('new-') ? {} : { id: item.id }), name: item.name.trim(), hex: item.hex.trim().toUpperCase(), active: item.active }))
       .filter((item) => item.name || item.hex !== '#EC4899');
     if (!name.trim()) return setError('Informe o nome do tipo de variação.');
     if (normalizedItems.length === 0) return setError('Adicione pelo menos uma cor.');
@@ -114,12 +114,12 @@ export function ColorPresetManager() {
 
         <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><h2 className="text-lg font-bold text-slate-950 dark:text-white">{selectedId ? 'Editar tipo de variação' : 'Novo tipo de variação'}</h2><p className="mt-1 text-xs leading-5 text-slate-500">As mudanças valem para novos usos. Variações que já pertencem a produtos não são modificadas.</p></div>
+            <div><h2 className="text-lg font-bold text-slate-950 dark:text-white">{selectedId ? 'Editar tipo de variação' : 'Novo tipo de variação'}</h2><p className="mt-1 text-xs leading-5 text-slate-500">Inativar uma cor preserva o cadastro e inativa automaticamente as variações vinculadas a ela nos produtos.</p></div>
             {selectedId && <button type="button" onClick={() => setPendingDelete(presets.find((preset) => preset.id === selectedId) ?? null)} className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /> Excluir</button>}
           </div>
           <label className="mt-6 block text-sm font-bold text-slate-700 dark:text-slate-200">Nome do tipo de variação<input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Ex.: Cores padrão" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none focus:border-pink-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white" /></label>
           <div className="mt-6"><div className="flex items-center justify-between gap-3"><div><h3 className="font-bold text-slate-900 dark:text-white">Cores disponíveis</h3><p className="text-xs text-slate-500">O nome aparece ao cliente e o círculo usa o hexadecimal.</p></div><button type="button" onClick={() => setItems((current) => [...current, newColor()])} disabled={items.length >= 40} className="inline-flex items-center gap-1 rounded-lg border border-pink-200 px-3 py-2 text-xs font-bold text-pink-700 hover:bg-pink-50 disabled:opacity-50"><Plus className="h-4 w-4" /> Adicionar cor</button></div>
-            <div className="mt-3 space-y-2">{items.map((item) => <div key={item.id} className="grid gap-2 rounded-xl border border-slate-200 p-3 sm:grid-cols-[42px_1fr_150px_auto] sm:items-center dark:border-slate-700"><span className="h-9 w-9 rounded-full border border-slate-300" style={{ backgroundColor: item.hex }} /><input value={item.name} onChange={(event) => updateItem(item.id, { name: event.target.value })} maxLength={60} placeholder="Nome da cor" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-pink-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white" /><div className="flex rounded-lg border border-slate-200 dark:border-slate-700"><input type="color" value={item.hex} onChange={(event) => updateItem(item.id, { hex: event.target.value.toUpperCase() })} aria-label={`Cor de ${item.name || 'nova cor'}`} className="h-9 w-10 cursor-pointer border-0 bg-transparent p-1" /><input value={item.hex} onChange={(event) => updateItem(item.id, { hex: event.target.value.toUpperCase() })} className="min-w-0 flex-1 bg-transparent px-2 text-xs font-bold uppercase text-slate-600 outline-none dark:text-slate-300" /></div><button type="button" onClick={() => setItems((current) => current.filter((color) => color.id !== item.id))} disabled={items.length === 1} aria-label={`Remover ${item.name || 'cor'}`} className="justify-self-end rounded-lg p-2 text-red-500 hover:bg-red-50 disabled:opacity-30"><Trash2 className="h-4 w-4" /></button></div>)}</div>
+            <div className="mt-3 space-y-2">{items.map((item) => <div key={item.id} className={`grid gap-2 rounded-xl border border-slate-200 p-3 sm:grid-cols-[42px_1fr_150px_auto] sm:items-center dark:border-slate-700 ${item.active ? '' : 'bg-slate-50 opacity-70 dark:bg-slate-950'}`}><span className="h-9 w-9 rounded-full border border-slate-300" style={{ backgroundColor: item.hex }} /><input value={item.name} onChange={(event) => updateItem(item.id, { name: event.target.value })} maxLength={60} placeholder="Nome da cor" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-pink-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white" /><div className="flex rounded-lg border border-slate-200 dark:border-slate-700"><input type="color" value={item.hex} onChange={(event) => updateItem(item.id, { hex: event.target.value.toUpperCase() })} aria-label={`Cor de ${item.name || 'nova cor'}`} className="h-9 w-10 cursor-pointer border-0 bg-transparent p-1" /><input value={item.hex} onChange={(event) => updateItem(item.id, { hex: event.target.value.toUpperCase() })} className="min-w-0 flex-1 bg-transparent px-2 text-xs font-bold uppercase text-slate-600 outline-none dark:text-slate-300" /></div><button type="button" onClick={() => updateItem(item.id, { active: !item.active })} className={`justify-self-end rounded-lg px-3 py-2 text-xs font-bold ${item.active ? 'border border-amber-200 text-amber-700 hover:bg-amber-50' : 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'}`}>{item.active ? 'Inativar' : 'Ativar'}</button></div>)}</div>
           </div>
           <div className="mt-6 flex justify-end"><button type="button" onClick={() => void save()} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-pink-600 px-5 py-3 text-sm font-bold text-white hover:bg-pink-700 disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar cores</button></div>
         </section>

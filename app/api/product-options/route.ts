@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { product_id, name, price_modifier, stock, dimensions, notes, color, color_name, image_url, active } = (body ?? {}) as {
+  const { product_id, name, price_modifier, stock, dimensions, notes, color, color_name, color_preset_item_id, image_url, active } = (body ?? {}) as {
     product_id?: string;
     name?: string;
     price_modifier?: number;
@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     notes?: string;
     color?: string;
     color_name?: string;
+    color_preset_item_id?: string;
     image_url?: string;
     active?: boolean;
   };
@@ -45,6 +46,17 @@ export async function POST(request: Request) {
   }
 
   const admin = getSupabaseAdmin();
+  let presetColorId: string | null = null;
+  if (color_preset_item_id) {
+    const { data: presetColor } = await admin
+      .from('product_option_color_preset_items')
+      .select('id, hex, active')
+      .eq('id', color_preset_item_id)
+      .maybeSingle();
+    if (!presetColor || !presetColor.active) return badRequest('Esta cor está inativa ou não existe mais');
+    if (normalizedColor !== presetColor.hex) return badRequest('A cor escolhida não corresponde ao grupo de cores');
+    presetColorId = presetColor.id;
+  }
 
   const { data: product } = await admin
     .from('products')
@@ -75,6 +87,7 @@ export async function POST(request: Request) {
       notes: notes?.trim() || null,
       color: normalizedColor,
       color_name: normalizedColor ? color_name?.trim() || null : null,
+      color_preset_item_id: presetColorId,
       image_url: image_url?.trim() || null,
       active: active ?? true,
       sort_order: (lastOption?.sort_order ?? -10) + 10,

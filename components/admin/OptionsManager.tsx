@@ -10,7 +10,7 @@ import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { useColorPresets } from '@/components/admin/useColorPresets';
 import type { ProductColorPresetItem } from '@/lib/product-color-presets';
 
-function ColorPicker({ value, onChange, colors }: { value: string; onChange: (v: string) => void; colors: ProductColorPresetItem[] }) {
+function ColorPicker({ value, onChange, colors }: { value: string; onChange: (v: string, presetItem?: ProductColorPresetItem) => void; colors: ProductColorPresetItem[] }) {
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-1.5">
@@ -19,7 +19,7 @@ function ColorPicker({ value, onChange, colors }: { value: string; onChange: (v:
             key={c.hex}
             type="button"
             title={c.name}
-            onClick={() => onChange(value === c.hex || value === c.name ? '' : c.hex)}
+            onClick={() => onChange(value === c.hex || value === c.name ? '' : c.hex, value === c.hex || value === c.name ? undefined : c)}
             className={`h-6 w-6 rounded-full border-2 transition ${
               value === c.hex || value === c.name
                 ? 'border-pink-500 ring-2 ring-pink-300 dark:ring-pink-700 scale-110'
@@ -61,6 +61,7 @@ export function OptionsManager({
   const [name, setName] = useState('');
   const [color, setColor] = useState('');
   const [colorName, setColorName] = useState('');
+  const [colorPresetItemId, setColorPresetItemId] = useState<string | null>(null);
   const [priceModifier, setPriceModifier] = useState('0');
   const [stock, setStock] = useState('0');
   const [dimensions, setDimensions] = useState('');
@@ -145,6 +146,7 @@ export function OptionsManager({
         name: name.trim(),
         color: color.trim() || null,
         color_name: color.trim() ? colorName.trim() || null : null,
+        color_preset_item_id: colorPresetItemId ?? undefined,
         price_modifier: modifier,
         stock: stockValue,
         dimensions: dimensions.trim() || undefined,
@@ -165,6 +167,7 @@ export function OptionsManager({
     setName('');
     setColor('');
     setColorName('');
+    setColorPresetItemId(null);
     setPriceModifier('0');
     setStock('0');
     setDimensions('');
@@ -206,6 +209,7 @@ export function OptionsManager({
           name: '',
           color: presetColor.hex,
           color_name: presetColor.name,
+          color_preset_item_id: presetColor.id.startsWith('fallback-') ? undefined : presetColor.id,
           price_modifier: modifier,
           stock: stockValue,
           image_url: colorImageUrl.trim() || undefined,
@@ -492,7 +496,7 @@ export function OptionsManager({
         </p>
         <div>
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Cor (opcional)</p>
-          <ColorPicker value={color} onChange={setColor} colors={presetColors} />
+          <ColorPicker value={color} onChange={(nextColor, item) => { setColor(nextColor); setColorPresetItemId(item?.id.startsWith('fallback-') ? null : item?.id ?? null); if (item) setColorName(item.name); }} colors={presetColors} />
           {color && (
             <input
               type="text"
@@ -548,6 +552,7 @@ function OptionRow({
   const [name, setName] = useState(option.name);
   const [color, setColor] = useState(option.color ?? '');
   const [colorName, setColorName] = useState(option.color_name ?? '');
+  const [colorPresetItemId, setColorPresetItemId] = useState(option.color_preset_item_id ?? null);
   const [priceModifier, setPriceModifier] = useState(String(option.price_modifier));
   const [stock, setStock] = useState(String(option.stock));
   const [dimensions, setDimensions] = useState(option.dimensions ?? '');
@@ -565,6 +570,7 @@ function OptionRow({
       name: name.trim(),
       color: color.trim() || null,
       color_name: color.trim() ? colorName.trim() || null : null,
+      color_preset_item_id: colorPresetItemId,
       price_modifier: modifier,
       stock: stockValue,
       dimensions: dimensions.trim() || null,
@@ -637,7 +643,7 @@ function OptionRow({
         </p>
         <div className="mt-2">
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Cor</p>
-          <ColorPicker value={color} onChange={setColor} colors={colors} />
+          <ColorPicker value={color} onChange={(nextColor, item) => { setColor(nextColor); setColorPresetItemId(item?.id.startsWith('fallback-') ? null : item?.id ?? null); if (item) setColorName(item.name); }} colors={colors} />
           {color && (
             <input
               type="text"

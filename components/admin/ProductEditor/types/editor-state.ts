@@ -9,6 +9,7 @@ export interface DraftVariation {
   name: string;
   color?: string;
   colorName?: string;
+  colorPresetItemId?: string;
   priceModifier: number;
   stock: number;
   dimensions?: string;

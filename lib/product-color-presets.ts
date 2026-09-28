@@ -5,6 +5,7 @@ export type ProductColorPresetItem = {
   name: string;
   hex: string;
   sort_order: number;
+  active: boolean;
 };
 
 export type ProductColorPreset = {
@@ -25,6 +26,7 @@ export const FALLBACK_PRODUCT_COLOR_PRESET: ProductColorPreset = {
       name: color.name,
       hex: color.hex,
       sort_order: index * 10,
+      active: true,
     })),
 };
 

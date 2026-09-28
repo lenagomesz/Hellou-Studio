@@ -134,7 +134,7 @@ export async function POST(request: Request) {
     is_wholesale?: boolean;
     minimum_order_quantity?: number;
     is_customizable?: boolean;
-    options?: Array<{ id?: string; name: string; dimensions?: string | null; notes?: string | null; color?: string | null; color_name?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number; active?: boolean }>;
+    options?: Array<{ id?: string; name: string; dimensions?: string | null; notes?: string | null; color?: string | null; color_name?: string | null; color_preset_item_id?: string | null; image_url?: string | null; price_modifier?: number; stock?: number; sort_order?: number; active?: boolean }>;
     customization_sections?: unknown;
   } & ProductCommercialInput & ProductCustomizationCopyInput;
 
@@ -223,6 +223,7 @@ export async function POST(request: Request) {
       notes: option.notes?.trim() || null,
       color: normalizeProductColor(option.color),
       color_name: option.color_name?.trim() || null,
+      color_preset_item_id: option.color_preset_item_id ?? null,
       image_url: option.image_url?.trim() || null,
       price_modifier: Number(option.price_modifier ?? 0),
       stock: Math.max(0, Math.trunc(Number(option.stock ?? 0))),

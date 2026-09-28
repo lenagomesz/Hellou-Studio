@@ -28,6 +28,7 @@ export async function PATCH(
     notes?: string | null;
     color?: string | null;
     color_name?: string | null;
+    color_preset_item_id?: string | null;
     image_url?: string | null;
     active?: boolean;
   };
@@ -71,6 +72,9 @@ export async function PATCH(
   if (input.image_url !== undefined) {
     update.image_url = input.image_url?.trim() || null;
   }
+  if (input.color_preset_item_id !== undefined) {
+    update.color_preset_item_id = input.color_preset_item_id?.trim() || null;
+  }
   if (input.active !== undefined) {
     if (typeof input.active !== 'boolean') {
       return badRequest('Status inválido');
@@ -83,7 +87,7 @@ export async function PATCH(
   }
 
   const admin = getSupabaseAdmin();
-  if (input.name !== undefined || input.color !== undefined) {
+  if (input.name !== undefined || input.color !== undefined || input.color_preset_item_id !== undefined) {
     const { data: current } = await admin
       .from('product_options')
       .select('name, color')
@@ -94,6 +98,15 @@ export async function PATCH(
     const nextName = input.name !== undefined ? input.name.trim() : current.name.trim();
     const nextColor = input.color !== undefined ? normalizeProductColor(input.color) ?? '' : current.color?.trim() ?? '';
     if (!nextName && !nextColor) return badRequest('Informe um nome ou uma cor');
+    if (input.color_preset_item_id?.trim()) {
+      const { data: presetColor } = await admin
+        .from('product_option_color_preset_items')
+        .select('id, hex, active')
+        .eq('id', input.color_preset_item_id.trim())
+        .maybeSingle();
+      if (!presetColor || !presetColor.active) return badRequest('Esta cor está inativa ou não existe mais');
+      if (nextColor !== presetColor.hex) return badRequest('A cor escolhida não corresponde ao grupo de cores');
+    }
   }
 
   const { data, error } = await admin

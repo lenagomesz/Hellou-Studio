@@ -13,7 +13,7 @@ export function useColorPresets() {
       .then(async (response) => {
         if (!response.ok) throw new Error('Could not load color presets');
         const data = await response.json() as { presets?: ProductColorPreset[] };
-        return (data.presets ?? []).map((preset) => ({ ...preset, items: normalizePresetItems(preset.items ?? []) }));
+        return (data.presets ?? []).map((preset) => ({ ...preset, items: normalizePresetItems(preset.items ?? []).filter((item) => item.active !== false) }));
       })
       .then((data) => {
         if (active && data.length > 0) setPresets(data);

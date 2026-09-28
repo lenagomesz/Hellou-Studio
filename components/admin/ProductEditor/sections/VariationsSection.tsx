@@ -32,6 +32,7 @@ export function VariationsSection() {
           name: '',
           color: color.hex,
           colorName: color.name,
+          colorPresetItemId: color.id.startsWith('fallback-') ? undefined : color.id,
           priceModifier: 0,
           stock: 0,
           _isDirty: false,

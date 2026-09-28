@@ -3,26 +3,26 @@ import { badRequest, requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { ProductColorPreset, ProductColorPresetItem } from '@/lib/product-color-presets';
 
-type ColorInput = { name?: unknown; hex?: unknown };
+type ColorInput = { id?: unknown; name?: unknown; hex?: unknown; active?: unknown };
 
 function normalizeHex(value: unknown) {
   if (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value.trim())) return null;
   return value.trim().toUpperCase();
 }
 
-function normalizeItems(value: unknown): Array<{ name: string; hex: string; sort_order: number }> | null {
+function normalizeItems(value: unknown): Array<{ id?: string; name: string; hex: string; active: boolean; sort_order: number }> | null {
   if (!Array.isArray(value) || value.length === 0 || value.length > 40) return null;
   const names = new Set<string>();
   const hexes = new Set<string>();
-  const items: Array<{ name: string; hex: string; sort_order: number }> = [];
+  const items: Array<{ id?: string; name: string; hex: string; active: boolean; sort_order: number }> = [];
   for (const [index, input] of value.entries()) {
     const item = input as ColorInput;
     const name = typeof item.name === 'string' ? item.name.trim() : '';
     const hex = normalizeHex(item.hex);
-    if (!name || name.length > 60 || !hex || names.has(name.toLocaleLowerCase('pt-BR')) || hexes.has(hex)) return null;
+    if (!name || name.length > 60 || !hex || (item.active !== undefined && typeof item.active !== 'boolean') || names.has(name.toLocaleLowerCase('pt-BR')) || hexes.has(hex)) return null;
     names.add(name.toLocaleLowerCase('pt-BR'));
     hexes.add(hex);
-    items.push({ name, hex, sort_order: index * 10 });
+    items.push({ name, hex, active: item.active !== false, sort_order: index * 10 });
   }
   return items;
 }
@@ -42,7 +42,7 @@ export async function GET() {
 
   const { data, error } = await getSupabaseAdmin()
     .from('product_option_color_presets')
-    .select('id, name, sort_order, product_option_color_preset_items(id, name, hex, sort_order)')
+    .select('id, name, sort_order, product_option_color_preset_items(id, name, hex, active, sort_order)')
     .order('sort_order')
     .order('name');
   if (error) return serverError('Erro ao buscar os grupos de cores');
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   const { data: createdItems, error: itemError } = await admin
     .from('product_option_color_preset_items')
     .insert(items.map((item) => ({ ...item, preset_id: preset.id })))
-    .select('id, name, hex, sort_order');
+    .select('id, name, hex, active, sort_order');
   if (itemError) {
     await admin.from('product_option_color_presets').delete().eq('id', preset.id);
     return serverError('Erro ao salvar as cores');
