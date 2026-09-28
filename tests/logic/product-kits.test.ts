@@ -20,12 +20,17 @@ describe('kits e complementos do catálogo', () => {
     expect(getStartingPrice({ ...product, sale_price: 0 })).toBe(5);
   });
 
-  it('oculta o kit inteiro quando uma peça está ausente ou indisponível', () => {
+  it('remove somente a peça indisponível e mantém o kit com pelo menos duas peças', () => {
     const products = setupProducts();
-    expect(buildProductKits(products.slice(1))).toEqual([]);
+    expect(buildProductKits(products.slice(1))[0].products.map(product => product.id)).toEqual(['Mini Fidget Espiral', 'Chaveiro Clicker']);
     for (const overrides of [{ active: false }, { type: 'digital' as const }, { is_wholesale: true }, { category: 'encomenda' }, { fulfillment_mode: 'ready_stock' as const }]) {
-      expect(buildProductKits([{ ...products[0], ...overrides }, ...products.slice(1)])).toEqual([]);
+      const [kit] = buildProductKits([{ ...products[0], ...overrides }, ...products.slice(1)]);
+      expect(kit.products.map(product => product.id)).toEqual(['Mini Fidget Espiral', 'Chaveiro Clicker']);
     }
+  });
+
+  it('oculta o kit quando restam menos de duas peças disponíveis', () => {
+    expect(buildProductKits(setupProducts().slice(2))).toEqual([]);
   });
 
   it('aceita produtos sob demanda sem estoque e monta temas com acentos', () => {

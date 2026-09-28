@@ -64,7 +64,7 @@ export function buildProductKits(products: KitProduct[], definitions: readonly K
   return definitions.filter(definition => definition.active).flatMap(definition => {
     if (definition.productIds.length > 0) {
       const selected = definition.productIds.map(id => available.find(product => product.id === id)).filter((product): product is KitProduct => Boolean(product));
-      if (selected.length !== definition.productIds.length || selected.length < 2) return [];
+      if (selected.length < 2) return [];
       return [{ ...definition, products: selected, startingPrice: selected.reduce((sum, product) => sum + Math.round(getStartingPrice(product) * 100), 0) / 100 }];
     }
 
@@ -77,9 +77,9 @@ export function buildProductKits(products: KitProduct[], definitions: readonly K
         match = available.find(product => !selected.some(item => item.id === product.id) && normalize(product.name).includes(name));
         if (match) break;
       }
-      if (!match) return [];
-      selected.push(match);
+      if (match) selected.push(match);
     }
+    if (selected.length < 2) return [];
     return [{ ...definition, products: selected, startingPrice: selected.reduce((sum, product) => sum + Math.round(getStartingPrice(product) * 100), 0) / 100 }];
   });
 }
