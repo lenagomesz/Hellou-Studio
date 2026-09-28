@@ -7,8 +7,8 @@ import { FeaturedProductsClient } from '@/components/shop/FeaturedProducts';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { HomeHeroCarousel } from '@/components/shop/HomeHeroCarousel';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
-// import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { Marquee } from '@/components/ui/Marquee';
+// import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
@@ -207,11 +207,8 @@ export default async function HomePage() {
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
       <HomeHeroCarousel settings={storeSettings} />
 
-      {/* =========================================== */}
-      {/* MARQUEE STRIP */}
-      {/* =========================================== */}
       <div className="border-y border-orange-200/40 dark:border-gray-800 bg-white dark:bg-gray-950">
-        <Marquee items={MARQUEE_ITEMS} speed={35} />
+        <Marquee items={MARQUEE_ITEMS.slice(0, 4)} speed={28} />
       </div>
 
       {/* =========================================== */}
@@ -293,93 +290,16 @@ export default async function HomePage() {
         <WholesaleProducts />
       </Suspense>
 
-      {/* =========================================== */}
-      {/* STL MARKETPLACE BANNER */}
-      {/* =========================================== */}
-      <section className="bg-gradient-to-br from-pink-500 via-pink-600 to-orange-400 py-12 sm:py-20 overflow-hidden relative">
-        <div className="absolute inset-0 overflow-hidden opacity-10">
-          <div className="absolute top-0 right-0 h-80 w-80 rounded-full bg-white blur-3xl" />
-          <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-white blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-white blur-3xl" />
-        </div>
-
-        <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-          <ScrollReveal direction="scale">
-            <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
-              {/* Esquerda - Content */}
-              <div className="text-center md:text-left">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/25 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-white ring-1 ring-white/40 sm:backdrop-blur-sm">
-                  <span>📥</span>
-                  <span>Modelos 3D</span>
-                </div>
-
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 leading-tight">
-                  Arquivos STL<br />
-                  <span className="text-white/90">da Hellou Studio</span>
-                </h2>
-
-                <p className="text-sm sm:text-base md:text-lg text-white/90 mb-4 sm:mb-6 leading-relaxed">
-                  Modelos 3D prontos para imprimir. Originais, personalizáveis e com uso comercial livre.
-                </p>
-
-                {/* Benefícios em cards - Otimizado para mobile */}
-                <div className="space-y-2 mb-5 sm:mb-7">
-                  <div className="flex items-start gap-2.5 rounded-lg bg-white/10 p-2.5 sm:p-3 sm:backdrop-blur-sm">
-                    <span className="text-lg sm:text-xl mt-0.5 flex-shrink-0">✓</span>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-white text-xs sm:text-sm">Uso comercial livre</p>
-                      <p className="text-xs text-white/80 hidden sm:block">Imprima e venda sem restrições</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 rounded-lg bg-white/10 p-2.5 sm:p-3 sm:backdrop-blur-sm">
-                    <span className="text-lg sm:text-xl mt-0.5 flex-shrink-0">✓</span>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-white text-xs sm:text-sm">Prontos para FDM</p>
-                      <p className="text-xs text-white/80 hidden sm:block">Otimizados para impressoras 3D</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 rounded-lg bg-white/10 p-2.5 sm:p-3 sm:backdrop-blur-sm">
-                    <span className="text-lg sm:text-xl mt-0.5 flex-shrink-0">✓</span>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-white text-xs sm:text-sm">Personalizáveis</p>
-                      <p className="text-xs text-white/80 hidden sm:block">Adapte cores, tamanhos e detalhes</p>
-                    </div>
-                  </div>
-                </div>
-
-                <Link
-                  href="/stl"
-                  className="w-full sm:w-auto inline-flex items-center justify-center sm:justify-start gap-2 rounded-full bg-white text-pink-600 px-5 sm:px-6 py-2.5 sm:py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm sm:text-base"
-                >
-                  Ver Modelos
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-4 w-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                  </svg>
-                </Link>
-              </div>
-
-              {/* Direita - Visual */}
-              <div className="hidden md:flex justify-center items-center">
-                <div className="relative">
-                  {/* Card principal */}
-                  <div className="absolute inset-0 scale-100 rounded-3xl border border-white/30 bg-gradient-to-br from-white/20 to-white/5 transition group-hover:scale-105 sm:backdrop-blur-md" />
-
-                  <div className="relative h-80 w-80 flex items-center justify-center rounded-3xl overflow-hidden">
-                    <div className="absolute inset-0 bg-white/5 sm:backdrop-blur-sm" />
-
-                    {/* Ícone grande */}
-                    <div className="relative z-10 text-center">
-                      <div className="text-8xl mb-4 animate-float">📥</div>
-                      <div className="text-white/80 text-sm font-medium">Arquivo STL</div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ScrollReveal>
+      <section className="border-y border-pink-100 bg-pink-50/60 py-5 dark:border-pink-950/60 dark:bg-pink-950/15 sm:py-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-pink-600 dark:text-pink-400">Para makers</p>
+            <h2 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">Prefere imprimir em casa?</h2>
+            <p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-300">Veja os arquivos digitais disponíveis para baixar depois da compra.</p>
+          </div>
+          <Link href="/stl" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-pink-600 shadow-sm ring-1 ring-pink-200 transition hover:-translate-y-0.5 hover:text-orange-500 hover:shadow-md dark:bg-gray-900 dark:text-pink-400 dark:ring-pink-900">
+            Ver arquivos STL <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </section>
 
@@ -569,8 +489,8 @@ export default async function HomePage() {
                 ?
               </h2>
               <p className="mx-auto mt-5 max-w-lg text-base text-gray-600 dark:text-gray-300 leading-relaxed sm:text-lg">
-                Explore nosso catálogo ou envie seu próprio modelo 3D.
-                Cada peça é impressa com carinho especialmente para você.
+                Explore nosso catálogo ou envie uma imagem, arquivo STL ou link de referência.
+                Cada peça é produzida com carinho especialmente para você.
               </p>
             </div>
 

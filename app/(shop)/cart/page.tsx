@@ -21,6 +21,7 @@ import { PaymentForm, type PaymentPricingSummary } from '@/components/shop/Payme
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES } from '@/lib/checkout-rules';
 import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/store-settings-schema';
+import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 import { formatCep, type AddressSearchResult } from '@/lib/address-search';
 import { productIdentifier } from '@/lib/seo';
 import { CustomizationSummary } from '@/components/shop/CustomizationSummary';
@@ -414,7 +415,7 @@ export default function CartPage() {
           </svg>
           Explorar catálogo
         </Link>
-        <div className="mx-auto mt-8 grid max-w-xl gap-3 text-left sm:grid-cols-2">
+        <div className={`mx-auto mt-8 grid max-w-2xl gap-3 text-left ${session ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
           <Link href="/products" className="rounded-2xl border border-pink-100 bg-pink-50/60 p-4 transition hover:-translate-y-0.5 hover:border-pink-300 hover:bg-pink-50 dark:border-pink-900/60 dark:bg-pink-950/20">
             <span className="text-xl" aria-hidden="true">✨</span>
             <span className="mt-2 block text-sm font-bold text-gray-900 dark:text-white">Encontrar um presente</span>
@@ -425,6 +426,13 @@ export default function CartPage() {
             <span className="mt-2 block text-sm font-bold text-gray-900 dark:text-white">Criar uma encomenda</span>
             <span className="mt-1 block text-xs leading-5 text-gray-600 dark:text-gray-300">Envie uma imagem, STL ou link e receba um orçamento.</span>
           </Link>
+          {session && (
+            <Link href="/account/favorites" className="rounded-2xl border border-rose-100 bg-rose-50/60 p-4 transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-50 dark:border-rose-900/60 dark:bg-rose-950/20">
+              <span className="text-xl" aria-hidden="true">♡</span>
+              <span className="mt-2 block text-sm font-bold text-gray-900 dark:text-white">Ver favoritos</span>
+              <span className="mt-1 block text-xs leading-5 text-gray-600 dark:text-gray-300">Retome as peças que você salvou para comprar depois.</span>
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -615,6 +623,19 @@ export default function CartPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                   </svg>
                 </button>
+
+                <div className="border-t border-pink-100 pt-4 dark:border-pink-950/70">
+                  <p className="text-xs font-bold text-gray-900 dark:text-white">Depois da confirmação</p>
+                  {hasOnlyDigitalProducts ? (
+                    <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Pagamento aprovado → download liberado na sua conta.</p>
+                  ) : (
+                    <ol className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] leading-4 text-gray-600 dark:text-gray-300">
+                      <li className="rounded-lg bg-pink-50 px-1.5 py-2 dark:bg-pink-950/30"><span className="block text-sm" aria-hidden="true">✓</span>Pedido confirmado</li>
+                      <li className="rounded-lg bg-orange-50 px-1.5 py-2 dark:bg-orange-950/30"><span className="block text-sm" aria-hidden="true">🖨️</span>Produção em {DEFAULT_PRODUCTION_LEAD_TIME}</li>
+                      <li className="rounded-lg bg-pink-50 px-1.5 py-2 dark:bg-pink-950/30"><span className="block text-sm" aria-hidden="true">📦</span>Envio com rastreio</li>
+                    </ol>
+                  )}
+                </div>
 
                 {/* Coupon */}
                 <div className="pt-4 border-t border-gray-100 dark:border-gray-800">

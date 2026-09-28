@@ -45,40 +45,21 @@ export default async function STLMarketplacePage(props: { searchParams: Promise<
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
-      {/* Full-width Banner */}
-      <div className="flex h-40 flex-col items-center justify-center bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-4 text-center sm:h-44 sm:px-10">
-        <h1 className="text-2xl font-bold text-white sm:text-3xl">
-          Bem-vindos, makers! 🎨
-        </h1>
-        <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
-          Compre arquivos STL prontos para imprimir em sua impressora 3D.
-        </p>
-      </div>
-
-
-      {/* Info Cards */}
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-            <div className="text-2xl mb-1">🔧</div>
-            <h3 className="font-semibold text-sm mb-1 text-gray-900 dark:text-white">Pronto para Imprimir</h3>
-            <p className="text-gray-600 dark:text-gray-400 text-xs">
-              Modelos otimizados para impressoras 3D FDM.
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-            <div className="text-2xl mb-1">📥</div>
-            <h3 className="font-semibold text-sm mb-1 text-gray-900 dark:text-white">Download Imediato</h3>
-            <p className="text-gray-600 dark:text-gray-400 text-xs">
-              Receba via email e acesse na sua conta.
-            </p>
-          </div>
+      <header className="mx-auto max-w-6xl px-4 pb-2 pt-8 sm:px-6 sm:pt-12">
+        <div className="overflow-hidden rounded-3xl border border-pink-100 bg-gradient-to-br from-pink-50 via-white to-orange-50 px-5 py-7 shadow-sm dark:border-pink-950/70 dark:from-pink-950/30 dark:via-gray-900 dark:to-orange-950/20 sm:px-8 sm:py-9">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-600 dark:text-pink-400">Para makers</p>
+          <h1 className="mt-2 text-2xl font-black tracking-tight text-gray-950 dark:text-white sm:text-3xl">Arquivos para imprimir do seu jeito</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-300">Modelos digitais para baixar após a aprovação do pagamento e imprimir na sua própria máquina.</p>
+          <ul className="mt-5 grid gap-2 text-xs text-gray-600 sm:grid-cols-3 dark:text-gray-300">
+            <li className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm ring-1 ring-pink-100/80 dark:bg-gray-900/80 dark:ring-pink-950/60"><span aria-hidden="true">🧩 </span>Arquivo STL ou 3MF</li>
+            <li className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm ring-1 ring-pink-100/80 dark:bg-gray-900/80 dark:ring-pink-950/60"><span aria-hidden="true">⚡ </span>Download na sua conta</li>
+            <li className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm ring-1 ring-pink-100/80 dark:bg-gray-900/80 dark:ring-pink-950/60"><span aria-hidden="true">🖨️ </span>Feito para você imprimir</li>
+          </ul>
         </div>
-      </div>
+      </header>
 
       {/* Marketplace */}
-      <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <header className="mb-4">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">Modelos Disponíveis</h1>
           <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
