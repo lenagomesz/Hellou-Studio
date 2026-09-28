@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { toast } from 'react-toastify';
+import { shopNotify } from '@/components/ui/shop-notifications';
 
 type FavoritesContextValue = {
   favoriteIds: ReadonlySet<string>;
@@ -77,7 +77,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json().catch(() => null) as { error?: string } | null;
         throw new Error(data?.error ?? 'Não foi possível atualizar seus favoritos.');
       }
-      toast.success(wasFavorite ? `${productName} foi removido dos favoritos.` : `${productName} foi salvo nos favoritos.`);
+      shopNotify.favorite(wasFavorite ? 'Removido dos favoritos' : 'Salvo nos favoritos', productName);
     } catch (error) {
       setFavoriteIds((current) => {
         const next = new Set(current);
@@ -85,7 +85,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         else next.delete(productId);
         return next;
       });
-      toast.error(error instanceof Error ? error.message : 'Não foi possível atualizar seus favoritos.');
+      shopNotify.error('Não foi possível atualizar seus favoritos', error instanceof Error ? error.message : 'Tente novamente em instantes.');
     } finally {
       setPendingIds((current) => {
         const next = new Set(current);

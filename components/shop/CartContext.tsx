@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { useSession } from 'next-auth/react';
 import { trackMetaEvent } from '@/lib/meta-pixel';
+import { shopNotify } from '@/components/ui/shop-notifications';
 import {
   LOCAL_CART_STORAGE_KEY,
   computeCartCount,
@@ -241,6 +242,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           currency: 'BRL',
           quantity: addedQuantity,
         });
+        shopNotify.cartAdded({ name: product.name, imageUrl: option?.image_url ?? product.image_url, quantity: addedQuantity });
       };
 
       if (isAuthed) {
@@ -254,6 +256,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           setStatus('idle');
         } catch (error) {
           setStatus('error');
+          shopNotify.error('Não foi possível adicionar ao carrinho', error instanceof Error ? error.message : 'Tente novamente em instantes.');
           throw error;
         }
         return;

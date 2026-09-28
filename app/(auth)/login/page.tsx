@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Suspense, useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, Loader2, Check, ShieldCheck, ChevronLeft, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { queueShopNotification } from '@/components/ui/shop-notifications';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -66,6 +67,11 @@ function LoginForm() {
     setLoading(false);
 
     const dest = callbackUrl;
+    queueShopNotification({
+      tone: 'success',
+      title: 'Login realizado',
+      message: isFavoriteAccess ? 'Agora você pode salvar seus produtos favoritos.' : 'Sua conta está pronta para acompanhar pedidos e favoritos.',
+    });
     globalThis.location.href = dest;
   }
 

@@ -1,15 +1,18 @@
 'use client';
 
+import { useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
+import { consumeQueuedShopNotification } from '@/components/ui/shop-notifications';
 
 export function ToastProvider() {
+  useEffect(() => { consumeQueuedShopNotification(); }, []);
   return (
     <ToastContainer
       position="top-center"
       autoClose={5000}
       hideProgressBar={false}
       newestOnTop
-      closeOnClick
+      closeOnClick={false}
       pauseOnFocusLoss={false}
       pauseOnHover
       draggable

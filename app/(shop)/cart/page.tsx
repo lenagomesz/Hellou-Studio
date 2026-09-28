@@ -26,6 +26,7 @@ import { productIdentifier } from '@/lib/seo';
 import { CustomizationSummary } from '@/components/shop/CustomizationSummary';
 import { trackMetaEvent } from '@/lib/meta-pixel';
 import { PRIVACY_CHANGED_EVENT } from '@/lib/privacy';
+import { shopNotify } from '@/components/ui/shop-notifications';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -227,6 +228,7 @@ export default function CartPage() {
       if (couponDiscount?.family_pickup) {
         setSelectedShipping({ id: 'pickup', name: storeSettings.shipping.pickupName, price: 0, days_min: 0, days_max: 0 });
       } else if (data.options.length > 0) setSelectedShipping(data.options[0]);
+      shopNotify.success('Frete calculado', data.options.length > 0 ? `${data.options.length} ${data.options.length === 1 ? 'opção encontrada' : 'opções encontradas'} para sua região.` : 'Confira a opção de retirada disponível.');
     } catch {
       setShippingError('Erro de conexão. Tente novamente.');
     } finally {
@@ -305,6 +307,7 @@ export default function CartPage() {
       if (data.family_pickup === true) {
         setSelectedShipping({ id: 'pickup', name: storeSettings.shipping.pickupName, price: 0, days_min: 0, days_max: 0 });
       }
+      shopNotify.success('Cupom aplicado', data.description || `O desconto ${data.code} foi adicionado ao seu pedido.`);
     } catch {
       setCouponError('Erro de conexão. Tente novamente.');
     } finally {

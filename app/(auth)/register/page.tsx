@@ -6,6 +6,7 @@ import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { User, Mail, Phone, Lock, Eye, EyeOff, Loader2, Check, ShieldCheck, ChevronLeft, Sun, Moon, FileText } from 'lucide-react';
 import { formatCpf, isValidCpf, cleanCpf } from '@/lib/cpf';
 import { useTheme } from 'next-themes';
+import { queueShopNotification } from '@/components/ui/shop-notifications';
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -119,6 +120,11 @@ export default function RegisterPage() {
       const callbackUrl = requestedCallbackUrl?.startsWith('/') && !requestedCallbackUrl.startsWith('//')
         ? requestedCallbackUrl
         : '/';
+      queueShopNotification({
+        tone: 'success',
+        title: `Que bom ter você aqui${name.trim() ? `, ${name.trim().split(' ')[0]}` : ''}!`,
+        message: 'Sua conta foi criada. Agora você pode salvar favoritos e acompanhar seus pedidos.',
+      });
       window.location.href = callbackUrl;
     } finally {
       setLoading(false);
