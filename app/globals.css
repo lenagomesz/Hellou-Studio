@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@keyframes review-fade-slide {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="review-fade-slide"],
+  [class*="review-fade-slide"] {
+    animation: none !important;
+  }
+}
+
 :root {
   --store-primary: #ec4899;
   --store-secondary: #f97316;

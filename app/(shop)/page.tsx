@@ -19,6 +19,7 @@ import { ProductKits } from '@/components/shop/ProductKits';
 import { getKitCatalog } from '@/lib/kit-catalog';
 import { buildProductKits } from '@/lib/product-kits';
 import { getStoreSettings } from '@/lib/store-settings';
+import { GoogleReviews } from '@/components/shop/GoogleReviews';
 
 export const metadata: Metadata = {
   title: { absolute: 'Hellou Studio' },
@@ -70,6 +71,8 @@ const MARQUEE_ITEMS = [
   'Atendimento humanizado',
   'Embalagem especial',
 ];
+
+const GOOGLE_BUSINESS_URL = 'https://www.google.com/maps/place/Hellou+Studio/data=!4m2!3m1!1s0x0:0x28d2327a9693fef6';
 
 const getFeaturedProducts = unstable_cache(
   async (type: 'physical' | 'digital'): Promise<Product[]> => {
@@ -213,6 +216,13 @@ export default async function HomePage() {
       </div>
 
       {/* =========================================== */}
+      {/* FEATURED PRODUCTS */}
+      {/* =========================================== */}
+      <Suspense fallback={<FeaturedSkeleton />}>
+        <FeaturedProducts />
+      </Suspense>
+
+      {/* =========================================== */}
       {/* CATEGORIES */}
       {/* =========================================== */}
       <section className="bg-white py-12 shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)] sm:bg-white/80 sm:py-20 sm:backdrop-blur-sm dark:bg-gray-950 sm:dark:bg-gray-950/80">
@@ -286,13 +296,6 @@ export default async function HomePage() {
           </ScrollReveal>
         </div>
       </section>
-
-      {/* =========================================== */}
-      {/* FEATURED PRODUCTS */}
-      {/* =========================================== */}
-      <Suspense fallback={<FeaturedSkeleton />}>
-        <FeaturedProducts />
-      </Suspense>
 
       <Suspense fallback={null}>
         <HomeKits threshold={storeSettings.commerce.freeShippingThreshold} />
@@ -435,6 +438,41 @@ export default async function HomePage() {
               </ScrollReveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* =========================================== */}
+      {/* GOOGLE REVIEWS */}
+      {/* =========================================== */}
+      <section className="bg-gradient-to-b from-white via-orange-50/35 to-pink-50/45 py-14 dark:from-gray-950 dark:via-gray-950 dark:to-gray-900 sm:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <ScrollReveal direction="scale">
+            <div className="mx-auto max-w-2xl text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-pink-600 shadow-sm ring-1 ring-pink-100 dark:bg-gray-900 dark:text-pink-400 dark:ring-gray-800">
+                <span aria-hidden="true">★</span>
+                Avaliações no Google
+              </span>
+              <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+                Quem compra na Hellou{' '}
+                <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">recomenda</span>
+              </h2>
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-orange-100 dark:bg-gray-900 dark:text-gray-200 dark:ring-gray-800">
+                <span className="tracking-[0.12em] text-amber-400" aria-label="5 de 5 estrelas">★★★★★</span>
+                <span>5,0 · 13 avaliações</span>
+              </div>
+            </div>
+          </ScrollReveal>
+
+          <GoogleReviews />
+
+          <ScrollReveal direction="up">
+            <div className="mt-8 text-center">
+              <a href={GOOGLE_BUSINESS_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-pink-200 bg-white px-5 py-3 text-sm font-bold text-pink-600 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-300 hover:text-orange-600 hover:shadow-md dark:border-pink-900 dark:bg-gray-900 dark:text-pink-400">
+                Ver todas as avaliações no Google
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
