@@ -244,7 +244,7 @@ export default function UserRequestsPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">{req.title}</p>
                     <p className="mt-0.5 text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {req.stl_file_name} · {formatDate(req.created_at)}
+                      {req.stl_file_name ?? (req.makerworld_link ? 'Link de referência' : 'Referência enviada')} · {formatDate(req.created_at)}
                     </p>
                   </div>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-medium ${status.color}`}>

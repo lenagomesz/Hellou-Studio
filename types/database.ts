@@ -176,9 +176,10 @@ export interface PrintRequest {
   title: string;
   description: string | null;
   notes: string | null;
-  stl_file_url: string;
-  stl_file_name: string;
-  stl_file_size: number;
+  stl_file_url: string | null;
+  stl_file_name: string | null;
+  stl_file_size: number | null;
+  makerworld_link?: string | null;
   status: PrintRequestStatus;
   admin_notes: string | null;
   quoted_price: number | null;

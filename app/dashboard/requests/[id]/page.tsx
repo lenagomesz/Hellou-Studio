@@ -260,21 +260,20 @@ export default function AdminRequestDetailPage() {
           )}
 
           <div>
-            <p className="text-xs font-medium text-gray-500">Arquivo STL</p>
-            <div className="mt-1 flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{request.stl_file_name}</p>
-                <p className="text-xs text-gray-500">{formatFileSize(request.stl_file_size)}</p>
+            <p className="text-xs font-medium text-gray-500">Referência enviada</p>
+            {request.stl_file_url && request.stl_file_name ? (
+              <div className="mt-1 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{request.stl_file_name}</p>
+                  <p className="text-xs text-gray-500">{request.stl_file_name.toLowerCase().endsWith('.stl') ? 'Arquivo STL' : 'Imagem de referência'}{request.stl_file_size !== null ? ` · ${formatFileSize(request.stl_file_size)}` : ''}</p>
+                </div>
+                <a href={request.stl_file_url} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition">
+                  {request.stl_file_name.toLowerCase().endsWith('.stl') ? 'Baixar' : 'Ver imagem'}
+                </a>
               </div>
-              <a
-                href={request.stl_file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
-              >
-                Download
-              </a>
-            </div>
+            ) : request.makerworld_link ? (
+              <a href={request.makerworld_link} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition">Abrir link enviado ↗</a>
+            ) : <p className="mt-1 text-sm text-gray-500">Referência indisponível.</p>}
           </div>
 
           {request.quoted_price !== null && (

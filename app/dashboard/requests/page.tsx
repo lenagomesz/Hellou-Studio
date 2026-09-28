@@ -52,6 +52,7 @@ type RequestRow = {
   status: PrintRequestStatus;
   quoted_price: number | null;
   stl_file_name: string | null;
+  makerworld_link: string | null;
   created_at: string;
   user: { id: string; email: string; name: string | null } | null;
 };
@@ -166,7 +167,7 @@ export default function RequestsPage() {
                   <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{req.title}</p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {req.user?.name || req.user?.email || 'Cliente'}
-                    {req.stl_file_name && ` · ${req.stl_file_name}`}
+                    {req.stl_file_name ? ` · ${req.stl_file_name}` : req.makerworld_link ? ' · Link de referência' : ''}
                   </p>
                 </div>
               </div>

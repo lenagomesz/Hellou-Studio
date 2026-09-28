@@ -37,6 +37,7 @@ export async function POST(
       stl_file_url: original.stl_file_url,
       stl_file_name: original.stl_file_name,
       stl_file_size: original.stl_file_size,
+      makerworld_link: original.makerworld_link,
     })
     .select('*')
     .single();

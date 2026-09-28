@@ -8,7 +8,26 @@ import type { PrintRequest } from '@/types/database';
 // Configure larger payload size for STL file uploads
 export const maxDuration = 300;
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+const MAX_STL_SIZE = 100 * 1024 * 1024; // 100 MB
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
+const STL_EXTENSION = '.stl';
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+
+function fileKind(file: File): 'stl' | 'image' | null {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(STL_EXTENSION)) return 'stl';
+  if (IMAGE_EXTENSIONS.some((extension) => name.endsWith(extension))) return 'image';
+  return null;
+}
+
+function safeReferenceUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(request: Request) {
   const auth = await requireUser();
@@ -55,35 +74,37 @@ export async function POST(request: Request) {
   const description = formData.get('description') as string | null;
   const notes = formData.get('notes') as string | null;
   const file = formData.get('file') as File | null;
-  const makerLink = formData.get('makerworld_link') as string | null;
+  const referenceLink = formData.get('reference_link') as string | null;
 
   if (!title?.trim()) return badRequest('Título é obrigatório');
 
   const hasFile = file !== null;
-  const hasLink = (makerLink?.trim().length ?? 0) > 0;
+  const hasLink = (referenceLink?.trim().length ?? 0) > 0;
 
   if (!hasFile && !hasLink) {
-    return badRequest('Envie um arquivo STL ou um link do Makerworld');
+    return badRequest('Envie uma imagem, um arquivo STL ou um link de referência');
   }
 
   if (hasFile && hasLink) {
-    return badRequest('Escolha uma opção: arquivo ou link (não ambos)');
+    return badRequest('Escolha uma referência por vez: imagem, STL ou link');
   }
+
+  const normalizedLink = hasLink ? safeReferenceUrl(referenceLink!.trim()) : null;
+  if (hasLink && !normalizedLink) return badRequest('Use um link válido que comece com http:// ou https://');
 
   const admin = getSupabaseAdmin();
   let stlFileUrl = null;
   let stlFileName = null;
   let stlFileSize = null;
 
-  // Handle STL file upload
+  // Files remain in the existing reference bucket and fields so existing requests
+  // and admin tooling continue to work. The filename identifies image versus STL.
   if (hasFile) {
-    if (!file.name.toLowerCase().endsWith('.stl')) {
-      return badRequest('Apenas arquivos .stl são aceitos');
-    }
+    const kind = fileKind(file);
+    if (!kind) return badRequest('Envie um STL, JPG, PNG ou WEBP');
 
-    if (file.size > MAX_FILE_SIZE) {
-      return badRequest('Arquivo muito grande (máximo 100MB)');
-    }
+    const maxSize = kind === 'stl' ? MAX_STL_SIZE : MAX_IMAGE_SIZE;
+    if (file.size > maxSize) return badRequest(kind === 'stl' ? 'Arquivo STL muito grande (máximo 100MB)' : 'Imagem muito grande (máximo 10MB)');
 
     const fileName = `${auth.user.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -91,7 +112,7 @@ export async function POST(request: Request) {
     const { error: uploadError } = await admin.storage
       .from('stl-uploads')
       .upload(fileName, buffer, {
-        contentType: 'application/octet-stream',
+        contentType: file.type || (kind === 'image' ? 'image/*' : 'application/octet-stream'),
         upsert: false,
       });
 
@@ -116,7 +137,7 @@ export async function POST(request: Request) {
       stl_file_url: stlFileUrl,
       stl_file_name: stlFileName,
       stl_file_size: stlFileSize,
-      makerworld_link: hasLink ? makerLink?.trim() : null,
+      makerworld_link: normalizedLink,
     })
     .select('*')
     .single();

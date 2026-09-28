@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Solicite uma impressão 3D personalizada',
-  description: 'Envie seu arquivo STL ou conte sua ideia para receber uma análise e um orçamento personalizado de impressão 3D.',
+  title: 'Peça uma impressão 3D personalizada',
+  description: 'Envie uma imagem, arquivo STL ou link de referência para receber análise de viabilidade, licença e orçamento de impressão 3D.',
   alternates: { canonical: '/request-print' },
 };
 

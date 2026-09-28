@@ -1,331 +1,122 @@
 'use client';
 
-import { useState, useRef, type FormEvent, type DragEvent } from 'react';
+import { useEffect, useRef, useState, type DragEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { STLAnalysisPanel } from '@/components/shop/STLAnalysisPanel';
+
+type ReferenceType = 'image' | 'stl' | 'link';
+
+const REFERENCE_TYPES: Array<{ id: ReferenceType; icon: string; title: string; description: string }> = [
+  { id: 'image', icon: '🖼️', title: 'Tenho uma imagem', description: 'Envie uma foto, desenho ou inspiração.' },
+  { id: 'stl', icon: '🧩', title: 'Tenho um arquivo STL', description: 'Ideal se o modelo já está pronto para imprimir.' },
+  { id: 'link', icon: '🔗', title: 'Vi algo online', description: 'Cole o link de qualquer site ou modelo.' },
+];
+
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+const inputClass = 'mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none ring-pink-400 transition placeholder:text-gray-400 focus:ring-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white';
+
+function isImage(file: File) {
+  return file.type.startsWith('image/') || IMAGE_EXTENSIONS.some((extension) => file.name.toLowerCase().endsWith(extension));
+}
+
+function formatFileSize(bytes: number) {
+  return bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export default function RequestPrintPage() {
   const router = useRouter();
   const { status } = useSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [referenceType, setReferenceType] = useState<ReferenceType>('image');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [notes, setNotes] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const [color, setColor] = useState('');
+  const [size, setSize] = useState('');
+  const [deadline, setDeadline] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [makerLink, setMakerLink] = useState('');
+  const [referenceLink, setReferenceLink] = useState('');
+  const [licenseAcknowledged, setLicenseAcknowledged] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  function handleDrop(e: DragEvent<HTMLDivElement>) {
-    e.preventDefault();
-    setDragOver(false);
-    const dropped = e.dataTransfer.files[0];
-    if (dropped?.name.toLowerCase().endsWith('.stl')) {
-      setFile(dropped);
-    } else {
-      setError('Apenas arquivos .stl são aceitos');
-    }
+  useEffect(() => {
+    if (!file || !isImage(file)) { setPreviewUrl(null); return; }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  function changeType(type: ReferenceType) {
+    setReferenceType(type); setFile(null); setReferenceLink(''); setLicenseAcknowledged(false); setError(null);
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = e.target.files?.[0];
-    if (selected) {
-      if (!selected.name.toLowerCase().endsWith('.stl')) {
-        setError('Apenas arquivos .stl são aceitos');
-        return;
-      }
-      setFile(selected);
-      setError(null);
-    }
+  function setSelectedFile(selected: File | undefined) {
+    if (!selected) return;
+    const wantsImage = referenceType === 'image';
+    const correctKind = wantsImage ? isImage(selected) : selected.name.toLowerCase().endsWith('.stl');
+    if (!correctKind) { setError(wantsImage ? 'Envie uma imagem JPG, PNG ou WEBP.' : 'Envie um arquivo .STL.'); return; }
+    const maxBytes = wantsImage ? 10 * 1024 * 1024 : 100 * 1024 * 1024;
+    if (selected.size > maxBytes) { setError(wantsImage ? 'A imagem deve ter no máximo 10 MB.' : 'O arquivo STL deve ter no máximo 100 MB.'); return; }
+    setFile(selected); setError(null);
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  function handleDrop(event: DragEvent<HTMLButtonElement>) {
+    event.preventDefault(); setDragOver(false); setSelectedFile(event.dataTransfer.files[0]);
+  }
 
-    if (status !== 'authenticated') {
-      router.push('/login?callbackUrl=/request-print');
-      return;
-    }
-
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (status !== 'authenticated') { router.push('/login?callbackUrl=/request-print'); return; }
     setError(null);
-
-    if (!title.trim()) {
-      setError('Título é obrigatório');
-      return;
-    }
-
-    const hasFile = file !== null;
-    const hasLink = makerLink.trim().length > 0;
-
-    if (!hasFile && !hasLink) {
-      setError('Envie um arquivo STL ou um link do Makerworld');
-      return;
-    }
-
-    if (hasFile && hasLink) {
-      setError('Escolha uma opção: arquivo ou link (não ambos)');
-      return;
-    }
-
-    // Validate Makerworld link format
-    if (hasLink) {
-      const linkTrim = makerLink.trim().toLowerCase();
-      if (!linkTrim.includes('makerworld') && !linkTrim.includes('printables')) {
-        setError('Link inválido. Use um link do Makerworld ou Printables');
-        return;
-      }
-    }
+    if ((referenceType === 'image' || referenceType === 'stl') && !file) { setError(referenceType === 'image' ? 'Escolha uma imagem de referência.' : 'Escolha o seu arquivo STL.'); return; }
+    if (referenceType === 'link' && !referenceLink.trim()) { setError('Cole o link da referência que você encontrou.'); return; }
+    if (referenceType === 'link' && !licenseAcknowledged) { setError('Confirme que entende a verificação de licença antes de enviar.'); return; }
 
     setSubmitting(true);
-
     const formData = new FormData();
-    formData.set('title', title.trim());
+    formData.set('title', title.trim() || 'Encomenda personalizada');
     if (description.trim()) formData.set('description', description.trim());
-    if (notes.trim()) formData.set('notes', notes.trim());
-
-    if (hasFile) {
-      formData.set('file', file);
-    }
-    if (hasLink) {
-      formData.set('makerworld_link', makerLink.trim());
-    }
-
-    const res = await fetch('/api/print-requests', {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (data.error?.includes('STL')) {
-        setError('Arquivo STL é obrigatório quando não há link Makerworld');
-      } else {
-        setError(data.error ?? 'Erro ao enviar solicitação');
-      }
-      setSubmitting(false);
-      return;
-    }
-
-    router.push('/account/requests');
+    const preferences = [`Quantidade: ${Math.max(1, Number(quantity) || 1)}`, color.trim() && `Cor/acabamento: ${color.trim()}`, size.trim() && `Tamanho desejado: ${size.trim()}`, deadline && `Data desejada: ${deadline}`].filter(Boolean).join('\n');
+    if (preferences) formData.set('notes', preferences);
+    if (file) formData.set('file', file);
+    if (referenceType === 'link') formData.set('reference_link', referenceLink.trim());
+    try {
+      const response = await fetch('/api/print-requests', { method: 'POST', body: formData });
+      if (!response.ok) { const data = (await response.json().catch(() => ({}))) as { error?: string }; setError(data.error ?? 'Não foi possível enviar sua encomenda. Tente novamente.'); return; }
+      router.push('/account/requests');
+    } catch { setError('Não foi possível enviar sua encomenda. Verifique sua conexão e tente novamente.'); }
+    finally { setSubmitting(false); }
   }
 
-  function formatFileSize(bytes: number) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
+  const isFileReference = referenceType !== 'link';
+  const selectedOption = REFERENCE_TYPES.find((option) => option.id === referenceType)!;
 
   return (
-    <div>
-      <section className="relative flex h-40 items-center justify-center overflow-hidden bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-4 text-center sm:h-44 sm:px-10">
-        <div className="pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full bg-white/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 rounded-full bg-orange-200/25 blur-3xl" />
-        <div className="relative mx-auto max-w-3xl">
-          <h1 className="text-2xl font-bold text-white sm:text-3xl">Sua ideia pode virar realidade</h1>
-          <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">Envie seu arquivo STL ou compartilhe um modelo. Analisamos material, acabamento, prazo e valor antes de iniciar a produção.</p>
+    <main className="overflow-x-hidden bg-[#fffaf8] dark:bg-gray-950">
+      <section className="relative overflow-hidden bg-gradient-to-br from-pink-600 via-pink-500 to-orange-400 px-4 py-12 text-white sm:px-6 sm:py-20">
+        <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-white/15 blur-3xl" /><div className="pointer-events-none absolute -bottom-32 right-0 h-80 w-80 rounded-full bg-orange-100/30 blur-3xl" />
+        <div className="relative mx-auto max-w-5xl text-center"><span className="inline-flex rounded-full border border-white/30 bg-white/15 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] backdrop-blur-sm">Encomenda personalizada</span><h1 className="mx-auto mt-5 max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">Sua ideia merece sair da tela.</h1><p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-white/90 sm:text-lg">Mostre o que você imaginou. Pode ser uma imagem, um arquivo 3D ou um link. Nós analisamos a viabilidade, a licença e enviamos um orçamento antes de produzir.</p>
+          <div className="mx-auto mt-7 grid max-w-3xl grid-cols-3 gap-2 text-left sm:gap-4">{[['1', 'Envie sua referência'], ['2', 'Receba o orçamento'], ['3', 'Aprove e acompanhe']].map(([step, label]) => <div key={step} className="rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm sm:p-4"><span className="text-xs font-black text-orange-100">{step}</span><p className="mt-1 text-xs font-bold leading-4 sm:text-sm">{label}</p></div>)}</div>
         </div>
       </section>
-      <div className="mx-auto max-w-4xl px-4 pb-10 pt-6 sm:px-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title - Common to both options */}
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
-            <label htmlFor="title" className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-              Título do projeto *
-            </label>
-            <input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Suporte para celular personalizado"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
-          </div>
 
-          {/* Two Options Section */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Option 1: STL File */}
-            <div className={`rounded-2xl border-2 transition ${
-              makerLink.trim() ? 'border-gray-200 dark:border-gray-800 opacity-50' : 'border-pink-200 dark:border-pink-800'
-            } bg-white dark:bg-gray-900 p-6 shadow-sm`}>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">📁</span>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Opção 1: Arquivo STL</h3>
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-                Você tem um arquivo STL que criou ou tem direitos autorais para usar? Envie direto para mim!
-              </p>
+      <form onSubmit={handleSubmit} className="relative mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+        <section className="rounded-3xl border border-pink-100 bg-white p-5 shadow-[0_18px_55px_-35px_rgba(219,39,119,.45)] dark:border-gray-800 dark:bg-gray-900 sm:p-8">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-pink-600">Passo 1 de 2</p><h2 className="mt-1 text-xl font-black text-gray-950 dark:text-white sm:text-2xl">Como você quer nos mostrar sua ideia?</h2></div><p className="text-xs text-gray-500 dark:text-gray-400">Escolha uma referência por vez.</p></div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">{REFERENCE_TYPES.map((option) => { const active = referenceType === option.id; return <button key={option.id} type="button" onClick={() => changeType(option.id)} className={`rounded-2xl border p-4 text-left transition ${active ? 'border-pink-400 bg-gradient-to-br from-pink-50 to-orange-50 shadow-sm dark:border-pink-700 dark:from-pink-950/40 dark:to-orange-950/20' : 'border-gray-100 bg-white hover:border-pink-200 hover:bg-pink-50/50 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-pink-900'}`} aria-pressed={active}><span className="text-2xl" aria-hidden="true">{option.icon}</span><p className="mt-3 text-sm font-bold text-gray-900 dark:text-white">{option.title}</p><p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">{option.description}</p></button>; })}</div>
+          {isFileReference ? <div className="mt-6"><button type="button" onClick={() => fileInputRef.current?.click()} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop} className={`flex min-h-52 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed p-5 text-center transition ${dragOver ? 'border-pink-500 bg-pink-50 dark:bg-pink-950/30' : file ? 'border-emerald-300 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-950/20' : 'border-pink-200 bg-pink-50/35 hover:border-pink-400 hover:bg-pink-50 dark:border-pink-900 dark:bg-pink-950/20'}`}>{file ? <>{previewUrl ? <img src={previewUrl} alt="Prévia da imagem de referência" className="h-24 w-24 rounded-xl object-cover shadow-sm" /> : <span className="text-4xl">🧩</span>}<p className="mt-3 max-w-full truncate text-sm font-bold text-gray-900 dark:text-white">{file.name}</p><p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)} · {referenceType === 'image' ? 'Imagem de referência' : 'Arquivo STL'}</p><span className="mt-4 text-xs font-bold text-pink-600">Trocar arquivo</span></> : <><span className="text-4xl" aria-hidden="true">{selectedOption.icon}</span><p className="mt-3 text-sm font-bold text-gray-900 dark:text-white">{referenceType === 'image' ? 'Arraste uma imagem ou clique para escolher' : 'Arraste o seu STL ou clique para escolher'}</p><p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{referenceType === 'image' ? 'JPG, PNG ou WEBP · até 10 MB' : 'Arquivo .STL · até 100 MB'}</p></>}</button><input ref={fileInputRef} type="file" accept={referenceType === 'image' ? '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp' : '.stl'} className="hidden" onChange={(event) => setSelectedFile(event.target.files?.[0])} />{file && <button type="button" onClick={() => setFile(null)} className="mt-3 text-xs font-bold text-gray-500 underline underline-offset-4 hover:text-pink-600">Remover referência</button>}{referenceType === 'stl' && file && <STLAnalysisPanel key={`${file.name}-${file.lastModified}`} file={file} authenticated={status === 'authenticated'} />}</div> : <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/45 p-4 dark:border-blue-900 dark:bg-blue-950/20 sm:p-6"><label htmlFor="reference-link" className="text-sm font-bold text-gray-900 dark:text-white">Link da referência</label><p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-400">Pode ser de uma loja, rede social ou plataforma de modelos 3D. Não precisa ser MakerWorld.</p><input id="reference-link" type="url" value={referenceLink} onChange={(event) => setReferenceLink(event.target.value)} placeholder="https://..." className={inputClass} /><label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100"><input type="checkbox" checked={licenseAcknowledged} onChange={(event) => setLicenseAcknowledged(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-pink-600" /><span><strong>Licença comercial vem primeiro.</strong> Entendo que a Hellou só produz modelos com permissão para impressão e venda. Vamos conferir a licença antes de aprovar o orçamento.</span></label></div>}
+        </section>
 
-              {/* Dropzone */}
-              <div
-                onDragOver={(e) => { if (!makerLink.trim()) { e.preventDefault(); setDragOver(true); } }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => { if (!makerLink.trim()) handleDrop(e); }}
-                onClick={() => !makerLink.trim() && fileInputRef.current?.click()}
-                className={`flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed p-6 text-center transition ${
-                  makerLink.trim()
-                    ? 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-not-allowed opacity-50'
-                    : dragOver
-                      ? 'border-pink-500 bg-pink-50 dark:bg-pink-950/30'
-                      : file
-                        ? 'border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-950/30'
-                        : 'border-pink-300 dark:border-pink-700 bg-pink-50/30 dark:bg-pink-950/20 hover:border-pink-500 hover:bg-pink-50/50'
-                }`}
-              >
-                {file ? (
-                  <>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-6 w-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                      </svg>
-                    </div>
-                    <p className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{file.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</p>
-                    {!makerLink.trim() && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                        className="mt-2 text-xs font-medium text-red-600 hover:text-red-700"
-                      >
-                        Remover arquivo
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-orange-100 text-pink-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                      </svg>
-                    </div>
-                    <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {makerLink.trim() ? 'Desabilitado' : 'Arraste seu arquivo .stl aqui'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{makerLink.trim() ? '' : 'ou clique para selecionar (máx. 100MB)'}</p>
-                  </>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".stl"
-                  onChange={handleFileChange}
-                  disabled={makerLink.trim().length > 0}
-                  className="hidden"
-                />
-              </div>
-              {file && !makerLink.trim() && <STLAnalysisPanel key={file.name + file.lastModified} file={file} authenticated={status === 'authenticated'} />}
-            </div>
-
-            {/* Option 2: Makerworld Link */}
-            <div className={`rounded-2xl border-2 transition ${
-              file ? 'border-gray-200 dark:border-gray-800 opacity-50' : 'border-blue-200 dark:border-blue-800'
-            } bg-white dark:bg-gray-900 p-6 shadow-sm flex flex-col`}>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">🔗</span>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Opção 2: Link Makerworld</h3>
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-                Encontrou algo legal no{' '}
-                <a
-                  href="https://makerworld.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  MakerWorld
-                </a>
-                ? Cole o link e vou avaliar a licença para você.
-              </p>
-
-              <a
-                href="https://makerworld.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mb-4 inline-flex w-fit items-center rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-              >
-                Acessar o MakerWorld ↗
-              </a>
-
-              <label htmlFor="makerworld-link" className="block text-xs font-semibold text-gray-900 dark:text-white mb-2">
-                Link do projeto
-              </label>
-              <input
-                id="makerworld-link"
-                type="url"
-                value={makerLink}
-                onChange={(e) => setMakerLink(e.target.value)}
-                placeholder="https://makerworld.com/pt/models/..."
-                disabled={file !== null}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition mb-3 ${
-                  file
-                    ? 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-not-allowed opacity-50 text-gray-500'
-                    : 'border-blue-300 dark:border-blue-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-                }`}
-              />
-
-              {/* Copyright Warning for Makerworld Option */}
-              <div className="bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3 mt-auto">
-                <p className="text-xs font-semibold text-red-900 dark:text-red-200 mb-1">
-                  ⚠️ Direitos Autorais
-                </p>
-                <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">
-                  Muitos modelos têm restrições. Analisaremos a licença e deixaremos claro se podemos prosseguir.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Description and Notes */}
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm space-y-5">
-            <div>
-              <label htmlFor="description" className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                Descrição
-              </label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descreva o que você gostaria (cor, material, acabamento, especificações...)"
-                rows={3}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="notes" className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                Observações adicionais
-              </label>
-              <textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Quantidade, prazo, uso pretendido, cores específicas..."
-                rows={2}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <p className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-              {error}
-            </p>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
-          >
-            {submitting ? 'Enviando...' : 'Enviar Solicitação'}
-          </button>
-        </form>
-      </div>
-    </div>
+        <section className="mt-6 rounded-3xl border border-pink-100 bg-white p-5 shadow-[0_18px_55px_-35px_rgba(219,39,119,.35)] dark:border-gray-800 dark:bg-gray-900 sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.16em] text-pink-600">Passo 2 de 2</p><h2 className="mt-1 text-xl font-black text-gray-950 dark:text-white sm:text-2xl">Conte um pouco mais</h2><p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Quanto mais contexto você der, mais certeiro fica o orçamento.</p>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2"><label className="sm:col-span-2"><span className="text-sm font-bold text-gray-800 dark:text-gray-100">Nome da ideia <span className="font-normal text-gray-400">(opcional)</span></span><input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={100} placeholder="Ex.: Luminária para meu quarto" className={inputClass} /></label><label className="sm:col-span-2"><span className="text-sm font-bold text-gray-800 dark:text-gray-100">Como você imagina a peça?</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={1000} rows={4} placeholder="Conte para que ela serve, onde vai ficar e quais detalhes são importantes para você." className={`${inputClass} resize-y leading-6`} /></label><label><span className="text-sm font-bold text-gray-800 dark:text-gray-100">Quantidade</span><input type="number" min="1" max="999" value={quantity} onChange={(event) => setQuantity(event.target.value)} className={inputClass} /></label><label><span className="text-sm font-bold text-gray-800 dark:text-gray-100">Cor ou acabamento <span className="font-normal text-gray-400">(opcional)</span></span><input value={color} onChange={(event) => setColor(event.target.value)} maxLength={120} placeholder="Ex.: rosa claro, fosco" className={inputClass} /></label><label><span className="text-sm font-bold text-gray-800 dark:text-gray-100">Tamanho aproximado <span className="font-normal text-gray-400">(opcional)</span></span><input value={size} onChange={(event) => setSize(event.target.value)} maxLength={120} placeholder="Ex.: 15 cm de altura" className={inputClass} /></label><label><span className="text-sm font-bold text-gray-800 dark:text-gray-100">Precisa para quando? <span className="font-normal text-gray-400">(opcional)</span></span><input type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} className={inputClass} /></label></div>
+        </section>
+        {error && <p role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{error}</p>}
+        <div className="mt-6 rounded-3xl border border-orange-100 bg-gradient-to-r from-orange-50 to-pink-50 p-5 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6"><p className="max-w-2xl text-xs leading-5 text-gray-600 dark:text-gray-300"><strong className="text-gray-900 dark:text-white">O que acontece agora:</strong> sua solicitação entra para análise. Você recebe o orçamento e todas as atualizações em <span className="font-semibold">Minhas solicitações</span>; nada é produzido ou cobrado antes da sua aprovação.</p><button type="submit" disabled={submitting} className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-6 text-sm font-black text-white shadow-lg shadow-pink-200/60 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-55 sm:mt-0 sm:w-auto">{submitting ? 'Enviando sua ideia...' : status === 'authenticated' ? 'Pedir orçamento' : 'Entrar para pedir orçamento'} <span className="ml-2" aria-hidden="true">→</span></button></div>
+      </form>
+    </main>
   );
 }
