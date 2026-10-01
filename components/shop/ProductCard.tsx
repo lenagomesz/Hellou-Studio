@@ -28,30 +28,21 @@ export function ProductCard({ product, basePath = "/products", category, showcas
     [product.image_url, product.image_url_2, product.images],
   );
   const [activeImage, setActiveImage] = useState(0);
-  const [previewing, setPreviewing] = useState(false);
   const hasImageGallery = images.length > 1;
   const hasAdditionalPriceOptions = product.product_options?.some(
     (option) => option.price_modifier > 0,
   ) ?? false;
 
   useEffect(() => {
-    if (!previewing || !hasImageGallery) return;
+    if (!hasImageGallery) return;
     const interval = window.setInterval(() => {
       setActiveImage((current) => (current + 1) % images.length);
-    }, 1400);
+    }, 3000);
     return () => window.clearInterval(interval);
-  }, [hasImageGallery, images.length, previewing]);
-
-  const beginPreview = () => {
-    if (!hasImageGallery) return;
-    setActiveImage(1);
-    setPreviewing(true);
-  };
-
-  const endPreview = () => setPreviewing(false);
+  }, [hasImageGallery, images.length]);
 
   return (
-    <article onPointerEnter={beginPreview} onPointerLeave={endPreview} onTouchStart={beginPreview} onTouchEnd={endPreview} className={`group relative overflow-hidden bg-white transition dark:bg-gray-900 dark:hover:shadow-gray-900/50 ${showcase ? 'flex h-full flex-col rounded-2xl border border-pink-100/80 shadow-[0_8px_26px_-20px_rgba(219,39,119,.45)] hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_22px_45px_-24px_rgba(219,39,119,.42)] dark:border-gray-800 dark:hover:border-pink-900' : 'block rounded-2xl border border-gray-100 shadow-sm hover:shadow-md dark:border-gray-800'}`}>
+    <article className={`group relative overflow-hidden bg-white transition dark:bg-gray-900 dark:hover:shadow-gray-900/50 ${showcase ? 'flex h-full flex-col rounded-2xl border border-pink-100/80 shadow-[0_8px_26px_-20px_rgba(219,39,119,.45)] hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_22px_45px_-24px_rgba(219,39,119,.42)] dark:border-gray-800 dark:hover:border-pink-900' : 'block rounded-2xl border border-gray-100 shadow-sm hover:shadow-md dark:border-gray-800'}`}>
       <Link href={`${basePath}/${productIdentifier(product)}`} prefetch={false} className={showcase ? 'flex h-full flex-col' : 'block'}>
       <div className={`relative aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700 ${showcase ? 'm-1.5 mb-0 rounded-[13px]' : ''}`}>
         {(product.is_wholesale || product.is_best_seller) && (

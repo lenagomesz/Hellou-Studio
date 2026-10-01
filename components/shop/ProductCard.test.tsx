@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProductCard } from './ProductCard';
 import type { Product } from '@/types/database';
 
@@ -23,11 +23,31 @@ function product(name: string): Product {
 }
 
 describe('card de lançamento na home', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('mantém altura fixa sem reservar uma linha vazia depois de títulos curtos', () => {
     render(<ProductCard product={product('Vaso')} showcase />);
 
     const title = screen.getByRole('heading', { name: 'Vaso' });
     expect(title).not.toHaveClass('min-h-[2.4rem]');
     expect(title.parentElement).toHaveClass('h-[13rem]', 'sm:h-[13.5rem]');
+  });
+
+  it('alterna as imagens automaticamente a cada três segundos', () => {
+    vi.useFakeTimers();
+    render(<ProductCard product={{ ...product('Vaso'), image_url: 'https://example.com/one.jpg', image_url_2: 'https://example.com/two.jpg' }} />);
+
+    const images = screen.getAllByRole('img');
+    expect(images[0]).toHaveClass('opacity-100');
+    expect(images[1]).toHaveClass('opacity-0');
+
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+
+    expect(images[0]).toHaveClass('opacity-0');
+    expect(images[1]).toHaveClass('opacity-100');
   });
 });
