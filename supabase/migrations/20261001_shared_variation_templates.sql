@@ -12,3 +12,7 @@ ALTER TABLE public.product_options
 UPDATE public.product_option_color_presets
 SET customer_label = 'Escolha uma cor'
 WHERE customer_label IS NULL OR btrim(customer_label) = '';
+
+-- Reaffirm the existing protection after changing both shared tables.
+ALTER TABLE public.product_option_color_presets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_options ENABLE ROW LEVEL SECURITY;
