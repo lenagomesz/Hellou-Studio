@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProductOption } from '@/types/database';
-import { ArrowDown, ArrowUp, Loader2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Copy, Loader2 } from 'lucide-react';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
@@ -210,6 +210,7 @@ export function OptionsManager({
           color: presetColor.hex,
           color_name: presetColor.name,
           color_preset_item_id: presetColor.id.startsWith('fallback-') ? undefined : presetColor.id,
+          variation_label: selectedPreset?.customer_label,
           price_modifier: modifier,
           stock: stockValue,
           image_url: colorImageUrl.trim() || undefined,
@@ -262,6 +263,28 @@ export function OptionsManager({
     router.refresh();
   }
 
+  async function handleDuplicate(option: ProductOption) {
+    setError(null);
+    setSubmitting(true);
+    const response = await fetch('/api/product-options', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_id: productId,
+        name: option.name ? `${option.name} (cópia)` : '',
+        color: option.color, color_name: option.color_name,
+        color_preset_item_id: option.color_preset_item_id,
+        variation_label: option.variation_label,
+        price_modifier: option.price_modifier, stock: 0,
+        dimensions: option.dimensions, notes: option.notes, image_url: option.image_url,
+      }),
+    });
+    const data = await response.json().catch(() => ({})) as { option?: ProductOption; error?: string };
+    if (!response.ok || !data.option) setError(data.error ?? 'Erro ao duplicar variação');
+    else setOptions((previous) => [...previous, data.option!]);
+    setSubmitting(false);
+    router.refresh();
+  }
+
   async function handleMove(index: number, direction: -1 | 1) {
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= options.length || reordering) return;
@@ -303,6 +326,7 @@ export function OptionsManager({
               colors={presetColors}
               onUpdate={(patch) => handleUpdate(option, patch)}
               onDelete={() => setPendingDelete(option)}
+              onDuplicate={() => handleDuplicate(option)}
               onMoveUp={() => handleMove(index, -1)}
               onMoveDown={() => handleMove(index, 1)}
               moveUpDisabled={reordering || index === 0}
@@ -533,6 +557,7 @@ function OptionRow({
   colors,
   onUpdate,
   onDelete,
+  onDuplicate,
   onMoveUp,
   onMoveDown,
   moveUpDisabled,
@@ -543,6 +568,7 @@ function OptionRow({
   colors: ProductColorPresetItem[];
   onUpdate: (patch: Partial<ProductOption>) => Promise<boolean> | boolean;
   onDelete: () => Promise<void> | void;
+  onDuplicate: () => Promise<void> | void;
   onMoveUp: () => Promise<void> | void;
   onMoveDown: () => Promise<void> | void;
   moveUpDisabled: boolean;
@@ -726,6 +752,13 @@ function OptionRow({
         </button>
         <button type="button" onClick={onMoveDown} disabled={moveDownDisabled} aria-label="Mover variação para baixo" title="Mover para baixo" className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-pink-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-800">
           <ArrowDown className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={onDuplicate}
+          className="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400"
+        >
+          <Copy className="h-3.5 w-3.5" /> Duplicar
         </button>
         <button
           type="button"

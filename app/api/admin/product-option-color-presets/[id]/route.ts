@@ -34,15 +34,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
   const { id } = await context.params;
-  let body: { name?: unknown; items?: unknown };
+  let body: { name?: unknown; customer_label?: unknown; items?: unknown };
   try { body = await request.json(); } catch { return badRequest('JSON inválido'); }
   const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const customerLabel = typeof body.customer_label === 'string' ? body.customer_label.trim() : 'Escolha uma cor';
   const items = normalizeItems(body.items);
   if (!name || name.length > 60) return badRequest('Informe um nome de até 60 caracteres para o tipo de variação');
+  if (!customerLabel || customerLabel.length > 60) return badRequest('Informe um título de até 60 caracteres para o cliente');
   if (!items) return badRequest('Cadastre entre 1 e 40 cores válidas, sem repetir nome ou cor');
 
   const admin = getSupabaseAdmin();
-  const { data: preset, error } = await admin.from('product_option_color_presets').update({ name }).eq('id', id).select('id, name, sort_order').maybeSingle();
+  const { data: preset, error } = await admin.from('product_option_color_presets').update({ name, customer_label: customerLabel }).eq('id', id).select('id, name, customer_label, sort_order').maybeSingle();
   if (error?.code === '23505') return badRequest('Já existe um tipo de variação com esse nome');
   if (error) return serverError('Erro ao atualizar o tipo de variação');
   if (!preset) return notFound('Tipo de variação não encontrado');

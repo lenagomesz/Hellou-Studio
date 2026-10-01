@@ -144,6 +144,7 @@ export function ProductDetail({
     ? automaticPricingOption
     : options.find((o) => o.id === selectedOptionId) ?? null;
   const selectedColorLabel = colorChoices.find((choice) => choice.value === selectedColor)?.label ?? null;
+  const variationLabel = options.find((option) => option.variation_label?.trim())?.variation_label?.trim() || 'Cor';
   const hasAdditionalPriceOptions = options.some((option) => option.price_modifier > 0);
   const isShowingStartingPrice = hasAdditionalPriceOptions && (
     automaticPricingSection
@@ -371,7 +372,7 @@ export function ProductDetail({
         {!automaticPricingSection && options.some((option) => option.color) && (() => {
           return (
             <div className="mt-4 lg:hidden">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cor</h2>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{variationLabel}</h2>
               <div className="mt-3 flex flex-wrap gap-3">
                 {colorChoices.map(({ value: color, label }) => {
                   const isActive = selectedColor === color;
@@ -708,7 +709,7 @@ export function ProductDetail({
             {options.some((o) => o.color) && (() => {
               return (
                 <div className="hidden lg:block">
-                  <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Cor</h2>
+                  <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{variationLabel}</h2>
                   <div className="mt-3 flex flex-wrap gap-3">
                     {colorChoices.map(({ value: color, label }) => {
                       const isActive = selectedColor === color;

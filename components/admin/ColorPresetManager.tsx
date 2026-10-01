@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Check, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Plus, RefreshCw, Save, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { FALLBACK_PRODUCT_COLOR_PRESET, type ProductColorPreset, type ProductColorPresetItem } from '@/lib/product-color-presets';
 
@@ -17,9 +17,11 @@ export function ColorPresetManager() {
   const [presets, setPresets] = useState<ProductColorPreset[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [customerLabel, setCustomerLabel] = useState('Escolha uma cor');
   const [items, setItems] = useState<EditableColor[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [pendingDelete, setPendingDelete] = useState<ProductColorPreset | null>(null);
@@ -27,6 +29,7 @@ export function ColorPresetManager() {
   const selectPreset = (preset: ProductColorPreset) => {
     setSelectedId(preset.id);
     setName(preset.name);
+    setCustomerLabel(preset.customer_label ?? 'Escolha uma cor');
     setItems(toEditable(preset));
     setError('');
     setMessage('');
@@ -49,6 +52,7 @@ export function ColorPresetManager() {
   const addPreset = () => {
     setSelectedId(null);
     setName('Novo tipo de variação');
+    setCustomerLabel('Escolha uma cor');
     setItems(toEditable(FALLBACK_PRODUCT_COLOR_PRESET));
     setMessage('');
     setError('');
@@ -62,14 +66,14 @@ export function ColorPresetManager() {
     const normalizedItems = items
       .map((item) => ({ ...(item.id.startsWith('new-') ? {} : { id: item.id }), name: item.name.trim(), hex: item.hex.trim().toUpperCase(), active: item.active }))
       .filter((item) => item.name || item.hex !== '#EC4899');
-    if (!name.trim()) return setError('Informe o nome do tipo de variação.');
+    if (!name.trim() || !customerLabel.trim()) return setError('Informe o nome do tipo e o título para o cliente.');
     if (normalizedItems.length === 0) return setError('Adicione pelo menos uma cor.');
     if (normalizedItems.some((item) => !item.name || !/^#[0-9A-F]{6}$/.test(item.hex))) return setError('Cada cor precisa de nome e código hexadecimal válido.');
     setSaving(true);
     const response = await fetch(selectedId ? `/api/admin/product-option-color-presets/${selectedId}` : '/api/admin/product-option-color-presets', {
       method: selectedId ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name.trim(), items: normalizedItems }),
+      body: JSON.stringify({ name: name.trim(), customer_label: customerLabel.trim(), items: normalizedItems }),
     });
     const data = await response.json().catch(() => ({})) as { preset?: ProductColorPreset; error?: string };
     setSaving(false);
@@ -94,6 +98,16 @@ export function ColorPresetManager() {
     setMessage('Tipo de variação excluído. Produtos já cadastrados não foram alterados.');
   }
 
+  async function syncLinkedVariations() {
+    if (!selectedId) return;
+    setError(''); setMessage(''); setSyncing(true);
+    const response = await fetch(`/api/admin/product-option-color-presets/${selectedId}/sync`, { method: 'POST' });
+    const data = await response.json().catch(() => ({})) as { updated?: number; error?: string };
+    setSyncing(false);
+    if (!response.ok) return setError(data.error ?? 'Não foi possível sincronizar as variações.');
+    setMessage(`${data.updated ?? 0} variações vinculadas receberam os nomes, cores e título atuais. Estoque, preço e fotos não foram alterados.`);
+  }
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <header className="rounded-[26px] border border-pink-100 bg-gradient-to-br from-white via-pink-50/60 to-orange-50 p-6 shadow-sm sm:p-8">
@@ -115,9 +129,9 @@ export function ColorPresetManager() {
         <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div><h2 className="text-lg font-bold text-slate-950 dark:text-white">{selectedId ? 'Editar tipo de variação' : 'Novo tipo de variação'}</h2><p className="mt-1 text-xs leading-5 text-slate-500">Inativar uma cor preserva o cadastro e inativa automaticamente as variações vinculadas a ela nos produtos.</p></div>
-            {selectedId && <button type="button" onClick={() => setPendingDelete(presets.find((preset) => preset.id === selectedId) ?? null)} className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /> Excluir</button>}
+            <div className="flex flex-wrap gap-2">{selectedId && <button type="button" onClick={() => void syncLinkedVariations()} disabled={syncing} className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 disabled:opacity-50">{syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Sincronizar produtos</button>}{selectedId && <button type="button" onClick={() => setPendingDelete(presets.find((preset) => preset.id === selectedId) ?? null)} className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /> Excluir</button>}</div>
           </div>
-          <label className="mt-6 block text-sm font-bold text-slate-700 dark:text-slate-200">Nome do tipo de variação<input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Ex.: Cores padrão" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none focus:border-pink-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white" /></label>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className="block text-sm font-bold text-slate-700 dark:text-slate-200">Nome interno<input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Ex.: Cores padrão" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none focus:border-pink-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white" /></label><label className="block text-sm font-bold text-slate-700 dark:text-slate-200">Título para o cliente<input value={customerLabel} onChange={(event) => setCustomerLabel(event.target.value)} maxLength={60} placeholder="Ex.: Escolha uma cor" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none focus:border-pink-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white" /></label></div>
           <div className="mt-6"><div className="flex items-center justify-between gap-3"><div><h3 className="font-bold text-slate-900 dark:text-white">Cores disponíveis</h3><p className="text-xs text-slate-500">O nome aparece ao cliente e o círculo usa o hexadecimal.</p></div><button type="button" onClick={() => setItems((current) => [...current, newColor()])} disabled={items.length >= 40} className="inline-flex items-center gap-1 rounded-lg border border-pink-200 px-3 py-2 text-xs font-bold text-pink-700 hover:bg-pink-50 disabled:opacity-50"><Plus className="h-4 w-4" /> Adicionar cor</button></div>
             <div className="mt-3 space-y-2">{items.map((item) => <div key={item.id} className={`grid gap-2 rounded-xl border border-slate-200 p-3 sm:grid-cols-[42px_1fr_150px_auto] sm:items-center dark:border-slate-700 ${item.active ? '' : 'bg-slate-50 opacity-70 dark:bg-slate-950'}`}><span className="h-9 w-9 rounded-full border border-slate-300" style={{ backgroundColor: item.hex }} /><input value={item.name} onChange={(event) => updateItem(item.id, { name: event.target.value })} maxLength={60} placeholder="Nome da cor" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-pink-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white" /><div className="flex rounded-lg border border-slate-200 dark:border-slate-700"><input type="color" value={item.hex} onChange={(event) => updateItem(item.id, { hex: event.target.value.toUpperCase() })} aria-label={`Cor de ${item.name || 'nova cor'}`} className="h-9 w-10 cursor-pointer border-0 bg-transparent p-1" /><input value={item.hex} onChange={(event) => updateItem(item.id, { hex: event.target.value.toUpperCase() })} className="min-w-0 flex-1 bg-transparent px-2 text-xs font-bold uppercase text-slate-600 outline-none dark:text-slate-300" /></div><button type="button" onClick={() => updateItem(item.id, { active: !item.active })} className={`justify-self-end rounded-lg px-3 py-2 text-xs font-bold ${item.active ? 'border border-amber-200 text-amber-700 hover:bg-amber-50' : 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'}`}>{item.active ? 'Inativar' : 'Ativar'}</button></div>)}</div>
           </div>

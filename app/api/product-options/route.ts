@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     return badRequest('JSON inválido');
   }
 
-  const { product_id, name, price_modifier, stock, dimensions, notes, color, color_name, color_preset_item_id, image_url, active } = (body ?? {}) as {
+  const { product_id, name, price_modifier, stock, dimensions, notes, color, color_name, color_preset_item_id, variation_label, image_url, active } = (body ?? {}) as {
     product_id?: string;
     name?: string;
     price_modifier?: number;
@@ -25,9 +25,11 @@ export async function POST(request: Request) {
     color?: string;
     color_name?: string;
     color_preset_item_id?: string;
+    variation_label?: string;
     image_url?: string;
     active?: boolean;
   };
+  if (variation_label !== undefined && (typeof variation_label !== 'string' || variation_label.trim().length > 60)) return badRequest('Título da variação inválido');
 
   if (!product_id) return badRequest('product_id é obrigatório');
   if (!name?.trim() && !color?.trim()) return badRequest('Informe um nome ou uma cor');
@@ -88,6 +90,7 @@ export async function POST(request: Request) {
       color: normalizedColor,
       color_name: normalizedColor ? color_name?.trim() || null : null,
       color_preset_item_id: presetColorId,
+      variation_label: variation_label?.trim() || null,
       image_url: image_url?.trim() || null,
       active: active ?? true,
       sort_order: (lastOption?.sort_order ?? -10) + 10,

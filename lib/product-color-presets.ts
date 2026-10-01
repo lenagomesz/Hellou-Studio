@@ -11,6 +11,7 @@ export type ProductColorPresetItem = {
 export type ProductColorPreset = {
   id: string;
   name: string;
+  customer_label: string;
   sort_order: number;
   items: ProductColorPresetItem[];
 };
@@ -18,6 +19,7 @@ export type ProductColorPreset = {
 export const FALLBACK_PRODUCT_COLOR_PRESET: ProductColorPreset = {
   id: 'fallback-standard-colors',
   name: 'Cores padrão',
+  customer_label: 'Escolha uma cor',
   sort_order: 0,
   items: PRODUCT_COLOR_PALETTE
     .filter((color) => color.hex !== 'transparent')

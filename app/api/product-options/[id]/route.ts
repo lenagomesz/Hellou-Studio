@@ -29,6 +29,7 @@ export async function PATCH(
     color?: string | null;
     color_name?: string | null;
     color_preset_item_id?: string | null;
+    variation_label?: string | null;
     image_url?: string | null;
     active?: boolean;
   };
@@ -71,6 +72,10 @@ export async function PATCH(
   }
   if (input.image_url !== undefined) {
     update.image_url = input.image_url?.trim() || null;
+  }
+  if (input.variation_label !== undefined) {
+    if (input.variation_label !== null && (typeof input.variation_label !== 'string' || input.variation_label.trim().length > 60)) return badRequest('Título da variação inválido');
+    update.variation_label = input.variation_label?.trim() || null;
   }
   if (input.color_preset_item_id !== undefined) {
     update.color_preset_item_id = input.color_preset_item_id?.trim() || null;

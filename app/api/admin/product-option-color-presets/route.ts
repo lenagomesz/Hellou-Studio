@@ -27,10 +27,11 @@ function normalizeItems(value: unknown): Array<{ id?: string; name: string; hex:
   return items;
 }
 
-function mapPreset(row: { id: string; name: string; sort_order: number; items?: ProductColorPresetItem[] }): ProductColorPreset {
+function mapPreset(row: { id: string; name: string; customer_label: string; sort_order: number; items?: ProductColorPresetItem[] }): ProductColorPreset {
   return {
     id: row.id,
     name: row.name,
+    customer_label: row.customer_label,
     sort_order: row.sort_order,
     items: [...(row.items ?? [])].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, 'pt-BR')),
   };
@@ -42,7 +43,7 @@ export async function GET() {
 
   const { data, error } = await getSupabaseAdmin()
     .from('product_option_color_presets')
-    .select('id, name, sort_order, product_option_color_preset_items(id, name, hex, active, sort_order)')
+    .select('id, name, customer_label, sort_order, product_option_color_preset_items(id, name, hex, active, sort_order)')
     .order('sort_order')
     .order('name');
   if (error) return serverError('Erro ao buscar os grupos de cores');
@@ -58,19 +59,21 @@ export async function POST(request: Request) {
   const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
-  let body: { name?: unknown; items?: unknown };
+  let body: { name?: unknown; customer_label?: unknown; items?: unknown };
   try { body = await request.json(); } catch { return badRequest('JSON inválido'); }
   const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const customerLabel = typeof body.customer_label === 'string' ? body.customer_label.trim() : 'Escolha uma cor';
   const items = normalizeItems(body.items);
   if (!name || name.length > 60) return badRequest('Informe um nome de até 60 caracteres para o tipo de variação');
+  if (!customerLabel || customerLabel.length > 60) return badRequest('Informe um título de até 60 caracteres para o cliente');
   if (!items) return badRequest('Cadastre entre 1 e 40 cores válidas, sem repetir nome ou cor');
 
   const admin = getSupabaseAdmin();
   const { data: last } = await admin.from('product_option_color_presets').select('sort_order').order('sort_order', { ascending: false }).limit(1).maybeSingle();
   const { data: preset, error } = await admin
     .from('product_option_color_presets')
-    .insert({ name, sort_order: (last?.sort_order ?? -10) + 10 })
-    .select('id, name, sort_order')
+    .insert({ name, customer_label: customerLabel, sort_order: (last?.sort_order ?? -10) + 10 })
+    .select('id, name, customer_label, sort_order')
     .single();
   if (error?.code === '23505') return badRequest('Já existe um tipo de variação com esse nome');
   if (error || !preset) return serverError('Erro ao criar o tipo de variação');

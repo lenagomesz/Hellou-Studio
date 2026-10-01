@@ -81,6 +81,7 @@ export interface ProductOption {
   color: string | null;
   color_name: string | null;
   color_preset_item_id?: string | null;
+  variation_label?: string | null;
   image_url: string | null;
   sort_order: number;
   active: boolean;
