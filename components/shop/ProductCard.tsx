@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Product, ProductCategory } from '@/types/database';
 import { productIdentifier } from '@/lib/seo';
 import { FavoriteButton } from '@/components/shop/FavoriteButton';
@@ -22,12 +23,35 @@ function formatPrice(value: number) {
 
 export function ProductCard({ product, basePath = "/products", category, showcase = false }: { product: Product; basePath?: string; category?: Pick<ProductCategory, 'name' | 'color'>; showcase?: boolean }) {
   const currentPrice = product.sale_price ?? product.base_price;
+  const images = useMemo(
+    () => Array.from(new Set([product.image_url, product.image_url_2, ...(product.images ?? [])].filter((image): image is string => Boolean(image?.trim())))),
+    [product.image_url, product.image_url_2, product.images],
+  );
+  const [activeImage, setActiveImage] = useState(0);
+  const [previewing, setPreviewing] = useState(false);
+  const hasImageGallery = images.length > 1;
   const hasAdditionalPriceOptions = product.product_options?.some(
     (option) => option.price_modifier > 0,
   ) ?? false;
 
+  useEffect(() => {
+    if (!previewing || !hasImageGallery) return;
+    const interval = window.setInterval(() => {
+      setActiveImage((current) => (current + 1) % images.length);
+    }, 1400);
+    return () => window.clearInterval(interval);
+  }, [hasImageGallery, images.length, previewing]);
+
+  const beginPreview = () => {
+    if (!hasImageGallery) return;
+    setActiveImage(1);
+    setPreviewing(true);
+  };
+
+  const endPreview = () => setPreviewing(false);
+
   return (
-    <article className={`group relative overflow-hidden bg-white transition dark:bg-gray-900 dark:hover:shadow-gray-900/50 ${showcase ? 'flex h-full flex-col rounded-2xl border border-pink-100/80 shadow-[0_8px_26px_-20px_rgba(219,39,119,.45)] hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_22px_45px_-24px_rgba(219,39,119,.42)] dark:border-gray-800 dark:hover:border-pink-900' : 'block rounded-2xl border border-gray-100 shadow-sm hover:shadow-md dark:border-gray-800'}`}>
+    <article onPointerEnter={beginPreview} onPointerLeave={endPreview} onTouchStart={beginPreview} onTouchEnd={endPreview} className={`group relative overflow-hidden bg-white transition dark:bg-gray-900 dark:hover:shadow-gray-900/50 ${showcase ? 'flex h-full flex-col rounded-2xl border border-pink-100/80 shadow-[0_8px_26px_-20px_rgba(219,39,119,.45)] hover:-translate-y-1 hover:border-pink-200 hover:shadow-[0_22px_45px_-24px_rgba(219,39,119,.42)] dark:border-gray-800 dark:hover:border-pink-900' : 'block rounded-2xl border border-gray-100 shadow-sm hover:shadow-md dark:border-gray-800'}`}>
       <Link href={`${basePath}/${productIdentifier(product)}`} prefetch={false} className={showcase ? 'flex h-full flex-col' : 'block'}>
       <div className={`relative aspect-square overflow-hidden bg-gradient-to-br from-pink-50 to-orange-50 dark:from-gray-800 dark:to-gray-700 ${showcase ? 'm-1.5 mb-0 rounded-[13px]' : ''}`}>
         {(product.is_wholesale || product.is_best_seller) && (
@@ -44,15 +68,21 @@ export function ProductCard({ product, basePath = "/products", category, showcas
             )}
           </div>
         )}
-        {product.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.image_url}
-            alt={product.image_alt_texts?.[product.image_url] || product.name}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.03]"
-          />
+        {images.length > 0 ? (
+          <>
+            {images.map((image, index) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={image}
+                src={image}
+                alt={product.image_alt_texts?.[image] || product.name}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-700 ease-out motion-safe:group-hover:scale-[1.03] ${index === activeImage ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+              />
+            ))}
+            {hasImageGallery && <span className="absolute bottom-2 right-2 rounded-full bg-black/45 px-2 py-1 text-[9px] font-bold text-white opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">{activeImage + 1}/{images.length}</span>}
+          </>
         ) : (
           <div className="flex h-full w-full items-center justify-center text-4xl text-pink-200 dark:text-gray-700">
             ◇
