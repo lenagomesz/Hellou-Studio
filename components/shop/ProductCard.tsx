@@ -37,7 +37,7 @@ export function ProductCard({ product, basePath = "/products", category, showcas
     if (!hasImageGallery) return;
     const interval = window.setInterval(() => {
       setActiveImage((current) => (current + 1) % images.length);
-    }, 3000);
+    }, 5000);
     return () => window.clearInterval(interval);
   }, [hasImageGallery, images.length]);
 

@@ -35,7 +35,7 @@ describe('card de lançamento na home', () => {
     expect(title.parentElement).toHaveClass('h-[13rem]', 'sm:h-[13.5rem]');
   });
 
-  it('alterna as imagens automaticamente a cada três segundos', () => {
+  it('alterna as imagens automaticamente a cada cinco segundos', () => {
     vi.useFakeTimers();
     render(<ProductCard product={{ ...product('Vaso'), image_url: 'https://example.com/one.jpg', image_url_2: 'https://example.com/two.jpg' }} />);
 
@@ -44,7 +44,7 @@ describe('card de lançamento na home', () => {
     expect(images[1]).toHaveClass('opacity-0');
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(5000);
     });
 
     expect(images[0]).toHaveClass('opacity-0');
