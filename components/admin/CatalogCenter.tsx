@@ -6,7 +6,7 @@ import { CustomizationSectionsEditor } from '@/components/admin/CustomizationSec
 import { ProductStandardizationMonitor } from '@/components/admin/ProductStandardizationMonitor';
 import type { ProductCustomizationSection } from '@/lib/product-customization';
 
-type Color = { id: string; name: string; hex: string; active: boolean; recent: boolean; productCount: number; stepCount: number; presetCount: number; products: Array<{ id: string; name: string }>; steps: Array<{ id: string; name: string }> };
+type Color = { id: string; name: string; hex: string; active: boolean; recent: boolean; productCount: number; stepCount: number; presetCount: number; products: Array<{ id: string; name: string }>; steps: Array<{ id: string; name: string }>; presets: Array<{ id: string; name: string }> };
 type Step = { id: string; name: string; description: string; definition: ProductCustomizationSection; active: boolean; recent: boolean; products: Array<{ product_id: string; name: string; blocked_ids: string[] }> };
 const inputClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white';
 
@@ -26,6 +26,7 @@ export function CatalogCenter() {
   const [name, setName] = useState('');
   const [hex, setHex] = useState('#EC4899');
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+  const [focusStepId, setFocusStepId] = useState('');
   const [stepName, setStepName] = useState('');
   const [description, setDescription] = useState('');
   const [definition, setDefinition] = useState<ProductCustomizationSection[]>([freshSection()]);
@@ -60,15 +61,17 @@ export function CatalogCenter() {
     finally { setBusy(false); }
   }
 
-  async function removeColor(color: Color) {
+  async function removeColor(color: Color, withoutReplacement: boolean) {
     setBusy(true); setError(''); setMessage('');
     try {
-      const response = await fetch(`/api/admin/catalog-colors/${color.id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/admin/catalog-colors/${color.id}${withoutReplacement ? '?withoutReplacement=1' : ''}`, { method: 'DELETE' });
       if (!response.ok) {
         const result = await response.json() as { error?: string };
         throw new Error(result.error ?? 'Erro ao excluir cor');
       }
-      await refresh(); setMessage(`Cor “${color.name}” excluída.`);
+      await refresh(); setMessage(withoutReplacement
+        ? `Cor “${color.name}” removida. Variações que usavam essa cor foram inativadas; revise os produtos afetados.`
+        : `Cor “${color.name}” excluída.`);
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Erro ao excluir cor'); }
     finally { setBusy(false); }
   }
@@ -124,7 +127,7 @@ export function CatalogCenter() {
   const filteredColors = useMemo(() => colors.filter((color) => {
     return (status === 'all' || status === 'new' && color.recent || status === 'active' && color.active || status === 'inactive' && !color.active)
       && (stepFilter === 'all' || color.steps.some((step) => step.id === stepFilter))
-      && `${color.name} ${color.hex} ${color.products.map((product) => product.name).join(' ')}`.toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR'));
+      && `${color.name} ${color.hex} ${color.products.map((product) => product.name).join(' ')} ${color.presets.map((group) => group.name).join(' ')}`.toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR'));
   }), [colors, search, status, stepFilter]);
   const filteredSteps = useMemo(() => steps.filter((step) => (
     (status === 'all' || status === 'active' && step.active || status === 'inactive' && !step.active || status === 'new' && step.recent)
@@ -138,11 +141,12 @@ export function CatalogCenter() {
       <h1 className="mt-3 text-3xl font-bold text-slate-950 dark:text-white">Central de cores e etapas</h1>
       <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300">Gerencie disponibilidade global, veja os produtos afetados e mantenha etapas reutilizáveis em um só lugar. Cada hexadecimal tem uma cor central; grupos e produtos podem apontar para ela. Para unificar duas entradas, substitua uma pela outra.</p>
       <div className="mt-5 flex flex-wrap gap-2"><button onClick={() => setTab('colors')} className={`rounded-xl px-4 py-2 text-sm font-bold ${tab === 'colors' ? 'bg-pink-600 text-white' : 'bg-white text-slate-700'}`}>Cores · {colors.length}</button><button onClick={() => setTab('steps')} className={`rounded-xl px-4 py-2 text-sm font-bold ${tab === 'steps' ? 'bg-pink-600 text-white' : 'bg-white text-slate-700'}`}>Etapas · {steps.length}</button><button onClick={() => setTab('products')} className={`rounded-xl px-4 py-2 text-sm font-bold ${tab === 'products' ? 'bg-pink-600 text-white' : 'bg-white text-slate-700'}`}>Produtos · padronização</button></div>
+      {tab === 'steps' && selectedStepId && <button type="button" onClick={() => { setFocusStepId(selectedStepId); setTab('products'); }} className="mt-3 rounded-xl border border-violet-300 bg-white px-4 py-2 text-sm font-bold text-violet-700">Vincular “{stepName}” aos produtos →</button>}
     </header>
     {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
     {message && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
     {tab !== 'products' && <div className="grid gap-3 sm:grid-cols-3"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar nome ou produto" className={inputClass} /><select value={status} onChange={(event) => setStatus(event.target.value)} className={inputClass}><option value="all">Todos os status</option><option value="active">Disponíveis</option><option value="inactive">Indisponíveis</option><option value="new">Novos</option></select>{tab === 'colors' ? <select value={stepFilter} onChange={(event) => setStepFilter(event.target.value)} className={inputClass}><option value="all">Todas as etapas</option>{[...new Map(colors.flatMap((color) => color.steps).map((step) => [step.id, step])).values()].map((step) => <option key={step.id} value={step.id}>{step.name}</option>)}</select> : <select value={colorFilter} onChange={(event) => setColorFilter(event.target.value)} className={inputClass}><option value="all">Todas as cores</option>{colors.map((color) => <option key={color.id} value={color.id}>{color.name}</option>)}</select>}</div>}
-    {tab === 'products' ? <ProductStandardizationMonitor steps={steps} /> : tab === 'colors' ? <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_310px]">
+    {tab === 'products' ? <ProductStandardizationMonitor key={focusStepId || 'all'} steps={steps} initialStepId={focusStepId} /> : tab === 'colors' ? <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_310px]">
       <div className="space-y-3">{filteredColors.map((color) => <ColorRow key={color.id} color={color} colors={colors} busy={busy} save={saveColor} remove={removeColor} replace={replaceColor} />)}{filteredColors.length === 0 && <p className="rounded-2xl bg-white p-6 text-sm text-slate-500">Nenhuma cor encontrada.</p>}</div>
       <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 dark:bg-slate-900"><h2 className="font-bold">Cadastrar cor</h2><div className="mt-4 space-y-3"><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nome da cor" maxLength={60} className={inputClass} /><div className="flex gap-2"><input type="color" value={hex} onChange={(event) => setHex(event.target.value.toUpperCase())} className="h-10 w-12" /><input value={hex} onChange={(event) => setHex(event.target.value.toUpperCase())} className={inputClass} /></div><button disabled={busy} onClick={() => void saveColor()} className="w-full rounded-xl bg-pink-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">Cadastrar</button></div></aside>
     </div> : <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
@@ -155,12 +159,13 @@ export function CatalogCenter() {
 function ColorRow({ color, colors, busy, save, remove, replace }: {
   color: Color; colors: Color[]; busy: boolean;
   save: (color: Color, patch: Partial<Color>) => Promise<void>;
-  remove: (color: Color) => Promise<void>;
+  remove: (color: Color, withoutReplacement: boolean) => Promise<void>;
   replace: (color: Color, target: Color) => Promise<void>;
 }) {
   const [name, setName] = useState(color.name);
   const [hex, setHex] = useState(color.hex);
   const [targetId, setTargetId] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
   useEffect(() => { setName(color.name); setHex(color.hex); }, [color.name, color.hex]);
   const fresh = color.recent;
   const used = color.productCount > 0 || color.stepCount > 0 || color.presetCount > 0;
@@ -170,7 +175,17 @@ function ColorRow({ color, colors, busy, save, remove, replace }: {
     <p className="mt-3 text-xs text-slate-500">{color.productCount} produto(s) · {color.stepCount} etapa(s) · {color.presetCount} grupo(s)</p>
     {color.products.length > 0 && <details className="mt-2 text-xs"><summary className="cursor-pointer text-pink-700">Ver produtos afetados</summary><div className="mt-2 flex flex-wrap gap-2">{color.products.map((product) => <Link key={product.id} href={`/dashboard/products/${product.id}`} className="rounded-lg bg-slate-50 px-2 py-1 text-slate-700 underline">{product.name}</Link>)}</div></details>}
     {color.steps.length > 0 && <p className="mt-2 text-xs text-slate-500">Etapas: {color.steps.map((step) => step.name).join(', ')}</p>}
-    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3"><select aria-label={`Substituir ${color.name} por`} value={targetId} onChange={(event) => setTargetId(event.target.value)} className="min-w-40 flex-1 rounded-lg border border-slate-200 px-2 py-2 text-xs dark:bg-slate-800"><option value="">Substituir por outra cor ativa…</option>{colors.filter((item) => item.id !== color.id && item.active).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.hex}</option>)}</select><button disabled={!target || busy} onClick={() => { if (target && window.confirm(`Substituir “${color.name}” por “${target.name}” em produtos, grupos e etapas? A cor de origem será excluída.`)) void replace(color, target); }} className="rounded-lg bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 disabled:opacity-40">Substituir</button><button disabled={used || busy} title={used ? 'Substitua esta cor ou remova seus vínculos antes de excluir' : 'Excluir cor sem vínculos'} onClick={() => { if (window.confirm(`Excluir a cor “${color.name}”?`)) void remove(color); }} className="rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-40">Excluir</button></div>
-    {used && <p className="mt-2 text-xs text-slate-500">Para excluir uma cor em uso, substitua-a por outra ou remova seus vínculos.</p>}
+    {color.presets.length > 0 && <p className="mt-2 text-xs text-slate-500">Grupos: {color.presets.map((group) => group.name).join(', ')}</p>}
+    <div className="mt-4 border-t border-slate-100 pt-3"><button disabled={busy} onClick={() => { setTargetId(''); setDeleteOpen(true); }} className="rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-40">Excluir cor</button></div>
+    {deleteOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setDeleteOpen(false); }}>
+      <div role="dialog" aria-modal="true" aria-label={`Excluir ${color.name}`} className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+        <div className="flex items-center gap-3"><span className="h-12 w-12 rounded-full border" style={{ backgroundColor: color.hex }} /><div><h3 className="text-lg font-bold">Excluir “{color.name}”?</h3><p className="text-xs text-slate-500">{color.hex} · {color.productCount} produto(s), {color.stepCount} etapa(s), {color.presetCount} grupo(s)</p></div></div>
+        {used ? <><p className="mt-4 text-sm text-slate-700 dark:text-slate-200">Esta cor está em uso. Você pode substituí-la por uma cor ativa para manter as opções nos produtos, ou removê-la sem substituição. Nesse caso, variações comerciais afetadas ficam inativas e escolhas da cor são retiradas das etapas.</p>
+          <label className="mt-4 block text-sm font-semibold">Substituir por
+            <select value={targetId} onChange={(event) => setTargetId(event.target.value)} className={`${inputClass} mt-1`}><option value="">Escolha a nova cor</option>{colors.filter((item) => item.id !== color.id && item.active).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.hex}</option>)}</select>
+          </label><div className="mt-5 flex flex-wrap gap-2"><button disabled={!target || busy} onClick={() => { if (target) { setDeleteOpen(false); void replace(color, target); } }} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-40">Substituir e excluir</button><button disabled={busy} onClick={() => { if (window.confirm('Excluir sem substituição? As variações desta cor serão inativadas e poderão deixar produtos sem opções de compra.')) { setDeleteOpen(false); void remove(color, true); } }} className="rounded-lg bg-red-50 px-4 py-2 text-sm font-bold text-red-700 disabled:opacity-40">Excluir sem substituir</button><button onClick={() => setDeleteOpen(false)} className="px-3 py-2 text-sm text-slate-600">Cancelar</button></div></>
+          : <div className="mt-5 flex gap-2"><button disabled={busy} onClick={() => { setDeleteOpen(false); void remove(color, false); }} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white">Confirmar exclusão</button><button onClick={() => setDeleteOpen(false)} className="px-3 py-2 text-sm text-slate-600">Cancelar</button></div>}
+      </div>
+    </div>}
   </article>;
 }
