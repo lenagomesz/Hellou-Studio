@@ -36,11 +36,13 @@ export function CatalogCenter() {
 
   const refresh = useCallback(async () => {
     const [colorResponse, stepResponse] = await Promise.all([
-      fetch('/api/admin/catalog-colors'), fetch('/api/admin/customization-steps'),
+      fetch('/api/admin/catalog-colors', { cache: 'no-store' }), fetch('/api/admin/customization-steps', { cache: 'no-store' }),
     ]);
     if (!colorResponse.ok || !stepResponse.ok) throw new Error('Não foi possível carregar a central');
-    setColors(((await colorResponse.json()) as { colors: Color[] }).colors);
+    const currentColors = ((await colorResponse.json()) as { colors: Color[] }).colors;
+    setColors(currentColors);
     setSteps(((await stepResponse.json()) as { steps: Step[] }).steps);
+    return currentColors;
   }, []);
 
   useEffect(() => { void refresh().catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Erro ao carregar')); }, [refresh]);
@@ -69,7 +71,9 @@ export function CatalogCenter() {
         const result = await response.json() as { error?: string };
         throw new Error(result.error ?? 'Erro ao excluir cor');
       }
-      await refresh(); setMessage(withoutReplacement
+      const remaining = await refresh();
+      if (remaining.some((item) => item.id === color.id)) throw new Error('A cor ainda consta no banco após a exclusão. Tente novamente ou confira as migrações no Supabase.');
+      setMessage(withoutReplacement
         ? `Cor “${color.name}” removida. Variações que usavam essa cor foram inativadas; revise os produtos afetados.`
         : `Cor “${color.name}” excluída.`);
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Erro ao excluir cor'); }
@@ -184,7 +188,7 @@ function ColorRow({ color, colors, busy, save, remove, replace }: {
           <label className="mt-4 block text-sm font-semibold">Substituir por
             <select value={targetId} onChange={(event) => setTargetId(event.target.value)} className={`${inputClass} mt-1`}><option value="">Escolha a nova cor</option>{colors.filter((item) => item.id !== color.id && item.active).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.hex}</option>)}</select>
           </label><div className="mt-5 flex flex-wrap gap-2"><button disabled={!target || busy} onClick={() => { if (target) { setDeleteOpen(false); void replace(color, target); } }} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-40">Substituir e excluir</button><button disabled={busy} onClick={() => { if (window.confirm('Excluir sem substituição? As variações desta cor serão inativadas e poderão deixar produtos sem opções de compra.')) { setDeleteOpen(false); void remove(color, true); } }} className="rounded-lg bg-red-50 px-4 py-2 text-sm font-bold text-red-700 disabled:opacity-40">Excluir sem substituir</button><button onClick={() => setDeleteOpen(false)} className="px-3 py-2 text-sm text-slate-600">Cancelar</button></div></>
-          : <div className="mt-5 flex gap-2"><button disabled={busy} onClick={() => { setDeleteOpen(false); void remove(color, false); }} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white">Confirmar exclusão</button><button onClick={() => setDeleteOpen(false)} className="px-3 py-2 text-sm text-slate-600">Cancelar</button></div>}
+          : <div className="mt-5 space-y-3"><p className="text-xs text-slate-500">Se houver vínculos antigos que não aparecem neste contador, eles serão removidos e as variações comerciais afetadas ficarão inativas.</p><div className="flex gap-2"><button disabled={busy} onClick={() => { setDeleteOpen(false); void remove(color, true); }} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white">Confirmar exclusão</button><button onClick={() => setDeleteOpen(false)} className="px-3 py-2 text-sm text-slate-600">Cancelar</button></div></div>}
       </div>
     </div>}
   </article>;

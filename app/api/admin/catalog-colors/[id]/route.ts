@@ -38,8 +38,17 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   const { error } = withoutReplacement
     ? await getSupabaseAdmin().rpc('delete_catalog_color_everywhere', { p_color_id: id })
     : await getSupabaseAdmin().rpc('delete_unused_catalog_color', { p_color_id: id });
+  if (error?.code === 'PGRST202' || error?.code === '42883') {
+    return NextResponse.json({
+      error: 'A função de exclusão ainda não está instalada no banco. Aplique as migrações 20261010_catalog_color_merge.sql e 20261011_catalog_color_removal.sql no Supabase SQL Editor, nesta ordem.',
+    }, { status: 503 });
+  }
   if (error?.message?.includes('Cor não encontrada')) return notFound('Cor não encontrada');
   if (error?.message?.includes('ainda é usada')) return NextResponse.json({ error: error.message }, { status: 409 });
-  if (error) return serverError('Erro ao excluir cor. Confirme se a nova migração foi aplicada.');
+  if (error?.code === '23503') return NextResponse.json({ error: 'Esta cor ainda tem vínculos no banco. Use a exclusão sem substituição ou substitua por outra cor.' }, { status: 409 });
+  if (error) {
+    console.error('[catalog-colors] delete failed:', { code: error.code, message: error.message });
+    return serverError('Não foi possível excluir a cor. Confira os vínculos e tente novamente.');
+  }
   return new NextResponse(null, { status: 204 });
 }
