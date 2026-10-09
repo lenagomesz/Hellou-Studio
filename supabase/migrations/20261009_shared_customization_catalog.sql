@@ -1,5 +1,15 @@
 -- One identity per physical color. Existing product choices keep their IDs and
 -- order history; their catalog references are added without deleting data.
+-- Some databases do not have the columns from the earlier preset activation
+-- migration yet. Create them before the backfill and checkout guard use them.
+ALTER TABLE public.product_option_color_preset_items
+  ADD COLUMN IF NOT EXISTS active boolean NOT NULL DEFAULT true;
+ALTER TABLE public.product_options
+  ADD COLUMN IF NOT EXISTS color_preset_item_id uuid
+  REFERENCES public.product_option_color_preset_items(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_product_options_color_preset_item
+  ON public.product_options(color_preset_item_id);
+
 CREATE TABLE IF NOT EXISTS public.catalog_colors (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL CHECK (char_length(btrim(name)) BETWEEN 1 AND 60),

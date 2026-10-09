@@ -1,6 +1,8 @@
 # Migração da central de cores e etapas
 
 1. Aplique `supabase/migrations/20261009_shared_customization_catalog.sql` antes de publicar o código da aplicação. A migração cria o cadastro global de cores, adiciona referências às variações atuais e às cores das seções JSON e cria os vínculos das etapas compartilhadas. Ela não remove seções exclusivas, variações, pedidos ou seleções antigas.
+
+   Se uma tentativa anterior falhou com `column o.color_preset_item_id does not exist`, execute novamente o arquivo atualizado desde o início. Ele agora cria a coluna e a estrutura relacionada antes de usá-la; os comandos anteriores à falha podem ser executados novamente.
 2. Confira as contagens após a migração:
 
    ```sql
