@@ -29,3 +29,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!data) return notFound('Cor não encontrada');
   return NextResponse.json({ color: data });
 }
+
+export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const auth = await requirePermission('products.manage');
+  if (auth.response) return auth.response;
+  const { id } = await context.params;
+  const { error } = await getSupabaseAdmin().rpc('delete_unused_catalog_color', { p_color_id: id });
+  if (error?.message?.includes('Cor não encontrada')) return notFound('Cor não encontrada');
+  if (error?.message?.includes('ainda é usada')) return NextResponse.json({ error: error.message }, { status: 409 });
+  if (error) return serverError('Erro ao excluir cor. Confirme se a nova migração foi aplicada.');
+  return new NextResponse(null, { status: 204 });
+}

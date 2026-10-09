@@ -11,7 +11,7 @@ export async function GET() {
     const [colors, optionsResult, presetsResult, productsResult, stepsResult, linksResult] = await Promise.all([
       loadCatalogColors(admin),
       admin.from('product_options').select('product_id,catalog_color_id,color_preset_item_id,color,color_name'),
-      admin.from('product_option_color_preset_items').select('id,catalog_color_id,preset_id'),
+      admin.from('product_option_color_preset_items').select('id,catalog_color_id,preset_id,hex'),
       admin.from('products').select('id,name,customization_sections'),
       admin.from('customization_steps').select('id,name,definition'),
       admin.from('product_customization_steps').select('product_id,step_id'),
@@ -20,7 +20,11 @@ export async function GET() {
     const presetColors = new Map((presetsResult.data ?? []).map((item) => [item.id, item.catalog_color_id]));
     const catalogByHex = new Map(colors.map((color) => [color.hex, color.id]));
     const catalogByName = new Map(colors.map((color) => [color.name.toLocaleLowerCase('pt-BR'), color.id]));
-    const usage = new Map(colors.map((color) => [color.id, { products: new Set<string>(), steps: new Set<string>() }]));
+    const usage = new Map(colors.map((color) => [color.id, { products: new Set<string>(), steps: new Set<string>(), presets: 0 }]));
+    for (const item of presetsResult.data ?? []) {
+      const colorId = item.catalog_color_id || catalogByHex.get(item.hex.toUpperCase());
+      if (colorId && usage.has(colorId)) usage.get(colorId)!.presets += 1;
+    }
     const localSteps: Array<{ id: string; name: string }> = [];
     for (const option of optionsResult.data ?? []) {
       const id = option.catalog_color_id || (option.color_preset_item_id && presetColors.get(option.color_preset_item_id))
@@ -54,6 +58,7 @@ export async function GET() {
       recent: Date.now() - new Date(color.created_at).getTime() < 7 * 86400000,
       productCount: usage.get(color.id)?.products.size ?? 0,
       stepCount: usage.get(color.id)?.steps.size ?? 0,
+      presetCount: usage.get(color.id)?.presets ?? 0,
       products: (productsResult.data ?? []).filter((product) => usage.get(color.id)?.products.has(product.id)).map((product) => ({ id: product.id, name: product.name })),
       steps: [...(stepsResult.data ?? []), ...localSteps].filter((step) => usage.get(color.id)?.steps.has(step.id)).map((step) => ({ id: step.id, name: step.name })),
     })) });
