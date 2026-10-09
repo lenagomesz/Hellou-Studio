@@ -141,13 +141,15 @@ export function CustomizationSectionsEditor({
   function moveSection(index: number, direction: -1 | 1) {
     const destination = index + direction;
     if (destination < 0 || destination >= value.length) return;
+    const positions = value.map((section, sectionIndex) => section.sortOrder ?? sectionIndex * 10);
     const next = [...value];
     [next[index], next[destination]] = [next[destination], next[index]];
-    onChange(sanitizeConditionalSections(next));
+    onChange(sanitizeConditionalSections(next.map((section, sectionIndex) => ({ ...section, sortOrder: positions[sectionIndex] }))));
   }
 
   function removeSection(index: number) {
-    onChange(sanitizeConditionalSections(value.filter((_, currentIndex) => currentIndex !== index)));
+    onChange(sanitizeConditionalSections(value.flatMap((section, currentIndex) => currentIndex === index
+      ? [] : [{ ...section, sortOrder: section.sortOrder ?? currentIndex * 10 }])));
   }
 
   function updateColor(sectionIndex: number, colorIndex: number, patch: Partial<ProductCustomizationColor>) {
@@ -197,7 +199,7 @@ export function CustomizationSectionsEditor({
         </div>
         <button
           type="button"
-          onClick={() => onChange([...value, { ...createSection(), colors: presetColors() }])}
+          onClick={() => onChange([...value, { ...createSection(), colors: presetColors(), sortOrder: Math.min(1000, Math.max(-10, ...value.map((section, index) => section.sortOrder ?? index * 10)) + 10) }])}
           disabled={value.length >= maxSections}
           className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-40"
         >

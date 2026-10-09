@@ -17,7 +17,7 @@ export const getKitCatalog = cache(async (): Promise<KitProduct[]> => {
     if (error) throw error;
     const [colors, presetResult, linksResult, stepsResult] = await Promise.all([
       loadCatalogColors(admin), admin.from('product_option_color_preset_items').select('id,active,catalog_color_id'),
-      admin.from('product_customization_steps').select('product_id,step_id,sort_order,required,active,blocked_ids'),
+      admin.from('product_customization_steps').select('product_id,step_id,sort_order,required,active,blocked_ids,label_override'),
       admin.from('customization_steps').select('id,name,description,definition,active'),
     ]);
     if (presetResult.error || linksResult.error || stepsResult.error) throw presetResult.error ?? linksResult.error ?? stepsResult.error;

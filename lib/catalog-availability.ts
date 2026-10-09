@@ -14,6 +14,7 @@ export type StepLink = {
   required: boolean;
   active: boolean;
   blocked_ids: string[];
+  label_override?: string | null;
 };
 export type Step = { id: string; name: string; description: string; definition: unknown; active: boolean };
 
@@ -68,7 +69,7 @@ export async function loadEffectiveCustomizationSections(
 ): Promise<ProductCustomizationSection[]> {
   const catalog = colors ?? await loadCatalogColors(admin);
   const { data: linkRows, error: linkError } = await admin.from('product_customization_steps')
-    .select('product_id,step_id,sort_order,required,active,blocked_ids')
+    .select('product_id,step_id,sort_order,required,active,blocked_ids,label_override')
     .eq('product_id', productId).order('sort_order');
   if (linkError) throw linkError;
   const links = (linkRows ?? []) as StepLink[];
@@ -88,14 +89,15 @@ export function resolveEffectiveCustomizationSections(exclusiveInput: unknown, c
   const byName = new Map(catalog.map((color) => [color.name.toLocaleLowerCase('pt-BR'), color]));
   const exclusive = normalizeProductCustomizationSections(exclusiveInput);
   const byStepId = new Map(steps.map((step) => [step.id, step]));
-  const positioned: Array<{ order: number; section: ProductCustomizationSection }> = exclusive.map((section, index) => ({ order: index * 10, section }));
+  const positioned: Array<{ order: number; section: ProductCustomizationSection }> = exclusive.map((section, index) => ({ order: section.sortOrder ?? index * 10, section }));
   for (const link of links) {
     const step = byStepId.get(link.step_id);
     if (!step) continue;
     const definition = normalizeProductCustomizationSections([step.definition])[0];
     positioned.push({
       order: link.sort_order,
-      section: { ...definition, required: link.required, available: link.active && step.active,
+      section: { ...definition, label: link.label_override?.trim() || definition.label,
+        required: link.required, available: link.active && step.active,
         colors: definition.colors.filter((item) => !link.blocked_ids.includes(item.id)),
         options: definition.options.filter((item) => !link.blocked_ids.includes(item.id)) },
     });

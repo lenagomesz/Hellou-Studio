@@ -48,6 +48,19 @@ describe('disponibilidade do catálogo', () => {
     expect(exhausted[0].colors).toEqual([]);
   });
 
+  it('mantém a etapa compartilhada com título próprio e posição entre variações do produto', () => {
+    const before = { ...section, id: 'before', label: 'Primeira escolha', sortOrder: 0 };
+    const after = { ...section, id: 'after', label: 'Última escolha', sortOrder: 20 };
+    const customized = resolveEffectiveCustomizationSections([before, after], [pink, blue], [
+      { ...link('a'), label_override: 'Cor das teclas' },
+    ], [step]);
+    const original = resolveEffectiveCustomizationSections([], [pink, blue], [link('b')], [step]);
+    expect(customized.map((item) => item.label)).toEqual(['Primeira escolha', 'Cor das teclas', 'Última escolha']);
+    expect(original[0].label).toBe('Cor do corpo');
+    expect(customized[1].id).toBe(original[0].id);
+    expect(validateCustomizationChoices(customized, 'Cor das teclas: Cor: Rosa')).toBe(true);
+  });
+
   it('inativa a etapa compartilhada sem apagar o vínculo e rejeita escolha antiga', () => {
     const sections = resolveEffectiveCustomizationSections([], [pink, blue], [link('a')], [{ ...step, active: false }]);
     expect(sections[0].available).toBe(false);

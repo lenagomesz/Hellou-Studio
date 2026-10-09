@@ -7,7 +7,7 @@ export async function GET() {
   if (auth.response) return auth.response;
   const admin = getSupabaseAdmin();
   const products: Array<{ id: string; name: string; active: boolean; is_customizable: boolean; customization_sections: unknown }> = [];
-  const links: Array<{ product_id: string; step_id: string; active: boolean; sort_order: number }> = [];
+  const links: Array<{ product_id: string; step_id: string; active: boolean; sort_order: number; label_override: string | null }> = [];
   const options: Array<{ id: string; product_id: string; name: string; color: string | null; color_name: string | null; stock: number; active: boolean; price_modifier: number }> = [];
 
   for (let offset = 0; ; offset += 500) {
@@ -20,7 +20,7 @@ export async function GET() {
   }
   for (let offset = 0; ; offset += 500) {
     const { data, error } = await admin.from('product_customization_steps')
-      .select('product_id,step_id,active,sort_order')
+      .select('product_id,step_id,active,sort_order,label_override')
       .order('product_id').order('step_id').range(offset, offset + 499);
     if (error) return serverError('Erro ao carregar vínculos das etapas');
     links.push(...(data ?? []));

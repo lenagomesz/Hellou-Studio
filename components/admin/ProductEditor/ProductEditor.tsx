@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -19,6 +19,8 @@ import { ProductLivePreview } from '../ProductLivePreview';
 import { OptionsManager } from '../OptionsManager';
 import { CustomizationSectionsEditor } from '../CustomizationSectionsEditor';
 import { ProductSharedSteps } from '../ProductSharedSteps';
+import type { SharedStepLink } from '../ProductSharedSteps';
+import type { ProductCustomizationSection } from '@/lib/product-customization';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { replaceProductTags } from '@/components/admin/ProductTagSelect';
 
@@ -37,6 +39,10 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
   const [submitting, setSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [managedProductOptions, setManagedProductOptions] = useState<ProductOption[]>(productOptions ?? []);
+  const [savedLocalSections, setSavedLocalSections] = useState<ProductCustomizationSection[]>(product?.customization_sections ?? []);
+  const [draftSharedSteps, setDraftSharedSteps] = useState<SharedStepLink[]>([]);
+  const [stageError, setStageError] = useState<string | null>(null);
+  useEffect(() => { setStageError(new URLSearchParams(window.location.search).get('stageError')); }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -114,6 +120,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
     const url = mode === 'create' ? '/api/products' : `/api/products/${product!.id}`;
     const method = mode === 'create' ? 'POST' : 'PATCH';
 
+    let createdProductId: string | null = null;
     try {
       const res = await fetch(url, {
         method,
@@ -128,6 +135,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
 
       const data = (await res.json()) as { product: Product };
       const productId = data.product?.id ?? (mode === 'edit' ? product!.id : '');
+      if (mode === 'create') createdProductId = productId;
 
       // Save tags separately
       try {
@@ -137,15 +145,41 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
         // Continue anyway
       }
 
+      if (mode === 'create' && draftSharedSteps.length) {
+        const failures: string[] = [];
+        for (const link of draftSharedSteps) {
+          const linkResponse = await fetch(`/api/admin/products/${productId}/customization-steps`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(link),
+          });
+          if (!linkResponse.ok) {
+            const result = await linkResponse.json().catch(() => ({})) as { error?: string };
+            failures.push(result.error ?? 'Erro ao vincular etapa');
+          }
+        }
+        if (failures.length) {
+          router.push(`/dashboard/products/${productId}/edit?stageError=${encodeURIComponent(failures.join('; '))}`);
+          router.refresh();
+          return;
+        }
+      }
+
       if (mode === 'create') {
         router.push(`/dashboard/products/${productId}/edit`);
         router.refresh();
       } else {
+        setSavedLocalSections(data.product.customization_sections ?? state.customizationSections);
+        dispatch({ type: 'SET_FIELD', field: 'customizationSections', value: data.product.customization_sections ?? state.customizationSections });
         setSuccess('Alterações salvas. O produto já foi atualizado na loja.');
         setSubmitting(false);
         router.refresh();
       }
     } catch (err) {
+      if (createdProductId) {
+        const reason = err instanceof Error ? err.message : 'Falha ao salvar as etapas';
+        router.push(`/dashboard/products/${createdProductId}/edit?stageError=${encodeURIComponent(reason)}`);
+        router.refresh();
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setSubmitting(false);
     }
@@ -171,6 +205,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {stageError && <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Produto criado, mas algumas etapas não foram vinculadas: {stageError}. Revise as variações abaixo.</div>}
       {success && (
         <div role="status" className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
           <CheckCircle2 className="h-5 w-5 shrink-0" /> {success}
@@ -195,6 +230,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
             {state.isCustomizable ? (
               <CustomizationSectionsEditor
                 value={state.customizationSections}
+                maxSections={10 - draftSharedSteps.length}
                 onChange={(sections) => dispatch({ type: 'SET_FIELD', field: 'customizationSections', value: sections })}
                 productOptions={(mode === 'edit' ? managedProductOptions : state.variations).map((option) => ({
                   id: option.id,
@@ -213,7 +249,17 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
               </div>
             )}
 
-            {mode === 'edit' && <ProductSharedSteps productId={product!.id} />}
+            <ProductSharedSteps
+              productId={mode === 'edit' ? product!.id : undefined}
+              localSections={mode === 'edit' ? savedLocalSections : state.customizationSections}
+              canPromote={mode === 'edit' && JSON.stringify(state.customizationSections) === JSON.stringify(savedLocalSections)}
+              onPromoted={(sections) => {
+                setSavedLocalSections(sections);
+                dispatch({ type: 'SET_FIELD', field: 'customizationSections', value: sections });
+                router.refresh();
+              }}
+              onDraftChange={setDraftSharedSteps}
+            />
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900 sm:p-5">
               <div className="mb-4">

@@ -2,15 +2,16 @@ import { NextResponse } from 'next/server';
 import { badRequest, notFound, requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { normalizeProductCustomizationSections } from '@/lib/product-customization';
+import { revalidatePath } from 'next/cache';
 
-type LinkInput = { step_id?: unknown; sort_order?: unknown; required?: unknown; active?: unknown; blocked_ids?: unknown };
+type LinkInput = { step_id?: unknown; sort_order?: unknown; required?: unknown; active?: unknown; blocked_ids?: unknown; label_override?: unknown };
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
   const { id } = await context.params;
   const { data, error } = await getSupabaseAdmin().from('product_customization_steps')
-    .select('product_id,step_id,sort_order,required,active,blocked_ids').eq('product_id', id).order('sort_order');
+    .select('product_id,step_id,sort_order,required,active,blocked_ids,label_override').eq('product_id', id).order('sort_order');
   if (error) return serverError('Erro ao carregar etapas do produto');
   return NextResponse.json({ links: data ?? [] });
 }
@@ -26,7 +27,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   if (body.required !== undefined && typeof body.required !== 'boolean') return badRequest('Obrigatoriedade inválida');
   if (body.active !== undefined && typeof body.active !== 'boolean') return badRequest('Status inválido');
   const sortOrder = Number(body.sort_order ?? 100);
-  if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 1000) return badRequest('Ordem inválida');
+  if (!Number.isInteger(sortOrder) || sortOrder < -10 || sortOrder > 1000) return badRequest('Ordem inválida');
+  if (body.label_override !== undefined && body.label_override !== null && typeof body.label_override !== 'string') return badRequest('Título inválido');
+  const labelOverride = typeof body.label_override === 'string' ? body.label_override.trim() || null : null;
+  if (labelOverride && labelOverride.length > 80) return badRequest('O título deve ter no máximo 80 caracteres');
   if (!Array.isArray(body.blocked_ids) || body.blocked_ids.some((value) => typeof value !== 'string')) return badRequest('Bloqueios inválidos');
   const admin = getSupabaseAdmin();
   const [product, step, existing] = await Promise.all([
@@ -46,8 +50,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   const { data, error } = await admin.from('product_customization_steps').upsert({
     product_id: id, step_id: stepId, sort_order: sortOrder,
     required: body.required !== false, active: body.active !== false, blocked_ids: blocked,
-  }).select('product_id,step_id,sort_order,required,active,blocked_ids').single();
+    label_override: labelOverride,
+  }).select('product_id,step_id,sort_order,required,active,blocked_ids,label_override').single();
   if (error || !data) return serverError('Erro ao vincular etapa ao produto');
+  revalidatePath(`/products/${id}`);
   return NextResponse.json({ link: data });
 }
 
@@ -61,5 +67,6 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   const { error } = await getSupabaseAdmin().from('product_customization_steps')
     .delete().eq('product_id', id).eq('step_id', body.step_id);
   if (error) return serverError('Erro ao remover vínculo');
+  revalidatePath(`/products/${id}`);
   return new NextResponse(null, { status: 204 });
 }

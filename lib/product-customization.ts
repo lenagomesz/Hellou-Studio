@@ -41,6 +41,7 @@ export type ProductCustomizationSection = {
   id: string;
   label: string;
   type: ProductCustomizationSectionType;
+  sortOrder?: number;
   required: boolean;
   autoSelectOptionByCharacterCount: boolean;
   helpText: string;
@@ -126,6 +127,10 @@ export function normalizeProductCustomizationSections(input: unknown, { allowUna
     const type = section.type;
     if (typeof type !== 'string' || !SECTION_TYPES.has(type as ProductCustomizationSectionType)) {
       throw new Error(`Escolha o tipo da seção "${label}"`);
+    }
+    const sortOrder = section.sortOrder;
+    if (sortOrder !== undefined && (typeof sortOrder !== 'number' || !Number.isInteger(sortOrder) || sortOrder < -10 || sortOrder > 1000)) {
+      throw new Error(`A posição de "${label}" é inválida`);
     }
 
     const helpText = typeof section.helpText === 'string' ? section.helpText.trim() : '';
@@ -230,6 +235,7 @@ export function normalizeProductCustomizationSections(input: unknown, { allowUna
       id,
       label,
       type: type as ProductCustomizationSectionType,
+      ...(sortOrder !== undefined ? { sortOrder: sortOrder as number } : {}),
       required: section.required !== false,
       autoSelectOptionByCharacterCount:
         (type === 'text' || type === 'color_text' || type === 'option_text')

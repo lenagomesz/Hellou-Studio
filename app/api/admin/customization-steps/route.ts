@@ -11,7 +11,7 @@ export async function GET() {
   const admin = getSupabaseAdmin();
   const [steps, links, products] = await Promise.all([
     admin.from('customization_steps').select('id,name,description,definition,active,created_at,updated_at').order('created_at'),
-    admin.from('product_customization_steps').select('product_id,step_id,sort_order,required,active,blocked_ids'),
+    admin.from('product_customization_steps').select('product_id,step_id,sort_order,required,active,blocked_ids,label_override'),
     admin.from('products').select('id,name'),
   ]);
   if (steps.error || links.error || products.error) return serverError('Erro ao carregar as etapas');

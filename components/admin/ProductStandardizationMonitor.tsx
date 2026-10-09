@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 type Step = { id: string; name: string; active: boolean; definition: { required: boolean } };
 type Product = {
   id: string; name: string; active: boolean; isCustomizable: boolean; localSteps: string[];
-  links: Array<{ step_id: string; active: boolean; sort_order: number }>;
+  links: Array<{ step_id: string; active: boolean; sort_order: number; label_override: string | null }>;
   options: Array<{ id: string; name: string; color: string | null; color_name: string | null; stock: number; active: boolean; price_modifier: number }>;
 };
 
@@ -101,7 +101,7 @@ function ProductMonitorRow({ product, steps, selectedStepId, selected, canSelect
       <p className="mt-1 text-xs text-slate-500">{link ? link.active ? 'Etapa vinculada' : 'Vínculo inativo neste produto' : !product.active ? 'Produto inativo' : product.links.length + product.localSteps.length >= 10 ? 'Limite de 10 etapas' : product.isCustomizable ? 'Etapa ainda não vinculada' : 'Sem variação anterior'} · {product.links.length} compartilhada(s) · {product.localSteps.length} exclusiva(s) · {product.options.length} opção(ões)</p>
       <details className="mt-2 text-xs text-slate-600 dark:text-slate-300"><summary className="cursor-pointer font-semibold text-violet-700">Ver todas as etapas, variações e opções</summary>
         <div className="mt-2 grid gap-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
-          <p><strong>Compartilhadas:</strong> {product.links.length ? product.links.map((item) => `${steps.find((step) => step.id === item.step_id)?.name ?? 'Etapa removida'}${item.active ? '' : ' (inativa)'}`).join(', ') : 'Nenhuma'}</p>
+          <p><strong>Compartilhadas:</strong> {product.links.length ? product.links.map((item) => `${item.label_override || steps.find((step) => step.id === item.step_id)?.name || 'Etapa removida'}${item.active ? '' : ' (inativa)'}`).join(', ') : 'Nenhuma'}</p>
           <p><strong>Exclusivas:</strong> {product.localSteps.length ? product.localSteps.join(', ') : 'Nenhuma'}</p>
           <div><strong>Opções comerciais:</strong> {product.options.length ? <ul className="mt-1 space-y-1">{product.options.map((option) => <li key={option.id} className="flex flex-wrap items-center gap-1"><span className="h-3 w-3 rounded-full border" style={{ backgroundColor: option.color && /^#[0-9a-f]{6}$/i.test(option.color) ? option.color : 'transparent' }} />{option.name}{option.color_name ? ` · ${option.color_name}` : ''} · {option.active ? 'ativa' : 'inativa'} · estoque {option.stock} · ajuste R$ {Number(option.price_modifier).toFixed(2)}</li>)}</ul> : ' Nenhuma'}</div>
         </div>
