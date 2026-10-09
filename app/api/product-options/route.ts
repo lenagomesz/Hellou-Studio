@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { badRequest, notFound, requireAdmin, serverError } from '@/lib/api';
+import { badRequest, notFound, requirePermission, serverError } from '@/lib/api';
 import type { ProductOption } from '@/types/database';
 import { normalizeProductColor } from '@/lib/product-colors';
+import { ensureCatalogColor } from '@/lib/catalog-admin';
 
 export async function POST(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
   let body: unknown;
@@ -49,15 +50,22 @@ export async function POST(request: Request) {
 
   const admin = getSupabaseAdmin();
   let presetColorId: string | null = null;
+  let catalogColorId: string | null = normalizedColor && /^#[0-9a-f]{6}$/i.test(normalizedColor)
+    ? await ensureCatalogColor(admin, color_name?.trim() || name?.trim() || normalizedColor, normalizedColor) : null;
   if (color_preset_item_id) {
     const { data: presetColor } = await admin
       .from('product_option_color_preset_items')
-      .select('id, hex, active')
+      .select('id, hex, active, catalog_color_id')
       .eq('id', color_preset_item_id)
       .maybeSingle();
     if (!presetColor || !presetColor.active) return badRequest('Esta cor está inativa ou não existe mais');
-    if (normalizedColor !== presetColor.hex) return badRequest('A cor escolhida não corresponde ao grupo de cores');
+    const { data: globalColor } = presetColor.catalog_color_id
+      ? await admin.from('catalog_colors').select('hex,active').eq('id', presetColor.catalog_color_id).maybeSingle()
+      : { data: null };
+    if (globalColor?.active === false) return badRequest('Esta cor está indisponível na central');
+    if (normalizedColor !== (globalColor?.hex ?? presetColor.hex)) return badRequest('A cor escolhida não corresponde ao grupo de cores');
     presetColorId = presetColor.id;
+    catalogColorId = presetColor.catalog_color_id ?? catalogColorId;
   }
 
   const { data: product } = await admin
@@ -90,6 +98,7 @@ export async function POST(request: Request) {
       color: normalizedColor,
       color_name: normalizedColor ? color_name?.trim() || null : null,
       color_preset_item_id: presetColorId,
+      catalog_color_id: catalogColorId,
       variation_label: variation_label?.trim() || null,
       image_url: image_url?.trim() || null,
       active: active ?? true,

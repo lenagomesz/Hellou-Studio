@@ -40,6 +40,7 @@ function normalize(value: string) {
 export function isKitProductAvailable(product: KitProduct) {
   return product.active && product.type === 'physical' && !product.is_wholesale
     && product.category !== 'encomenda' && !normalize(product.name).startsWith('encomenda')
+    && (!(product.total_option_count && product.total_option_count > 0) || product.product_options.length > 0)
     && (product.fulfillment_mode !== 'ready_stock' || product.product_options.some(option => option.active && option.stock > 0));
 }
 

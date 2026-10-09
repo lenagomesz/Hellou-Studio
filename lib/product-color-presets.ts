@@ -6,6 +6,8 @@ export type ProductColorPresetItem = {
   hex: string;
   sort_order: number;
   active: boolean;
+  catalog_color_id?: string | null;
+  global_active?: boolean;
 };
 
 export type ProductColorPreset = {

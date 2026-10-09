@@ -11,6 +11,7 @@ import {
 } from '@/lib/api';
 import type { Product, ProductOption } from '@/types/database';
 import { normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
+import { linkSectionColors } from '@/lib/catalog-admin';
 import {
   normalizeProductCustomizationCopy,
   normalizeProductCustomizationSections,
@@ -188,6 +189,11 @@ export async function PATCH(
     console.log('[products-patch] update payload:', update);
 
     const admin = getSupabaseAdmin();
+    if (Array.isArray(update.customization_sections)) {
+      update.customization_sections = await Promise.all(
+        update.customization_sections.map((section) => linkSectionColors(admin, section)),
+      );
+    }
     const { data, error } = await admin
       .from('products')
       .update(update)

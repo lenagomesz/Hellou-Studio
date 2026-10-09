@@ -16,12 +16,14 @@ export type ProductCustomizationColor = {
   id: string;
   label: string;
   value: string;
+  colorId?: string;
 };
 
 export type ProductCustomizationOption = {
   id: string;
   label: string;
   imageUrl?: string;
+  active?: boolean;
 };
 
 export type ProductCustomizationVisibility =
@@ -47,6 +49,8 @@ export type ProductCustomizationSection = {
   showWhen?: ProductCustomizationVisibility;
   colors: ProductCustomizationColor[];
   options: ProductCustomizationOption[];
+  availabilityExhausted?: boolean;
+  available?: boolean;
 };
 
 export type ProductCustomizationSelection = {
@@ -99,7 +103,7 @@ function normalizeIdentifier(value: unknown, fallback: string) {
   return normalized || fallback;
 }
 
-export function normalizeProductCustomizationSections(input: unknown): ProductCustomizationSection[] {
+export function normalizeProductCustomizationSections(input: unknown, { allowUnavailable = false }: { allowUnavailable?: boolean } = {}): ProductCustomizationSection[] {
   if (input == null) return [];
   if (!Array.isArray(input)) throw new Error('As seções de personalização são inválidas');
   if (input.length > 10) throw new Error('Cadastre no máximo 10 seções de personalização');
@@ -155,11 +159,12 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
           if (colorLabel.length > 50 || colorValue.length > 40) {
             throw new Error(`Revise os dados de cor em "${label}"`);
           }
-          return { id: colorId, label: colorLabel, value: colorValue };
+          const catalogColorId = typeof color.colorId === 'string' && /^[0-9a-f-]{36}$/i.test(color.colorId) ? color.colorId : undefined;
+          return { id: colorId, label: colorLabel, value: colorValue, ...(catalogColorId ? { colorId: catalogColorId } : {}) };
         })
       : [];
 
-    if (needsColors && colors.length === 0) {
+    if (needsColors && colors.length === 0 && !(allowUnavailable && section.availabilityExhausted === true)) {
       throw new Error(`Adicione pelo menos uma cor em "${label}"`);
     }
 
@@ -188,11 +193,12 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
             id: optionId,
             label: optionLabel,
             ...(imageUrl ? { imageUrl } : {}),
+            ...(option.active === false ? { active: false } : {}),
           };
         })
       : [];
 
-    if (needsOptions && options.length === 0) {
+    if (needsOptions && options.length === 0 && !(allowUnavailable && section.availabilityExhausted === true)) {
       throw new Error(`Adicione pelo menos uma opção em "${label}"`);
     }
 
@@ -234,6 +240,8 @@ export function normalizeProductCustomizationSections(input: unknown): ProductCu
       ...(showWhen ? { showWhen } : {}),
       colors,
       options,
+      ...(allowUnavailable && section.availabilityExhausted === true ? { availabilityExhausted: true } : {}),
+      ...(allowUnavailable && section.available === false ? { available: false } : {}),
     };
   });
 
@@ -284,6 +292,7 @@ export function formatProductCustomizationSelections(
   context: ProductCustomizationVisibilityContext = {},
 ) {
   return getVisibleCustomizationSections(sections, selections, context)
+    .filter((section) => section.available !== false)
     .map((section) => {
       const selection = selections[section.id] ?? {};
       const parts: string[] = [];
@@ -313,6 +322,7 @@ export function areRequiredCustomizationSectionsComplete(
   context: ProductCustomizationVisibilityContext = {},
 ) {
   return getVisibleCustomizationSections(sections, selections, context).every((section) => {
+    if (section.available === false) return true;
     if (!section.required) return true;
     const selection = selections[section.id] ?? {};
     const hasColor = Boolean(selection.colorId && section.colors.some((color) => color.id === selection.colorId));
@@ -334,6 +344,7 @@ export function parseProductCustomizationSelections(
 ) {
   const selections: Record<string, ProductCustomizationSelection> = {};
   for (const section of sections) {
+    if (section.available === false) continue;
     const line = value.split('\n').find((item) => item.startsWith(`${section.label}: `));
     if (!line) continue;
     const content = line.slice(section.label.length + 2);

@@ -94,7 +94,7 @@ export function ProductDetail({
   }, [options]);
   const customizationSections = useMemo(() => {
     try {
-      return normalizeProductCustomizationSections(product.customization_sections);
+      return normalizeProductCustomizationSections(product.customization_sections, { allowUnavailable: true });
     } catch {
       return [];
     }
@@ -183,14 +183,14 @@ export function ProductDetail({
   const cartCustomizationText = selectedColor && selectedOption?.color !== selectedColor
     ? [finalCustomizationText, `Cor: ${selectedColorLabel ?? getProductColorName(selectedColor)}`].filter(Boolean).join(' · ')
     : finalCustomizationText;
-  const hasRequiredCustomization = !product.is_customizable || (
+  const hasRequiredCustomization = !(product.is_customizable || customizationSections.length > 0) || (
     customizationSections.length > 0
       ? areRequiredCustomizationSectionsComplete(
           customizationSections,
           customizationSelections,
           customizationVisibilityContext,
         )
-        && (visibleCustomizationSections.length === 0 || finalCustomizationText.length > 0)
+        && (!visibleCustomizationSections.some((section) => section.available !== false && section.required) || finalCustomizationText.length > 0)
         && finalCustomizationText.length <= 4000
       : customizationText.trim().length > 0
   );
@@ -199,7 +199,7 @@ export function ProductDetail({
   const customizationPlaceholder = product.customization_placeholder ?? DEFAULT_CUSTOMIZATION_COPY.placeholder;
   const hasSelectedOption = automaticPricingSection
     ? selectedOption !== null
-    : options.length === 0 || selectedOption !== null;
+    : (product.total_option_count ?? options.length) === 0 || selectedOption !== null;
   const canAddToCart = !isOwnedDigital && hasSelectedOption && hasRequiredCustomization && quantityIsAllowed && quantity <= maxQuantity;
   const isSyncing = status === 'syncing';
   const tagOverlay = product.tags && product.tags.length > 0 ? (
@@ -454,7 +454,7 @@ export function ProductDetail({
           </div>
         )}
 
-        {product.is_customizable && visibleCustomizationSections.length > 0 && (
+        {(product.is_customizable || customizationSections.length > 0) && visibleCustomizationSections.length > 0 && (
           <div className="mt-6 space-y-4 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50/60 p-4 dark:border-pink-900/60 dark:from-pink-950/30 dark:to-orange-950/20 sm:p-5">
             <div>
               <h2 className="text-sm font-bold text-gray-900 dark:text-white">{customizationQuestion}</h2>
@@ -471,10 +471,10 @@ export function ProductDetail({
               const needsImages = section.type === 'images';
               const hasOptionImages = needsOption && section.options.some((option) => option.imageUrl);
               return (
-                <div
+                <fieldset
                   key={section.id}
-                  role="group"
                   aria-labelledby={`customization-section-${section.id}`}
+                  disabled={section.available === false}
                   className="rounded-xl border border-pink-100 bg-white/90 p-3.5 dark:border-pink-900/60 dark:bg-gray-900/90 sm:p-4"
                 >
                   <div className="mb-3">
@@ -483,6 +483,8 @@ export function ProductDetail({
                       {section.required && <span className="ml-1 text-pink-600">*</span>}
                     </h3>
                     {section.helpText && <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">{section.helpText}</p>}
+                    {section.available === false && <p className="mt-1 text-xs font-semibold text-amber-700">Etapa temporariamente indisponível</p>}
+                    {section.availabilityExhausted && <p className="mt-1 text-xs font-semibold text-amber-700">Nenhuma opção disponível no momento</p>}
                   </div>
 
                   {needsColor && (
@@ -690,7 +692,7 @@ export function ProductDetail({
                       </div>
                     );
                   })()}
-                </div>
+                </fieldset>
               );
             })}
 

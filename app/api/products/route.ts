@@ -11,6 +11,7 @@ import {
 } from '@/lib/api';
 import type { Product } from '@/types/database';
 import { normalizeProductColor } from '@/lib/product-colors';
+import { ensureCatalogColor, linkSectionColors } from '@/lib/catalog-admin';
 import { attachProductTags } from '@/lib/product-tags';
 import { parseOptionalPrice } from '@/lib/product-filters';
 import { createProductSlug, normalizeProductCommercialFields, type ProductCommercialInput } from '@/lib/product-commercial';
@@ -178,6 +179,11 @@ export async function POST(request: Request) {
   }
 
   const admin = getSupabaseAdmin();
+  try {
+    customizationSections = await Promise.all(customizationSections.map((section) => linkSectionColors(admin, section)));
+  } catch {
+    return serverError('Não foi possível vincular as cores ao catálogo');
+  }
   if (!commercialFields.slug) commercialFields.slug = await uniqueProductSlug(name);
   const { data: productCategory } = await admin
     .from('product_categories')
@@ -215,7 +221,9 @@ export async function POST(request: Request) {
 
   const validOptions = (options ?? []).filter((option) => option.name?.trim() || option.color?.trim());
   if (validOptions.length > 0) {
-    const { error: optionsError } = await admin.from('product_options').insert(validOptions.map((option, index) => ({
+    let optionRows;
+    try {
+      optionRows = await Promise.all(validOptions.map(async (option, index) => ({
       ...(option.id ? { id: option.id } : {}),
       product_id: data.id,
       name: option.name?.trim() || '',
@@ -224,12 +232,21 @@ export async function POST(request: Request) {
       color: normalizeProductColor(option.color),
       color_name: option.color_name?.trim() || null,
       color_preset_item_id: option.color_preset_item_id ?? null,
+      catalog_color_id: option.color && /^#[0-9a-f]{6}$/i.test(option.color)
+        ? await ensureCatalogColor(admin, option.color_name?.trim() || option.name?.trim() || option.color, option.color)
+        : null,
       image_url: option.image_url?.trim() || null,
       price_modifier: Number(option.price_modifier ?? 0),
       stock: Math.max(0, Math.trunc(Number(option.stock ?? 0))),
       sort_order: Number.isInteger(option.sort_order) ? option.sort_order : index * 10,
       active: option.active ?? true,
-    })));
+      })));
+    } catch (catalogError) {
+      await admin.from('products').delete().eq('id', data.id);
+      console.error('[products] color link error:', catalogError);
+      return serverError('Erro ao vincular as cores das variações');
+    }
+    const { error: optionsError } = await admin.from('product_options').insert(optionRows);
     if (optionsError) {
       await admin.from('products').delete().eq('id', data.id);
       console.error('[products] option insert error:', optionsError);

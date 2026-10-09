@@ -3,10 +3,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // --- Mocks (hoisted so vi.mock factories can reference them) ---
 
-const { mockPaymentCreate, mockPaymentGet, mockFindOwnedDigitalProducts, mockUser } = vi.hoisted(() => ({
+const { mockPaymentCreate, mockPaymentGet, mockFindOwnedDigitalProducts, mockAvailableOptions, mockEffectiveSections, mockValidateChoices, mockUser } = vi.hoisted(() => ({
   mockPaymentCreate: vi.fn(),
   mockPaymentGet: vi.fn(),
   mockFindOwnedDigitalProducts: vi.fn(),
+  mockAvailableOptions: vi.fn(),
+  mockEffectiveSections: vi.fn(),
+  mockValidateChoices: vi.fn(),
   mockUser: { id: 'user-123', email: 'test@example.com', role: 'user' },
 }));
 
@@ -16,6 +19,12 @@ vi.mock('@/lib/mercadopago', () => ({
 
 vi.mock('@/lib/digital-purchases', () => ({
   findOwnedDigitalProducts: mockFindOwnedDigitalProducts,
+}));
+
+vi.mock('@/lib/catalog-availability', () => ({
+  loadAvailableProductOptions: mockAvailableOptions,
+  loadEffectiveCustomizationSections: mockEffectiveSections,
+  validateCustomizationChoices: mockValidateChoices,
 }));
 
 vi.mock('@/lib/api', () => ({
@@ -156,6 +165,9 @@ describe('POST /api/payments/mercadopago/create', () => {
     vi.clearAllMocks();
     setupMockAdmin();
     mockFindOwnedDigitalProducts.mockResolvedValue(new Map());
+    mockAvailableOptions.mockImplementation(async (_admin, options: unknown[]) => options);
+    mockEffectiveSections.mockResolvedValue([]);
+    mockValidateChoices.mockReturnValue(true);
     mockRpc.mockImplementation((name: string) => {
       if (name === 'prepare_checkout_order') {
         return Promise.resolve({ data: [{ order_id: 'order-abc', reused: false }], error: null });
@@ -168,6 +180,22 @@ describe('POST /api/payments/mercadopago/create', () => {
   });
 
   describe('Validation', () => {
+    it('recusa uma cor desativada depois que entrou no carrinho', async () => {
+      mockAvailableOptions.mockResolvedValue([]);
+      const response = await POST(makeRequest({ payment_method: 'pix', cpf: '12345678909' }));
+      expect(response.status).toBe(400);
+      expect((await response.json()).error).toContain('não está mais disponível');
+      expect(mockRpc).not.toHaveBeenCalledWith('prepare_checkout_order', expect.anything());
+    });
+
+    it('recusa uma opção de etapa que foi bloqueada para o produto', async () => {
+      mockValidateChoices.mockReturnValue(false);
+      const response = await POST(makeRequest({ payment_method: 'pix', cpf: '12345678909' }));
+      expect(response.status).toBe(400);
+      expect((await response.json()).error).toContain('Revise a personalização');
+      expect(mockRpc).not.toHaveBeenCalledWith('prepare_checkout_order', expect.anything());
+    });
+
     it('bloqueia um STL já comprado antes de criar pedido ou pagamento', async () => {
       mockCartItems[0].product.type = 'digital';
       mockFindOwnedDigitalProducts.mockResolvedValue(new Map([['prod-1', 'old-order']]));

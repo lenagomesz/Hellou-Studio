@@ -4,12 +4,12 @@ import { badRequest, requireUser, serverError } from '@/lib/api';
 import type { CartItemView } from '@/lib/cart';
 import type { CartItem, Product, ProductOption } from '@/types/database';
 import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
+import { loadAvailableProductOptions, loadEffectiveCustomizationSections, validateCustomizationChoices } from '@/lib/catalog-availability';
 import {
   areRequiredCustomizationSectionsComplete,
   countCustomizationLetters,
   getOptionCharacterCount,
   getVisibleCustomizationSections,
-  normalizeProductCustomizationSections,
   parseProductCustomizationSelections,
 } from '@/lib/product-customization';
 
@@ -168,14 +168,17 @@ export async function POST(request: Request) {
   }
   let automaticLetterCount: number | null = null;
   try {
-    const sections = normalizeProductCustomizationSections(product.customization_sections);
+    const sections = await loadEffectiveCustomizationSections(admin, product_id, product.customization_sections);
     const selections = parseProductCustomizationSelections(sections, normalizedCustomization);
+    if (!validateCustomizationChoices(sections, normalizedCustomization)) {
+      return badRequest('Uma opção de personalização não está mais disponível');
+    }
     const visibilityContext = { productOptionId: optionId };
     const visibleSections = getVisibleCustomizationSections(sections, selections, visibilityContext);
-    if (product.is_customizable && !normalizedCustomization && (sections.length === 0 || visibleSections.length > 0)) {
+    if ((product.is_customizable || sections.length > 0) && !normalizedCustomization && (sections.length === 0 || visibleSections.some((section) => section.available !== false && section.required))) {
       return badRequest('Preencha a personalização antes de adicionar ao carrinho');
     }
-    if (product.is_customizable && sections.length > 0 && !areRequiredCustomizationSectionsComplete(sections, selections, visibilityContext)) {
+    if (sections.length > 0 && !areRequiredCustomizationSectionsComplete(sections, selections, visibilityContext)) {
       return badRequest('Complete todas as personalizações obrigatórias');
     }
     for (const section of sections.filter((item) => item.type === 'images')) {
@@ -199,10 +202,16 @@ export async function POST(request: Request) {
   }
 
   let optionStock: number | null = null;
+  if (!optionId) {
+    const { count, error: optionCountError } = await admin.from('product_options')
+      .select('id', { count: 'exact', head: true }).eq('product_id', product_id);
+    if (optionCountError) return serverError('Erro ao validar variações');
+    if ((count ?? 0) > 0) return badRequest('Selecione uma variação disponível');
+  }
   if (optionId) {
     const { data: optionRow, error: optionError } = await admin
       .from('product_options')
-      .select('id, product_id, name, stock')
+      .select('*')
       .eq('id', optionId)
       .eq('active', true)
       .maybeSingle();
@@ -210,6 +219,9 @@ export async function POST(request: Request) {
     if (optionError) return serverError('Erro ao validar variação');
     if (!optionRow?.product_id || optionRow.product_id !== product_id) {
       return badRequest('Variação inválida');
+    }
+    if ((await loadAvailableProductOptions(admin, [optionRow as ProductOption])).length === 0) {
+      return badRequest('Esta cor ou variação não está mais disponível');
     }
     if (
       automaticLetterCount !== null

@@ -18,6 +18,7 @@ import { AIAssistantSection } from './sections/AIAssistantSection';
 import { ProductLivePreview } from '../ProductLivePreview';
 import { OptionsManager } from '../OptionsManager';
 import { CustomizationSectionsEditor } from '../CustomizationSectionsEditor';
+import { ProductSharedSteps } from '../ProductSharedSteps';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { replaceProductTags } from '@/components/admin/ProductTagSelect';
 
@@ -211,6 +212,8 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
                 Ative “Produto personalizado?” em Identidade para criar escolhas e subvariações condicionais de foto, texto, cor ou opção.
               </div>
             )}
+
+            {mode === 'edit' && <ProductSharedSteps productId={product!.id} />}
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900 sm:p-5">
               <div className="mb-4">

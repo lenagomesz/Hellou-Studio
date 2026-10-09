@@ -14,6 +14,9 @@ import { calculateCheckoutTotals, FIRST_PURCHASE_BLOCKING_STATUSES, validateChec
 import { isMercadoPagoApproved, mapMercadoPagoOrderStatus } from '@/lib/payment-status';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
 import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
+import { loadAvailableProductOptions, loadEffectiveCustomizationSections, validateCustomizationChoices } from '@/lib/catalog-availability';
+import { areRequiredCustomizationSectionsComplete, parseProductCustomizationSelections } from '@/lib/product-customization';
+import type { ProductOption } from '@/types/database';
 
 const PIX_EXPIRATION_MINUTES = 30;
 
@@ -181,6 +184,32 @@ export async function POST(request: Request) {
   const incompleteCustomization = cartItems.find((item) => item.product?.is_customizable && !item.customization_text?.trim());
   if (incompleteCustomization) {
     return badRequest(`Preencha a personalização de ${incompleteCustomization.product?.name ?? 'um produto'}`);
+  }
+
+  // Recheck the current catalog. A cart may have been filled before an admin
+  // disabled a shared color, step, or product-specific choice.
+  try {
+    for (const item of cartItems) {
+      if (!item.product_option_id) {
+        const { count, error: optionCountError } = await admin.from('product_options')
+          .select('id', { count: 'exact', head: true }).eq('product_id', item.product_id);
+        if (optionCountError) throw optionCountError;
+        if ((count ?? 0) > 0) return badRequest(`Selecione uma variação disponível para ${item.product?.name ?? 'o produto'}.`);
+      }
+      if (item.option && (await loadAvailableProductOptions(admin, [item.option as ProductOption])).length === 0) {
+        return badRequest(`A variação de ${item.product?.name ?? 'um produto'} não está mais disponível. Revise o carrinho.`);
+      }
+      if (!item.product) continue;
+      const sections = await loadEffectiveCustomizationSections(admin, item.product_id, item.product.customization_sections);
+      const text = item.customization_text ?? '';
+      if (!validateCustomizationChoices(sections, text)
+        || !areRequiredCustomizationSectionsComplete(sections, parseProductCustomizationSelections(sections, text), { productOptionId: item.product_option_id })) {
+        return badRequest(`As escolhas de ${item.product.name} mudaram. Revise a personalização antes de pagar.`);
+      }
+    }
+  } catch (error) {
+    console.error('[checkout] catalog validation failed:', error);
+    return serverError('Não foi possível confirmar a disponibilidade das escolhas. Tente novamente.');
   }
 
   // Validate no mixed product types (digital + physical)

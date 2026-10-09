@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { badRequest, requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { ProductColorPreset, ProductColorPresetItem } from '@/lib/product-color-presets';
+import { ensureCatalogColor } from '@/lib/catalog-admin';
+import { loadCatalogColors } from '@/lib/catalog-availability';
 
 type ColorInput = { id?: unknown; name?: unknown; hex?: unknown; active?: unknown };
 
@@ -43,14 +45,21 @@ export async function GET() {
 
   const { data, error } = await getSupabaseAdmin()
     .from('product_option_color_presets')
-    .select('id, name, customer_label, sort_order, product_option_color_preset_items(id, name, hex, active, sort_order)')
+    .select('id, name, customer_label, sort_order, product_option_color_preset_items(id, name, hex, active, sort_order, catalog_color_id)')
     .order('sort_order')
     .order('name');
   if (error) return serverError('Erro ao buscar os grupos de cores');
 
+  const colors = await loadCatalogColors(getSupabaseAdmin());
+  const colorById = new Map(colors.map((color) => [color.id, color]));
+  const colorByHex = new Map(colors.map((color) => [color.hex, color]));
+
   const presets = (data ?? []).map((preset) => mapPreset({
     ...preset,
-    items: preset.product_option_color_preset_items as ProductColorPresetItem[] | undefined,
+    items: (preset.product_option_color_preset_items as ProductColorPresetItem[] | undefined)?.map((item) => {
+      const color = item.catalog_color_id ? colorById.get(item.catalog_color_id) : colorByHex.get(item.hex.toUpperCase());
+      return { ...item, name: color?.name ?? item.name, hex: color?.hex ?? item.hex, global_active: color?.active !== false };
+    }),
   }));
   return NextResponse.json({ presets });
 }
@@ -80,7 +89,8 @@ export async function POST(request: Request) {
 
   const { data: createdItems, error: itemError } = await admin
     .from('product_option_color_preset_items')
-    .insert(items.map((item) => ({ ...item, preset_id: preset.id })))
+    .insert(await Promise.all(items.map(async (item) => ({ ...item, preset_id: preset.id,
+      catalog_color_id: await ensureCatalogColor(admin, item.name, item.hex) }))))
     .select('id, name, hex, active, sort_order');
   if (itemError) {
     await admin.from('product_option_color_presets').delete().eq('id', preset.id);

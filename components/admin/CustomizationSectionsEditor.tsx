@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp, GitBranch, Images, ListChecks, Palette, Plus, Trash2, Type } from 'lucide-react';
 import type {
   ProductCustomizationColor,
@@ -40,6 +40,14 @@ function createOption(): ProductCustomizationOption {
     label: 'Nova opção',
     imageUrl: '',
   };
+}
+
+function moveChoice<T>(items: T[], index: number, direction: -1 | 1): T[] {
+  const destination = index + direction;
+  if (destination < 0 || destination >= items.length) return items;
+  const next = [...items];
+  [next[index], next[destination]] = [next[destination], next[index]];
+  return next;
 }
 
 function createSection(): ProductCustomizationSection {
@@ -87,11 +95,29 @@ export function CustomizationSectionsEditor({
   value,
   onChange,
   productOptions = [],
+  maxSections = 10,
+  availableColors,
 }: {
   value: ProductCustomizationSection[];
   onChange: (sections: ProductCustomizationSection[]) => void;
   productOptions?: Array<{ id: string; name: string }>;
+  maxSections?: number;
+  availableColors?: Array<{ id: string; name: string; hex: string; active: boolean }>;
 }) {
+  const [loadedColors, setLoadedColors] = useState<Array<{ id: string; name: string; hex: string; active: boolean }>>([]);
+  useEffect(() => {
+    if (availableColors !== undefined) return;
+    let mounted = true;
+    void fetch('/api/admin/catalog-colors')
+      .then(async (response) => response.ok ? (await response.json() as { colors: typeof loadedColors }).colors : [])
+      .then((colors) => { if (mounted) setLoadedColors(colors); })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, [availableColors]);
+  const effectiveColors = availableColors ?? loadedColors;
+  const presetColors = () => effectiveColors.length > 0
+    ? effectiveColors.filter((color) => color.active).slice(0, 20).map((color) => ({ id: createId('color'), colorId: color.id, label: color.name, value: color.hex }))
+    : createPresetColors();
   useEffect(() => {
     const productOptionIds = new Set(productOptions.map((option) => option.id));
     const hasRemovedCondition = value.some((section) => (
@@ -171,8 +197,8 @@ export function CustomizationSectionsEditor({
         </div>
         <button
           type="button"
-          onClick={() => onChange([...value, createSection()])}
-          disabled={value.length >= 10}
+          onClick={() => onChange([...value, { ...createSection(), colors: presetColors() }])}
+          disabled={value.length >= maxSections}
           className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-40"
         >
           <Plus className="h-4 w-4" />
@@ -230,7 +256,7 @@ export function CustomizationSectionsEditor({
                       const type = event.target.value as ProductCustomizationSectionType;
                       updateSection(sectionIndex, {
                         type,
-                        colors: usesColor(type) && section.colors.length === 0 ? createPresetColors() : section.colors,
+                        colors: usesColor(type) && section.colors.length === 0 ? presetColors() : section.colors,
                         options: usesOptions(type) && (section.options ?? []).length === 0 ? [createOption()] : (section.options ?? []),
                         autoSelectOptionByCharacterCount: usesText(type)
                           ? section.autoSelectOptionByCharacterCount
@@ -316,7 +342,7 @@ export function CustomizationSectionsEditor({
                     <div className="flex flex-wrap items-center justify-end gap-3">
                       <button
                         type="button"
-                        onClick={() => updateSection(sectionIndex, { colors: createPresetColors() })}
+                        onClick={() => updateSection(sectionIndex, { colors: presetColors() })}
                         className="text-xs font-bold text-slate-500 hover:text-violet-700 dark:text-slate-400"
                       >
                         Restaurar cores padrão
@@ -334,10 +360,19 @@ export function CustomizationSectionsEditor({
                   <div className="mt-3 space-y-2">
                     {section.colors.map((color, colorIndex) => (
                       <div key={color.id} className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2">
+                        {effectiveColors.length > 0 && <select
+                          value={color.colorId ?? ''}
+                          onChange={(event) => {
+                            const selected = effectiveColors.find((item) => item.id === event.target.value);
+                            if (selected) updateColor(sectionIndex, colorIndex, { colorId: selected.id, label: selected.name, value: selected.hex });
+                          }}
+                          aria-label={`Cor cadastrada ${colorIndex + 1}`}
+                          className="col-span-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900"
+                        ><option value="">Cor personalizada (será cadastrada ao salvar)</option>{effectiveColors.filter((item) => item.active).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.hex}</option>)}</select>}
                         <input
                           type="color"
                           value={/^#[0-9a-f]{6}$/i.test(color.value) ? color.value : '#ec4899'}
-                          onChange={(event) => updateColor(sectionIndex, colorIndex, { value: event.target.value })}
+                          onChange={(event) => updateColor(sectionIndex, colorIndex, { value: event.target.value, colorId: undefined })}
                           aria-label={`Cor ${colorIndex + 1}`}
                           className="h-9 w-11 cursor-pointer rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900"
                         />
@@ -348,14 +383,7 @@ export function CustomizationSectionsEditor({
                           placeholder="Nome da cor"
                           className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
                         />
-                        <button
-                          type="button"
-                          onClick={() => updateSection(sectionIndex, { colors: section.colors.filter((_, index) => index !== colorIndex) })}
-                          aria-label={`Excluir cor ${colorIndex + 1}`}
-                          className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center"><button type="button" disabled={colorIndex === 0} onClick={() => updateSection(sectionIndex, { colors: moveChoice(section.colors, colorIndex, -1) })} aria-label={`Mover cor ${colorIndex + 1} para cima`} className="p-1 disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button><button type="button" disabled={colorIndex === section.colors.length - 1} onClick={() => updateSection(sectionIndex, { colors: moveChoice(section.colors, colorIndex, 1) })} aria-label={`Mover cor ${colorIndex + 1} para baixo`} className="p-1 disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button><button type="button" onClick={() => updateSection(sectionIndex, { colors: section.colors.filter((_, index) => index !== colorIndex) })} aria-label={`Excluir cor ${colorIndex + 1}`} className="rounded-lg p-1 text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button></div>
                       </div>
                     ))}
                   </div>
@@ -461,14 +489,8 @@ export function CustomizationSectionsEditor({
                           value={option.imageUrl ?? ''}
                           onChange={(imageUrl) => updateOption(sectionIndex, optionIndex, { imageUrl })}
                         />
-                        <button
-                          type="button"
-                          onClick={() => updateSection(sectionIndex, { options: (section.options ?? []).filter((_, index) => index !== optionIndex) })}
-                          aria-label={`Excluir opção ${optionIndex + 1}`}
-                          className="justify-self-end rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 sm:mb-1"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center justify-self-end"><button type="button" disabled={optionIndex === 0} onClick={() => updateSection(sectionIndex, { options: moveChoice(section.options, optionIndex, -1) })} aria-label={`Mover opção ${optionIndex + 1} para cima`} className="p-1 disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button><button type="button" disabled={optionIndex === section.options.length - 1} onClick={() => updateSection(sectionIndex, { options: moveChoice(section.options, optionIndex, 1) })} aria-label={`Mover opção ${optionIndex + 1} para baixo`} className="p-1 disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button><button type="button" onClick={() => updateSection(sectionIndex, { options: (section.options ?? []).filter((_, index) => index !== optionIndex) })} aria-label={`Excluir opção ${optionIndex + 1}`} className="rounded-lg p-1 text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button></div>
+                        <label className="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" checked={option.active !== false} onChange={(event) => updateOption(sectionIndex, optionIndex, { active: event.target.checked })} /> Disponível</label>
                       </div>
                     ))}
                   </div>

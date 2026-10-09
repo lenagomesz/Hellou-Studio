@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { badRequest, notFound, requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { ProductColorPresetItem } from '@/lib/product-color-presets';
+import { ensureCatalogColor } from '@/lib/catalog-admin';
 
 type ColorInput = { id?: unknown; name?: unknown; hex?: unknown; active?: unknown };
 
@@ -56,36 +57,30 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const knownIds = new Set((currentItems ?? []).map((item) => item.id));
   if (items.some((item) => item.id && !knownIds.has(item.id))) return badRequest('Uma das cores não pertence a este tipo de variação');
 
-  const inactiveIds: string[] = [];
   const savedItems: ProductColorPresetItem[] = [];
   for (const item of items) {
+    const catalogColorId = await ensureCatalogColor(admin, item.name, item.hex);
     if (item.id) {
-      const wasActive = currentItems?.find((current) => current.id === item.id)?.active !== false;
       const { data: updated, error: updateError } = await admin
         .from('product_option_color_preset_items')
-        .update({ name: item.name, hex: item.hex, active: item.active, sort_order: item.sort_order })
+        .update({ name: item.name, hex: item.hex, active: item.active, sort_order: item.sort_order, catalog_color_id: catalogColorId })
         .eq('id', item.id)
         .select('id, name, hex, active, sort_order')
         .single();
       if (updateError || !updated) return serverError('Erro ao salvar as cores');
-      if (wasActive && !item.active) inactiveIds.push(item.id);
+      const { error: linkedError } = await admin.from('product_options')
+        .update({ catalog_color_id: catalogColorId }).eq('color_preset_item_id', item.id);
+      if (linkedError) return serverError('Erro ao atualizar o vínculo das variações com a cor');
       savedItems.push(updated as ProductColorPresetItem);
     } else {
       const { data: inserted, error: insertError } = await admin
         .from('product_option_color_preset_items')
-        .insert({ preset_id: id, name: item.name, hex: item.hex, active: item.active, sort_order: item.sort_order })
+        .insert({ preset_id: id, name: item.name, hex: item.hex, active: item.active, sort_order: item.sort_order, catalog_color_id: catalogColorId })
         .select('id, name, hex, active, sort_order')
         .single();
       if (insertError || !inserted) return serverError('Erro ao salvar as cores');
       savedItems.push(inserted as ProductColorPresetItem);
     }
-  }
-  if (inactiveIds.length > 0) {
-    const { error: deactivateError } = await admin
-      .from('product_options')
-      .update({ active: false })
-      .in('color_preset_item_id', inactiveIds);
-    if (deactivateError) return serverError('A cor foi salva, mas não foi possível inativar as variações vinculadas');
   }
   return NextResponse.json({ preset: { ...preset, items: savedItems } });
 }

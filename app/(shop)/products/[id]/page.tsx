@@ -12,6 +12,7 @@ import type { Product, ProductOption } from '@/types/database';
 import { absoluteUrl, plainText, productIdentifier, productImages, productPath, safeJsonLd } from '@/lib/seo';
 import { attachProductTags } from '@/lib/product-tags';
 import { getStoreSettings } from '@/lib/store-settings';
+import { loadAvailableProductOptions, loadEffectiveCustomizationSections } from '@/lib/catalog-availability';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -35,13 +36,17 @@ async function loadProductWithOptions(identifier: string) {
   if (!productData) return null;
 
   const optionsRes = await withTimeout(admin.from('product_options').select('*')
-    .eq('product_id', productData.id).eq('active', true)
+    .eq('product_id', productData.id)
     .order('sort_order', { ascending: true }).order('created_at', { ascending: true }), 12000);
   if (optionsRes.error) throw optionsRes.error;
 
+  const [options, sections] = await Promise.all([
+    loadAvailableProductOptions(admin, (optionsRes.data ?? []) as ProductOption[]),
+    loadEffectiveCustomizationSections(admin, productData.id, productData.customization_sections),
+  ]);
   return {
-    product: productData,
-    options: (optionsRes.data ?? []) as ProductOption[],
+    product: { ...productData, customization_sections: sections, total_option_count: (optionsRes.data ?? []).length },
+    options,
   };
 }
 

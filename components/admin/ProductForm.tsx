@@ -11,6 +11,7 @@ import { ProductTagSelect, replaceProductTags } from '@/components/admin/Product
 import { OptionsManager } from '@/components/admin/OptionsManager';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { CustomizationSectionsEditor } from '@/components/admin/CustomizationSectionsEditor';
+import { ProductSharedSteps } from '@/components/admin/ProductSharedSteps';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { ArrowDown, ArrowUp, CheckCircle2, Loader2, Upload } from 'lucide-react';
 import {
@@ -433,6 +434,7 @@ export function ProductForm(props: ProductFormProps) {
         {isCustomizable && (
           <CustomizationSectionsEditor value={customizationSections} onChange={setCustomizationSections} />
         )}
+        {props.mode === 'edit' && <ProductSharedSteps productId={props.product.id} />}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { badRequest, notFound, requireAdmin, serverError } from '@/lib/api';
+import { badRequest, notFound, requirePermission, serverError } from '@/lib/api';
 import type { ProductOption } from '@/types/database';
 import { normalizeProductColor } from '@/lib/product-colors';
+import { ensureCatalogColor } from '@/lib/catalog-admin';
 
 export async function PATCH(
   request: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
   const { id } = await ctx.params;
@@ -92,6 +93,11 @@ export async function PATCH(
   }
 
   const admin = getSupabaseAdmin();
+  if (input.color !== undefined) {
+    const hex = update.color as string | null;
+    update.catalog_color_id = hex && /^#[0-9a-f]{6}$/i.test(hex)
+      ? await ensureCatalogColor(admin, input.color_name?.trim() || input.name?.trim() || hex, hex) : null;
+  }
   if (input.name !== undefined || input.color !== undefined || input.color_preset_item_id !== undefined) {
     const { data: current } = await admin
       .from('product_options')
@@ -106,11 +112,18 @@ export async function PATCH(
     if (input.color_preset_item_id?.trim()) {
       const { data: presetColor } = await admin
         .from('product_option_color_preset_items')
-        .select('id, hex, active')
+        .select('id, hex, active, catalog_color_id')
         .eq('id', input.color_preset_item_id.trim())
         .maybeSingle();
       if (!presetColor || !presetColor.active) return badRequest('Esta cor está inativa ou não existe mais');
-      if (nextColor !== presetColor.hex) return badRequest('A cor escolhida não corresponde ao grupo de cores');
+      const { data: globalColor } = presetColor.catalog_color_id
+        ? await admin.from('catalog_colors').select('hex,active').eq('id', presetColor.catalog_color_id).maybeSingle()
+        : { data: null };
+      if (globalColor?.active === false) return badRequest('Esta cor está indisponível na central');
+      const expectedHex = globalColor?.hex ?? presetColor.hex;
+      if (input.color === undefined) update.color = expectedHex;
+      else if (nextColor !== expectedHex) return badRequest('A cor escolhida não corresponde ao grupo de cores');
+      update.catalog_color_id = presetColor.catalog_color_id ?? update.catalog_color_id ?? null;
     }
   }
 
@@ -131,7 +144,7 @@ export async function DELETE(
   _request: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission('products.manage');
   if (auth.response) return auth.response;
 
   const { id } = await ctx.params;
