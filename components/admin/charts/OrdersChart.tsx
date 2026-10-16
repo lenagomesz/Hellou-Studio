@@ -42,7 +42,7 @@ export function OrdersChart({ data, groupBy }: Props) {
         <YAxis fontSize={12} stroke="#9ca3af" width={40} />
         <Tooltip
           formatter={(value) => [Number(value), 'Pedidos']}
-          labelFormatter={(label) => formatDate(label, groupBy)}
+          labelFormatter={(label) => formatDate(String(label), groupBy)}
           contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
         />
         <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} />

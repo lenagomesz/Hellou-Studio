@@ -42,7 +42,7 @@ export function UsersChart({ data, groupBy }: Props) {
         <YAxis fontSize={12} stroke="#9ca3af" width={40} />
         <Tooltip
           formatter={(value) => [Number(value), 'Novos usuários']}
-          labelFormatter={(label) => formatDate(label, groupBy)}
+          labelFormatter={(label) => formatDate(String(label), groupBy)}
           contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
         />
         <Line

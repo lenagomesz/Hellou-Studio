@@ -58,7 +58,7 @@ export function RevenueChart({ data, groupBy }: Props) {
         />
         <Tooltip
           formatter={(value) => [formatCurrency(Number(value)), 'Receita']}
-          labelFormatter={(label) => formatDate(label, groupBy)}
+          labelFormatter={(label) => formatDate(String(label), groupBy)}
           contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
         />
         <Area
