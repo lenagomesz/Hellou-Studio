@@ -105,6 +105,7 @@ function ProductEditorContent({ mode, product, productOptions }: ProductEditorPr
       image_url: state.images[0] || null,
       image_url_2: null,
       images: state.images.length > 0 ? state.images : null,
+      model_3d_url: state.model3dUrl.trim() || null,
       fulfillment_mode: state.fulfillmentMode,
       is_wholesale: state.isWholesale,
       minimum_order_quantity: state.isWholesale ? Math.max(2, Math.min(999, state.minimumOrderQuantity)) : 1,
@@ -407,6 +408,7 @@ export function ProductEditor(props: ProductEditorProps) {
             [props.product.image_url, ...(props.product.images ?? []), props.product.image_url_2]
               .filter((image): image is string => Boolean(image?.trim())),
           )),
+          model3dUrl: props.product.model_3d_url || '',
           active: props.product.active,
           seoTitle: props.product.seo_title || '',
           seoDescription: props.product.seo_description || '',

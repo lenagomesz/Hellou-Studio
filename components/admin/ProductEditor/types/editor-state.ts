@@ -71,6 +71,7 @@ export interface ProductEditorState {
 
   // Images
   images: string[];
+  model3dUrl: string;
 
   // Inventory / Fulfillment
   fulfillmentMode: 'made_to_order' | 'ready_stock' | 'hybrid';
@@ -150,6 +151,7 @@ export function createInitialEditorState(
     minimumOrderQuantity: 1,
 
     images: [],
+    model3dUrl: '',
 
     fulfillmentMode: 'made_to_order',
     weightGrams: 0,

@@ -35,10 +35,12 @@ function drawSquareImage(
 export function ImagesSection() {
   const { state, dispatch } = useProductEditor();
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const modelInputRef = useRef<HTMLInputElement>(null);
   const resizeCanvasRef = useRef<HTMLCanvasElement>(null);
   const resizeImageRef = useRef<HTMLImageElement | null>(null);
   const resizeUrlRef = useRef('');
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadingModel, setUploadingModel] = useState(false);
   const [imageDragOver, setImageDragOver] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +95,25 @@ export function ImagesSection() {
     } finally {
       setUploadingImages(false);
       if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  };
+
+  const uploadModel = async (file?: File) => {
+    if (!file) return;
+    setError(null);
+    setUploadingModel(true);
+    try {
+      const formData = new FormData();
+      formData.append('model', file);
+      const response = await fetch('/api/upload/product-model', { method: 'POST', body: formData });
+      const data = await response.json().catch(() => ({})) as { url?: string; error?: string };
+      if (!response.ok || !data.url) throw new Error(data.error ?? 'Não foi possível enviar o modelo 3D');
+      dispatch({ type: 'SET_FIELD', field: 'model3dUrl', value: data.url });
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : 'Erro ao enviar o modelo 3D');
+    } finally {
+      setUploadingModel(false);
+      if (modelInputRef.current) modelInputRef.current.value = '';
     }
   };
 
@@ -335,6 +356,25 @@ export function ImagesSection() {
             className="rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition"
           >
             Adicionar
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-violet-200 bg-violet-50/70 p-4 dark:border-violet-900/70 dark:bg-violet-950/20">
+          <label htmlFor="model-3d-url" className="block text-sm font-bold text-slate-800 dark:text-white">Modelo 3D interativo</label>
+          <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">Envie o STL usado na impressão e o site o converterá para visualização. O cliente poderá girar o produto, e a cor da variação selecionada será aplicada ao modelo.</p>
+          <input
+            id="model-3d-url"
+            type="url"
+            inputMode="url"
+            value={state.model3dUrl}
+            onChange={(event) => dispatch({ type: 'SET_FIELD', field: 'model3dUrl', value: event.target.value })}
+            placeholder="URL do GLB (preenchida automaticamente ao enviar STL)"
+            className="mt-3 w-full rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:border-violet-800 dark:bg-slate-900 dark:text-white"
+          />
+          <input ref={modelInputRef} type="file" accept=".stl,.glb,model/gltf-binary" className="hidden" onChange={(event) => void uploadModel(event.target.files?.[0])} />
+          <button type="button" onClick={() => modelInputRef.current?.click()} disabled={uploadingModel} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-violet-300 bg-white px-3 py-2 text-sm font-bold text-violet-700 hover:bg-violet-100 disabled:opacity-60 dark:border-violet-800 dark:bg-slate-900 dark:text-violet-300">
+            {uploadingModel ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {uploadingModel ? 'Convertendo modelo...' : 'Enviar STL e gerar 3D'}
           </button>
         </div>
 

@@ -40,6 +40,8 @@ export interface Product {
   image_url: string | null;
   image_url_2: string | null;
   images: string[] | null;
+  /** Arquivo GLB usado no visualizador 3D da página do produto. */
+  model_3d_url?: string | null;
   active: boolean;
   file_path: string | null;
   created_at: string;

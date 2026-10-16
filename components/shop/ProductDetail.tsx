@@ -7,6 +7,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
+import { Product3DViewer } from '@/components/shop/Product3DViewer';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 import { DEFAULT_STORE_SETTINGS } from '@/lib/store-settings-schema';
@@ -304,6 +305,16 @@ export function ProductDetail({
             <div className="relative flex aspect-square h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 text-7xl text-pink-200 shadow-sm dark:from-gray-800 dark:to-gray-800">
               ◇
               {tagOverlay}
+            </div>
+          )}
+          {product.model_3d_url && (
+            <div className="mt-4">
+              <Product3DViewer
+                modelUrl={product.model_3d_url}
+                color={selectedOption?.color ?? selectedColor}
+                productName={product.name}
+                poster={currentDisplayImage}
+              />
             </div>
           )}
           {/* Badge de frete grátis se aplicável */}

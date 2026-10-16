@@ -110,6 +110,7 @@ export async function POST(request: Request) {
     sale_price,
     image_url,
     images,
+    model_3d_url,
     active,
     fulfillment_mode,
     is_wholesale,
@@ -130,6 +131,7 @@ export async function POST(request: Request) {
     sale_price?: number | null;
     image_url?: string | null;
     images?: string[] | null;
+    model_3d_url?: string | null;
     active?: boolean;
     fulfillment_mode?: string;
     is_wholesale?: boolean;
@@ -204,6 +206,7 @@ export async function POST(request: Request) {
       sale_price: sale_price ?? null,
       image_url: image_url?.trim() || null,
       images: images ?? null,
+      model_3d_url: model_3d_url?.trim() || null,
       active: active ?? true,
       fulfillment_mode: fulfillmentMode,
       is_wholesale: !!is_wholesale,

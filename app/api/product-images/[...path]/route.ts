@@ -6,7 +6,7 @@ const BUCKET = 'products';
 export async function GET(_request: Request, context: { params: Promise<{ path: string[] }> }) {
   const { path: segments } = await context.params;
   const path = segments.map(decodeURIComponent).join('/');
-  if (!path.startsWith('product-images/')) {
+  if (!path.startsWith('product-images/') && !path.startsWith('product-models/')) {
     return NextResponse.json({ error: 'Imagem inválida' }, { status: 404 });
   }
 

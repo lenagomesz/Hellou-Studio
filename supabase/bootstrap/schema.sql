@@ -68,6 +68,7 @@ create table if not exists public.products (
   type        text not null default 'physical' check (type in ('physical', 'digital')),
   base_price  numeric(10,2) not null check (base_price >= 0),
   image_url   text,
+  model_3d_url text,
   active      boolean not null default true,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()

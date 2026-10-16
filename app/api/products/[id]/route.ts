@@ -72,6 +72,7 @@ export async function PATCH(
       image_url?: string | null;
       image_url_2?: string | null;
       images?: string[] | null;
+      model_3d_url?: string | null;
       active?: boolean;
       fulfillment_mode?: string;
       is_wholesale?: boolean;
@@ -175,6 +176,9 @@ export async function PATCH(
     }
     if (input.images !== undefined) {
       update.images = input.images;
+    }
+    if (input.model_3d_url !== undefined) {
+      update.model_3d_url = input.model_3d_url?.trim() || null;
     }
     if (input.active !== undefined) {
       update.active = !!input.active;
