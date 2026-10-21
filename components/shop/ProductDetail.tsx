@@ -8,6 +8,7 @@ import type { Product, ProductOption } from '@/types/database';
 import { useCart } from '@/components/shop/CartContext';
 import { ImageGallery } from '@/components/shop/ImageGallery';
 import { Product3DViewer } from '@/components/shop/Product3DViewer';
+import { getProduct3DSelection } from '@/lib/product-3d';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 import { DEFAULT_STORE_SETTINGS } from '@/lib/store-settings-schema';
@@ -125,6 +126,7 @@ export function ProductDetail({
     customizationSelections,
     customizationVisibilityContext,
   );
+  const preview3D = getProduct3DSelection(product.model_3d_url, visibleCustomizationSections, customizationSelections, selectedColor);
   const automaticPricingSection = visibleCustomizationSections.find(
     (section) => section.autoSelectOptionByCharacterCount,
   ) ?? null;
@@ -297,11 +299,11 @@ export function ProductDetail({
               ◇
             </div>
           )}
-          {product.model_3d_url && (
+          {preview3D.modelUrl && (
             <div className="mt-4">
               <Product3DViewer
-                modelUrl={product.model_3d_url}
-                color={selectedOption?.color ?? selectedColor}
+                modelUrl={preview3D.modelUrl}
+                color={preview3D.color}
                 productName={product.name}
                 poster={currentDisplayImage}
               />

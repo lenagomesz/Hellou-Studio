@@ -364,7 +364,7 @@ export function ImagesSection() {
           <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">Envie o STL usado na impressão e o site o converterá para visualização. O cliente poderá girar o produto, e a cor da variação selecionada será aplicada ao modelo.</p>
           <input
             id="model-3d-url"
-            type="url"
+            type="text"
             inputMode="url"
             value={state.model3dUrl}
             onChange={(event) => dispatch({ type: 'SET_FIELD', field: 'model3dUrl', value: event.target.value })}

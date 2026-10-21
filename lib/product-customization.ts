@@ -23,6 +23,7 @@ export type ProductCustomizationOption = {
   id: string;
   label: string;
   imageUrl?: string;
+  model3dUrl?: string;
   active?: boolean;
 };
 
@@ -189,6 +190,10 @@ export function normalizeProductCustomizationSections(input: unknown, { allowUna
           optionIds.add(optionId);
           const optionLabel = typeof option.label === 'string' ? option.label.trim() : '';
           const imageUrl = typeof option.imageUrl === 'string' ? option.imageUrl.trim() : '';
+          const model3dUrl = typeof option.model3dUrl === 'string' ? option.model3dUrl.trim() : '';
+          if (model3dUrl && (model3dUrl.length > 2048 || (!/^https:\/\//i.test(model3dUrl) && !/^\/(?!\/)/.test(model3dUrl)))) {
+            throw new Error(`O modelo 3D da opção em "${label}" é inválido`);
+          }
           if (!optionLabel) throw new Error(`Preencha as opções de "${label}"`);
           if (optionLabel.length > 50) throw new Error(`As opções de "${label}" devem ter no máximo 50 caracteres`);
           if (imageUrl.length > 2048 || (imageUrl && !imageUrl.startsWith('/') && !/^https:\/\//i.test(imageUrl))) {
@@ -198,6 +203,7 @@ export function normalizeProductCustomizationSections(input: unknown, { allowUna
             id: optionId,
             label: optionLabel,
             ...(imageUrl ? { imageUrl } : {}),
+            ...(model3dUrl ? { model3dUrl } : {}),
             ...(option.active === false ? { active: false } : {}),
           };
         })

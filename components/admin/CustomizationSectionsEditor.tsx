@@ -11,6 +11,7 @@ import type {
 } from '@/lib/product-customization';
 import { PRODUCT_COLOR_PALETTE } from '@/lib/product-colors';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
+import { ProductModelUploadField } from '@/components/admin/ProductModelUploadField';
 
 function createId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -492,6 +493,7 @@ export function CustomizationSectionsEditor({
                           onChange={(imageUrl) => updateOption(sectionIndex, optionIndex, { imageUrl })}
                         />
                         <div className="flex items-center justify-self-end"><button type="button" disabled={optionIndex === 0} onClick={() => updateSection(sectionIndex, { options: moveChoice(section.options, optionIndex, -1) })} aria-label={`Mover opção ${optionIndex + 1} para cima`} className="p-1 disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button><button type="button" disabled={optionIndex === section.options.length - 1} onClick={() => updateSection(sectionIndex, { options: moveChoice(section.options, optionIndex, 1) })} aria-label={`Mover opção ${optionIndex + 1} para baixo`} className="p-1 disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button><button type="button" onClick={() => updateSection(sectionIndex, { options: (section.options ?? []).filter((_, index) => index !== optionIndex) })} aria-label={`Excluir opção ${optionIndex + 1}`} className="rounded-lg p-1 text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button></div>
+                        <div className="sm:col-span-3"><ProductModelUploadField label={`Modelo 3D: ${option.label}`} value={option.model3dUrl ?? ''} onChange={(model3dUrl) => updateOption(sectionIndex, optionIndex, { model3dUrl })} /></div>
                         <label className="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" checked={option.active !== false} onChange={(event) => updateOption(sectionIndex, optionIndex, { active: event.target.checked })} /> Disponível</label>
                       </div>
                     ))}
