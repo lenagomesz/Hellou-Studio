@@ -203,15 +203,6 @@ export function ProductDetail({
     : (product.total_option_count ?? options.length) === 0 || selectedOption !== null;
   const canAddToCart = !isOwnedDigital && hasSelectedOption && hasRequiredCustomization && quantityIsAllowed && quantity <= maxQuantity;
   const isSyncing = status === 'syncing';
-  const tagOverlay = product.tags && product.tags.length > 0 ? (
-    <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
-      {product.tags.slice(0, 3).map((tag) => (
-        <span key={tag.id} className="rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-md ring-1 ring-white/40" style={{ backgroundColor: tag.color }}>
-          {tag.name}
-        </span>
-      ))}
-    </div>
-  ) : null;
 
   const handleAddToCart = async () => {
     if (!canAddToCart) return;
@@ -300,11 +291,10 @@ export function ProductDetail({
         <div className="group relative">
           <FavoriteButton productId={product.id} productName={product.name} className="absolute right-3 top-3 z-20 sm:right-4 sm:top-4" />
           {galleryImages.length > 0 ? (
-            <ImageGallery images={galleryImages} alt={product.name} altTexts={product.image_alt_texts} activeImage={currentDisplayImage} activeImageKey={gallerySelectionVersion} overlay={tagOverlay} />
+            <ImageGallery images={galleryImages} alt={product.name} altTexts={product.image_alt_texts} activeImage={currentDisplayImage} activeImageKey={gallerySelectionVersion} />
           ) : (
             <div className="relative flex aspect-square h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 to-orange-50 text-7xl text-pink-200 shadow-sm dark:from-gray-800 dark:to-gray-800">
               ◇
-              {tagOverlay}
             </div>
           )}
           {product.model_3d_url && (
@@ -351,13 +341,16 @@ export function ProductDetail({
       </div>
 
       <div className="flex flex-col">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <p className="text-xs font-medium uppercase tracking-wider text-pink-600 dark:text-pink-400">
             {CATEGORY_LABELS[product.category] ?? product.category}
           </p>
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${availability.className}`}>
             {availability.label}
           </span>
+          {product.tags?.map((tag) => (
+            <span key={tag.id} className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: tag.color }}>{tag.name}</span>
+          ))}
         </div>
         <ProductHeading className="mt-1 text-2xl font-bold text-gray-900 sm:mt-2 sm:text-3xl dark:text-white">{product.name}</ProductHeading>
         <ProductRatingSummary productId={product.id} />

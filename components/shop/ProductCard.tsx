@@ -95,10 +95,14 @@ export function ProductCard({ product, basePath = "/products", category, showcas
             {product.is_customizable && <span className="rounded-full bg-pink-50 px-2 py-0.5 text-[8px] font-bold text-pink-700 dark:bg-pink-950/40 dark:text-pink-300">Personalizável</span>}
             {product.fulfillment_mode === 'ready_stock' && <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[8px] font-bold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">Pronta entrega</span>}
             {product.type !== 'digital' && product.fulfillment_mode !== 'ready_stock' && <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[8px] font-bold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">Feito sob demanda</span>}
+            {product.tags?.map((tag) => <span key={tag.id} className="rounded-full px-2 py-0.5 text-[8px] font-bold text-white" style={{ backgroundColor: tag.color }}>{tag.name}</span>)}
           </div>
         )}
         {!showcase && product.type !== 'digital' && (
-          <p className="mt-1 text-[10px] font-semibold text-orange-700 dark:text-orange-300">{product.fulfillment_mode === 'ready_stock' ? 'Pronta entrega' : 'Feito sob demanda'}</p>
+<div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-semibold">
+            <span className="text-orange-700 dark:text-orange-300">{product.fulfillment_mode === 'ready_stock' ? 'Pronta entrega' : 'Feito sob demanda'}</span>
+            {product.tags?.map((tag) => <span key={tag.id} className="rounded-full px-2 py-0.5 text-[8px] font-bold text-white" style={{ backgroundColor: tag.color }}>{tag.name}</span>)}
+          </div>
         )}
         <div className={`${showcase ? 'mt-auto min-h-12 pt-2' : 'mt-2 min-h-6'} flex items-end justify-between gap-2`}>
           <div className="flex min-w-0 flex-wrap items-baseline gap-1.5">

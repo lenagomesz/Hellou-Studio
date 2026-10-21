@@ -5,6 +5,7 @@ import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin, isSupabaseAdminConfigured, withTimeout } from '@/lib/supabase';
 import { FeaturedProductsClient } from '@/components/shop/FeaturedProducts';
 import { ProductCard } from '@/components/shop/ProductCard';
+import { ChristmasCatalog } from '@/components/shop/ChristmasCatalog';
 import { HomeHeroCarousel } from '@/components/shop/HomeHeroCarousel';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { Marquee } from '@/components/ui/Marquee';
@@ -74,7 +75,7 @@ const MARQUEE_ITEMS = [
 const GOOGLE_BUSINESS_URL = 'https://www.google.com/maps/place/Hellou+Studio/data=!4m2!3m1!1s0x0:0x28d2327a9693fef6';
 
 const getFeaturedProducts = unstable_cache(
-  async (type: 'physical' | 'digital'): Promise<Product[]> => {
+  async (type: 'physical' | 'digital' | 'christmas'): Promise<Product[]> => {
     if (!isSupabaseAdminConfigured()) return [];
 
     return withTimeout(
@@ -86,24 +87,32 @@ const getFeaturedProducts = unstable_cache(
           .select('*, product_options(price_modifier)')
           .eq('active', true);
 
-        if (type === 'physical') {
+        if (type === 'physical' || type === 'christmas') {
           query = query.or('type.eq.physical,type.is.null').neq('category', 'encomenda').not('name', 'ilike', 'Encomenda%');
         } else {
           query = query.eq('type', 'digital');
         }
 
-        const { data, error } = await query
-          .order('created_at', { ascending: false })
-          .limit(10);
+        query = query.order('created_at', { ascending: false });
+        const { data, error } = await (type === 'christmas' ? query : query.limit(10));
 
         if (error) return [];
-        return attachProductTags((data ?? []) as Product[]);
+        const products = await attachProductTags((data ?? []) as Product[]);
+        return type === 'christmas'
+          ? products.filter((product) => product.tags.some((tag) => tag.name.trim().toLocaleLowerCase('pt-BR') === 'natal'))
+          : products;
       })(),
     ).catch((err) => { console.error('[home/page] withTimeout catch:', err); return [] as Product[]; });
   },
-  ['featured-products-limit-10'],
+  ['featured-products-with-christmas'],
   { revalidate: 3600 },
 );
+
+async function ChristmasProducts() {
+  const [products, categories] = await Promise.all([getFeaturedProducts('christmas'), getCatalogCategories('physical')]);
+  if (products.length === 0) return null;
+  return <div className="mx-auto max-w-[1400px] px-3 pt-12 sm:px-6"><ChristmasCatalog products={products} categories={categories} /></div>;
+}
 
 async function FeaturedProducts() {
   const [physicalProducts, digitalProducts, physicalCategories, digitalCategories] = await Promise.all([
@@ -214,6 +223,9 @@ export default async function HomePage() {
       {/* =========================================== */}
       {/* FEATURED PRODUCTS */}
       {/* =========================================== */}
+      <Suspense fallback={null}>
+        <ChristmasProducts />
+      </Suspense>
       <Suspense fallback={<FeaturedSkeleton />}>
         <FeaturedProducts />
       </Suspense>
