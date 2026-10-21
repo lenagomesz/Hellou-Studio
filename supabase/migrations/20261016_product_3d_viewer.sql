@@ -4,3 +4,6 @@ alter table public.products
 
 comment on column public.products.model_3d_url is
   'URL pública do modelo GLB exibido no visualizador 3D do produto.';
+
+-- Mantém a proteção já definida nas migrações anteriores da tabela.
+alter table public.products enable row level security;
