@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Sora } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import { SessionProvider } from '@/components/auth/SessionProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
@@ -107,6 +108,7 @@ export default async function RootLayout({
             <ToastProvider />
           </SessionProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

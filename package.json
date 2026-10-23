@@ -26,6 +26,7 @@
     "@react-email/components": "^1.0.12",
     "@sentry/nextjs": "^10.65.0",
     "@supabase/supabase-js": "^2.106.2",
+    "@vercel/analytics": "^1.4.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "correios-brasil": "^3.0.6",
