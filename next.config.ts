@@ -15,7 +15,9 @@ const nextConfig: NextConfig = {
   async headers() {
     const contentSecurityPolicy = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://sdk.mercadopago.com https://connect.facebook.net`,
+      // Three.js's GLTF loader compiles its WebAssembly decoder in the browser.
+      // Allow that operation without enabling JavaScript string evaluation in production.
+      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://sdk.mercadopago.com https://connect.facebook.net`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
