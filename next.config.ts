@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       // Three.js's GLTF loader compiles its WebAssembly decoder in the browser.
       // Allow that operation without enabling JavaScript string evaluation in production.
-      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://sdk.mercadopago.com https://connect.facebook.net`,
+      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://sdk.mercadopago.com https://www.mercadopago.com https://connect.facebook.net`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",

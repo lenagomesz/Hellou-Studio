@@ -37,6 +37,8 @@ export async function POST(request: Request) {
     token,
     installments = 1,
     issuer_id,
+    payment_method_id,
+    device_id,
     cpf,
     shipping_address,
     shipping_method,
@@ -49,6 +51,8 @@ export async function POST(request: Request) {
     token?: string;
     installments?: number;
     issuer_id?: string;
+    payment_method_id?: string;
+    device_id?: string;
     cpf?: string;
     shipping_address?: Record<string, unknown>;
     shipping_method?: string;
@@ -417,6 +421,7 @@ export async function POST(request: Request) {
       paymentBody.token = token;
       paymentBody.installments = Math.max(1, Math.min(12, Number(installments) || 1));
       if (issuer_id) paymentBody.issuer_id = issuer_id;
+      if (payment_method_id) paymentBody.payment_method_id = payment_method_id;
     }
 
     structuredLog('info', 'mercadopago.payment_creating', {
@@ -427,7 +432,14 @@ export async function POST(request: Request) {
     });
     const result = await payment.create({
       body: paymentBody,
-      requestOptions: { idempotencyKey: checkoutIdempotencyKey },
+      requestOptions: {
+        idempotencyKey: checkoutIdempotencyKey,
+        // Mercado Pago uses this anonymous identifier in its fraud analysis.
+        // It is collected by the official security.js on the checkout page.
+        ...(typeof device_id === 'string' && /^[A-Za-z0-9_-]{8,256}$/.test(device_id)
+          ? { meliSessionId: device_id }
+          : {}),
+      },
     });
 
     const mpPaymentId = String(result.id);

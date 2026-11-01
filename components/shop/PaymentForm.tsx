@@ -9,6 +9,7 @@ import { useCart } from '@/components/shop/CartContext';
 declare global {
   interface Window {
     MercadoPago: new (publicKey: string) => MercadoPagoInstance;
+    MP_DEVICE_SESSION_ID?: string;
   }
 }
 
@@ -87,6 +88,7 @@ export function PaymentForm({
     recommended_message: string;
   }>>([]);
   const [issuerId, setIssuerId] = useState('');
+  const [paymentMethodId, setPaymentMethodId] = useState('');
   const [cardLoading, setCardLoading] = useState(false);
   const [cardSuccess, setCardSuccess] = useState<string | null>(null);
   const [installmentsLoading, setInstallmentsLoading] = useState(false);
@@ -136,6 +138,11 @@ export function PaymentForm({
     };
     document.head.appendChild(script);
 
+    const securityScript = document.createElement('script');
+    securityScript.src = 'https://www.mercadopago.com/v2/security.js';
+    securityScript.setAttribute('view', 'checkout');
+    document.head.appendChild(securityScript);
+
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
@@ -152,6 +159,7 @@ export function PaymentForm({
       if (res.ok && data.installments) {
         setInstallmentOptions(data.installments);
         if (data.issuer) setIssuerId(String(data.issuer.id));
+        if (data.payment_method_id) setPaymentMethodId(String(data.payment_method_id));
       }
     } catch {
       // silent
@@ -292,6 +300,8 @@ export function PaymentForm({
           token: tokenResult.id,
           installments,
           issuer_id: issuerId || undefined,
+          payment_method_id: paymentMethodId || undefined,
+          device_id: window.MP_DEVICE_SESSION_ID || undefined,
           cpf: cleanCpf(cpf),
           shipping_method: shippingMethod,
           shipping_cep: shippingCep,

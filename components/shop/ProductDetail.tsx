@@ -767,7 +767,7 @@ export function ProductDetail({
             {/* Size / Variation pills */}
             {options.some((option) => option.name.trim()) && <div>
               <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-                {options.filter((option) => option.name.trim()).every((o) => ['P', 'M', 'G'].includes(o.name.toUpperCase())) ? 'Tamanho' : 'Variação'}
+                {options.filter((option) => option.name.trim()).every((o) => ['P', 'M', 'G'].includes(o.name.toUpperCase())) ? 'Tamanho' : variationLabel}
               </h2>
               <div className="mt-3 flex flex-wrap gap-2">
                 {(() => {
