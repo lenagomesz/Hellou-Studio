@@ -83,6 +83,9 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
         ?? 'M4.75 12h14.5M12 4.75v14.5',
     }));
   const bottomNavigationLinks = navigationLinks.filter((link) => ['/', '/products', '/request-print'].includes(link.href));
+  const homeLink = bottomNavigationLinks.find((link) => link.href === '/');
+  const catalogLink = bottomNavigationLinks.find((link) => link.href === '/products');
+  const createLink = bottomNavigationLinks.find((link) => link.href === '/request-print');
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -492,15 +495,15 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
       <div aria-hidden="true" className="hidden h-[100px] lg:block" />
 
       <nav className="fixed inset-x-0 bottom-0 z-50 grid h-[calc(4.25rem+env(safe-area-inset-bottom))] grid-cols-5 border-t border-pink-100 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_36px_-24px_rgba(107,33,65,.45)] dark:border-gray-800 dark:bg-gray-950 lg:hidden" aria-label="Navegação rápida">
-        {[...bottomNavigationLinks].sort((first, second) => (first.href === '/products' ? -1 : second.href === '/products' ? 1 : first.href === '/' ? 1 : second.href === '/' ? -1 : 0)).slice(0, 1).map((link) => {
+        {[homeLink, catalogLink].filter((link): link is NonNullable<typeof link> => Boolean(link)).map((link) => {
           const active = isActive(link.href);
           return <Link key={link.href} href={link.href} scroll onClick={handleMobileNavigation} aria-current={active ? 'page' : undefined} className={`flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[9px] font-bold transition ${active ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}><MenuIcon path={link.icon} /><span className="max-w-full truncate">{link.label}</span></Link>;
         })}
-        <Link href="/products?tag=natal" scroll onClick={handleMobileNavigation} className={`flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[9px] font-bold transition ${pathname === '/products' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}><span aria-hidden="true" className="inline-flex h-7 w-7 items-center justify-center text-base">🎄</span><span>Natal</span></Link>
-        {bottomNavigationLinks.slice(2, 3).map((link) => {
+        {createLink && (() => {
+          const link = createLink;
           const active = isActive(link.href);
-          return <Link key={link.href} href={link.href} scroll onClick={handleMobileNavigation} aria-current={active ? 'page' : undefined} className="relative flex min-w-0 flex-col items-center justify-end gap-1 pb-2 text-[9px] font-black text-pink-600 dark:text-pink-400"><span className="absolute -top-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border-4 border-white bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-lg shadow-pink-500/30 dark:border-gray-950"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" d={link.icon} /></svg></span><span>{link.label === 'Encomendas' ? 'Criar' : link.label}</span></Link>;
-        })}
+          return <Link href={link.href} scroll onClick={handleMobileNavigation} aria-current={active ? 'page' : undefined} className="relative flex min-w-0 flex-col items-center justify-end gap-1 pb-2 text-[9px] font-black text-pink-600 dark:text-pink-400"><span className="absolute -top-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border-4 border-white bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-lg shadow-pink-500/30 dark:border-gray-950"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" d={link.icon} /></svg></span><span>{link.label === 'Encomendas' ? 'Criar' : link.label}</span></Link>;
+        })()}
         <Link href="/cart" scroll onClick={handleMobileNavigation} aria-current={pathname === '/cart' ? 'page' : undefined} className={`relative flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[9px] font-bold ${pathname === '/cart' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}><span className="relative inline-flex h-7 w-7 items-center justify-center"><BagIcon className="h-[19px] w-[19px]" />{count > 0 && <span className="absolute -right-1.5 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-orange-500 px-1 text-[8px] font-black leading-4 text-white">{count > 99 ? '99+' : count}</span>}</span><span>Carrinho</span></Link>
         <button type="button" onClick={() => setMenuOpen(true)} aria-expanded={menuOpen} aria-controls="mobile-navigation-drawer" className={`flex min-w-0 flex-col items-center justify-center gap-1 border-0 bg-transparent px-1 text-[9px] font-bold ${menuOpen ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}><span aria-hidden="true" className="inline-flex h-7 w-7 items-center justify-center"><svg viewBox="0 0 24 24" fill="currentColor" className="h-[19px] w-[19px]"><circle cx="5" cy="12" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="19" cy="12" r="1.7" /></svg></span><span>Mais</span></button>
       </nav>
