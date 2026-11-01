@@ -93,17 +93,18 @@ const getFeaturedProducts = unstable_cache(
         }
 
         query = query.order('created_at', { ascending: false });
-        const { data, error } = await (type === 'christmas' ? query : query.limit(10));
+        const { data, error } = await (type === 'christmas' ? query : query.limit(type === 'physical' ? 40 : 10));
 
         if (error) return [];
         const products = await attachProductTags((data ?? []) as Product[]);
-        return type === 'christmas'
-          ? products.filter((product) => product.tags.some((tag) => tag.name.trim().toLocaleLowerCase('pt-BR') === 'natal'))
-          : products;
+        const hasChristmasTag = (product: Product) => product.tags?.some((tag) => tag.name.trim().toLocaleLowerCase('pt-BR') === 'natal') ?? false;
+        if (type === 'christmas') return products.filter(hasChristmasTag);
+        if (type === 'physical') return products.filter((product) => !hasChristmasTag(product)).slice(0, 10);
+        return products;
       })(),
     ).catch((err) => { console.error('[home/page] withTimeout catch:', err); return [] as Product[]; });
   },
-  ['featured-products-with-christmas'],
+  ['featured-products-with-separated-christmas'],
   { revalidate: 3600 },
 );
 
