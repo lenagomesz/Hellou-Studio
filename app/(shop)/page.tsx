@@ -16,7 +16,6 @@ import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
 import { productIdentifier } from '@/lib/seo';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
-import { getKitCatalog } from '@/lib/kit-catalog';
 import { GoogleReviews } from '@/components/shop/GoogleReviews';
 
 export const metadata: Metadata = {
@@ -204,12 +203,6 @@ async function WholesaleProducts() {
   );
 }
 
-async function HomeKits() {
-  const products = await getKitCatalog();
-  const kits = products.filter((product) => ['monte-seu-kit-natalino', 'monte-seu-kit-religioso'].includes(product.slug ?? ''));
-  return <section className="bg-[#fffaf7] py-12 dark:bg-gray-950 sm:py-16"><div className="mx-auto max-w-6xl px-4 sm:px-6"><p className="text-xs font-black uppercase tracking-[.2em] text-pink-600">Kits de Natal</p><h2 className="mt-2 text-3xl font-black tracking-tight text-gray-900 dark:text-white">Monte do seu jeito</h2><p className="mt-2 max-w-xl text-sm text-gray-600 dark:text-gray-400">Escolha a bandeja, as cores e as peças favoritas para criar uma composição especial.</p><div className="mt-7 grid grid-cols-2 gap-3 sm:gap-5">{kits.map((product) => <ProductCard key={product.id} product={product} />)}</div></div></section>;
-}
-
 function FeaturedSkeleton() {
   return (
     <section className="bg-white py-12 shadow-[0_-1px_0_0_rgba(251,191,36,0.1),0_1px_0_0_rgba(251,191,36,0.1)] sm:bg-white/80 sm:py-20 sm:backdrop-blur-sm dark:bg-gray-950 sm:dark:bg-gray-950/80">
@@ -310,10 +303,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      <Suspense fallback={null}>
-        <HomeKits />
-      </Suspense>
 
       <Suspense fallback={null}>
         <WholesaleProducts />
