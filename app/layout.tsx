@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Sora } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { SessionProvider } from '@/components/auth/SessionProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
@@ -14,13 +14,6 @@ import './globals.css';
 
 const inter = Inter({
   variable: '--font-inter',
-  subsets: ['latin'],
-  display: 'swap',
-});
-
-const sora = Sora({
-  variable: '--font-display',
-  weight: ['500', '600', '700', '800'],
   subsets: ['latin'],
   display: 'swap',
 });
@@ -89,7 +82,7 @@ export default async function RootLayout({
   return (
     <html
       lang={settings.commerce.locale}
-      className={`${inter.variable} ${sora.variable} h-full`}
+      className={`${inter.variable} h-full`}
       suppressHydrationWarning
     >
       <body

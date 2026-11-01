@@ -39,7 +39,7 @@
   --color-background: #fffaf7;
   --color-foreground: #1a1a1a;
   --font-sans: var(--font-inter);
-  --font-display: var(--font-display);
+  --font-display: var(--font-inter);
 }
 
 .dark {
