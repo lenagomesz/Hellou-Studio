@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Check, ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/components/shop/CartContext';
 import type { Product, ProductOption } from '@/types/database';
@@ -13,6 +14,7 @@ const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'curren
 
 export function CustomKitConfigurator({ mode, kitProduct, kitOptions, products }: { mode: 'natal' | 'religioso'; kitProduct: Product; kitOptions: ProductOption[]; products: KitSelectableProduct[] }) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [color, setColor] = useState('');
   const [count, setCount] = useState(2);
@@ -44,6 +46,7 @@ export function CustomKitConfigurator({ mode, kitProduct, kitOptions, products }
         for (const product of selectedProducts) { const option = product.product_options?.find(item => item.id === optionIds[product.id]) ?? product.product_options?.[0] ?? null; await addItem({ product, option, quantity: quantities[product.id], customization_text: 'Componente do Monte seu Kit Religioso' }); }
       }
       setStep(4);
+      router.push('/cart');
     } finally { setSaving(false); }
   }
 
