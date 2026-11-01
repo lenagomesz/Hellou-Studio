@@ -55,12 +55,14 @@ export function ProductDetail({
   ownedOrderId = null,
   onAdded,
   freeShippingThreshold = DEFAULT_STORE_SETTINGS.commerce.freeShippingThreshold,
+  whatsappUrl,
 }: Readonly<{
   product: Product;
   options: ProductOption[];
   ownedOrderId?: string | null;
   onAdded?: () => void;
   freeShippingThreshold?: number;
+  whatsappUrl?: string;
 }>) {
   const { addItem, removeItem, status } = useCart();
   const searchParams = useSearchParams();
@@ -374,6 +376,16 @@ export function ProductDetail({
             <span className="text-xs text-green-600 font-medium">+ frete grátis</span>
           )}
         </div>
+        {product.type !== 'digital' && (
+          <p className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
+            <span aria-hidden="true">⏱</span>{requiresReadyStock ? 'Pronta entrega: envio rápido após a confirmação.' : `Produção em ${DEFAULT_PRODUCTION_LEAD_TIME}.`}
+          </p>
+        )}
+        {whatsappUrl && (
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex w-fit items-center gap-1.5 text-xs font-bold text-emerald-700 transition hover:text-emerald-600 dark:text-emerald-400">
+            <span aria-hidden="true">◔</span>Tirar uma dúvida sobre esta peça no WhatsApp
+          </a>
+        )}
 
         {!automaticPricingSection && options.some((option) => option.color) && (() => {
           return (

@@ -200,7 +200,6 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
       { id: 'kits', label: 'Kits', href: '/kits', active: true },
       { id: 'stl', label: 'STL', href: '/stl', active: true },
       { id: 'encomendas', label: 'Encomendas', href: '/request-print', active: true },
-      { id: 'blog', label: 'Blog', href: '/blog', active: true },
       { id: 'sobre', label: 'Sobre', href: '/about', active: true },
     ],
   },

@@ -33,11 +33,6 @@ const NAV_LINKS = [
     icon: 'm12 2.75 8.5 4.75L12 12.25 3.5 7.5 12 2.75Zm-8.5 9L12 16.5l8.5-4.75m-17 5L12 21.5l8.5-4.75',
   },
   {
-    href: '/blog',
-    label: 'Blog',
-    icon: 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z',
-  },
-  {
     href: '/about',
     label: 'Sobre',
     icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-10v6m0-10h.01',
@@ -81,7 +76,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
   const { theme, setTheme } = useTheme();
   const whatsappUrl = getWhatsAppUrl(settings);
   const navigationLinks = settings.navigation.links
-    .filter((link) => link.active)
+    .filter((link) => link.active && link.href !== '/blog')
     .map((link) => ({
       ...link,
       icon: NAV_LINKS.find((defaultLink) => defaultLink.href === link.href)?.icon
@@ -400,7 +395,15 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
               Explorar
             </p>
 
-            {navigationLinks.map((link) => {
+            <Link href="/products?tag=natal" scroll onClick={handleMobileNavigation} className={`flex min-h-11 items-center gap-3 rounded-xl border px-3 text-sm font-semibold transition ${pathname === '/products' ? 'border-pink-100 bg-gradient-to-r from-pink-50 to-orange-50 text-pink-700 dark:border-pink-900 dark:from-pink-950/50 dark:to-orange-950/30 dark:text-pink-400' : 'border-transparent text-gray-700 hover:border-gray-100 hover:bg-orange-50/60 dark:text-gray-300 dark:hover:border-gray-800 dark:hover:bg-gray-800'}`}>
+              <span aria-hidden="true" className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-base">🎄</span>
+              Catálogo de Natal<span aria-hidden="true" className="ml-auto text-gray-400">→</span>
+            </Link>
+
+            {[...navigationLinks].sort((first, second) => {
+              const priority: Record<string, number> = { '/products': 0, '/products?tag=natal': 1, '/request-print': 2 };
+              return (priority[first.href] ?? 10) - (priority[second.href] ?? 10);
+            }).map((link) => {
               const active = isActive(link.href);
               return (
                 <Link
@@ -489,10 +492,11 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
       <div aria-hidden="true" className="hidden h-[100px] lg:block" />
 
       <nav className="fixed inset-x-0 bottom-0 z-50 grid h-[calc(4.25rem+env(safe-area-inset-bottom))] grid-cols-5 border-t border-pink-100 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_36px_-24px_rgba(107,33,65,.45)] dark:border-gray-800 dark:bg-gray-950 lg:hidden" aria-label="Navegação rápida">
-        {bottomNavigationLinks.slice(0, 2).map((link) => {
+        {[...bottomNavigationLinks].sort((first, second) => (first.href === '/products' ? -1 : second.href === '/products' ? 1 : first.href === '/' ? 1 : second.href === '/' ? -1 : 0)).slice(0, 1).map((link) => {
           const active = isActive(link.href);
           return <Link key={link.href} href={link.href} scroll onClick={handleMobileNavigation} aria-current={active ? 'page' : undefined} className={`flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[9px] font-bold transition ${active ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}><MenuIcon path={link.icon} /><span className="max-w-full truncate">{link.label}</span></Link>;
         })}
+        <Link href="/products?tag=natal" scroll onClick={handleMobileNavigation} className={`flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[9px] font-bold transition ${pathname === '/products' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}><span aria-hidden="true" className="inline-flex h-7 w-7 items-center justify-center text-base">🎄</span><span>Natal</span></Link>
         {bottomNavigationLinks.slice(2, 3).map((link) => {
           const active = isActive(link.href);
           return <Link key={link.href} href={link.href} scroll onClick={handleMobileNavigation} aria-current={active ? 'page' : undefined} className="relative flex min-w-0 flex-col items-center justify-end gap-1 pb-2 text-[9px] font-black text-pink-600 dark:text-pink-400"><span className="absolute -top-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border-4 border-white bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-lg shadow-pink-500/30 dark:border-gray-950"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" d={link.icon} /></svg></span><span>{link.label === 'Encomendas' ? 'Criar' : link.label}</span></Link>;

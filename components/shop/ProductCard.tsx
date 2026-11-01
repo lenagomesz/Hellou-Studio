@@ -112,6 +112,12 @@ export function ProductCard({ product, basePath = "/products", category, showcas
           </div>
           {showcase && <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-sm transition group-hover:scale-105 group-hover:shadow-md"><ArrowUpRight className="h-3.5 w-3.5" /></span>}
         </div>
+        {product.type !== 'digital' && (
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{product.fulfillment_mode === 'ready_stock' ? 'Envio rápido' : 'Produção em até 5 dias úteis'}</span>
+            <span className="rounded-lg bg-pink-50 px-2 py-1 text-[10px] font-bold text-pink-700 transition group-hover:bg-pink-500 group-hover:text-white dark:bg-pink-950/40 dark:text-pink-300">Ver opções →</span>
+          </div>
+        )}
       </div>
       </Link>
       <FavoriteButton productId={product.id} productName={product.name} className="absolute right-2 top-2 z-20 sm:right-3 sm:top-3" />

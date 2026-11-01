@@ -14,6 +14,7 @@ import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import { getCatalogCategories } from '@/lib/catalog-categories';
 import type { Product } from '@/types/database';
 import { attachProductTags } from '@/lib/product-tags';
+import { productIdentifier } from '@/lib/seo';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 import { ProductKits } from '@/components/shop/ProductKits';
 import { getKitCatalog } from '@/lib/kit-catalog';
@@ -111,7 +112,25 @@ const getFeaturedProducts = unstable_cache(
 async function ChristmasProducts() {
   const [products, categories] = await Promise.all([getFeaturedProducts('christmas'), getCatalogCategories('physical')]);
   if (products.length === 0) return null;
-  return <div className="mx-auto max-w-[1400px] px-3 pt-12 sm:px-6"><ChristmasCatalog products={products} categories={categories} /></div>;
+  const kit = products.find((product) => /kit/i.test(product.name));
+  return (
+    <div className="mx-auto max-w-[1400px] px-3 pt-12 sm:px-6">
+      {kit && (
+        <section className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-pink-600 via-pink-500 to-orange-400 p-1 shadow-xl shadow-pink-500/20">
+          <div className="flex flex-col gap-5 rounded-[22px] bg-white/95 p-4 sm:flex-row sm:items-center sm:p-5 dark:bg-gray-950/95">
+            {kit.image_url && <img src={kit.image_url} alt={kit.image_alt_texts?.[kit.image_url] || kit.name} className="h-40 w-full rounded-2xl object-cover sm:h-44 sm:w-44" />}
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-600 dark:text-pink-400">Kits de Natal</p>
+              <h2 className="mt-1 text-2xl font-black text-gray-900 dark:text-white">{kit.name}</h2>
+              <p className="mt-1 max-w-xl text-sm leading-5 text-gray-600 dark:text-gray-300">Um presente pronto para encantar e deixar a decoração natalina ainda mais especial.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-3"><strong className="text-xl text-pink-600 dark:text-pink-400">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(kit.sale_price ?? kit.base_price)}</strong><Link href={`/products/${productIdentifier(kit)}`} className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:scale-[1.02]">Conhecer o kit →</Link></div>
+            </div>
+          </div>
+        </section>
+      )}
+      <ChristmasCatalog products={products} categories={categories} />
+    </div>
+  );
 }
 
 async function FeaturedProducts() {

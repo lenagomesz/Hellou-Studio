@@ -166,7 +166,12 @@ export default async function ProductDetailPage(
         <span className="text-gray-900 dark:text-gray-100">{product.name}</span>
       </nav>
 
-      <ProductDetail product={product} options={options} freeShippingThreshold={storeSettings.commerce.freeShippingThreshold} />
+      <ProductDetail
+        product={product}
+        options={options}
+        freeShippingThreshold={storeSettings.commerce.freeShippingThreshold}
+        whatsappUrl={storeSettings.contact.whatsapp ? `https://wa.me/${storeSettings.contact.whatsapp}?text=${encodeURIComponent(`Olá! Tenho uma dúvida sobre ${product.name} (${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)}): ${absoluteUrl(productPath(product))}`)}` : undefined}
+      />
       <MetaProductView id={product.id} name={product.name} value={price} />
 
       <ProductReviews productId={product.id} isAdmin={user?.role === 'admin'} />

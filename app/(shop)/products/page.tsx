@@ -37,6 +37,9 @@ async function getProductsRaw(filters: {
   search?: string;
   productIds?: string[];
   wholesale?: boolean;
+  tag?: string;
+  maxPrice?: number;
+  customizable?: boolean;
 }): Promise<Product[]> {
   console.log('[products/page] getProductsRaw called, filters:', filters);
   console.log('[products/page] SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING');
@@ -68,9 +71,12 @@ async function getProductsRaw(filters: {
   const { data, error } = await query;
   console.log('[products/page] query result - count:', data?.length ?? 0, 'error:', error?.message ?? 'none');
   const products = await attachProductTags((data ?? []) as Product[]);
-  if (!filters.search?.trim()) return products;
-
-  return products.filter((product) => matchesCatalogSearch(product, filters.search ?? ''));
+  return products.filter((product) => {
+    if (filters.tag && !product.tags?.some((tag) => tag.name.trim().toLocaleLowerCase('pt-BR') === filters.tag?.trim().toLocaleLowerCase('pt-BR'))) return false;
+    if (filters.maxPrice && (product.sale_price ?? product.base_price) > filters.maxPrice) return false;
+    if (filters.customizable && !product.is_customizable) return false;
+    return !filters.search?.trim() || matchesCatalogSearch(product, filters.search ?? '');
+  });
 }
 
 async function getProducts(filters: {
@@ -78,6 +84,9 @@ async function getProducts(filters: {
   search?: string;
   productIds?: string[];
   wholesale?: boolean;
+  tag?: string;
+  maxPrice?: number;
+  customizable?: boolean;
 }): Promise<Product[]> {
   return getProductsRaw(filters);
 }
@@ -90,6 +99,9 @@ export default async function ProductsCatalogPage(
       sort?: string | string[];
       collection?: string | string[];
       wholesale?: string | string[];
+      tag?: string | string[];
+      maxPrice?: string | string[];
+      customizable?: string | string[];
     }>;
   },
 ) {
@@ -99,6 +111,9 @@ export default async function ProductsCatalogPage(
   const sort = typeof searchParams.sort === 'string' ? searchParams.sort : undefined;
   const collectionId = typeof searchParams.collection === 'string' ? searchParams.collection : undefined;
   const wholesale = searchParams.wholesale === 'true';
+  const tag = typeof searchParams.tag === 'string' ? searchParams.tag : undefined;
+  const maxPrice = searchParams.maxPrice === '30' ? 30 : undefined;
+  const customizable = searchParams.customizable === 'true';
 
   const [categories, storeSettings] = await Promise.all([
     getCatalogCategories('physical'),
@@ -106,10 +121,11 @@ export default async function ProductsCatalogPage(
   ]);
   const collection = (storeSettings.home.collections ?? []).find((item) => item.id === collectionId && item.active);
   const validCategory = category && categories.some((item) => item.slug === category) ? category : undefined;
-  const products = await getProducts({ category: validCategory, search, productIds: collection?.productIds, wholesale });
+  const products = await getProducts({ category: validCategory, search, productIds: collection?.productIds, wholesale, tag, maxPrice, customizable });
   const activeCategory = validCategory ?? 'all';
   const categoryTabs = [{ slug: 'all', name: 'Todos' }, ...categories];
-  const isGroupedCatalog = !validCategory && !search?.trim() && !collection && !wholesale;
+  const hasSpecialFilter = Boolean(tag || maxPrice || customizable);
+  const isGroupedCatalog = !validCategory && !search?.trim() && !collection && !wholesale && !hasSpecialFilter;
   const christmasProducts = isGroupedCatalog
     ? sortCatalogProducts(products.filter((product) => product.tags?.some((tag) => tag.name.trim().toLocaleLowerCase('pt-BR') === 'natal')), sort)
     : [];
@@ -147,6 +163,13 @@ export default async function ProductsCatalogPage(
 
         <div className="mb-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link href="/kits" className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-1.5 text-sm font-bold text-pink-700 transition hover:bg-pink-100 dark:border-pink-900 dark:bg-pink-950/30 dark:text-pink-300">Kits para combinar ↗</Link>
+          {[
+            { label: '🎄 Natal', href: '/products?tag=natal', active: tag === 'natal' },
+            { label: '🎁 Kits', href: '/kits', active: false },
+            { label: 'Presentes até R$ 30', href: '/products?maxPrice=30', active: maxPrice === 30 },
+            { label: 'Decoração', href: '/products?category=decoracao', active: validCategory === 'decoracao' },
+            { label: 'Personalizáveis', href: '/products?customizable=true', active: customizable },
+          ].map((filter) => <Link key={filter.label} href={filter.href} className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition ${filter.active ? 'bg-pink-500 text-white shadow-sm' : 'border border-gray-200 bg-white text-gray-700 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800'}`}>{filter.label}</Link>)}
           {collection && <Link href="/products" className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-1.5 text-sm font-semibold text-pink-700 transition hover:bg-pink-100 dark:border-pink-900 dark:bg-pink-950/30 dark:text-pink-300">← Ver catálogo completo</Link>}
           {wholesale && <Link href="/products" className="shrink-0 rounded-full border border-orange-200 bg-orange-50 px-4 py-1.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-300">← Ver catálogo completo</Link>}
           {categoryTabs.map((cat) => {
@@ -156,7 +179,7 @@ export default async function ProductsCatalogPage(
             if (sort && sort !== 'default') params.set('sort', sort);
             if (wholesale) params.set('wholesale', 'true');
             const href = `/products${params.toString() ? `?${params}` : ''}`;
-            const isActive = activeCategory === cat.slug;
+            const isActive = !hasSpecialFilter && activeCategory === cat.slug;
             return (
               <Link
                 key={cat.slug}
@@ -173,6 +196,9 @@ export default async function ProductsCatalogPage(
           {validCategory ? <input type="hidden" name="category" value={validCategory} /> : null}
           {collection ? <input type="hidden" name="collection" value={collection.id} /> : null}
           {wholesale ? <input type="hidden" name="wholesale" value="true" /> : null}
+          {tag ? <input type="hidden" name="tag" value={tag} /> : null}
+          {maxPrice ? <input type="hidden" name="maxPrice" value={maxPrice} /> : null}
+          {customizable ? <input type="hidden" name="customizable" value="true" /> : null}
           <div className="relative col-span-2 sm:col-span-1">
             <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-pink-500" aria-hidden="true">⌕</span>
             <input
@@ -188,10 +214,11 @@ export default async function ProductsCatalogPage(
           </select>
           <button type="submit" className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-orange-500/20 active:translate-y-0">Buscar</button>
         </form>
+        {hasSpecialFilter && <Link href="/products" className="-mt-5 mb-6 inline-flex text-sm font-bold text-pink-600 hover:text-orange-500 dark:text-pink-400">← Limpar filtros</Link>}
 
         {products.length === 0 ? (
           <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            {validCategory || search || collection || wholesale ? (
+            {validCategory || search || collection || wholesale || hasSpecialFilter ? (
               <><p className="text-gray-600 dark:text-gray-400">Nenhum produto encontrado com esses filtros.</p><Link href="/products" className="mt-3 inline-block text-sm font-medium text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300">Limpar filtros</Link></>
             ) : (
               <><span className="text-5xl">✨🎨</span><h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">Opa! Ainda não chegaram novidades...</h2><p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Estamos preparando peças incríveis pra você! 🚀<br />Volte em breve, novidades a caminho!</p></>

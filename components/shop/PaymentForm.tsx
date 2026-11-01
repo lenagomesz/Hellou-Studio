@@ -701,6 +701,7 @@ export function PaymentForm({
               Dados criptografados
             </span>
           </div>
+          <p className="mt-3 text-center text-[11px] leading-4 text-gray-500 dark:text-gray-400">Cartão processado com segurança pelo Mercado Pago. Se houver recusa por segurança, confirme a compra no app do banco ou escolha PIX.</p>
         </div>
       </div>
     </div>
