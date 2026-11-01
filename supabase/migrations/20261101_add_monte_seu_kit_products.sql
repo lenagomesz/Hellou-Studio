@@ -8,6 +8,14 @@ FROM (VALUES
 ) AS item(name, slug, description, base_price)
 WHERE NOT EXISTS (SELECT 1 FROM public.products existing WHERE existing.slug = item.slug);
 
+UPDATE public.products SET image_url = CASE slug
+  WHEN 'monte-seu-kit-natalino' THEN '/images/catalogo-natal-2026/monte-seu-kit-natalino.jpg'
+  WHEN 'monte-seu-kit-religioso' THEN '/images/catalogo-natal-2026/monte-seu-kit-religioso.jpg'
+END, images = CASE slug
+  WHEN 'monte-seu-kit-natalino' THEN ARRAY['/images/catalogo-natal-2026/monte-seu-kit-natalino.jpg']
+  WHEN 'monte-seu-kit-religioso' THEN ARRAY['/images/catalogo-natal-2026/monte-seu-kit-religioso.jpg']
+END WHERE slug IN ('monte-seu-kit-natalino', 'monte-seu-kit-religioso');
+
 INSERT INTO public.product_options (product_id, name, variation_label, price_modifier, stock, sort_order, active)
 SELECT product.id, option_data.name, 'Quantidade de itens', option_data.price_modifier, 0, option_data.sort_order, true
 FROM public.products product

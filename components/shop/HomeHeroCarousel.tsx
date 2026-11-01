@@ -75,7 +75,8 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
               aria-label={`${index + 1} de ${slides.length}`}
               aria-hidden={index !== active}
             >
-              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-5 pb-14 pt-8 text-center sm:px-10 sm:pb-16 sm:pt-10">
+              <div className={`relative z-10 mx-auto flex h-full w-full max-w-6xl items-center px-5 pb-14 pt-8 sm:px-10 sm:pb-16 sm:pt-10 ${slide.imageUrl ? 'gap-6 text-left md:grid md:grid-cols-2' : 'flex-col justify-center text-center'}`}>
+                <div className={slide.imageUrl ? 'flex flex-col items-start' : 'flex flex-col items-center'}>
                 <span className="inline-flex w-fit max-w-full items-center gap-2 rounded-full border border-pink-200/70 bg-white px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-pink-700 shadow-sm dark:border-pink-800/60 dark:bg-gray-900 dark:text-pink-300 sm:bg-white/85 sm:text-xs sm:backdrop-blur-md sm:dark:bg-gray-900/80">
                   <span className="h-2 w-2 shrink-0 rounded-full bg-gradient-to-br from-pink-500 to-orange-400" />
                   {slide.badge}
@@ -100,7 +101,8 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
                   {slide.action}
                   <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
-
+                </div>
+                {slide.imageUrl && <div className="hidden overflow-hidden rounded-[2rem] border-8 border-white/80 bg-pink-100 shadow-2xl md:block"><img src={slide.imageUrl} alt="Kits de Natal Hellou Studio" className="aspect-square h-full w-full object-cover" /></div>}
               </div>
             </article>
           ))}

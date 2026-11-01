@@ -48,6 +48,7 @@ export interface StoreSettings {
       description: string;
       action: string;
       href: string;
+      imageUrl?: string;
       trust: string[];
       active: boolean;
     }>;

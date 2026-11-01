@@ -107,6 +107,7 @@ export function normalizeStoreSettings(input: unknown): StoreSettings {
           description: textValue(slide.description, fallback.description, 350),
           action: textValue(slide.action, fallback.action, 60),
           href: href.startsWith('/') ? href : fallback.href,
+          imageUrl: optionalText(slide.imageUrl, fallback.imageUrl ?? '', 500),
           trust: rawTrust.slice(0, 3).map((item, trustIndex) => textValue(item, fallback.trust[trustIndex] ?? 'Compra segura', 80)),
           active: typeof slide.active === 'boolean' ? slide.active : true,
         };
