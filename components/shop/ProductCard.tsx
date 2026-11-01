@@ -115,7 +115,7 @@ export function ProductCard({ product, basePath = "/products", category, showcas
         {product.type !== 'digital' && (
           <div className="mt-2 flex items-center justify-between gap-2">
             <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{product.fulfillment_mode === 'ready_stock' ? 'Envio rápido' : 'Produção em até 5 dias úteis'}</span>
-            <span className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-1.5 text-[10px] font-black text-white shadow-sm shadow-pink-500/25 transition group-hover:scale-[1.03] group-hover:shadow-md group-hover:shadow-orange-400/30">Comprar →</span>
+            <span className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-1.5 text-[10px] font-black text-white shadow-sm shadow-pink-500/25 transition group-hover:scale-[1.03] group-hover:shadow-md group-hover:shadow-orange-400/30">Comprar</span>
           </div>
         )}
       </div>
