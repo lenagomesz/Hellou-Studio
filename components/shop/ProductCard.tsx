@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { Product, ProductCategory } from '@/types/database';
 import { productIdentifier } from '@/lib/seo';
@@ -104,20 +103,14 @@ export function ProductCard({ product, basePath = "/products", category, showcas
             {product.tags?.map((tag) => <span key={tag.id} className="rounded-full px-2 py-0.5 text-[8px] font-bold text-white" style={{ backgroundColor: tag.color }}>{tag.name}</span>)}
           </div>
         )}
-        <div className={`${showcase ? 'mt-auto min-h-12 pt-2' : 'mt-2 min-h-6'} flex items-end justify-between gap-2`}>
+        <div className={`${showcase ? 'mt-auto pt-3' : 'mt-3'} flex items-end justify-between gap-2`}>
           <div className="flex min-w-0 flex-wrap items-baseline gap-1.5">
             {hasAdditionalPriceOptions && <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide text-pink-500 dark:text-pink-400 sm:text-[9px]">A partir de</span>}
             <p className={`${showcase ? 'font-black tracking-tight' : 'font-semibold'} text-sm text-gray-900 sm:text-base dark:text-white`}>{formatPrice(currentPrice)}</p>
             {product.sale_price !== null && product.sale_price < product.base_price && <span className="text-[9px] text-gray-400 line-through sm:text-[10px]">{formatPrice(product.base_price)}</span>}
           </div>
-          {showcase && <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-sm transition group-hover:scale-105 group-hover:shadow-md"><ArrowUpRight className="h-3.5 w-3.5" /></span>}
+          {product.type !== 'digital' && <span className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-3.5 py-2 text-[11px] font-black text-white shadow-sm shadow-pink-500/25 transition group-hover:scale-[1.03] group-hover:shadow-md group-hover:shadow-orange-400/30">Comprar</span>}
         </div>
-        {product.type !== 'digital' && (
-          <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{product.fulfillment_mode === 'ready_stock' ? 'Envio rápido' : 'Produção em até 5 dias úteis'}</span>
-            <span className="rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 px-3 py-1.5 text-[10px] font-black text-white shadow-sm shadow-pink-500/25 transition group-hover:scale-[1.03] group-hover:shadow-md group-hover:shadow-orange-400/30">Comprar</span>
-          </div>
-        )}
       </div>
       </Link>
       <FavoriteButton productId={product.id} productName={product.name} className="absolute right-2 top-2 z-20 sm:right-3 sm:top-3" />
