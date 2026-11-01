@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import { useTheme } from 'next-themes';
 import { useCart } from '@/components/shop/CartContext';
 import { NotificationBell } from '@/components/shop/NotificationBell';
@@ -75,6 +75,10 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const whatsappUrl = getWhatsAppUrl(settings);
+  const refreshHome = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    window.location.assign('/');
+  };
   const navigationLinks = settings.navigation.links
     .filter((link) => link.active && link.href !== '/blog')
     .map((link) => ({
@@ -197,9 +201,9 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
           className="w-full px-4 py-3 sm:px-6 lg:px-8"
         >
           <div className="flex min-h-11 items-center justify-between gap-3 lg:hidden">
-            <a href="/" className="shrink-0 text-xl font-bold tracking-tight" aria-label={`${settings.identity.name} — atualizar página inicial`}>
+            <Link href="/" onClick={refreshHome} className="shrink-0 text-xl font-bold tracking-tight" aria-label={`${settings.identity.name} — atualizar página inicial`}>
               {settings.identity.logoUrl ? <img src={settings.identity.logoUrl} alt={settings.identity.name} className="h-9 w-auto max-w-40 object-contain" /> : <span className="store-gradient-text">{settings.identity.shortName}</span>}
-            </a>
+            </Link>
 
             <div className="flex items-center justify-end gap-1.5">
               {mounted && (
@@ -235,9 +239,9 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
           </div>
 
           <div className="hidden grid-cols-[minmax(160px,0.8fr)_auto_minmax(225px,0.8fr)] items-center gap-4 lg:grid">
-            <a href="/" className="w-fit text-2xl font-bold tracking-tight" aria-label={`${settings.identity.name} — atualizar página inicial`}>
+            <Link href="/" onClick={refreshHome} className="w-fit text-2xl font-bold tracking-tight" aria-label={`${settings.identity.name} — atualizar página inicial`}>
               {settings.identity.logoUrl ? <img src={settings.identity.logoUrl} alt={settings.identity.name} className="h-10 w-auto max-w-52 object-contain" /> : <span className="store-gradient-text">{settings.identity.shortName}</span>}
-            </a>
+            </Link>
 
             <nav className="flex items-center justify-center gap-1 rounded-2xl bg-orange-50/40 p-1 dark:bg-white/[0.03]" aria-label="Navegação principal">
               {navigationLinks.map((link) => {
