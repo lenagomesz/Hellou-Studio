@@ -249,7 +249,7 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
                     key={link.href}
                     href={link.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold transition xl:px-3 ${['/products', '/stl', '/request-print', '/about'].includes(link.href) ? 'w-[120px] justify-center' : ''} ${
+                    className={`inline-flex min-h-10 w-[112px] items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold transition xl:px-3 ${
                       active
                         ? 'border-pink-200/70 bg-gradient-to-r from-pink-50 to-orange-50 text-pink-600 shadow-sm shadow-pink-100/50 dark:border-pink-900 dark:from-pink-950/60 dark:to-orange-950/30 dark:text-pink-400 dark:shadow-none'
                         : 'border-transparent text-gray-600 hover:-translate-y-0.5 hover:border-gray-200 hover:bg-white hover:text-gray-900 hover:shadow-sm dark:text-gray-300 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-white'
