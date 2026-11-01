@@ -45,21 +45,10 @@ export default async function STLMarketplacePage(props: { searchParams: Promise<
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
-      <header className="mx-auto max-w-6xl px-4 pb-2 pt-8 sm:px-6 sm:pt-12">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-600 via-pink-500 to-rose-400 px-5 py-7 text-white shadow-[0_18px_45px_-25px_rgba(219,39,119,.9)] sm:px-8 sm:py-9">
-          <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-white/15 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-orange-200/25 blur-2xl" />
-          <div className="relative">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-100">Para makers</p>
-            <h1 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Arquivos para imprimir do seu jeito</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/90">Modelos digitais para baixar após a aprovação do pagamento e imprimir na sua própria máquina.</p>
-            <ul className="mt-5 grid gap-2 text-xs font-semibold sm:grid-cols-3">
-              <li className="rounded-xl border border-white/20 bg-white/15 px-3 py-2.5 backdrop-blur-sm"><span aria-hidden="true">🧩 </span>Arquivo STL ou 3MF</li>
-              <li className="rounded-xl border border-white/20 bg-white/15 px-3 py-2.5 backdrop-blur-sm"><span aria-hidden="true">⚡ </span>Download na sua conta</li>
-              <li className="rounded-xl border border-white/20 bg-white/15 px-3 py-2.5 backdrop-blur-sm"><span aria-hidden="true">🖨️ </span>Feito para você imprimir</li>
-            </ul>
-          </div>
-        </div>
+      <header className="flex h-40 flex-col items-center justify-center bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-4 text-center text-white sm:h-44 sm:px-10">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-100">Para makers</p>
+        <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Arquivos para imprimir do seu jeito</h1>
+        <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">Modelos digitais para baixar após a aprovação do pagamento e imprimir na sua própria máquina.</p>
       </header>
 
       {/* Marketplace */}

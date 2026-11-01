@@ -18,13 +18,11 @@ const FAQS = [
 export default function AboutPage() {
   return (
     <div className="bg-[#fffaf8] text-gray-900 dark:bg-gray-950 dark:text-white">
-      <section className="relative overflow-hidden bg-gradient-to-br from-pink-600 via-pink-500 to-orange-400 px-4 py-12 text-center text-white sm:px-6 sm:py-24">
-        <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-white/15 blur-3xl" />
-        <div className="pointer-events-none absolute -right-20 top-0 h-64 w-64 rounded-full bg-orange-100/30 blur-3xl" />
-        <div className="relative mx-auto max-w-3xl">
-          <p className="inline-flex rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm sm:text-xs">Por trás da Hellou Studio</p>
-          <h1 className="mt-5 text-3xl font-black leading-[1.02] tracking-[-0.04em] sm:text-5xl">Feito em camadas,<br />pensado para o seu cantinho.</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-white/90 sm:text-lg">Peças impressas em 3D para presentear, organizar e deixar a rotina com mais personalidade.</p>
+      <section className="flex h-40 flex-col items-center justify-center bg-gradient-to-r from-pink-500 via-pink-600 to-orange-400 px-6 py-4 text-center text-white sm:h-44 sm:px-10">
+        <div className="mx-auto max-w-3xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-100">Por trás da Hellou Studio</p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Feito em camadas, pensado para o seu cantinho.</h1>
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">Peças impressas em 3D para presentear, organizar e deixar a rotina com mais personalidade.</p>
         </div>
       </section>
 
