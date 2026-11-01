@@ -103,13 +103,13 @@ export function ProductCard({ product, basePath = "/products", category, showcas
             {product.tags?.map((tag) => <span key={tag.id} className="rounded-full px-2 py-0.5 text-[8px] font-bold text-white" style={{ backgroundColor: tag.color }}>{tag.name}</span>)}
           </div>
         )}
-        <div className={`${showcase ? 'mt-auto pt-3' : 'mt-3'} flex flex-col items-stretch gap-2 sm:flex-row sm:items-end sm:justify-between`}>
+        <div className={`${showcase ? 'mt-auto pt-3' : 'mt-3'} flex flex-col items-stretch gap-2 lg:flex-row lg:items-end lg:justify-between`}>
           <div className="flex min-w-0 flex-wrap items-baseline gap-1.5">
             {hasAdditionalPriceOptions && <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide text-pink-500 dark:text-pink-400 sm:text-[9px]">A partir de</span>}
             <p className={`${showcase ? 'font-black tracking-tight' : 'font-semibold'} text-sm text-gray-900 sm:text-base dark:text-white`}>{formatPrice(currentPrice)}</p>
             {product.sale_price !== null && product.sale_price < product.base_price && <span className="text-[9px] text-gray-400 line-through sm:text-[10px]">{formatPrice(product.base_price)}</span>}
           </div>
-          {product.type !== 'digital' && <span className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-3.5 py-2 text-center text-[11px] font-black text-white shadow-sm shadow-pink-500/25 transition group-hover:scale-[1.03] group-hover:shadow-md group-hover:shadow-orange-400/30 sm:w-auto">Comprar</span>}
+          {product.type !== 'digital' && <span className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-3.5 py-2 text-center text-[11px] font-black text-white shadow-sm shadow-pink-500/25 transition group-hover:scale-[1.03] group-hover:shadow-md group-hover:shadow-orange-400/30 lg:w-auto">Comprar</span>}
         </div>
       </div>
       </Link>

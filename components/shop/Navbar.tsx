@@ -197,9 +197,9 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
           className="w-full px-4 py-3 sm:px-6 lg:px-8"
         >
           <div className="flex min-h-11 items-center justify-between gap-3 lg:hidden">
-            <Link href="/" className="shrink-0 text-xl font-bold tracking-tight" aria-label={`${settings.identity.name} — página inicial`}>
+            <a href="/" className="shrink-0 text-xl font-bold tracking-tight" aria-label={`${settings.identity.name} — atualizar página inicial`}>
               {settings.identity.logoUrl ? <img src={settings.identity.logoUrl} alt={settings.identity.name} className="h-9 w-auto max-w-40 object-contain" /> : <span className="store-gradient-text">{settings.identity.shortName}</span>}
-            </Link>
+            </a>
 
             <div className="flex items-center justify-end gap-1.5">
               {mounted && (
@@ -235,9 +235,9 @@ export function Navbar({ settings }: { settings: StoreSettings }) {
           </div>
 
           <div className="hidden grid-cols-[minmax(160px,0.8fr)_auto_minmax(225px,0.8fr)] items-center gap-4 lg:grid">
-            <Link href="/" className="w-fit text-2xl font-bold tracking-tight" aria-label={`${settings.identity.name} — página inicial`}>
+            <a href="/" className="w-fit text-2xl font-bold tracking-tight" aria-label={`${settings.identity.name} — atualizar página inicial`}>
               {settings.identity.logoUrl ? <img src={settings.identity.logoUrl} alt={settings.identity.name} className="h-10 w-auto max-w-52 object-contain" /> : <span className="store-gradient-text">{settings.identity.shortName}</span>}
-            </Link>
+            </a>
 
             <nav className="flex items-center justify-center gap-1 rounded-2xl bg-orange-50/40 p-1 dark:bg-white/[0.03]" aria-label="Navegação principal">
               {navigationLinks.map((link) => {
