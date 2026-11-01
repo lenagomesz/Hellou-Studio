@@ -21,16 +21,17 @@ function formatPrice(value: number) {
 }
 
 export function ProductCard({ product, basePath = "/products", category, showcase = false }: { product: Product; basePath?: string; category?: Pick<ProductCategory, 'name' | 'color'>; showcase?: boolean }) {
-  const currentPrice = product.sale_price ?? product.base_price;
+  const isReligiousKit = product.slug === 'monte-seu-kit-religioso';
+  const currentPrice = isReligiousKit ? 44.8 : product.sale_price ?? product.base_price;
   const images = useMemo(
     () => Array.from(new Set([product.image_url, product.image_url_2, ...(product.images ?? [])].filter((image): image is string => Boolean(image?.trim())))),
     [product.image_url, product.image_url_2, product.images],
   );
   const [activeImage, setActiveImage] = useState(0);
   const hasImageGallery = images.length > 1;
-  const hasAdditionalPriceOptions = product.product_options?.some(
+  const hasAdditionalPriceOptions = isReligiousKit || (product.product_options?.some(
     (option) => option.price_modifier > 0,
-  ) ?? false;
+  ) ?? false);
 
   useEffect(() => {
     if (!hasImageGallery) return;
