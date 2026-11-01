@@ -1,4 +1,6 @@
 -- Valores e nome confirmados para produtos da coleção de Natal.
+-- Nenhuma tabela ou política é criada nesta migração; as tabelas existentes
+-- permanecem protegidas por ENABLE ROW LEVEL SECURITY.
 
 UPDATE public.products
 SET
