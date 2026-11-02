@@ -94,5 +94,39 @@ export async function POST(request: Request) {
     .insert({ name, hex }).select('id,name,hex,active,created_at').single();
   if (error?.code === '23505') return badRequest('Esta cor já existe na central');
   if (error || !data) return serverError('Erro ao cadastrar cor');
+  const admin = getSupabaseAdmin();
+  const color = { id: `color-${data.id}`, label: data.name, value: data.hex, colorId: data.id };
+  try {
+    const [products, sharedSteps] = await Promise.all([
+      allRows((from, to) => admin.from('products').select('id,customization_sections').range(from, to)),
+      allRows((from, to) => admin.from('customization_steps').select('id,definition').range(from, to)),
+    ]);
+    const syncResults = await Promise.all([
+      ...products.flatMap((product) => {
+        const sections = Array.isArray(product.customization_sections) ? product.customization_sections as Array<Record<string, unknown>> : [];
+        let changed = false;
+        const next = sections.map((section) => {
+          if (section.type !== 'color' && section.type !== 'color_text') return section;
+          const colors = Array.isArray(section.colors) ? section.colors as Array<Record<string, unknown>> : [];
+          if (colors.some((item) => item.colorId === data.id || item.label === data.name)) return section;
+          changed = true;
+          return { ...section, colors: [...colors, color] };
+        });
+        return changed ? [admin.from('products').update({ customization_sections: next }).eq('id', product.id)] : [];
+      }),
+      ...sharedSteps.flatMap((step) => {
+        const definition = step.definition as Record<string, unknown>;
+        if (definition.type !== 'color' && definition.type !== 'color_text') return [];
+        const colors = Array.isArray(definition.colors) ? definition.colors as Array<Record<string, unknown>> : [];
+        if (colors.some((item) => item.colorId === data.id || item.label === data.name)) return [];
+        return [admin.from('customization_steps').update({ definition: { ...definition, colors: [...colors, color] } }).eq('id', step.id)];
+      }),
+    ]);
+    const failedSync = syncResults.find((result) => result.error);
+    if (failedSync?.error) throw failedSync.error;
+  } catch (syncError) {
+    console.error('[catalog-colors] color created but propagation failed:', syncError);
+    return NextResponse.json({ color: data, warning: 'Cor cadastrada, mas algumas etapas antigas não foram sincronizadas.' }, { status: 201 });
+  }
   return NextResponse.json({ color: data }, { status: 201 });
 }
