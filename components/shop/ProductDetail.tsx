@@ -80,8 +80,10 @@ export function ProductDetail({
   const ProductHeading = onAdded ? 'h2' : 'h1';
   const requiresReadyStock = product.fulfillment_mode === 'ready_stock';
   const isChristmasProduct = product.tags?.some((tag) => tag.name.trim().toLocaleLowerCase('pt-BR') === 'natal') ?? false;
-  const approximateDimensions = isChristmasProduct && product.length_cm && product.width_cm && product.height_cm
-    ? `${formatMeasurement(product.length_cm)} × ${formatMeasurement(product.width_cm)} × ${formatMeasurement(product.height_cm)} cm`
+  const approximateDimensions = isChristmasProduct && product.height_cm
+    ? product.length_cm && product.width_cm
+      ? `${formatMeasurement(product.length_cm)} × ${formatMeasurement(product.width_cm)} × ${formatMeasurement(product.height_cm)} cm (C × L × A)`
+      : `${formatMeasurement(product.height_cm)} cm de altura`
     : null;
   const availability = isOwnedDigital
     ? { label: '✓ Adquirido', className: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300' }
@@ -389,7 +391,7 @@ export function ProductDetail({
             <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
               <span aria-hidden="true">⏱</span>{requiresReadyStock ? 'Pronta entrega: envio rápido após a confirmação.' : `Produção em ${DEFAULT_PRODUCTION_LEAD_TIME}.`}
             </p>
-            {approximateDimensions && <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700 dark:bg-pink-950/40 dark:text-pink-300"><span aria-hidden="true">↔</span>Medidas aprox.: {approximateDimensions} (C × L × A)</p>}
+            {approximateDimensions && <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700 dark:bg-pink-950/40 dark:text-pink-300"><span aria-hidden="true">↕</span>Medida aprox.: {approximateDimensions}</p>}
           </div>
         )}
         {whatsappUrl && (
