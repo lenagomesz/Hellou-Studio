@@ -17,6 +17,7 @@ import { findOwnedDigitalProducts } from '@/lib/digital-purchases';
 import { loadAvailableProductOptions, loadEffectiveCustomizationSections, validateCustomizationChoices } from '@/lib/catalog-availability';
 import { areRequiredCustomizationSectionsComplete, parseProductCustomizationSelections } from '@/lib/product-customization';
 import type { ProductOption } from '@/types/database';
+import { toOrderEmailItems } from '@/lib/order-email-items';
 
 const PIX_EXPIRATION_MINUTES = 30;
 
@@ -349,6 +350,7 @@ export async function POST(request: Request) {
       image_url: item.product?.image_url,
       option_name: item.option?.name,
       option_color: item.option?.color,
+      option_color_name: item.option?.color_name,
       customization_text: item.customization_text ?? null,
     },
   }));
@@ -654,6 +656,8 @@ export async function POST(request: Request) {
         customerName: userData?.name || null,
         customerEmail: userData?.email || user.email,
         total: totalAmount,
+        itens: toOrderEmailItems(orderItems),
+        orderType: isDigitalOrder ? 'stl' : stlItems.length > 0 ? 'mixed' : 'physical',
       }).catch((error) => structuredLog('warn', 'mercadopago.admin_email_failed', { error, orderId: order.id }));
 
       if (wants_invoice) {

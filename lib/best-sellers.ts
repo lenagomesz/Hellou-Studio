@@ -3,7 +3,26 @@ import { REVENUE_ORDER_STATUSES } from '@/lib/order-analytics';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 type CategorizedProduct = { id: string; category: string };
-type SaleItem = { product_id: string; quantity: number };
+type SaleItem = { product_id: string; quantity: number; order_id?: string };
+
+export type ProductSales = { orderCount: number; unitsSold: number };
+export type ProductSalesStats = { bestSellerIds: string[]; byProduct: Record<string, ProductSales> };
+
+export function summarizeProductSales(sales: SaleItem[]): Record<string, ProductSales> {
+  const summaries: Record<string, ProductSales> = {};
+  const orders = new Map<string, Set<string>>();
+  for (const sale of sales) {
+    const quantity = Number(sale.quantity);
+    if (!Number.isFinite(quantity) || quantity <= 0) continue;
+    const summary = summaries[sale.product_id] ??= { orderCount: 0, unitsSold: 0 };
+    summary.unitsSold += quantity;
+    const productOrders = orders.get(sale.product_id) ?? new Set<string>();
+    if (sale.order_id) productOrders.add(sale.order_id);
+    orders.set(sale.product_id, productOrders);
+    summary.orderCount = productOrders.size;
+  }
+  return summaries;
+}
 
 export function findBestSellerProductIds(products: CategorizedProduct[], sales: SaleItem[]): string[] {
   const productCategory = new Map(products.map((product) => [product.id, product.category]));
@@ -30,7 +49,7 @@ export function findBestSellerProductIds(products: CategorizedProduct[], sales: 
   return Array.from(winnerByCategory.values(), (winner) => winner.id);
 }
 
-async function loadBestSellerProductIds(): Promise<string[]> {
+async function loadProductSalesStats(): Promise<ProductSalesStats> {
   const admin = getSupabaseAdmin();
   const pageSize = 1000;
   const products: CategorizedProduct[] = [];
@@ -44,12 +63,12 @@ async function loadBestSellerProductIds(): Promise<string[]> {
       .range(offset, offset + pageSize - 1);
     if (error) {
       console.error('[best-sellers] Falha ao carregar produtos:', error.message);
-      return [];
+      throw new Error('Não foi possível carregar os produtos para o resumo de vendas');
     }
     products.push(...(data ?? []));
     if (!data || data.length < pageSize) break;
   }
-  if (products.length === 0) return [];
+  if (products.length === 0) return { bestSellerIds: [], byProduct: {} };
 
   const revenueOrderIds: string[] = [];
   for (let offset = 0; ; offset += pageSize) {
@@ -61,12 +80,12 @@ async function loadBestSellerProductIds(): Promise<string[]> {
       .range(offset, offset + pageSize - 1);
     if (error) {
       console.error('[best-sellers] Falha ao carregar pedidos confirmados:', error.message);
-      return [];
+      throw new Error('Não foi possível carregar os pedidos confirmados');
     }
     revenueOrderIds.push(...(data ?? []).map((order) => order.id));
     if (!data || data.length < pageSize) break;
   }
-  if (revenueOrderIds.length === 0) return [];
+  if (revenueOrderIds.length === 0) return { bestSellerIds: [], byProduct: {} };
 
   // Consulta os itens diretamente pelos pedidos confirmados. Isso evita depender
   // de filtros em relações embutidas do PostgREST, que podem retornar uma lista vazia.
@@ -77,24 +96,28 @@ async function loadBestSellerProductIds(): Promise<string[]> {
     for (let offset = 0; ; offset += pageSize) {
       const { data, error } = await admin
         .from('order_items')
-        .select('product_id, quantity')
+        .select('product_id, quantity, order_id')
         .in('order_id', orderIds)
         .order('id', { ascending: true })
         .range(offset, offset + pageSize - 1);
       if (error) {
         console.error('[best-sellers] Falha ao carregar itens vendidos:', error.message);
-        return [];
+        throw new Error('Não foi possível carregar os itens vendidos');
       }
-      sales.push(...(data ?? []).map((item) => ({ product_id: item.product_id, quantity: item.quantity })));
+      sales.push(...(data ?? []).map((item) => ({ product_id: item.product_id, quantity: item.quantity, order_id: item.order_id })));
       if (!data || data.length < pageSize) break;
     }
   }
 
-  return findBestSellerProductIds(products, sales);
+  return { bestSellerIds: findBestSellerProductIds(products, sales), byProduct: summarizeProductSales(sales) };
 }
 
-export const getBestSellerProductIds = unstable_cache(
-  loadBestSellerProductIds,
-  ['best-selling-products-by-category-v2'],
-  { revalidate: 3600 },
+export const getProductSalesStats = unstable_cache(
+  loadProductSalesStats,
+  ['confirmed-product-sales-v1'],
+  { revalidate: 60 },
 );
+
+export async function getBestSellerProductIds() {
+  return (await getProductSalesStats()).bestSellerIds;
+}

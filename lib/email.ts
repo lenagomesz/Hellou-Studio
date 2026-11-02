@@ -4,6 +4,7 @@ import { structuredLog } from '@/lib/observability';
 import { buildEmailUrl, normalizeEmailBaseUrl } from '@/lib/email-links';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
 import { summarizeProductCustomization } from '@/lib/product-customization';
+import type { OrderEmailItem } from '@/lib/order-email-items';
 
 let cached: Resend | null = null;
 let warned = false;
@@ -866,6 +867,7 @@ export async function sendAdminNewOrderEmail(params: {
   customerName: string | null;
   customerEmail: string;
   total: number;
+  itens: OrderEmailItem[];
   orderType?: 'stl' | 'physical' | 'mixed';
 }) {
   const resend = getResend();
@@ -875,6 +877,18 @@ export async function sendAdminNewOrderEmail(params: {
   const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.total);
   const formattedDate = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const orderType = params.orderType || 'physical';
+  const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  const itemsHtml = params.itens.map((item) => `
+    <tr>
+      <td style="padding:14px 0;border-bottom:1px solid #e5e7eb;vertical-align:top;">
+        <p style="margin:0;color:#1f2937;font-size:14px;font-weight:700;">${escapeEmailHtml(item.nome)}</p>
+        ${item.variacao ? `<p style="margin:6px 0 0;color:#4b5563;font-size:13px;"><strong>Variação:</strong> ${escapeEmailHtml(item.variacao)}</p>` : ''}
+        <p style="margin:6px 0 0;color:#6b7280;font-size:13px;">Quantidade: ${item.quantidade} × ${currency.format(item.precoUnitario)}</p>
+        ${item.personalizacao ? `<p style="margin:8px 0 0;color:#9d174d;font-size:13px;line-height:1.6;"><strong>Personalização:</strong><br/>${escapeEmailHtml(summarizeProductCustomization(item.personalizacao)).replace(/\r?\n/g, '<br/>')}</p>` : ''}
+      </td>
+      <td style="padding:14px 0 14px 12px;border-bottom:1px solid #e5e7eb;vertical-align:top;text-align:right;white-space:nowrap;color:#1f2937;font-size:14px;font-weight:700;">${currency.format(item.quantidade * item.precoUnitario)}</td>
+    </tr>
+  `).join('');
   
   const typeBadge = orderType === 'stl' 
     ? '<span style="display: inline-block; padding: 4px 12px; background: #DBEAFE; color: #1E40AF; border-radius: 12px; font-size: 12px; font-weight: 600;">📁 Arquivo STL</span>'
@@ -905,13 +919,18 @@ export async function sendAdminNewOrderEmail(params: {
           <div style="margin: 20px 0; padding: 16px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB;">
             <p style="margin: 0 0 8px; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Dados do cliente</p>
             <p style="color: #374151; font-size: 14px; margin: 4px 0;">
-              <strong>Nome:</strong> ${params.customerName ?? 'N/A'}
+              <strong>Nome:</strong> ${escapeEmailHtml(params.customerName ?? 'N/A')}
             </p>
             <p style="color: #374151; font-size: 14px; margin: 4px 0;">
-              <strong>Email:</strong> ${params.customerEmail}
+              <strong>Email:</strong> ${escapeEmailHtml(params.customerEmail)}
             </p>
           </div>
           
+          <div style="margin:20px 0;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+            <h3 style="margin:0 0 8px;color:#374151;font-size:14px;">Itens do pedido</h3>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">${itemsHtml}</table>
+          </div>
+
           <div style="margin: 20px 0; padding: 12px; background: #FFFBEB; border-radius: 8px; border: 1px solid #FDE68A;">
             <p style="margin: 0; font-size: 13px; color: #92400E;">
               ${orderType === 'stl' ? '⚡ Este é um pedido de arquivo STL - entrega imediata!' : '⚙️ Este é um pedido físico - verifique o prazo de produção.'}

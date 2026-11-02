@@ -9,6 +9,7 @@ import { hasDigitalItems, hasPhysicalItems } from '@/lib/order-helpers';
 import { isMercadoPagoApproved, mapMercadoPagoOrderStatus } from '@/lib/payment-status';
 import { captureOperationalError, structuredLog } from '@/lib/observability';
 import { DEFAULT_PRODUCTION_LEAD_TIME } from '@/lib/production';
+import { toOrderEmailItems } from '@/lib/order-email-items';
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
@@ -317,6 +318,7 @@ export async function POST(request: Request) {
           customerName: userData.name || null,
           customerEmail: userData.email,
           total: Number(result.transaction_amount) || 0,
+          itens: toOrderEmailItems(items ?? []),
           orderType,
         }).catch((error) => structuredLog('warn', 'mercadopago.admin_email_failed', { error, orderId: order.id }));
 

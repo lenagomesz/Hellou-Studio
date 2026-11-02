@@ -38,7 +38,7 @@ export function ProductRatingSummary({ productId }: { productId: string }) {
   if (!summary) return null;
 
   return (
-    <a href="#product-reviews" aria-label={summary.count ? `Ver ${summary.count} ${summary.count === 1 ? 'avaliação' : 'avaliações'}, nota média ${summary.average.toFixed(1)} de 5` : 'Ver avaliações do produto'} className="mt-2 inline-flex w-fit items-center gap-2 rounded-full text-xs font-medium text-gray-600 transition hover:text-pink-600 dark:text-gray-300 dark:hover:text-pink-400 sm:text-sm">
+    <a href="#product-reviews" aria-label={summary.count ? `Ver ${summary.count} ${summary.count === 1 ? 'avaliação' : 'avaliações'}, nota média ${summary.average.toFixed(1)} de 5` : 'Ver avaliações do produto'} className="inline-flex w-fit items-center gap-2 rounded-full text-xs font-medium text-gray-600 transition hover:text-pink-600 dark:text-gray-300 dark:hover:text-pink-400 sm:text-sm">
       <span aria-hidden="true" className="relative inline-block whitespace-nowrap text-base leading-none tracking-[0.08em] text-gray-300 dark:text-gray-700">
         ★★★★★
         <span className="absolute inset-0 overflow-hidden whitespace-nowrap text-amber-400" style={{ width: `${summary.average * 20}%` }}>★★★★★</span>

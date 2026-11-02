@@ -67,6 +67,9 @@ export interface Product {
   slug?: string | null;
   tags?: ProductTag[];
   is_best_seller?: boolean;
+  /** Number of distinct confirmed orders containing this product. */
+  order_count?: number;
+  sold_quantity?: number;
   product_options?: Array<Pick<ProductOption, 'price_modifier'>>;
   total_option_count?: number;
 }

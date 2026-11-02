@@ -1,25 +1,30 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { getBestSellerProductIds } from '@/lib/best-sellers';
+import { getProductSalesStats } from '@/lib/best-sellers';
 import type { ProductTag } from '@/types/database';
 
-export async function attachProductTags<T extends { id: string }>(products: T[]): Promise<Array<T & { tags: ProductTag[]; is_best_seller: boolean }>> {
+export async function attachProductTags<T extends { id: string }>(products: T[]): Promise<Array<T & { tags: ProductTag[]; is_best_seller: boolean; order_count?: number; sold_quantity?: number }>> {
   if (products.length === 0) return [];
   const admin = getSupabaseAdmin();
   const productIds = products.map((product) => product.id);
-  const [{ data: assignments, error: assignmentError }, bestSellerIds] = await Promise.all([
+  const [{ data: assignments, error: assignmentError }, salesStats] = await Promise.all([
     admin
       .from('product_tag_assignments')
       .select('product_id, tag_id')
       .in('product_id', productIds),
-    getBestSellerProductIds().catch(() => [] as string[]),
+    getProductSalesStats().catch(() => null),
   ]);
-  const bestSellerIdSet = new Set(bestSellerIds);
+  const bestSellerIdSet = new Set(salesStats?.bestSellerIds ?? []);
+  const salesFor = (id: string) => salesStats ? {
+    order_count: salesStats.byProduct[id]?.orderCount ?? 0,
+    sold_quantity: salesStats.byProduct[id]?.unitsSold ?? 0,
+  } : {};
 
   if (assignmentError || !assignments?.length) {
     return products.map((product) => ({
       ...product,
       tags: [],
       is_best_seller: bestSellerIdSet.has(product.id),
+      ...salesFor(product.id),
     }));
   }
 
@@ -34,6 +39,7 @@ export async function attachProductTags<T extends { id: string }>(products: T[])
       ...product,
       tags: [],
       is_best_seller: bestSellerIdSet.has(product.id),
+      ...salesFor(product.id),
     }));
   }
 
@@ -48,6 +54,7 @@ export async function attachProductTags<T extends { id: string }>(products: T[])
   return products.map((product) => ({
     ...product,
     is_best_seller: bestSellerIdSet.has(product.id),
+    ...salesFor(product.id),
     tags: (tagIdsByProduct.get(product.id) ?? [])
       .map((id) => tagById.get(id))
       .filter((tag): tag is ProductTag => Boolean(tag)),

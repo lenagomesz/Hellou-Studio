@@ -7,7 +7,7 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 vi.mock('@/lib/best-sellers', () => ({
-  getBestSellerProductIds: vi.fn().mockResolvedValue([]),
+  getProductSalesStats: vi.fn().mockResolvedValue({ bestSellerIds: [], byProduct: {} }),
 }));
 
 import { attachProductTags } from '@/lib/product-tags';
@@ -39,6 +39,6 @@ describe('tags dos produtos', () => {
   it('mantém produtos sem tags quando não existem vínculos', async () => {
     mockFrom.mockReturnValue({ select: () => ({ in: vi.fn().mockResolvedValue({ data: [], error: null }) }) });
 
-    await expect(attachProductTags([{ id: 'p1' }])).resolves.toEqual([{ id: 'p1', tags: [], is_best_seller: false }]);
+    await expect(attachProductTags([{ id: 'p1' }])).resolves.toEqual([{ id: 'p1', tags: [], is_best_seller: false, order_count: 0, sold_quantity: 0 }]);
   });
 });

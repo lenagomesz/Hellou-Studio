@@ -224,6 +224,8 @@ export default async function ProductsCatalogPage(
               <><span className="text-5xl">✨🎨</span><h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">Opa! Ainda não chegaram novidades...</h2><p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Estamos preparando peças incríveis pra você! 🚀<br />Volte em breve, novidades a caminho!</p></>
             )}
           </div>
+        ) : tag?.trim().toLocaleLowerCase('pt-BR') === 'natal' ? (
+          <ChristmasCatalog products={focusedProducts} categories={categories} />
         ) : isGroupedCatalog ? (
           <div className="space-y-12">
             {christmasProducts.length > 0 && (
