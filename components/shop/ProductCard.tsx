@@ -22,7 +22,7 @@ function formatPrice(value: number) {
 
 export function ProductCard({ product, basePath = "/products", category, showcase = false }: { product: Product; basePath?: string; category?: Pick<ProductCategory, 'name' | 'color'>; showcase?: boolean }) {
   const isReligiousKit = product.slug === 'monte-seu-kit-religioso';
-  const currentPrice = isReligiousKit ? 44.8 : product.sale_price ?? product.base_price;
+  const currentPrice = isReligiousKit ? 45.9 : product.sale_price ?? product.base_price;
   const images = useMemo(
     () => Array.from(new Set([product.image_url, product.image_url_2, ...(product.images ?? [])].filter((image): image is string => Boolean(image?.trim())))),
     [product.image_url, product.image_url_2, product.images],

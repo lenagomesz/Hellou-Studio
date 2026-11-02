@@ -57,6 +57,12 @@ export async function validateCheckoutCoupon(
   if (coupon.exclusive_user_id && coupon.exclusive_user_id !== userId) {
     return { valid: false, error: 'Este cupom é exclusivo para outro cliente.' };
   }
+  if (coupon.first_purchase_only) {
+    const { count, error: orderError } = await admin.from('orders').select('id', { count: 'exact', head: true })
+      .eq('user_id', userId).in('status', [...FIRST_PURCHASE_BLOCKING_STATUSES]);
+    if (orderError) return { valid: false, error: 'Não foi possível confirmar a elegibilidade deste cupom.' };
+    if ((count ?? 0) > 0) return { valid: false, error: 'Este cupom é válido somente na primeira compra.' };
+  }
   if (coupon.expires_at && new Date(coupon.expires_at).getTime() < Date.now()) {
     return { valid: false, error: 'Este cupom expirou.' };
   }

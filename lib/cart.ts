@@ -22,6 +22,7 @@ export interface AddItemInput {
   option: CartItemView['option'];
   quantity: number;
   customization_text?: string | null;
+  suppressNotification?: boolean;
 }
 
 export function computeUnitPrice(item: CartItemView): number {

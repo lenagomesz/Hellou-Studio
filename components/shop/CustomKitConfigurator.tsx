@@ -26,7 +26,7 @@ export function CustomKitConfigurator({ mode, kitProduct, kitOptions, products }
   const selectedTrayColor = trayColors.find(item => item.id === colorId);
   const selectedCount = Object.values(quantities).reduce((sum, value) => sum + value, 0);
   const selectedProducts = products.filter(product => (quantities[product.id] ?? 0) > 0);
-  const total = useMemo(() => mode === 'natal' ? ({ 2: 69.9, 3: 89.9, 4: 109.9, 5: 119.9 }[selectedCount] ?? 69.9) : 24.9 + selectedProducts.reduce((sum, product) => { const chosen = product.product_options?.find(option => option.id === optionIds[product.id]) ?? product.product_options?.[0]; return sum + ((product.sale_price ?? product.base_price) + (chosen?.price_modifier ?? 0)) * (quantities[product.id] ?? 0); }, 0), [mode, optionIds, quantities, selectedCount, selectedProducts]);
+  const total = useMemo(() => mode === 'natal' ? ({ 2: 69.9, 3: 89.9, 4: 109.9, 5: 119.9 }[selectedCount] ?? 69.9) : 26 + selectedProducts.reduce((sum, product) => { const chosen = product.product_options?.find(option => option.id === optionIds[product.id]) ?? product.product_options?.[0]; return sum + ((product.sale_price ?? product.base_price) + (chosen?.price_modifier ?? 0)) * (quantities[product.id] ?? 0); }, 0), [mode, optionIds, quantities, selectedCount, selectedProducts]);
   const canContinue = step === 1 ? Boolean(selectedTrayColor) : mode === 'natal' ? selectedCount >= 2 && selectedCount <= 5 : selectedCount > 0;
 
   function change(productId: string, delta: number) {
@@ -54,7 +54,7 @@ export function CustomKitConfigurator({ mode, kitProduct, kitOptions, products }
           const colorSection = product.customization_sections?.find(section => section.type === 'color' || section.type === 'color_text');
           const productColor = colorSection?.colors.find(item => item.id === productColorIds[product.id]) ?? colorSection?.colors[0];
           const customization = colorSection && productColor ? `${colorSection.label}: Cor: ${productColor.label}` : null;
-          await addItem({ product, option, quantity: quantities[product.id], customization_text: customization });
+          await addItem({ product, option, quantity: quantities[product.id], customization_text: customization, suppressNotification: true });
         }
       }
       setStep(4);

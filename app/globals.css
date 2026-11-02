@@ -151,6 +151,14 @@ body {
   50% { transform: rotate(1deg); }
 }
 
+@keyframes christmas-shake {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-9deg) scale(1.04); }
+  40% { transform: rotate(8deg) scale(1.04); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(4deg); }
+}
+
 .animate-fade-in-up {
   animation: fade-in-up 0.7s ease-out both;
 }

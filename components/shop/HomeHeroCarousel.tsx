@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import type { StoreSettings } from '@/lib/store-settings-schema';
 
-export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
+export function HomeHeroCarousel({ settings, kitImages = {} }: { settings: StoreSettings; kitImages?: Record<string, string> }) {
   const slides = settings.home.heroSlides.filter((slide) => slide.active);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -68,15 +68,17 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
           className="relative flex h-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
           style={{ transform: `translateX(-${active * 100}%)` }}
         >
-          {slides.map((slide, index) => (
+          {slides.map((slide, index) => {
+            const displayImage = kitImages[slide.id] || slide.imageUrl;
+            return (
             <article
               key={slide.id}
               className="relative flex h-full min-w-full items-end overflow-hidden"
               aria-label={`${index + 1} de ${slides.length}`}
               aria-hidden={index !== active}
             >
-              <div className={`relative z-10 mx-auto flex h-full w-full max-w-6xl items-center px-5 pb-14 pt-8 sm:px-10 sm:pb-16 sm:pt-10 ${slide.imageUrl ? 'gap-6 text-left md:grid md:grid-cols-2' : 'flex-col justify-center text-center'}`}>
-                <div className={slide.imageUrl ? 'flex flex-col items-start' : 'flex flex-col items-center'}>
+              <div className={`relative z-10 mx-auto flex h-full w-full max-w-6xl items-center px-5 pb-14 pt-8 sm:px-10 sm:pb-16 sm:pt-10 ${displayImage ? 'flex-col justify-center gap-6 text-center md:grid md:grid-cols-2 md:text-left' : 'flex-col justify-center text-center'}`}>
+                <div className={displayImage ? 'flex flex-col items-center md:items-start' : 'flex flex-col items-center'}>
                 <span className="inline-flex w-fit max-w-full items-center gap-2 rounded-full border border-pink-200/70 bg-white px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-pink-700 shadow-sm dark:border-pink-800/60 dark:bg-gray-900 dark:text-pink-300 sm:bg-white/85 sm:text-xs sm:backdrop-blur-md sm:dark:bg-gray-900/80">
                   <span className="h-2 w-2 shrink-0 rounded-full bg-gradient-to-br from-pink-500 to-orange-400" />
                   {slide.badge}
@@ -102,10 +104,10 @@ export function HomeHeroCarousel({ settings }: { settings: StoreSettings }) {
                   <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
                 </div>
-                {slide.imageUrl && <div className="hidden overflow-hidden rounded-[2rem] border-8 border-white/80 bg-pink-100 shadow-2xl md:block"><img src={slide.imageUrl} alt="Kits de Natal Hellou Studio" className="aspect-square h-full w-full object-cover" /></div>}
+                {displayImage && <div className="hidden overflow-hidden rounded-[2rem] border-8 border-white/80 bg-pink-100 shadow-2xl md:block"><img src={displayImage} alt="Kits de Natal Hellou Studio" className="aspect-square h-full w-full object-cover" /></div>}
               </div>
             </article>
-          ))}
+          )})}
         </div>
 
         {slides.length > 1 && (

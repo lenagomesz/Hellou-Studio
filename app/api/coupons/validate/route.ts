@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/api';
 import type { Coupon } from '@/types/database';
 import { durableRateLimit } from '@/lib/durable-rate-limit';
+import { FIRST_PURCHASE_BLOCKING_STATUSES } from '@/lib/checkout-rules';
 
 export async function POST(request: Request) {
   try {
@@ -31,10 +32,18 @@ export async function POST(request: Request) {
     }
 
     const coupon = data as Coupon;
-    if (coupon.exclusive_user_id) {
+    if (coupon.exclusive_user_id || coupon.first_purchase_only) {
       const user = await getCurrentUser();
-      if (!user || user.id !== coupon.exclusive_user_id) {
+      if (!user) {
+        return NextResponse.json({ error: 'Entre na sua conta para usar este cupom de primeira compra.' }, { status: 401 });
+      }
+      if (coupon.exclusive_user_id && user.id !== coupon.exclusive_user_id) {
         return NextResponse.json({ error: 'Este bônus é exclusivo para outro cliente.' }, { status: 403 });
+      }
+      if (coupon.first_purchase_only) {
+        const { count } = await admin.from('orders').select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id).in('status', [...FIRST_PURCHASE_BLOCKING_STATUSES]);
+        if ((count ?? 0) > 0) return NextResponse.json({ error: 'Este cupom é válido somente na primeira compra.' }, { status: 400 });
       }
     }
 

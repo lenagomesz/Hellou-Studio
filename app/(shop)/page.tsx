@@ -123,13 +123,13 @@ async function ChristmasProducts() {
             <div className="grid gap-4 lg:grid-cols-2">
               {kits.map((kit) => {
                 const isReligious = kit.slug === 'monte-seu-kit-religioso';
-                const price = isReligious ? 44.8 : (kit.sale_price ?? kit.base_price);
+                const price = isReligious ? 45.9 : (kit.sale_price ?? kit.base_price);
                 return <article key={kit.id} className="flex flex-col gap-4 rounded-2xl border border-pink-100 bg-white p-3 sm:flex-row sm:items-center dark:border-gray-800 dark:bg-gray-900">
                   {kit.image_url && <img src={kit.image_url} alt={kit.image_alt_texts?.[kit.image_url] || kit.name} className="h-40 w-full rounded-xl object-cover sm:h-40 sm:w-40" />}
                   <div className="min-w-0 flex-1">
                     <h2 className="text-xl font-black text-gray-900 dark:text-white">{kit.name}</h2>
                     <p className="mt-1 text-sm leading-5 text-gray-600 dark:text-gray-300">{isReligious ? 'Escolha a bandeja e combine suas peças religiosas favoritas.' : 'Escolha a bandeja e monte seu kit natalino com até cinco peças.'}</p>
-                    <div className="mt-3 flex flex-wrap items-center gap-3"><strong className="text-lg text-pink-600 dark:text-pink-400">{isReligious ? 'A partir de ' : ''}{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)}</strong><Link href={`/products/${productIdentifier(kit)}`} className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:scale-[1.02]">Montar meu kit</Link></div>
+                    <div className="mt-3 flex flex-wrap items-center gap-3"><strong className="text-lg text-pink-600 dark:text-pink-400">A partir de {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)}</strong><Link href={`/products/${productIdentifier(kit)}`} className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:scale-[1.02]">Montar meu kit</Link></div>
                   </div>
                 </article>;
               })}
@@ -232,11 +232,18 @@ function FeaturedSkeleton() {
 
 export default async function HomePage() {
   const { getStoreSettings } = await import('@/lib/store-settings');
-  const storeSettings = await getStoreSettings();
+  const kitCoverPromise = isSupabaseAdminConfigured()
+    ? getSupabaseAdmin().from('products').select('slug,image_url').in('slug', ['monte-seu-kit-natalino', 'monte-seu-kit-religioso']).eq('active', true)
+    : Promise.resolve({ data: [] as Array<{ slug: string | null; image_url: string | null }> });
+  const [storeSettings, kitCoverResult] = await Promise.all([
+    getStoreSettings(),
+    kitCoverPromise,
+  ]);
+  const kitImages = Object.fromEntries((kitCoverResult.data ?? []).flatMap((product) => product.slug && product.image_url ? [[product.slug, product.image_url]] : []));
   const collections = (storeSettings.home.collections ?? []).filter((collection) => collection.active);
   return (
     <div className="overflow-x-hidden bg-white dark:bg-gray-950">
-      <HomeHeroCarousel settings={storeSettings} />
+      <HomeHeroCarousel settings={storeSettings} kitImages={kitImages} />
 
       <div className="border-y border-orange-200/40 dark:border-gray-800 bg-white dark:bg-gray-950">
         <Marquee items={MARQUEE_ITEMS.slice(0, 4)} speed={28} />

@@ -161,6 +161,7 @@ export interface Coupon {
   bonus_title?: string | null;
   bonus_description?: string | null;
   show_in_bonus_area?: boolean;
+    first_purchase_only?: boolean;
 }
 
 export type PrintRequestStatus =

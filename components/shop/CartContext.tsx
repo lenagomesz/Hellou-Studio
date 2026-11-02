@@ -226,7 +226,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, isAuthed, sessionStatus]);
 
   const addItem = useCallback(
-    async ({ product, option, quantity, customization_text }: AddItemInput) => {
+    async ({ product, option, quantity, customization_text, suppressNotification = false }: AddItemInput) => {
       const stockLimit = getCartStockLimit(product, option);
       const safeQuantity = normalizeCartQuantity(quantity, stockLimit, product);
       const normalizedCustomization = customization_text?.trim() || null;
@@ -242,7 +242,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           currency: 'BRL',
           quantity: addedQuantity,
         });
-        shopNotify.cartAdded({ name: product.name, imageUrl: option?.image_url ?? product.image_url, quantity: addedQuantity });
+        if (!suppressNotification) shopNotify.cartAdded({ name: product.name, imageUrl: option?.image_url ?? product.image_url, quantity: addedQuantity });
       };
 
       if (isAuthed) {
