@@ -73,6 +73,36 @@ type DeliveryDraft = {
   couponDiscount: { code: string; discount_amount: number; discount_value: number; description: string; free_shipping?: boolean; family_pickup?: boolean } | null;
 };
 
+type CartDisplayEntry = { item: CartItemView; components: CartItemView[] };
+
+function groupReligiousKitItems(items: CartItemView[]): CartDisplayEntry[] {
+  const groupedIds = new Set<string>();
+  const entries: CartDisplayEntry[] = [];
+
+  for (const [index, item] of items.entries()) {
+    if (groupedIds.has(item.id)) continue;
+    const isReligiousKit = item.product.name.toLocaleLowerCase('pt-BR') === 'monte seu kit religioso';
+    const summary = item.customization_text?.match(/Itens do kit:\s*(.+)$/)?.[1] ?? '';
+    const requested = summary.split(', ').map(part => /^(\d+)x\s+(.+)$/.exec(part.trim())).filter((match): match is RegExpExecArray => Boolean(match));
+    const components: CartItemView[] = [];
+
+    if (isReligiousKit && requested.length > 0) {
+      for (const match of requested) {
+        const quantity = Number(match[1]);
+        const name = match[2];
+        const component = items.slice(index + 1).find(candidate => !groupedIds.has(candidate.id) && candidate.product.name === name && candidate.quantity === quantity);
+        if (component) {
+          components.push(component);
+          groupedIds.add(component.id);
+        }
+      }
+    }
+
+    entries.push({ item, components });
+  }
+  return entries;
+}
+
 export default function CartPage() {
   const { items, total, status, updateQuantity, removeItem } = useCart();
   const { data: session } = useSession();
@@ -119,6 +149,11 @@ export default function CartPage() {
 
   const isLoading = status === 'loading';
   const isSyncing = status === 'syncing';
+  const displayEntries = groupReligiousKitItems(items);
+
+  async function removeDisplayEntry(entry: CartDisplayEntry) {
+    for (const current of [entry.item, ...entry.components]) await removeItem(current.id);
+  }
 
   useEffect(() => {
     if (step < 2 || items.length === 0 || paymentCompleted) return;
@@ -536,7 +571,7 @@ export default function CartPage() {
             <div className="flex-1 min-w-0 space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {items.length} {items.length === 1 ? 'produto' : 'produtos'} no carrinho
+                  {displayEntries.length} {displayEntries.length === 1 ? 'produto' : 'produtos'} no carrinho
                 </p>
                 <Link href="/products" className="inline-flex items-center gap-1 text-sm font-medium text-pink-600 hover:text-pink-700 transition">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
@@ -547,14 +582,15 @@ export default function CartPage() {
               </div>
 
               <ul className="space-y-4">
-                {items.map((item) => (
+                {displayEntries.map(({ item, components }) => (
                   <CartLine
                     key={item.id}
                     item={item}
+                    components={components}
                     disabled={isSyncing}
                     onIncrease={() => updateQuantity(item.id, item.product.is_wholesale && item.quantity === 1 ? getCartMinimumQuantity(item.product) : item.quantity + 1)}
                     onDecrease={() => updateQuantity(item.id, item.product.is_wholesale && item.quantity <= getCartMinimumQuantity(item.product) ? 1 : Math.max(1, item.quantity - 1))}
-                    onRemove={() => removeItem(item.id)}
+                    onRemove={() => removeDisplayEntry({ item, components })}
                   />
                 ))}
               </ul>
@@ -990,7 +1026,7 @@ export default function CartPage() {
           <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Resumo do pedido</h3>
             <ul className="space-y-2 mb-3">
-              {items.map((item) => (
+              {displayEntries.map(({ item, components }) => (
                 <li key={item.id} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-950/30 dark:to-orange-950/30">
@@ -1005,7 +1041,7 @@ export default function CartPage() {
                       {item.product.name} <span className="text-gray-400">×{item.quantity}</span>
                     </span>
                   </div>
-                  <span className="font-medium text-gray-900 dark:text-white">{formatPrice(computeItemTotal(item))}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{formatPrice(computeItemTotal(item) + components.reduce((sum, component) => sum + computeItemTotal(component), 0))}</span>
                 </li>
               ))}
             </ul>
@@ -1301,19 +1337,21 @@ export default function CartPage() {
 
 function CartLine({
   item,
+  components,
   disabled,
   onIncrease,
   onDecrease,
   onRemove,
 }: Readonly<{
   item: CartItemView;
+  components: CartItemView[];
   disabled: boolean;
   onIncrease: () => void;
   onDecrease: () => void;
   onRemove: () => void;
 }>) {
   const unit = computeUnitPrice(item);
-  const lineTotal = computeItemTotal(item);
+  const lineTotal = computeItemTotal(item) + components.reduce((sum, component) => sum + computeItemTotal(component), 0);
   const minimum = getCartMinimumQuantity(item.product);
   const max = getCartStockLimit(item.product, item.option) ?? 50;
   const atMax = item.quantity >= max;
@@ -1357,11 +1395,12 @@ function CartLine({
                   <CustomizationSummary value={item.customization_text} />
                 </div>
               )}
-              <p className="mt-0.5 text-xs text-gray-400">{formatPrice(unit)} un.</p>
+              {components.length > 0 && <ul className="mt-2 space-y-1 rounded-lg bg-pink-50/70 p-2 text-xs text-gray-700 dark:bg-pink-950/20 dark:text-gray-300">{components.map(component => <li key={component.id} className="flex justify-between gap-3"><span>{component.quantity}x {component.product.name}</span><span className="shrink-0 font-medium">{formatPrice(computeItemTotal(component))}</span></li>)}</ul>}
+              <p className="mt-0.5 text-xs text-gray-400">{components.length > 0 ? `Kit completo · bandeja ${formatPrice(unit)}` : `${formatPrice(unit)} un.`}</p>
               {item.product.is_wholesale && <p className="mt-1 text-xs font-semibold text-orange-600 dark:text-orange-400">1 un. no varejo ou atacado a partir de {minimum}</p>}
             </div>
             <div className="flex flex-shrink-0 items-center gap-1">
-              <Link
+              {components.length === 0 && <Link
                 href={`/products/${productIdentifier(item.product)}?replace=${item.id}${item.option ? `&option=${item.option.id}` : ''}${item.customization_text ? `&customization=${encodeURIComponent(item.customization_text)}` : ''}` as Route}
                 className="rounded-full p-1.5 text-gray-300 transition hover:bg-pink-50 dark:hover:bg-pink-950/30 hover:text-pink-500"
                 aria-label={`Editar ${item.product.name}`}
@@ -1369,7 +1408,7 @@ function CartLine({
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                 </svg>
-              </Link>
+              </Link>}
               <button
                 type="button"
                 onClick={onRemove}
@@ -1385,7 +1424,7 @@ function CartLine({
           </div>
 
           <div className="mt-auto flex items-end justify-between pt-2">
-            <div className="inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
+            {components.length > 0 ? <span className="rounded-lg bg-pink-50 px-3 py-2 text-xs font-bold text-pink-700 dark:bg-pink-950/30 dark:text-pink-300">1 kit</span> : <div className="inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
               <button
                 type="button"
                 onClick={onDecrease}
@@ -1409,7 +1448,7 @@ function CartLine({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
               </button>
-            </div>
+            </div>}
             <p className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(lineTotal)}</p>
           </div>
         </div>
