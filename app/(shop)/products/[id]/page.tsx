@@ -130,7 +130,7 @@ export default async function ProductDetailPage(
   const kitMode = product.slug === 'monte-seu-kit-natalino' ? 'natal' : product.slug === 'monte-seu-kit-religioso' ? 'religioso' : null;
   if (kitMode) {
     const candidateSlugs = kitMode === 'natal'
-      ? ['rena-tricotada', 'boneco-de-neve-tricotado', 'papai-noel-tricotado', 'pinguim-tricotado', 'arvore-tricotada', 'decoracao-feliz-natal-mini']
+      ? ['rena-tricotada', 'boneco-de-neve-tricotado', 'papai-noel-tricotado', 'pinguim-tricotado', 'arvore-tricotada', 'ursinho-polar-natalino', 'decoracao-feliz-natal-mini']
       : ['miniatura-jesus-cristo', 'divino-espirito-santo', 'nossa-senhora-aparecida-mini', 'sagrada-familia-minimalista', 'presepio-sagrada-familia', 'presepio-iluminado-estrela-de-belem'];
     const admin = getSupabaseAdmin();
     const { data: candidateData } = await admin.from('products').select('*,product_options(*)').in('slug', candidateSlugs).eq('active', true).order('name');

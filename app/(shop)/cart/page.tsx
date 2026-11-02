@@ -76,31 +76,38 @@ type DeliveryDraft = {
 type CartDisplayEntry = { item: CartItemView; components: CartItemView[] };
 
 function groupReligiousKitItems(items: CartItemView[]): CartDisplayEntry[] {
-  const groupedIds = new Set<string>();
-  const entries: CartDisplayEntry[] = [];
+  const kitItems = items.filter(item => item.product.name.toLocaleLowerCase('pt-BR') === 'monte seu kit religioso');
+  const componentIds = new Set<string>();
+  const componentsByKitId = new Map<string, CartItemView[]>();
 
-  for (const [index, item] of items.entries()) {
-    if (groupedIds.has(item.id)) continue;
-    const isReligiousKit = item.product.name.toLocaleLowerCase('pt-BR') === 'monte seu kit religioso';
-    const summary = item.customization_text?.match(/Itens do kit:\s*(.+)$/)?.[1] ?? '';
-    const requested = summary.split(', ').map(part => /^(\d+)x\s+(.+)$/.exec(part.trim())).filter((match): match is RegExpExecArray => Boolean(match));
+  for (const kit of kitItems) {
+    const summary = kit.customization_text?.match(/Itens do kit:\s*(.+)$/)?.[1] ?? '';
+    const requested = summary
+      .split(', ')
+      .map(part => /^(\d+)x\s+(.+)$/.exec(part.trim()))
+      .filter((match): match is RegExpExecArray => Boolean(match));
     const components: CartItemView[] = [];
 
-    if (isReligiousKit && requested.length > 0) {
-      for (const match of requested) {
-        const quantity = Number(match[1]);
-        const name = match[2];
-        const component = items.slice(index + 1).find(candidate => !groupedIds.has(candidate.id) && candidate.product.name === name && candidate.quantity === quantity);
-        if (component) {
-          components.push(component);
-          groupedIds.add(component.id);
-        }
+    for (const match of requested) {
+      const quantity = Number(match[1]);
+      const name = match[2];
+      const component = items.find(candidate => (
+        candidate.id !== kit.id
+        && !componentIds.has(candidate.id)
+        && candidate.product.name === name
+        && candidate.quantity === quantity
+      ));
+      if (component) {
+        components.push(component);
+        componentIds.add(component.id);
       }
     }
-
-    entries.push({ item, components });
+    componentsByKitId.set(kit.id, components);
   }
-  return entries;
+
+  return items
+    .filter(item => !componentIds.has(item.id))
+    .map(item => ({ item, components: componentsByKitId.get(item.id) ?? [] }));
 }
 
 export default function CartPage() {
