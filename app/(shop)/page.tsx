@@ -109,23 +109,35 @@ const getFeaturedProducts = unstable_cache(
 async function ChristmasProducts() {
   const [products, categories] = await Promise.all([getFeaturedProducts('christmas'), getCatalogCategories('physical')]);
   if (products.length === 0) return null;
-  const kit = products.find((product) => /kit/i.test(product.name));
+  const kitSlugs = new Set(['monte-seu-kit-natalino', 'monte-seu-kit-religioso']);
+  const kits = products
+    .filter((product) => kitSlugs.has(product.slug ?? ''))
+    .sort((a, b) => (a.slug === 'monte-seu-kit-natalino' ? -1 : b.slug === 'monte-seu-kit-natalino' ? 1 : 0));
+  const catalogProducts = products.filter((product) => !kitSlugs.has(product.slug ?? ''));
   return (
     <div className="mx-auto max-w-[1400px] px-3 pt-12 sm:px-6">
-      {kit && (
-        <section className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-pink-600 via-pink-500 to-orange-400 p-1 shadow-xl shadow-pink-500/20">
-          <div className="flex flex-col gap-5 rounded-[22px] bg-white/95 p-4 sm:flex-row sm:items-center sm:p-5 dark:bg-gray-950/95">
-            {kit.image_url && <img src={kit.image_url} alt={kit.image_alt_texts?.[kit.image_url] || kit.name} className="h-40 w-full rounded-2xl object-cover sm:h-44 sm:w-44" />}
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-600 dark:text-pink-400">Kits de Natal</p>
-              <h2 className="mt-1 text-2xl font-black text-gray-900 dark:text-white">{kit.name}</h2>
-              <p className="mt-1 max-w-xl text-sm leading-5 text-gray-600 dark:text-gray-300">Um presente pronto para encantar e deixar a decoração natalina ainda mais especial.</p>
-              <div className="mt-3 flex flex-wrap items-center gap-3"><strong className="text-xl text-pink-600 dark:text-pink-400">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(kit.sale_price ?? kit.base_price)}</strong><Link href={`/products/${productIdentifier(kit)}`} className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:scale-[1.02]">Conhecer o kit →</Link></div>
+      {kits.length > 0 && (
+        <section className="mb-8 rounded-3xl bg-gradient-to-r from-pink-600 via-pink-500 to-orange-400 p-1 shadow-xl shadow-pink-500/20">
+          <div className="rounded-[22px] bg-white/95 p-4 sm:p-5 dark:bg-gray-950/95">
+            <p className="mb-4 text-center text-[11px] font-black uppercase tracking-[0.2em] text-pink-600 dark:text-pink-400">Kits de Natal</p>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {kits.map((kit) => {
+                const isReligious = kit.slug === 'monte-seu-kit-religioso';
+                const price = isReligious ? 44.8 : (kit.sale_price ?? kit.base_price);
+                return <article key={kit.id} className="flex flex-col gap-4 rounded-2xl border border-pink-100 bg-white p-3 sm:flex-row sm:items-center dark:border-gray-800 dark:bg-gray-900">
+                  {kit.image_url && <img src={kit.image_url} alt={kit.image_alt_texts?.[kit.image_url] || kit.name} className="h-40 w-full rounded-xl object-cover sm:h-40 sm:w-40" />}
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-xl font-black text-gray-900 dark:text-white">{kit.name}</h2>
+                    <p className="mt-1 text-sm leading-5 text-gray-600 dark:text-gray-300">{isReligious ? 'Escolha a bandeja e combine suas peças religiosas favoritas.' : 'Escolha a bandeja e monte seu kit natalino com até cinco peças.'}</p>
+                    <div className="mt-3 flex flex-wrap items-center gap-3"><strong className="text-lg text-pink-600 dark:text-pink-400">{isReligious ? 'A partir de ' : ''}{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)}</strong><Link href={`/products/${productIdentifier(kit)}`} className="rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:scale-[1.02]">Montar meu kit</Link></div>
+                  </div>
+                </article>;
+              })}
             </div>
           </div>
         </section>
       )}
-      <ChristmasCatalog products={products} categories={categories} />
+      <ChristmasCatalog products={catalogProducts} categories={categories} />
     </div>
   );
 }
