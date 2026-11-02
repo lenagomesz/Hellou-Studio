@@ -4,13 +4,15 @@ import { ProductEditor } from '@/components/admin/ProductEditor/ProductEditor';
 import { STLProductForm } from '@/components/admin/STLProductForm';
 import Link from 'next/link';
 import type { Product, ProductOption } from '@/types/database';
+import { attachProductTags } from '@/lib/product-tags';
 
 export const dynamic = 'force-dynamic';
 
 async function getProduct(id: string) {
   const admin = getSupabaseAdmin();
   const { data } = await admin.from('products').select('*').eq('id', id).maybeSingle();
-  return data as Product | null;
+  if (!data) return null;
+  return (await attachProductTags([data as Product]))[0] ?? null;
 }
 
 async function getProductOptions(productId: string) {

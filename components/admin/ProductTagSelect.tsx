@@ -19,11 +19,14 @@ export function ProductTagSelect({
     let cancelled = false;
     const query = productId ? `?product_id=${encodeURIComponent(productId)}` : '';
     fetch(`/api/admin/products/tags${query}`, { cache: 'no-store' })
-      .then((response) => response.json())
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Não foi possível carregar as tags');
+        return response.json();
+      })
       .then((data: { tags?: ProductTag[]; assigned_tag_ids?: string[] }) => {
         if (cancelled) return;
         setTags(data.tags ?? []);
-        if (productId) onChange(data.assigned_tag_ids ?? []);
+        if (productId && Array.isArray(data.assigned_tag_ids)) onChange(data.assigned_tag_ids);
       })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoading(false); });

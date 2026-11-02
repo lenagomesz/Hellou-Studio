@@ -45,7 +45,7 @@ export function STLProductForm({ mode, product }: Props) {
   const [price, setPrice] = useState(product ? String(product.base_price) : '');
   const [category, setCategory] = useState(product?.category ?? 'encomenda');
   const [active, setActive] = useState(product?.active ?? true);
-  const [tagIds, setTagIds] = useState<string[]>([]);
+  const [tagIds, setTagIds] = useState<string[]>(() => product?.tags?.map((tag) => tag.id) ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');

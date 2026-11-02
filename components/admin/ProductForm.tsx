@@ -98,7 +98,7 @@ export function ProductForm(props: ProductFormProps) {
     () => initial?.customization_sections ?? [],
   );
   const [options, setOptions] = useState<DraftOption[]>(() => props.mode === 'create' ? [createDraftOption()] : []);
-  const [tagIds, setTagIds] = useState<string[]>([]);
+  const [tagIds, setTagIds] = useState<string[]>(() => initial?.tags?.map((tag) => tag.id) ?? []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
