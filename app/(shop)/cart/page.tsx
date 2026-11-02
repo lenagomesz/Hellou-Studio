@@ -969,7 +969,7 @@ export default function CartPage() {
                   onClick={() => setPickupConfirmationOpen(true)}
                   className="text-xs font-medium text-gray-400 underline decoration-dotted underline-offset-4 transition hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 >
-                  Precisa combinar outra forma de recebimento?
+                  Precisa combinar outra forma de recebimento? Retirar diretamente com a dona
                 </button>
                 {pickupError && <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">{pickupError}</p>}
               </div>
