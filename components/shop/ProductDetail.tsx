@@ -49,6 +49,10 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
+function formatMeasurement(value: number) {
+  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(value);
+}
+
 export function ProductDetail({
   product,
   options,
@@ -75,6 +79,10 @@ export function ProductDetail({
   const isOwnedDigital = product.type === 'digital' && Boolean(ownedOrderId);
   const ProductHeading = onAdded ? 'h2' : 'h1';
   const requiresReadyStock = product.fulfillment_mode === 'ready_stock';
+  const isChristmasProduct = product.tags?.some((tag) => tag.name.trim().toLocaleLowerCase('pt-BR') === 'natal') ?? false;
+  const approximateDimensions = isChristmasProduct && product.length_cm && product.width_cm && product.height_cm
+    ? `${formatMeasurement(product.length_cm)} × ${formatMeasurement(product.width_cm)} × ${formatMeasurement(product.height_cm)} cm`
+    : null;
   const availability = isOwnedDigital
     ? { label: '✓ Adquirido', className: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300' }
     : product.type === 'digital'
@@ -377,9 +385,12 @@ export function ProductDetail({
           )}
         </div>
         {product.type !== 'digital' && (
-          <p className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
-            <span aria-hidden="true">⏱</span>{requiresReadyStock ? 'Pronta entrega: envio rápido após a confirmação.' : `Produção em ${DEFAULT_PRODUCTION_LEAD_TIME}.`}
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
+              <span aria-hidden="true">⏱</span>{requiresReadyStock ? 'Pronta entrega: envio rápido após a confirmação.' : `Produção em ${DEFAULT_PRODUCTION_LEAD_TIME}.`}
+            </p>
+            {approximateDimensions && <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700 dark:bg-pink-950/40 dark:text-pink-300"><span aria-hidden="true">↔</span>Medidas aprox.: {approximateDimensions} (C × L × A)</p>}
+          </div>
         )}
         {whatsappUrl && (
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex w-fit items-center gap-1.5 text-xs font-bold text-emerald-700 transition hover:text-emerald-600 dark:text-emerald-400">
