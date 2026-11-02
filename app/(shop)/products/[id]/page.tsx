@@ -132,8 +132,14 @@ export default async function ProductDetailPage(
     const candidateSlugs = kitMode === 'natal'
       ? ['rena-tricotada', 'boneco-de-neve-tricotado', 'papai-noel-tricotado', 'pinguim-tricotado', 'arvore-tricotada', 'decoracao-feliz-natal-mini']
       : ['miniatura-jesus-cristo', 'divino-espirito-santo', 'nossa-senhora-aparecida-mini', 'sagrada-familia-minimalista', 'presepio-sagrada-familia', 'presepio-iluminado-estrela-de-belem'];
-    const { data: candidateData } = await getSupabaseAdmin().from('products').select('*,product_options(*)').in('slug', candidateSlugs).eq('active', true).order('name');
-    return <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6"><Link href="/" className="text-sm font-bold text-pink-600">← Voltar</Link><div className="mt-6 grid gap-7 lg:grid-cols-[320px_1fr]"><aside><div className="overflow-hidden rounded-3xl bg-pink-50"><img src={product.image_url ?? ''} alt={product.name} className="aspect-square h-full w-full object-cover" /></div><h1 className="mt-5 text-3xl font-black">{product.name}</h1>{kitMode === 'religioso' && <p className="mt-2 text-lg font-black text-pink-600">A partir de R$ 44,80</p>}<p className="mt-3 text-sm leading-6 text-gray-600">{product.description}</p></aside><CustomKitConfigurator mode={kitMode} kitProduct={product} kitOptions={options} products={(candidateData ?? []) as unknown as KitSelectableProduct[]} /></div></div>;
+    const admin = getSupabaseAdmin();
+    const { data: candidateData } = await admin.from('products').select('*,product_options(*)').in('slug', candidateSlugs).eq('active', true).order('name');
+    const candidates = await Promise.all((candidateData ?? []).map(async candidate => ({
+      ...candidate,
+      product_options: await loadAvailableProductOptions(admin, (candidate.product_options ?? []) as ProductOption[]),
+      customization_sections: await loadEffectiveCustomizationSections(admin, candidate.id, candidate.customization_sections),
+    })));
+    return <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6"><Link href="/" className="text-sm font-bold text-pink-600">← Voltar</Link><div className="mt-6 grid gap-7 lg:grid-cols-[320px_1fr]"><aside><div className="overflow-hidden rounded-3xl bg-pink-50"><img src={product.image_url ?? ''} alt={product.name} className="aspect-square h-full w-full object-cover" /></div><h1 className="mt-5 text-3xl font-black">{product.name}</h1>{kitMode === 'religioso' && <p className="mt-2 text-lg font-black text-pink-600">A partir de R$ 44,80</p>}<p className="mt-3 text-sm leading-6 text-gray-600">{product.description}</p></aside><CustomKitConfigurator mode={kitMode} kitProduct={product} kitOptions={options} products={candidates as unknown as KitSelectableProduct[]} /></div></div>;
   }
 
   const [related, user] = await Promise.all([
