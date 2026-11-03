@@ -75,6 +75,15 @@ type DeliveryDraft = {
 
 type CartDisplayEntry = { item: CartItemView; components: CartItemView[] };
 
+function isCustomKit(item: CartItemView) {
+  return /^monte seu kit (natalino|religioso)$/i.test(item.product.name);
+}
+
+function kitTrayLabel(item: CartItemView) {
+  const color = item.customization_text?.match(/Cor:\s*([^·]+)/)?.[1]?.trim();
+  return `Bandeja média${color ? ` · ${color}` : ''}`;
+}
+
 function groupReligiousKitItems(items: CartItemView[]): CartDisplayEntry[] {
   const kitItems = items.filter(item => item.product.name.toLocaleLowerCase('pt-BR') === 'monte seu kit religioso');
   const componentIds = new Set<string>();
@@ -1169,7 +1178,7 @@ export default function CartPage() {
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-gray-900 dark:text-white text-xs line-clamp-2">{item.product.name}</p>
                           <p className="text-xs text-gray-400">×{item.quantity}{item.option?.name ? ` · ${item.option.name}` : ''}</p>
-                          {components.length > 0 && <p className="mt-1 text-[11px] leading-4 text-gray-600 dark:text-gray-300">Inclui: {components.map(component => `${component.quantity}× ${component.product.name}`).join(', ')}</p>}
+                          {isCustomKit(item) && <p className="mt-1 text-[11px] leading-4 text-gray-600 dark:text-gray-300">Inclui: {kitTrayLabel(item)}{components.length > 0 ? `, ${components.map(component => `${component.quantity}× ${component.product.name}`).join(', ')}` : ''}</p>}
                         </div>
                       </div>
                       <div className="flex-shrink-0 text-right">
@@ -1408,8 +1417,8 @@ function CartLine({
                   <CustomizationSummary value={item.customization_text} />
                 </div>
               )}
-              {components.length > 0 && <ul className="mt-2 space-y-1 rounded-lg bg-pink-50/70 p-2 text-xs text-gray-700 dark:bg-pink-950/20 dark:text-gray-300">{components.map(component => <li key={component.id} className="flex justify-between gap-3"><span>{component.quantity}x {component.product.name}</span><span className="shrink-0 font-medium">{formatPrice(computeItemTotal(component))}</span></li>)}</ul>}
-              <p className="mt-0.5 text-xs text-gray-400">{components.length > 0 ? `Kit completo · bandeja ${formatPrice(unit)}` : `${formatPrice(unit)} un.`}</p>
+              {isCustomKit(item) && <ul className="mt-2 space-y-1 rounded-lg bg-pink-50/70 p-2 text-xs text-gray-700 dark:bg-pink-950/20 dark:text-gray-300"><li className="flex justify-between gap-3"><span>1x {kitTrayLabel(item)}</span>{components.length > 0 && <span className="shrink-0 font-medium">{formatPrice(unit)}</span>}</li>{components.map(component => <li key={component.id} className="flex justify-between gap-3"><span>{component.quantity}x {component.product.name}</span><span className="shrink-0 font-medium">{formatPrice(computeItemTotal(component))}</span></li>)}</ul>}
+              <p className="mt-0.5 text-xs text-gray-400">{isCustomKit(item) ? 'Kit completo' : `${formatPrice(unit)} un.`}</p>
               {item.product.is_wholesale && <p className="mt-1 text-xs font-semibold text-orange-600 dark:text-orange-400">1 un. no varejo ou atacado a partir de {minimum}</p>}
             </div>
             <div className="flex flex-shrink-0 items-center gap-1">
