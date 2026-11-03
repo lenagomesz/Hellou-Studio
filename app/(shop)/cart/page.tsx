@@ -81,6 +81,7 @@ function groupReligiousKitItems(items: CartItemView[]): CartDisplayEntry[] {
   const componentsByKitId = new Map<string, CartItemView[]>();
 
   for (const kit of kitItems) {
+    const kitId = kit.customization_text?.match(/Kit ID: ([0-9a-f-]{36})/)?.[1];
     const summary = kit.customization_text?.match(/Itens do kit:\s*(.+)$/)?.[1] ?? '';
     const requested = summary
       .split(', ')
@@ -96,6 +97,9 @@ function groupReligiousKitItems(items: CartItemView[]): CartDisplayEntry[] {
         && !componentIds.has(candidate.id)
         && candidate.product.name === name
         && candidate.quantity === quantity
+        && (kitId
+          ? candidate.customization_text?.includes(`Kit ID: ${kitId}`)
+          : !candidate.customization_text?.includes('Kit ID:'))
       ));
       if (component) {
         components.push(component);

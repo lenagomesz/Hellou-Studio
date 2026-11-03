@@ -43,7 +43,8 @@ export function CustomKitConfigurator({ mode, kitProduct, kitOptions, products }
     try {
       if (!traySection || !selectedTrayColor) throw new Error('Escolha uma cor disponível para a bandeja.');
       const itemSummary = selectedProducts.map(product => `${quantities[product.id]}x ${product.name}`).join(', ');
-      const kitCustomization = `${traySection.label}: Cor: ${selectedTrayColor.label} · Texto: Itens do kit: ${itemSummary}`;
+      const kitId = crypto.randomUUID();
+      const kitCustomization = `${traySection.label}: Cor: ${selectedTrayColor.label} · Kit ID: ${kitId} · Texto: Itens do kit: ${itemSummary}`;
       if (mode === 'natal') {
         const option = kitOptions.find(item => item.name.includes(`${selectedCount} itens`));
         await addItem({ product: kitProduct, option: option ?? null, quantity: 1, customization_text: kitCustomization });
@@ -53,7 +54,7 @@ export function CustomKitConfigurator({ mode, kitProduct, kitOptions, products }
           const option = product.product_options?.find(item => item.id === optionIds[product.id]) ?? product.product_options?.[0] ?? null;
           const colorSection = product.customization_sections?.find(section => section.type === 'color' || section.type === 'color_text');
           const productColor = colorSection?.colors.find(item => item.id === productColorIds[product.id]) ?? colorSection?.colors[0];
-          const customization = colorSection && productColor ? `${colorSection.label}: Cor: ${productColor.label}` : null;
+          const customization = `${colorSection && productColor ? `${colorSection.label}: Cor: ${productColor.label} · ` : ''}Kit ID: ${kitId}`;
           await addItem({ product, option, quantity: quantities[product.id], customization_text: customization, suppressNotification: true });
         }
       }
