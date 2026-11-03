@@ -498,6 +498,7 @@ export default function CartPage() {
   const firstPurchaseDiscount = checkoutTotals.firstPurchaseDiscount;
   const grandTotal = checkoutTotals.total;
   const checkoutItems = paymentSummary?.items ?? items;
+  const checkoutDisplayEntries = groupReligiousKitItems(checkoutItems);
   const checkoutSubtotal = paymentSummary?.subtotal ?? total;
   const checkoutShippingCost = paymentSummary?.shippingCost ?? shippingCost;
   const checkoutDiscountAmount = paymentSummary?.discountAmount ?? discountAmount;
@@ -1148,13 +1149,13 @@ export default function CartPage() {
               {/* Items */}
               <div className="rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 sm:p-4 md:p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
-                  <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Itens ({checkoutItems.length})</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Itens ({checkoutDisplayEntries.length})</h2>
                   <button type="button" onClick={() => setStep(1)} className="text-xs text-pink-600 hover:text-pink-700 transition">
                     Editar
                   </button>
                 </div>
                 <ul className="space-y-2.5">
-                  {checkoutItems.map((item) => (
+                  {checkoutDisplayEntries.map(({ item, components }) => (
                     <li key={item.id} className="flex items-start justify-between gap-2 text-xs">
                       <div className="flex items-start gap-2 min-w-0 flex-1">
                         <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-950/30 dark:to-orange-950/30">
@@ -1168,10 +1169,11 @@ export default function CartPage() {
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-gray-900 dark:text-white text-xs line-clamp-2">{item.product.name}</p>
                           <p className="text-xs text-gray-400">×{item.quantity}{item.option?.name ? ` · ${item.option.name}` : ''}</p>
+                          {components.length > 0 && <p className="mt-1 text-[11px] leading-4 text-gray-600 dark:text-gray-300">Inclui: {components.map(component => `${component.quantity}× ${component.product.name}`).join(', ')}</p>}
                         </div>
                       </div>
                       <div className="flex-shrink-0 text-right">
-                        <span className="font-medium text-gray-900 dark:text-white text-xs block">{formatPrice(computeItemTotal(item))}</span>
+                        <span className="font-medium text-gray-900 dark:text-white text-xs block">{formatPrice(computeItemTotal(item) + components.reduce((sum, component) => sum + computeItemTotal(component), 0))}</span>
                       </div>
                     </li>
                   ))}
