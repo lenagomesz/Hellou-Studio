@@ -7,8 +7,8 @@ import { useCart } from '@/components/shop/CartContext';
 import type { Product, ProductOption } from '@/types/database';
 export type KitSelectableProduct = Omit<Product, 'product_options'> & { product_options?: ProductOption[] };
 
-const TRAY_COLOR_LABELS = new Set(['Bege', 'Vermelho', 'Verde Musgo', 'Verde musgo', 'Marrom', 'Caramelo']);
-const displayTrayColor = (label: string) => label === 'Bege' ? 'Creme' : label.toLocaleLowerCase('pt-BR') === 'verde musgo' ? 'Verde' : label;
+const TRAY_COLOR_LABELS = new Set(['Branco', 'Vermelho', 'Verde Musgo', 'Verde musgo', 'Marrom', 'Caramelo']);
+const displayTrayColor = (label: string) => label.toLocaleLowerCase('pt-BR') === 'verde musgo' ? 'Verde' : label;
 const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
 export function CustomKitConfigurator({ mode, kitProduct, kitOptions, products }: { mode: 'natal' | 'religioso'; kitProduct: Product; kitOptions: ProductOption[]; products: KitSelectableProduct[] }) {
