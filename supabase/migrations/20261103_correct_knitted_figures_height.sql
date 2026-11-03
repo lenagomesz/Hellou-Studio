@@ -9,3 +9,5 @@ where active = true
     'Rena Tricotada',
     'Ursinho Polar Natalino'
   );
+
+alter table public.products enable row level security;
