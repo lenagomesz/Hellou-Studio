@@ -29,6 +29,7 @@ import {
   UserRoundSearch,
   Users,
   Warehouse,
+  MessageCircle,
   Zap,
   type LucideIcon,
 } from 'lucide-react';
@@ -80,6 +81,7 @@ export const ADMIN_NAVIGATION: AdminNavigationSection[] = [
       { href: '/dashboard/analytics', label: 'Análises', description: 'Tráfego, vendas e comportamento', icon: BarChart3, permission: 'analytics.view', keywords: 'analytics insights métricas acessos', featureKey: 'period_comparison' },
       { href: '/dashboard/ai', label: 'Inteligência Artificial', description: 'IA para conteúdo, tendências e crescimento', icon: Zap, permission: 'settings.manage', keywords: 'gemini ai ml machine learning' },
       { href: '/dashboard/campaigns', label: 'Campanhas', description: 'E-mails, públicos e automações', icon: Mail, permission: 'marketing.manage', keywords: 'marketing mensagens', featureKey: 'email_campaigns' },
+      { href: '/dashboard/whatsapp-channel', label: 'Canal WhatsApp', description: 'Conteúdo, calendário e publicações do canal', icon: MessageCircle, permission: 'marketing.manage', keywords: 'canal postagens enquetes calendário' },
       { href: '/dashboard/coupons', label: 'Cupons', description: 'Descontos, bônus e promoções', icon: Tag, permission: 'marketing.manage', keywords: 'ofertas códigos' },
       { href: '/dashboard/calculadora', label: 'Calculadora', description: 'Custos, preços e análise de mercado', icon: Calculator, permission: 'settings.manage', keywords: 'margem lucro ia' },
       { href: '/dashboard/polaroid', label: 'Polaroid', description: 'Monte folhas A4 com fotos e marcas de corte', icon: Images, permission: 'settings.manage', keywords: 'foto impressão brinde a4 recorte' },

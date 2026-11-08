@@ -69,6 +69,7 @@ export function isRestrictedAdminPath(pathname: string, level: AdminAccessLevel)
     '/dashboard/financeiro',
     '/dashboard/analytics',
     '/dashboard/campaigns',
+    '/dashboard/whatsapp-channel',
     '/dashboard/coupons',
     '/dashboard/calculadora',
     '/dashboard/orders/bulk-actions',
