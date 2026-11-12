@@ -8,6 +8,7 @@ import type { OrderStatus } from '@/types/database';
 import { getProductColorName, getProductColorValue } from '@/lib/product-colors';
 import { ShipmentTracking } from '@/components/orders/ShipmentTracking';
 import { CustomizationSummary } from '@/components/shop/CustomizationSummary';
+import { getWhatsAppUrl } from '@/lib/whatsapp';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_payment: 'Aguardando Pagamento',
@@ -82,7 +83,7 @@ type OrderDetail = {
   created_at: string;
   updated_at: string;
   shipping_address: Record<string, unknown> | null;
-  user: { id: string; email: string; name: string | null } | null;
+  user: { id: string; email: string; name: string | null; phone: string | null } | null;
   items: OrderItem[];
 };
 
@@ -123,6 +124,7 @@ export default function OrderDetailPage() {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [emails, setEmails] = useState<EmailDelivery[]>([]);
   const [resendingEmailId, setResendingEmailId] = useState<string | null>(null);
+  const whatsappUrl = getWhatsAppUrl(order?.user?.phone);
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -666,6 +668,18 @@ export default function OrderDetailPage() {
             </div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">{order.user?.name ?? '—'}</p>
             <p className="text-xs text-gray-500 mt-0.5">{order.user?.email ?? '—'}</p>
+            {whatsappUrl ? (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-green-700"
+              >
+                Abrir conversa no WhatsApp
+              </a>
+            ) : (
+              <p className="mt-3 text-xs text-gray-500">WhatsApp indisponível: telefone não cadastrado ou inválido.</p>
+            )}
           </div>
 
           {/* Shipping - Hidden for digital-only orders */}

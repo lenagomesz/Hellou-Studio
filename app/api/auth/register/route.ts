@@ -43,6 +43,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const cpfDigits = cleanCpf(typeof cpf === 'string' ? cpf : '');
+  if (typeof cpf !== 'string' || cpf.replace(/\D/g, '').length > 11 || !cpfDigits || !isValidCpf(cpfDigits)) {
+    return NextResponse.json({ error: 'CPF válido é obrigatório' }, { status: 400 });
+  }
+
   const admin = getSupabaseAdmin();
 
   const { data: banned } = await admin
@@ -75,14 +80,7 @@ export async function POST(request: Request) {
 
   const cleanPhone = phone?.replace(/\D/g, '').trim() || null;
 
-  let cleanedCpf: string | null = null;
-  if (cpf) {
-    const digits = cleanCpf(cpf);
-    if (digits.length > 0 && !isValidCpf(digits)) {
-      return NextResponse.json({ error: 'CPF inválido' }, { status: 400 });
-    }
-    if (digits.length === 11) cleanedCpf = digits;
-  }
+  const cleanedCpf = cpfDigits;
 
   const { data: created, error } = await admin
     .from('users')

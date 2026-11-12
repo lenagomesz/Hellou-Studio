@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { badRequest, requirePermission, serverError } from '@/lib/api';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { sendOrderStatusEmail } from '@/lib/email';
+import { sendAdminShipmentConfirmationEmail, sendOrderStatusEmail, shouldSendAdminShipmentConfirmation } from '@/lib/email';
 import type { OrderStatus } from '@/types/database';
 import { isRevenueOrderStatus } from '@/lib/order-analytics';
 
@@ -154,14 +154,34 @@ export async function PATCH(request: Request) {
     return serverError('Erro ao atualizar pedido');
   }
 
-  // Send email to customer
+  let userData: { email: string; name: string | null } | null = null;
   try {
-    const { data: userData } = await admin
+    const { data } = await admin
       .from('users')
       .select('email, name')
       .eq('id', order.user_id)
       .single();
+    userData = data;
+  } catch (userError) {
+    console.error('[admin-orders-patch] user lookup error:', userError);
+  }
 
+  // Administrative confirmation is independent of customer email delivery and awaited before responding.
+  if (shouldSendAdminShipmentConfirmation({ previousStatus: order.status, newStatus: status, trackingCode })) {
+    try {
+      await sendAdminShipmentConfirmationEmail({
+        orderId,
+        customerName: userData?.name ?? null,
+        customerEmail: userData?.email ?? null,
+        trackingCode,
+      });
+    } catch (emailError) {
+      console.error('[admin-orders-patch] admin shipment email error:', emailError);
+    }
+  }
+
+  // Send email to customer
+  try {
     if (userData?.email) {
       await sendOrderStatusEmail({
         email: userData.email,
