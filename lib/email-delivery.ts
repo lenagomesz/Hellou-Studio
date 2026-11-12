@@ -14,6 +14,7 @@ export type TransactionalEmailType =
   | 'order_confirmation'
   | 'pix_payment'
   | 'order_status'
+  | 'admin_shipment_confirmation'
   | 'admin_new_order'
   | 'invoice_request'
   | 'admin_new_print_request'

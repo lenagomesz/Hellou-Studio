@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requirePermission, requireUser, badRequest, notFound, serverError } from '@/lib/api';
-import { sendOrderStatusEmail, sendSTLDeliveryEmail } from '@/lib/email';
+import { sendAdminShipmentConfirmationEmail, sendOrderStatusEmail, sendSTLDeliveryEmail, shouldSendAdminShipmentConfirmation } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { createTimelineEvent } from '@/lib/order-management';
 import { getRefundClient } from '@/lib/mercadopago';
@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 
   const { data: order, error } = await admin
     .from('orders')
-    .select('*, user:users(id, email, name), items:order_items(*, product:products(id, name, image_url, type, file_path), option:product_options(id, name, color, image_url))')
+    .select('*, user:users(id, email, name, phone), items:order_items(*, product:products(id, name, image_url, type, file_path), option:product_options(id, name, color, image_url))')
     .eq('id', id)
     .single();
 
@@ -233,20 +233,40 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
       .single();
 
     if (order) {
-      const { data: user } = await admin
-        .from('users')
-        .select('email, name')
-        .eq('id', order.user_id)
-        .single();
+      let user: { email: string; name: string | null } | null = null;
+      try {
+        const { data } = await admin
+          .from('users')
+          .select('email, name')
+          .eq('id', order.user_id)
+          .single();
+        user = data;
+      } catch (userError) {
+        console.error('[orders-patch] user lookup error:', userError);
+      }
+
+      const shipping = order.shipping_address as Record<string, unknown> | null;
+      const shipmentTrackingCode = typeof shipping?.tracking_code === 'string' ? shipping.tracking_code : null;
+      if (shouldSendAdminShipmentConfirmation({ previousStatus, newStatus: status, trackingCode: shipmentTrackingCode })) {
+        try {
+          await sendAdminShipmentConfirmationEmail({
+            orderId: id,
+            customerName: user?.name ?? null,
+            customerEmail: user?.email ?? null,
+            trackingCode: shipmentTrackingCode!,
+          });
+        } catch (emailError) {
+          console.error('[orders-patch] admin shipment email error:', emailError);
+        }
+      }
 
       if (user?.email) {
-        const shipping = order.shipping_address as Record<string, unknown> | null;
         sendOrderStatusEmail({
           email: user.email,
           nome: user.name ?? null,
           orderId: id,
           newStatus: status,
-          trackingCode: (shipping?.tracking_code as string) ?? null,
+          trackingCode: shipmentTrackingCode,
           refundAmount: status === 'refunded' ? Number(current.total) : undefined,
         }).catch(() => {});
       }

@@ -861,6 +861,79 @@ export async function sendOrderStatusEmail(params: {
   }
 }
 
+export function shouldSendAdminShipmentConfirmation(params: {
+  previousStatus: string | null | undefined;
+  newStatus: string | null | undefined;
+  trackingCode: string | null | undefined;
+}): boolean {
+  return params.previousStatus !== 'shipped'
+    && params.newStatus === 'shipped'
+    && Boolean(params.trackingCode?.trim());
+}
+
+function getAdminShipmentEmailRecipient(): string {
+  return process.env.ADMIN_SHIPMENT_EMAIL?.trim() || 'studiohellou@gmail.com';
+}
+
+export async function sendAdminShipmentConfirmationEmail(params: {
+  orderId: string;
+  customerName: string | null | undefined;
+  customerEmail: string | null | undefined;
+  trackingCode: string;
+}): Promise<boolean> {
+  const trackingCode = params.trackingCode.trim();
+  if (!trackingCode) return false;
+
+  const safeCustomerName = escapeEmailHtml(params.customerName?.trim() || 'Não informado');
+  const safeCustomerEmail = escapeEmailHtml(params.customerEmail?.trim() || 'Não informado');
+  const safeTrackingCode = escapeEmailHtml(trackingCode);
+  const orderReference = escapeEmailHtml(params.orderId.slice(0, 8).toUpperCase());
+  const baseUrl = getBaseUrl();
+  const trackingUrl = `https://melhorrastreio.com.br/${encodeURIComponent(trackingCode)}`;
+  const orderUrl = buildEmailUrl(baseUrl, `/dashboard/orders/${encodeURIComponent(params.orderId)}`);
+  const safeTrackingUrl = escapeEmailHtml(trackingUrl);
+  const safeOrderUrl = escapeEmailHtml(orderUrl);
+
+  try {
+    const resend = getResend();
+    if (!resend) return false;
+    const res = await sendTrackedEmail(resend, {
+      from: getFrom(),
+      to: getAdminShipmentEmailRecipient(),
+      subject: `Envio confirmado — pedido #${orderReference}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1f2937;">
+          <h1 style="margin: 0 0 8px; font-size: 24px;">📦 Pedido enviado</h1>
+          <p style="margin: 0 0 24px; color: #4b5563;">O envio foi registrado com sucesso.</p>
+          <div style="margin: 20px 0; padding: 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; line-height: 1.7;">
+            <p style="margin: 0;"><strong>Pedido:</strong> #${orderReference}</p>
+            <p style="margin: 0;"><strong>Cliente:</strong> ${safeCustomerName}</p>
+            <p style="margin: 0;"><strong>E-mail:</strong> ${safeCustomerEmail}</p>
+            <p style="margin: 0;"><strong>Código de rastreio:</strong> <span style="font-family: monospace;">${safeTrackingCode}</span></p>
+          </div>
+          <p style="margin: 24px 0;">
+            <a href="${safeTrackingUrl}" style="display: inline-block; margin-right: 12px; padding: 12px 18px; background: #ec4899; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Ver no Melhor Rastreio</a>
+            <a href="${safeOrderUrl}" style="display: inline-block; padding: 12px 18px; background: #374151; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Abrir pedido no painel</a>
+          </p>
+        </div>
+      `,
+    }, {
+      emailType: 'admin_shipment_confirmation',
+      orderId: params.orderId,
+      metadata: { trackingCode },
+    });
+    if (res.error) {
+      structuredLog('error', 'email.provider_response_error', { emailType: 'admin_shipment_confirmation', orderId: params.orderId });
+      return false;
+    }
+    structuredLog('info', 'email.send_completed', { emailType: 'admin_shipment_confirmation', orderId: params.orderId, providerEmailId: res.data?.id });
+    return true;
+  } catch (error) {
+    structuredLog('error', 'email.template_exception', { emailType: 'admin_shipment_confirmation', orderId: params.orderId, error });
+    return false;
+  }
+}
+
 export async function sendAdminNewOrderEmail(params: {
   adminEmail: string;
   orderId: string;

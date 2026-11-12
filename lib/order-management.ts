@@ -2,7 +2,7 @@
 // Core utilities for bulk order management system
 
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { sendOrderStatusEmail } from '@/lib/email';
+import { sendAdminShipmentConfirmationEmail, sendOrderStatusEmail, shouldSendAdminShipmentConfirmation } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { getStoreDayBounds } from '@/lib/store-time';
 import type { OrderStatus } from '@/types/database';
@@ -186,16 +186,46 @@ export async function bulkUpdateStatus(params: {
         metadata: { bulk: true },
       });
 
+      const savedTrackingCode = (order.shipping_address as Record<string, unknown> | null)?.tracking_code;
+      const requestedTrackingCode = typeof params.trackingCode === 'string' && params.trackingCode.trim()
+        ? params.trackingCode.trim()
+        : null;
+      const trackingCode = requestedTrackingCode
+        ?? (typeof savedTrackingCode === 'string' ? savedTrackingCode : null);
+      const shouldNotifyAdmin = shouldSendAdminShipmentConfirmation({
+        previousStatus,
+        newStatus: params.newStatus,
+        trackingCode,
+      });
+      const needsUser = shouldNotifyAdmin || params.sendEmails;
+      let user: { email: string; name: string | null } | null = null;
+      if (needsUser) {
+        try {
+          const { data } = await admin.from('users').select('email, name').eq('id', order.user_id).single();
+          user = data;
+        } catch (userError) {
+          console.error('[bulk-update] user lookup error for order:', orderId, userError);
+        }
+      }
+
+      // This notice is independent of the customer email preference and is awaited so serverless requests finish it.
+      if (shouldNotifyAdmin && trackingCode) {
+        try {
+          await sendAdminShipmentConfirmationEmail({
+            orderId,
+            customerName: user?.name ?? null,
+            customerEmail: user?.email ?? null,
+            trackingCode,
+          });
+        } catch (emailError) {
+          console.error('[bulk-update] admin shipment email error for order:', orderId, emailError);
+        }
+      }
+
       // Send email if requested
       let emailSent = false;
       if (params.sendEmails) {
         try {
-          const { data: user } = await admin
-            .from('users')
-            .select('email, name')
-            .eq('id', order.user_id)
-            .single();
-
           if (user?.email) {
             await sendOrderStatusEmail({
               email: user.email,

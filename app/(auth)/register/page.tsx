@@ -67,8 +67,8 @@ export default function RegisterPage() {
     }
 
     const cpfDigits = cleanCpf(cpf);
-    if (cpfDigits.length > 0 && !isValidCpf(cpfDigits)) {
-      setError('CPF inválido. Verifique os números informados.');
+    if (!cpfDigits || !isValidCpf(cpfDigits)) {
+      setError('Informe um CPF válido.');
       return;
     }
 
@@ -93,7 +93,7 @@ export default function RegisterPage() {
           email,
           phone,
           password,
-          cpf: cleanCpf(cpf) || undefined,
+          cpf: cleanCpf(cpf),
           marketingConsent,
         }),
       });
@@ -257,7 +257,7 @@ export default function RegisterPage() {
               {/* CPF */}
               <div>
                 <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  CPF <span className="text-gray-400 font-normal">(opcional)</span>
+                  CPF
                 </label>
                 <div className="relative">
                   <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-gray-400" />
@@ -266,6 +266,7 @@ export default function RegisterPage() {
                     type="text"
                     inputMode="numeric"
                     autoComplete="off"
+                    required
                     placeholder="000.000.000-00"
                     value={cpf}
                     onChange={(e) => setCpf(formatCpf(e.target.value))}
