@@ -84,7 +84,7 @@ export function ProductCard({ product, basePath = "/products", category, showcas
         <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-pink-600">
           {category?.name ?? CATEGORY_LABELS[product.category] ?? product.category}
         </p>
-        <h3 className={`${showcase ? 'line-clamp-2 font-bold leading-[1.2rem]' : 'line-clamp-1 font-semibold'} mt-1 text-xs text-gray-900 sm:text-sm dark:text-white`}>
+        <h3 className={`${showcase ? 'line-clamp-2 shrink-0 font-bold leading-[1.2rem]' : 'line-clamp-1 font-semibold'} mt-1 text-xs text-gray-900 sm:text-sm dark:text-white`} title={product.name}>
           {product.name}
         </h3>
         <p className="mt-1 line-clamp-2 min-h-8 text-[11px] leading-4 text-gray-500 dark:text-gray-400 sm:min-h-9 sm:text-xs sm:leading-[18px]">
