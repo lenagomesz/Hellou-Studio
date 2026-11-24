@@ -30,8 +30,8 @@ describe('disponibilidade do catálogo', () => {
     const unavailable = { ...pink, active: false };
     const first = resolveEffectiveCustomizationSections([], [unavailable, blue], [link('a')], [step]);
     const second = resolveEffectiveCustomizationSections([], [unavailable, blue], [link('b')], [step]);
-    expect(first[0].colors.map((color) => color.label)).toEqual(['Azul']);
-    expect(second[0].colors.map((color) => color.label)).toEqual(['Azul']);
+    expect(first[0].colors.map((color) => [color.label, Boolean(color.unavailable)])).toEqual([['Rosa', true], ['Azul', false]]);
+    expect(second[0].colors.map((color) => [color.label, Boolean(color.unavailable)])).toEqual([['Rosa', true], ['Azul', false]]);
     expect(validateCustomizationChoices(first, 'Cor do corpo: Cor: Rosa')).toBe(false);
     expect(resolveEffectiveCustomizationSections([], [pink, blue], [link('a')], [step])[0].colors).toHaveLength(2);
   });
@@ -41,11 +41,11 @@ describe('disponibilidade do catálogo', () => {
     const first = resolveEffectiveCustomizationSections([exclusive], [pink, blue], [link('a', ['pink-choice'])], [step]);
     const second = resolveEffectiveCustomizationSections([], [pink, blue], [link('b')], [step]);
     expect(first.map((item) => item.label)).toEqual(['Cor do detalhe', 'Cor do corpo']);
-    expect(first[1].colors.map((item) => item.label)).toEqual(['Azul']);
+    expect(first[1].colors.map((item) => [item.label, Boolean(item.unavailable)])).toEqual([['Rosa', true], ['Azul', false]]);
     expect(second[0].colors.map((item) => item.label)).toEqual(['Rosa', 'Azul']);
     const exhausted = resolveEffectiveCustomizationSections([], [pink, blue], [link('a', ['pink-choice', 'blue-choice'])], [step]);
     expect(exhausted[0].availabilityExhausted).toBe(true);
-    expect(exhausted[0].colors).toEqual([]);
+    expect(exhausted[0].colors.every((color) => color.unavailable)).toBe(true);
   });
 
   it('mantém a etapa compartilhada com título próprio e posição entre variações do produto', () => {

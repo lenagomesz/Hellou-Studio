@@ -17,6 +17,7 @@ export type ProductCustomizationColor = {
   label: string;
   value: string;
   colorId?: string;
+  unavailable?: boolean;
 };
 
 export type ProductCustomizationOption = {
@@ -166,7 +167,7 @@ export function normalizeProductCustomizationSections(input: unknown, { allowUna
             throw new Error(`Revise os dados de cor em "${label}"`);
           }
           const catalogColorId = typeof color.colorId === 'string' && /^[0-9a-f-]{36}$/i.test(color.colorId) ? color.colorId : undefined;
-          return { id: colorId, label: colorLabel, value: colorValue, ...(catalogColorId ? { colorId: catalogColorId } : {}) };
+          return { id: colorId, label: colorLabel, value: colorValue, ...(catalogColorId ? { colorId: catalogColorId } : {}), ...(allowUnavailable && color.unavailable === true ? { unavailable: true } : {}) };
         })
       : [];
 
@@ -310,7 +311,7 @@ export function formatProductCustomizationSelections(
       const parts: string[] = [];
       if (section.type === 'color' || section.type === 'color_text') {
         const selectedColor = section.colors.find((color) => color.id === selection.colorId);
-        if (selectedColor) parts.push(`Cor: ${selectedColor.label}`);
+        if (selectedColor && !selectedColor.unavailable) parts.push(`Cor: ${selectedColor.label}`);
       }
       if (section.type === 'option' || section.type === 'option_text') {
         const selectedOption = section.options.find((option) => option.id === selection.optionId);
@@ -337,7 +338,7 @@ export function areRequiredCustomizationSectionsComplete(
     if (section.available === false) return true;
     if (!section.required) return true;
     const selection = selections[section.id] ?? {};
-    const hasColor = Boolean(selection.colorId && section.colors.some((color) => color.id === selection.colorId));
+    const hasColor = Boolean(selection.colorId && section.colors.some((color) => color.id === selection.colorId && !color.unavailable));
     const hasText = Boolean(selection.text?.trim());
     const hasOption = Boolean(selection.optionId && section.options.some((option) => option.id === selection.optionId));
     const imageCount = selection.imageUrls?.length ?? 0;

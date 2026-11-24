@@ -98,20 +98,20 @@ export function resolveEffectiveCustomizationSections(exclusiveInput: unknown, c
       order: link.sort_order,
       section: { ...definition, label: link.label_override?.trim() || definition.label,
         required: link.required, available: link.active && step.active,
-        colors: definition.colors.filter((item) => !link.blocked_ids.includes(item.id)),
+        colors: definition.colors.map((item) => ({ ...item, ...(link.blocked_ids.includes(item.id) ? { unavailable: true } : {}) })),
         options: definition.options.filter((item) => !link.blocked_ids.includes(item.id)) },
     });
   }
   return positioned.sort((a, b) => a.order - b.order).map(({ section }) => {
-    const colors = section.colors.flatMap((item) => {
+    const colors = section.colors.map((item) => {
       const color = (item.colorId && byId.get(item.colorId)) || byHex.get(item.value.toUpperCase())
         || byName.get(item.value.toLocaleLowerCase('pt-BR')) || byName.get(item.label.toLocaleLowerCase('pt-BR'));
-      if (color && !color.active) return [];
-      return [{ ...item, ...(color ? { colorId: color.id, label: color.name, value: color.hex } : {}) }];
+      return { ...item, ...(color ? { colorId: color.id, label: color.name, value: color.hex } : {}),
+        ...(item.unavailable || (color && !color.active) ? { unavailable: true } : {}) };
     });
     const options = section.options.filter((item) => item.active !== false);
     return { ...section, colors, options,
-      ...((section.type === 'color' || section.type === 'color_text') && colors.length === 0
+      ...((section.type === 'color' || section.type === 'color_text') && !colors.some((color) => !color.unavailable)
         || (section.type === 'option' || section.type === 'option_text') && options.length === 0
         ? { availabilityExhausted: true } : {}) };
   });
@@ -129,7 +129,7 @@ export function validateCustomizationChoices(sections: ProductCustomizationSecti
     const value = line.slice(separator + 2);
     const color = /(?:^| · )Cor: ([^·]+)/.exec(value)?.[1]?.trim();
     const option = /(?:^| · )Opção: ([^·]+)/.exec(value)?.[1]?.trim();
-    if (color && !section.colors.some((item) => item.label === color)) return false;
+    if (color && !section.colors.some((item) => item.label === color && !item.unavailable)) return false;
     if (option && !section.options.some((item) => item.label === option)) return false;
   }
   return true;

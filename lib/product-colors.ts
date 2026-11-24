@@ -18,6 +18,25 @@ export const PRODUCT_COLOR_PALETTE = [
   { name: 'Transparente', hex: 'transparent' },
 ] as const;
 
+const COLOR_DISPLAY_ORDER = [
+  'Branco', 'Bege', 'Cinza', 'Preto', 'Rosa', 'Vermelho', 'Laranja',
+  'Amarelo', 'Dourado', 'Verde', 'Verde-escuro', 'Azul', 'Azul-escuro',
+  'Lilás', 'Roxo', 'Prata', 'Transparente',
+];
+
+export function sortProductColorChoices<T extends { label: string; value: string }>(colors: T[]): T[] {
+  return [...colors].sort((first, second) => {
+    const position = (choice: T) => {
+      const name = PRODUCT_COLOR_PALETTE.find((color) =>
+        color.hex.toLowerCase() === choice.value.toLowerCase() || color.name.toLowerCase() === choice.label.toLowerCase(),
+      )?.name;
+      const index = name ? COLOR_DISPLAY_ORDER.indexOf(name) : -1;
+      return index < 0 ? COLOR_DISPLAY_ORDER.length : index;
+    };
+    return position(first) - position(second) || first.label.localeCompare(second.label, 'pt-BR');
+  });
+}
+
 export function getProductColorName(value: string | null | undefined, customName?: string | null) {
   if (customName?.trim()) return customName.trim();
   if (!value) return 'Cor';

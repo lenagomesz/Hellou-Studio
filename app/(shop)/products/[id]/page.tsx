@@ -49,6 +49,7 @@ async function loadProductWithOptions(identifier: string) {
   return {
     product: { ...productData, customization_sections: sections, total_option_count: (optionsRes.data ?? []).length },
     options,
+    unavailableOptions: ((optionsRes.data ?? []) as ProductOption[]).filter((option) => !options.some((available) => available.id === option.id)),
   };
 }
 
@@ -122,7 +123,7 @@ export default async function ProductDetailPage(
   if (!result) notFound();
   if (id !== productIdentifier(result.product)) redirect(productPath(result.product));
 
-  const { product: rawProduct, options } = result;
+  const { product: rawProduct, options, unavailableOptions } = result;
   const storeSettings = await getStoreSettings();
   const product = (await attachProductTags([rawProduct]))[0];
 
@@ -186,6 +187,7 @@ export default async function ProductDetailPage(
       <ProductDetail
         product={product}
         options={options}
+        unavailableOptions={unavailableOptions}
         freeShippingThreshold={storeSettings.commerce.freeShippingThreshold}
         whatsappUrl={storeSettings.contact.whatsapp ? `https://wa.me/${storeSettings.contact.whatsapp}?text=${encodeURIComponent(`Olá! Tenho uma dúvida sobre ${product.name} (${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)}): ${absoluteUrl(productPath(product))}`)}` : undefined}
       />
