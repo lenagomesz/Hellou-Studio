@@ -155,16 +155,20 @@ export function ProductDetail({
           (getOptionCharacterCount(first.name) ?? 0) - (getOptionCharacterCount(second.name) ?? 0)
         ))
     : [];
-  const selectedOption = automaticPricingSection
+  const initiallySelectedOption = automaticPricingSection
     ? automaticPricingOption
     : options.find((o) => o.id === selectedOptionId) ?? null;
   const isChristmasWordTree = product.slug === 'arvore-de-natal-personalizada-com-nomes';
-  const treeOptionMatch = selectedOption?.name.match(/^(5|10|15|20|25) cm · ([3-7]) nomes$/);
-  const treeNames = (customizationSelections['nomes-da-arvore']?.text ?? '')
-    .split(/[,;\n]+/).map((name) => name.trim()).filter(Boolean);
+  const treeSize = initiallySelectedOption?.name.match(/^(5|10|15|20|25) cm · [3-7] nomes$/)?.[1] ?? '5';
+  const treeNameEntries = (customizationSelections['nomes-da-arvore']?.text ?? '').split(',');
+  const treeNames = treeNameEntries.map((name) => name.trim()).filter(Boolean);
+  const treePricedCount = Math.min(7, Math.max(3, treeNames.length));
+  const selectedOption = isChristmasWordTree
+    ? options.find((option) => option.name === `${treeSize} cm · ${treePricedCount} nomes`) ?? null
+    : initiallySelectedOption;
   const treeNamesValid = !isChristmasWordTree || (
-    treeOptionMatch !== null && treeNames.length === Number(treeOptionMatch?.[2])
-    && treeNames.every((name) => name.length <= 15)
+    treeNameEntries.length >= 3 && treeNameEntries.length <= 7
+    && treeNameEntries.every((name) => name.trim().length > 0 && name.trim().length <= 15)
   );
   const selectedColorLabel = colorChoices.find((choice) => choice.value === selectedColor)?.label ?? null;
   const variationLabel = options.find((option) => option.variation_label?.trim())?.variation_label?.trim() || 'Cor';
@@ -493,6 +497,17 @@ export function ProductDetail({
           </div>
         )}
 
+        {isChristmasWordTree && <div className="mt-6 rounded-2xl border border-pink-200 bg-pink-50/70 p-4 dark:border-pink-900 dark:bg-pink-950/30">
+          <h2 className="text-sm font-bold text-gray-900 dark:text-white">Escolha a altura da árvore</h2>
+          <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Altura da árvore">
+            {[5, 10, 15, 20, 25].map((size) => {
+              const option = options.find((entry) => entry.name === `${size} cm · 3 nomes`);
+              return <button key={size} type="button" disabled={!option} onClick={() => { if (option) setSelectedOptionId(option.id); }} className={`rounded-lg border px-4 py-2 text-sm font-semibold ${treeSize === String(size) ? 'border-pink-500 bg-white text-pink-700 dark:bg-pink-950 dark:text-pink-300' : 'border-pink-200 bg-white text-gray-700 hover:border-pink-400 dark:bg-gray-900 dark:text-gray-200'}`}>{size} cm</button>;
+            })}
+          </div>
+          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">Valor atual: <strong>{formatPrice(finalPrice)}</strong>. A partir do quarto nome ou palavra, acrescenta R$ 10 por nome.</p>
+        </div>}
+
         {(product.is_customizable || customizationSections.length > 0) && visibleCustomizationSections.length > 0 && (
           <div className="mt-6 space-y-4 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50/60 p-4 dark:border-pink-900/60 dark:from-pink-950/30 dark:to-orange-950/20 sm:p-5">
             <div>
@@ -604,7 +619,26 @@ export function ProductDetail({
                     </div>
                   )}
 
-                  {needsText && (
+                  {needsText && isChristmasWordTree && section.id === 'nomes-da-arvore' && (
+                    <div className="space-y-2">
+                      {Array.from({ length: Math.max(3, treeNameEntries.length) }, (_, index) => (
+                        <label key={index} className="block text-sm font-medium text-gray-800 dark:text-gray-200">
+                          Nome ou palavra {index + 1} {index === 0 ? '(topo)' : index === Math.max(3, treeNameEntries.length) - 1 ? '(base)' : ''}
+                          <input value={treeNameEntries[index] ?? ''} maxLength={15} onChange={(event) => {
+                            const entries = Array.from({ length: Math.max(3, treeNameEntries.length) }, (_, position) => treeNameEntries[position] ?? '');
+                            entries[index] = event.target.value.replace(/[,;\n]/g, '');
+                            setCustomizationSelections((current) => ({ ...current, [section.id]: { ...current[section.id], text: entries.join(',') } }));
+                          }} placeholder={index === 0 ? 'Ex.: Paz' : index === 1 ? 'Ex.: Amor' : 'Digite um nome ou palavra'} className="mt-1 block w-full rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-100 dark:border-pink-900 dark:bg-gray-950 dark:text-white" />
+                        </label>
+                      ))}
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <button type="button" disabled={treeNameEntries.length >= 7} onClick={() => setCustomizationSelections((current) => ({ ...current, [section.id]: { ...current[section.id], text: [...Array.from({ length: Math.max(3, treeNameEntries.length) }, (_, index) => treeNameEntries[index] ?? ''), ''].join(',') } }))} className="rounded-lg border border-pink-300 px-3 py-2 text-sm font-semibold text-pink-700 disabled:opacity-40 dark:text-pink-300">+ Adicionar nome</button>
+                        {treeNameEntries.length > 3 && <button type="button" onClick={() => setCustomizationSelections((current) => ({ ...current, [section.id]: { ...current[section.id], text: treeNameEntries.slice(0, -1).join(',') } }))} className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 dark:text-gray-300">Remover último</button>}
+                      </div>
+                      <p className={`text-sm ${treeNamesValid ? 'text-gray-600 dark:text-gray-300' : 'text-red-600'}`}>{treeNames.length} de 3 a 7 preenchidos. A ordem dos campos será a ordem na árvore, de cima para baixo. Coloque os nomes mais longos nos últimos campos, para ficarem na base.</p>
+                    </div>
+                  )}
+                  {needsText && !(isChristmasWordTree && section.id === 'nomes-da-arvore') && (
                     <div className={needsColor || needsOption ? 'mt-3' : ''}>
                       <input
                         value={selection.text ?? ''}
@@ -619,11 +653,6 @@ export function ProductDetail({
                         className="w-full rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 dark:border-pink-900 dark:bg-gray-950 dark:text-white dark:focus:ring-pink-500/10"
                       />
                       <p className="mt-1 text-right text-[11px] text-gray-400">{selection.text?.length ?? 0}/120</p>
-                      {isChristmasWordTree && section.id === 'nomes-da-arvore' && (
-                        <p className={`mt-1 text-sm ${treeNamesValid ? 'text-gray-600 dark:text-gray-300' : 'text-red-600'}`}>
-                          Digite {treeOptionMatch?.[2] ?? 3} nomes ou palavras separados por vírgula. {treeNames.length} preenchidos; até 15 caracteres cada.
-                        </p>
-                      )}
                       {section.autoSelectOptionByCharacterCount && (
                         <div
                           aria-live="polite"
@@ -803,27 +832,6 @@ export function ProductDetail({
             })()}
 
             {/* Size / Variation pills */}
-            {isChristmasWordTree && <div className="grid gap-4 sm:grid-cols-2">
-              <label className="text-sm font-semibold text-gray-900 dark:text-white">Altura da árvore
-                <select className="mt-2 block w-full rounded-lg border border-pink-200 bg-white px-3 py-2.5 text-sm text-gray-900 dark:bg-gray-900 dark:text-white" value={treeOptionMatch?.[1] ?? '5'} onChange={(event) => {
-                  const count = treeOptionMatch?.[2] ?? '3';
-                  const option = options.find((entry) => entry.name === `${event.target.value} cm · ${count} nomes`);
-                  if (option) setSelectedOptionId(option.id);
-                }}>
-                  {[5, 10, 15, 20, 25].map((size) => <option key={size} value={size}>{size} cm</option>)}
-                </select>
-              </label>
-              <label className="text-sm font-semibold text-gray-900 dark:text-white">Quantidade de nomes ou palavras
-                <select className="mt-2 block w-full rounded-lg border border-pink-200 bg-white px-3 py-2.5 text-sm text-gray-900 dark:bg-gray-900 dark:text-white" value={treeOptionMatch?.[2] ?? '3'} onChange={(event) => {
-                  const size = treeOptionMatch?.[1] ?? '5';
-                  const option = options.find((entry) => entry.name === `${size} cm · ${event.target.value} nomes`);
-                  if (option) setSelectedOptionId(option.id);
-                }}>
-                  {[3, 4, 5, 6, 7].map((count) => <option key={count} value={count}>{count} {count === 1 ? 'nome' : 'nomes'}</option>)}
-                </select>
-              </label>
-              <p className="sm:col-span-2 text-sm text-gray-600 dark:text-gray-300">Preço desta combinação: <strong>{formatPrice(finalPrice)}</strong></p>
-            </div>}
             {!isChristmasWordTree && options.some((option) => option.name.trim()) && <div>
               <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
                 {options.filter((option) => option.name.trim()).every((o) => ['P', 'M', 'G'].includes(o.name.toUpperCase())) ? 'Tamanho' : variationLabel}
