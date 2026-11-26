@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Product, ProductCategory } from '@/types/database';
 import { productIdentifier } from '@/lib/seo';
 import { FavoriteButton } from '@/components/shop/FavoriteButton';
+import { ShopImage } from '@/components/shop/ShopImage';
 
 const CATEGORY_LABELS: Record<string, string> = {
   chaveiros: 'Chaveiros',
@@ -62,13 +63,12 @@ export function ProductCard({ product, basePath = "/products", category, showcas
         {images.length > 0 ? (
           <>
             {images.map((image, index) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <ShopImage
                 key={image}
                 src={image}
                 alt={product.image_alt_texts?.[image] || product.name}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 loading={index === 0 ? 'eager' : 'lazy'}
-                decoding="async"
                 className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-700 ease-out motion-safe:group-hover:scale-[1.03] ${index === activeImage ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
               />
             ))}
