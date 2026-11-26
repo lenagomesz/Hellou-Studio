@@ -7,7 +7,13 @@ import {
   normalizeProductRelation,
   type ProductRelation,
 } from '@/lib/stl-download';
-import { getDigitalDownloadFileName, getDigitalFileContentType } from '@/lib/digital-files';
+import { getDigitalDownloadFileName } from '@/lib/digital-files';
+import { SUCCESSFUL_ORDER_STATUSES } from '@/lib/checkout-rules';
+import { structuredLog } from '@/lib/observability';
+
+// Link assinado de curta duração: o cliente baixa direto do Storage, sem o
+// arquivo passar pela função (limite de 4,5 MB de resposta na Vercel).
+const SIGNED_URL_TTL_SECONDS = 120;
 
 interface DigitalOrderItem {
   product_id: string;
@@ -56,8 +62,8 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Allow download for approved (digital-only), processing (hybrid), or delivered orders
-    const allowedStatuses = ['approved', 'processing', 'delivered'];
+    // Só pedidos com pagamento confirmado (inclui enviados/concluídos).
+    const allowedStatuses: readonly string[] = SUCCESSFUL_ORDER_STATUSES;
     if (!allowedStatuses.includes(order.status)) {
       return NextResponse.json(
         { error: 'O pedido ainda não foi aprovado. Aguarde a confirmação do pagamento.' },
@@ -82,19 +88,22 @@ export async function GET(
     }
 
     const storageCandidates = getStorageCandidates(product.file_path);
-    let fileData: Blob | null = null;
+    const downloadFileName = getDigitalDownloadFileName(product.name, product.file_path);
+    let signedUrl: string | null = null;
     let lastError: { message?: string } | null = null;
 
     for (const candidate of storageCandidates) {
-      const result = await supabase.storage.from(candidate.bucket).download(candidate.path);
-      if (result.data && !result.error) {
-        fileData = result.data;
+      const result = await supabase.storage
+        .from(candidate.bucket)
+        .createSignedUrl(candidate.path, SIGNED_URL_TTL_SECONDS, { download: downloadFileName });
+      if (result.data?.signedUrl && !result.error) {
+        signedUrl = result.data.signedUrl;
         break;
       }
       lastError = result.error;
     }
 
-    if (!fileData) {
+    if (!signedUrl) {
       console.error('[download] Storage error:', {
         filePath: product.file_path,
         attemptedLocations: storageCandidates.map(({ bucket, path }) => `${bucket}/${path}`),
@@ -103,22 +112,15 @@ export async function GET(
       return NextResponse.json({ error: 'File not found in storage' }, { status: 404 });
     }
 
-    // Log download (optional)
-    console.log('[download] Downloaded:', {
+    structuredLog('info', 'digital_download.signed_url_issued', {
       orderId: id,
-      fileId: fileId,
-      fileName: product.name,
+      fileId,
       userId,
     });
 
-    // Stream file
-    const downloadFileName = getDigitalDownloadFileName(product.name, product.file_path);
-    return new NextResponse(fileData, {
-      headers: {
-        'Content-Disposition': `attachment; filename="${downloadFileName}"`,
-        'Content-Type': getDigitalFileContentType(product.file_path),
-      },
-    });
+    const response = NextResponse.redirect(signedUrl, 302);
+    response.headers.set('Cache-Control', 'private, no-store');
+    return response;
   } catch (error) {
     console.error('[download] Exception:', error);
     return NextResponse.json(

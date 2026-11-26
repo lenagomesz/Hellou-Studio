@@ -220,15 +220,6 @@ export async function POST(request: Request) {
             .in('product_id', exclusiveProductIds)
             .eq('user_id', order.user_id);
         }
-
-        for (const item of items) {
-          if (item.product_option_id) {
-            await admin
-              .from('product_options')
-              .update({ stock: (item.option?.stock ?? 0) + item.quantity })
-              .eq('id', item.product_option_id);
-          }
-        }
       }
     }
 
@@ -365,22 +356,28 @@ export async function POST(request: Request) {
                'Arquivo digital')
             : 'Arquivo digital';
 
-          await sendSTLOrderConfirmationEmail({
-            email: userData.email,
-            nome: userData.name || null,
-            orderId: order.id,
-            fileName,
-            price: Number(result.transaction_amount) || 0,
-          });
+          // O pedido já foi finalizado no banco: uma falha de e-mail não pode
+          // devolver 500 ao Mercado Pago (o retry não reenviaria nada mesmo).
+          try {
+            await sendSTLOrderConfirmationEmail({
+              email: userData.email,
+              nome: userData.name || null,
+              orderId: order.id,
+              fileName,
+              price: Number(result.transaction_amount) || 0,
+            });
 
-          await sendSTLAdminNotificationEmail({
-            adminEmail: process.env.ADMIN_EMAIL || 'studiohellou@gmail.com',
-            orderId: order.id,
-            customerName: userData.name || null,
-            customerEmail: userData.email,
-            fileName,
-            price: Number(result.transaction_amount) || 0,
-          });
+            await sendSTLAdminNotificationEmail({
+              adminEmail: process.env.ADMIN_EMAIL || 'studiohellou@gmail.com',
+              orderId: order.id,
+              customerName: userData.name || null,
+              customerEmail: userData.email,
+              fileName,
+              price: Number(result.transaction_amount) || 0,
+            });
+          } catch (error) {
+            structuredLog('warn', 'mercadopago.stl_email_failed', { error, orderId: order.id });
+          }
         }
       }
     }
